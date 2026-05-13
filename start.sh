@@ -32,37 +32,51 @@ fi
 echo "✅ Docker daemon is running"
 echo ""
 
-# Start PostgreSQL
-echo "🐘 Starting PostgreSQL container..."
-docker compose up -d
-
-if [ $? -eq 0 ]; then
-    echo "✅ PostgreSQL container started successfully!"
-    echo ""
-    echo "⏳ Waiting for PostgreSQL to be ready (up to 15 seconds)..."
-    sleep 5
-    
-    # Test connection
-    echo ""
-    echo "🔍 Testing database connection..."
-    cd backend
-    source venv/bin/activate 2>/dev/null || echo "⚠️ Virtual environment not activated"
-    python test_db_connection.py
-    cd ..
+# Check if PostgreSQL is running
+if [ "$(docker inspect -f '{{.State.Running}}' khmer_sign_postgres 2>/dev/null)" = "true" ]; then
+    echo "🐘 PostgreSQL is already running!"
 else
-    echo "❌ Failed to start PostgreSQL container"
-    exit 1
+    echo "🐘 Starting PostgreSQL container..."
+    docker compose up -d
+
+    if [ $? -eq 0 ]; then
+        echo "✅ PostgreSQL container started successfully!"
+        echo "⏳ Waiting for PostgreSQL to be ready (up to 15 seconds)..."
+        sleep 5
+    else
+        echo "❌ Failed to start PostgreSQL container"
+        exit 1
+    fi
 fi
 
+# Test connection
 echo ""
-echo "✨ Setup complete!"
+echo "🔍 Testing database connection..."
+cd backend
+source venv/bin/activate 2>/dev/null || echo "⚠️ Virtual environment not activated"
+python test_db_connection.py
+cd ..
+
 echo ""
-echo "📋 Next steps:"
-echo "  1. Terminal 1 - Start Backend:"
-echo "     cd backend && source venv/bin/activate && uvicorn main:app --reload"
+echo "✨ Database Setup complete!"
 echo ""
-echo "  2. Terminal 2 - Start Frontend:"
-echo "     cd frontend && npm run dev"
+echo "🚀 Starting backend and frontend simultaneously..."
+
+# Trap ctrl-c and kill all child processes
+trap "kill 0" EXIT
+
+echo "▶️  Starting Backend (Port 8000)..."
+(cd backend && source venv/bin/activate && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000) &
+
+echo "▶️  Starting Frontend (Port 3000)..."
+(cd frontend && npm run dev) &
+
 echo ""
-echo "  3. Backend: http://localhost:8000"
-echo "  4. Frontend: http://localhost:3000"
+echo "✨ Both services are running in this terminal!"
+echo "   Backend:  http://localhost:8000"
+echo "   Frontend: http://localhost:3000"
+echo "   ⚠️ Press Ctrl+C to stop both services."
+echo "--------------------------------------------------------"
+
+# Wait for background processes to finish
+wait
