@@ -67,3 +67,8 @@ sign language figma/
 data_set/
 postman/
 docs.local/
+
+.cursor/
+.me-docs-learn/
+backend/.env.example
+finger_spelling_data_set/
