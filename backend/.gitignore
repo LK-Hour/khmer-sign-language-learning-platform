@@ -81,3 +81,4 @@ alembic/versions/
 # Project Specific
 instance/
 .webassets-cache
+run_server.sh
