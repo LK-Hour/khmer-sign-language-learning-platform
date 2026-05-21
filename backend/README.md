@@ -3,7 +3,7 @@
 This is the backend service for the Khmer Sign Language Platform, built with [FastAPI](https://fastapi.tiangolo.com/).
 
 ## Prerequisites
-- Python 3.9 or higher
+- Python 3.10 or higher
 - A supported database (e.g., PostgreSQL, MySQL, or SQLite)
 
 ## Setup Instructions

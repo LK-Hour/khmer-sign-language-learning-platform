@@ -33,7 +33,7 @@ A comprehensive web platform for learning Khmer sign language with AI-powered re
 ### **Backend**
 | Component | Version |
 |-----------|---------|
-| Python | 3.9+ |
+| Python | 3.10+ |
 | FastAPI | 0.104.1 |
 | Uvicorn | 0.24.0 |
 | SQLAlchemy | 2.0.23 |
@@ -58,7 +58,7 @@ A comprehensive web platform for learning Khmer sign language with AI-powered re
 ### Required Software
 - **Docker & Docker Compose** - For PostgreSQL
 - **Node.js** - 18+ LTS
-- **Python** - 3.9+
+- **Python** - 3.10+
 - **Git**
 
 ---

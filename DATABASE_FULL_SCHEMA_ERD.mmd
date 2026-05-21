@@ -1,0 +1,332 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+	direction TB
+	users {
+		UUID id PK ""  
+		VARCHAR username UK ""  
+		VARCHAR email  "nullable — Facebook/Telegram may not provide"  
+		VARCHAR password_hash  "nullable — OAuth users have no password"  
+		VARCHAR display_name  ""  
+		TEXT avatar_url  "profile picture URL from OAuth provider"  
+		VARCHAR account_type  "student | admin"  
+		VARCHAR auth_provider  "email | google | facebook | telegram"  
+		BOOLEAN is_guest  ""  
+		BOOLEAN is_active  ""  
+		TIMESTAMP last_login_at  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	user_oauth_providers {
+		UUID id PK ""  
+		UUID user_id FK ""  
+		VARCHAR provider  "google|facebook|telegram — UK(provider, provider_user_id)"  
+		VARCHAR provider_user_id UK ""  
+		VARCHAR provider_email  "nullable"  
+		TEXT provider_avatar_url  ""  
+		TEXT access_token_encrypted  "AES encrypted — must be retrievable"  
+		TEXT refresh_token_encrypted  "AES encrypted"  
+		TIMESTAMP token_expires_at  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	user_lesson_progress {
+		UUID id PK ""  
+		UUID user_id FK "UK(user_id, track_type, lesson_id)"  
+		VARCHAR track_type  "sign | finger"  
+		BIGINT lesson_id  "app-layer FK via track_type"  
+		BOOLEAN is_completed  ""  
+		BOOLEAN is_locked  ""  
+		NUMERIC peakest_accuracy  ""  
+		INTEGER attempts  ""  
+		INTEGER total_time_spent  "seconds"  
+		TIMESTAMP started_at  ""  
+		TIMESTAMP completed_at  ""  
+		TIMESTAMP last_accessed_at  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	user_exercise_results {
+		UUID id PK ""  
+		UUID user_id FK ""  
+		VARCHAR track_type  "sign|finger"  
+		BIGINT exercise_id  "app-layer FK via track_type"  
+		UUID progress_id FK ""  
+		TEXT selected_answer  ""  
+		BOOLEAN is_correct  ""  
+		INTEGER time_taken  "seconds"  
+		INTEGER attempt_number  ""  
+		TIMESTAMP created_at  ""  
+	}
+
+	sign_lesson_words {
+		BIGINT id PK ""  
+		BIGINT lesson_id FK "UK(lesson_id, word_id)"  
+		BIGINT word_id FK ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+	}
+
+	sign_exercises {
+		BIGINT id PK ""  
+		BIGINT lesson_id FK ""  
+		TEXT question_en  ""  
+		TEXT question_kh  ""  
+		VARCHAR exercise_type  "multiple_choice|free_form|video_select|matching"  
+		BIGINT media_id FK "nullable — question media"  
+		VARCHAR correct_answer  "for free_form"  
+		TEXT explanation_en  ""  
+		TEXT explanation_kh  ""  
+		INTEGER points  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	sign_exercise_options {
+		BIGINT id PK ""  
+		BIGINT exercise_id FK ""  
+		VARCHAR option_text_en  ""  
+		VARCHAR option_text_kh  ""  
+		BIGINT media_id FK "nullable — for video_select"  
+		BOOLEAN is_correct  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+	}
+
+	sign_practice_sessions {
+		BIGINT id PK ""  
+		UUID user_id FK ""  
+		BIGINT lesson_id FK ""  
+		BIGINT[] word_id FK ""  
+		TIMESTAMP started_at  ""  
+		TIMESTAMP ended_at  ""  
+		INTEGER duration  "seconds"  
+		NUMERIC average_accuracy  ""  
+		NUMERIC peak_accuracy  ""  
+		INTEGER keyframe_count  ""  
+		BOOLEAN is_completed  ""  
+		TIMESTAMP created_at  ""  
+	}
+
+	finger_lesson_letters {
+		BIGINT id PK ""  
+		BIGINT lesson_id FK "UK(lesson_id, letter_id)"  
+		BIGINT letter_id FK ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+	}
+
+	finger_exercises {
+		BIGINT id PK ""  
+		BIGINT lesson_id FK ""  
+		TEXT question_en  ""  
+		TEXT question_kh  ""  
+		VARCHAR exercise_type  "multiple_choice|free_form|image_select|matching"  
+		BIGINT media_id FK "nullable — question media"  
+		VARCHAR correct_answer  "for free_form"  
+		TEXT explanation_en  ""  
+		TEXT explanation_kh  ""  
+		INTEGER points  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	finger_exercise_options {
+		BIGINT id PK ""  
+		BIGINT exercise_id FK ""  
+		VARCHAR option_text_en  ""  
+		VARCHAR option_text_kh  ""  
+		BIGINT media_id FK "nullable — for image_select"  
+		BOOLEAN is_correct  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+	}
+
+	finger_practice_sessions {
+		BIGINT id PK ""  
+		UUID user_id FK ""  
+		BIGINT lesson_id FK ""  
+		BIGINT[] letter_id FK ""  
+		TIMESTAMP started_at  ""  
+		TIMESTAMP ended_at  ""  
+		INTEGER duration  "seconds"  
+		NUMERIC average_accuracy  ""  
+		NUMERIC peak_accuracy  ""  
+		BOOLEAN is_completed  ""  
+		TIMESTAMP created_at  ""  
+	}
+
+	sign_units {
+		BIGINT id PK ""  
+		VARCHAR name_en  ""  
+		VARCHAR name_kh UK ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	sign_chapters {
+		BIGINT id PK ""  
+		BIGINT unit_id FK ""  
+		VARCHAR name_en  ""  
+		VARCHAR name_kh  ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	finger_units {
+		BIGINT id PK ""  
+		VARCHAR name_en  ""  
+		VARCHAR name_kh UK ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	finger_chapters {
+		BIGINT id PK ""  
+		BIGINT unit_id FK ""  
+		VARCHAR name_en  ""  
+		VARCHAR name_kh  ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	finger_letters{
+		BIGINT id PK ""  
+		VARCHAR letter_en  ""  
+		VARCHAR letter_kh UK ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		TEXT image_url  "direct URL — no junction table"  
+		BOOLEAN is_active  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	finger_media {
+		BIGINT id PK ""  
+		VARCHAR name  ""  
+		VARCHAR media_type  "image|gif"  
+		TEXT file_url  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	finger_lessons {
+		BIGINT id PK ""  
+		BIGINT chapter_id FK ""  
+		VARCHAR title_en  ""  
+		VARCHAR title_kh  ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	sign_media {
+		BIGINT id PK ""  
+		VARCHAR name  ""  
+		VARCHAR media_type  "video|gif|image"  
+		TEXT file_url  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	sign_lessons {
+		BIGINT id PK ""  
+		BIGINT chapter_id FK ""  
+		VARCHAR title_en  ""  
+		VARCHAR title_kh  ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		INTEGER order_index  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	sign_practice_contributions {
+		UUID id PK ""  
+		UUID user_id FK ""  
+		BIGINT sign_lesson_id  "nullable FK — set when track_type=sign"  
+		VARCHAR filename  ""  
+		TEXT file_url  ""  
+		VARCHAR status  "pending|approved|rejected"  
+		TEXT review_notes  ""  
+		BOOLEAN consent_given  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	user_sessions {
+		UUID id PK ""  
+		UUID user_id FK ""  
+		VARCHAR token_hash UK "SHA-256 of raw token — never stored plaintext"  
+		VARCHAR refresh_token_hash UK "SHA-256 of raw refresh token"  
+		TIMESTAMP expires_at  ""  
+		TIMESTAMP refresh_expires_at  ""  
+		TEXT user_agent  ""  
+		BOOLEAN is_active  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP revoked_at  "NULL = active"  
+	}
+
+	sign_words {
+		BIGINT id PK ""  
+		VARCHAR word_en  ""  
+		VARCHAR word_kh UK ""  
+		TEXT description_en  ""  
+		TEXT description_kh  ""  
+		TEXT video_url  "direct URL — no junction table"  
+		BOOLEAN is_active  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	users||--o{user_oauth_providers:"authenticates via"
+	users||--o{user_sessions:"has"
+	users||--o{user_lesson_progress:"tracks"
+	users||--o{user_exercise_results:"records"
+	users||--o{sign_practice_contributions:"submits"
+	users||--o{sign_practice_sessions:"practices"
+	users||--o{finger_practice_sessions:"practices"
+	user_lesson_progress||--o{user_exercise_results:"contains"
+	sign_units||--o{sign_chapters:"contains"
+	sign_chapters||--o{sign_lessons:"contains"
+	sign_lessons||--o{sign_lesson_words:"teaches"
+	sign_words||--o{sign_lesson_words:"taught in"
+	sign_lessons||--o{sign_exercises:"has"
+	sign_exercises||--o{sign_exercise_options:"offers"
+	sign_media||--o{sign_exercise_options:"used in"
+	sign_media||--o{sign_exercises:"used in question"
+	sign_lessons||--o{sign_practice_sessions:"generates"
+	sign_words||--o{sign_practice_sessions:"practiced in"
+	finger_units||--o{finger_chapters:"contains"
+	finger_chapters||--o{finger_lessons:"contains"
+	finger_lessons||--o{finger_lesson_letters:"teaches"
+	finger_letters||--o{finger_lesson_letters:"taught in"
+	finger_lessons||--o{finger_exercises:"has"
+	finger_exercises||--o{finger_exercise_options:"offers"
+	finger_media||--o{finger_exercise_options:"used in"
+	finger_media||--o{finger_exercises:"used in question"
+	finger_lessons||--o{finger_practice_sessions:"generates"
+	finger_letters||--o{finger_practice_sessions:"practiced in"
+	sign_lessons||--o{sign_practice_contributions:"referenced by"
