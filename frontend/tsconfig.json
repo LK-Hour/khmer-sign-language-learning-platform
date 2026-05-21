@@ -28,7 +28,8 @@
       "@/zustand/*": ["./src/zustand/*"],
       "@/theme/*": ["./src/theme/*"],
       "@/auth/*": ["./src/auth/*"],
-      "@/assets/*": ["./src/assets/*"]
+      "@/assets/*": ["./src/assets/*"],
+      "@/features/*": ["./src/features/*"]
     }
   },
   "include": [
