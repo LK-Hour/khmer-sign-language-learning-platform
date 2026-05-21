@@ -67,19 +67,3 @@ sign language figma/
 data_set/
 postman/
 docs.local/
-
-# cursor
-.cursor
-.me-docs-learn/
-
-
-#docs.local mydocs
-docs.local/my_docs/
-frontend/package-lock.json
-
-#dataset
-finger_spelling_data_set/
-
-backend/.env.example
-
-frontend/package-lock.json

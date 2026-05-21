@@ -1,0 +1,454 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+	direction TB
+
+	users {
+		UUID id PK ""
+		VARCHAR username UK ""
+		VARCHAR email "nullable"
+		VARCHAR password_hash "nullable"
+		VARCHAR display_name ""
+		TEXT avatar_url ""
+		VARCHAR account_type "ENUM: student | admin"
+		VARCHAR auth_provider "ENUM: email | google | facebook | telegram"
+		BOOLEAN is_guest "derivable but kept for quick queries"
+		BOOLEAN is_active ""
+		TIMESTAMPTZ last_login_at ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	user_oauth_providers {
+		UUID id PK ""
+		UUID user_id FK ""
+		VARCHAR provider "ENUM: google|facebook|telegram"
+		VARCHAR provider_user_id ""
+		VARCHAR provider_email "nullable"
+		TEXT provider_avatar_url ""
+		TEXT access_token_encrypted ""
+		TEXT refresh_token_encrypted ""
+		TIMESTAMPTZ token_expires_at ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+		%% UK(provider, provider_user_id)
+	}
+
+	user_sessions {
+		UUID id PK ""
+		UUID user_id FK ""
+		VARCHAR token_hash UK ""
+		VARCHAR refresh_token_hash UK ""
+		INET ip_address ""
+		VARCHAR device_id "nullable"
+		TEXT user_agent ""
+		BOOLEAN is_active ""
+		TIMESTAMPTZ expires_at ""
+		TIMESTAMPTZ refresh_expires_at ""
+		TIMESTAMPTZ last_used_at ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ revoked_at "NULL = active"
+	}
+
+	sign_user_lesson_progress {
+		UUID id PK ""
+		UUID user_id FK "UK(user_id, sign_lesson_id)"
+		BIGINT sign_lesson_id FK ""
+		BOOLEAN is_completed ""
+		BOOLEAN is_locked ""
+		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
+		INTEGER attempts "CHECK (>= 0)"
+		INTEGER total_time_spent "seconds"
+		TIMESTAMPTZ started_at ""
+		TIMESTAMPTZ completed_at ""
+		TIMESTAMPTZ last_accessed_at ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	finger_user_lesson_progress {
+		UUID id PK ""
+		UUID user_id FK "UK(user_id, finger_lesson_id)"
+		BIGINT finger_lesson_id FK ""
+		BOOLEAN is_completed ""
+		BOOLEAN is_locked ""
+		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
+		INTEGER attempts "CHECK (>= 0)"
+		INTEGER total_time_spent "seconds"
+		TIMESTAMPTZ started_at ""
+		TIMESTAMPTZ completed_at ""
+		TIMESTAMPTZ last_accessed_at ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	sign_user_exercise_results {
+		UUID id PK ""
+		UUID user_id FK ""
+		BIGINT sign_exercise_id FK ""
+		UUID progress_id FK "-> sign_user_lesson_progress"
+		BIGINT selected_option_id FK "nullable — for multiple choice"
+		TEXT selected_answer "nullable — for free_form"
+		BOOLEAN is_correct ""
+		INTEGER time_taken "seconds, CHECK (>= 0)"
+		INTEGER attempt_number "CHECK (>= 0)"
+		TIMESTAMPTZ created_at ""
+	}
+
+	finger_user_exercise_results {
+		UUID id PK ""
+		UUID user_id FK ""
+		BIGINT finger_exercise_id FK ""
+		UUID progress_id FK "-> finger_user_lesson_progress"
+		BIGINT selected_option_id FK "nullable — for multiple choice"
+		TEXT selected_answer "nullable — for free_form"
+		BOOLEAN is_correct ""
+		INTEGER time_taken "seconds, CHECK (>= 0)"
+		INTEGER attempt_number "CHECK (>= 0)"
+		TIMESTAMPTZ created_at ""
+	}
+
+	medias {
+		BIGINT id PK ""  
+		VARCHAR media_type  "video | gif | image"  
+		TEXT file_url  ""  
+		TIMESTAMP created_at  ""  
+		TIMESTAMP updated_at  ""  
+	}
+
+	sign_units {
+		BIGINT id PK ""
+		VARCHAR name_en ""
+		VARCHAR name_kh UK ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		INTEGER order_index "UK(order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	sign_chapters {
+		BIGINT id PK ""
+		BIGINT unit_id FK ""
+		VARCHAR name_en ""
+		VARCHAR name_kh ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		INTEGER order_index "UK(unit_id, order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	sign_lessons {
+		BIGINT id PK ""
+		BIGINT chapter_id FK ""
+		VARCHAR name_en ""
+		VARCHAR name_kh ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		INTEGER order_index "UK(chapter_id, order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	sign_words {
+		BIGINT id PK ""
+		VARCHAR word_en ""
+		VARCHAR word_kh UK ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		BOOLEAN is_active ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	sign_lesson_words {
+		BIGINT id PK ""
+		BIGINT lesson_id FK "UK(lesson_id, word_id)"
+		BIGINT word_id FK ""
+		INTEGER order_index "UK(lesson_id, order_index)"
+		TIMESTAMPTZ created_at ""
+	}
+
+	sign_word_medias {
+		BIGINT id PK ""
+		BIGINT word_id FK ""
+		BIGINT media_id FK ""
+		TIMESTAMPTZ created_at ""
+	}
+
+	sign_practice_contributions {
+		UUID id PK ""
+		UUID user_id FK ""
+		BIGINT word_id FK "The specific sign demonstrated"
+		BIGINT sign_lesson_id FK "nullable — lesson context"
+		VARCHAR filename ""
+		BIGINT media_id FK ""
+		VARCHAR status "ENUM: pending|approved|rejected"
+		TEXT review_notes ""
+		UUID reviewed_by FK "nullable"
+		TIMESTAMPTZ reviewed_at "nullable"
+		TEXT rejection_reason "nullable"
+		VARCHAR consent_version ""
+		BOOLEAN consent_given ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	sign_exercises {
+		BIGINT id PK ""
+		BIGINT lesson_id FK ""
+		TEXT question_en ""
+		TEXT question_kh ""
+		VARCHAR exercise_type "ENUM: multiple_choice|free_form|video_select|matching"
+		BIGINT media_id FK "nullable — question media"
+		VARCHAR correct_answer "nullable — for free_form"
+		TEXT explanation_en ""
+		TEXT explanation_kh ""
+		INTEGER order_index "UK(lesson_id, order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	sign_exercise_options {
+		BIGINT id PK ""
+		BIGINT exercise_id FK ""
+		VARCHAR option_text_en ""
+		VARCHAR option_text_kh ""
+		BIGINT media_id FK "nullable — for video_select"
+		BOOLEAN is_correct ""
+		INTEGER points "CHECK (>= 0)"
+		INTEGER order_index "UK(exercise_id, order_index)"
+		TIMESTAMPTZ created_at ""
+	}
+
+	sign_practice_sessions {
+		BIGINT id PK ""
+		UUID user_id FK ""
+		BIGINT lesson_id FK ""
+		BIGINT media_id FK "nullable — recorded webcam practice"
+		TIMESTAMPTZ started_at ""
+		TIMESTAMPTZ ended_at "CHECK (>= started_at)"
+		INTEGER duration "seconds, CHECK (>= 0)"
+		NUMERIC(5,2) average_accuracy "CHECK (BETWEEN 0 AND 100)"
+		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
+		BOOLEAN is_completed ""
+		TIMESTAMPTZ created_at ""
+	}
+
+	sign_practice_session_words {
+		BIGINT id PK ""
+		BIGINT session_id FK ""
+		BIGINT word_id FK ""
+		NUMERIC(5,2) accuracy "CHECK (BETWEEN 0 AND 100)"
+		INTEGER attempts "CHECK (>= 0)"
+		INTEGER time_spent_seconds "CHECK (>= 0)"
+		BIGINT media_id FK "nullable"
+		TIMESTAMPTZ created_at ""
+	}
+
+	finger_units {
+		BIGINT id PK ""
+		VARCHAR name_en ""
+		VARCHAR name_kh UK ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		INTEGER order_index "UK(order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	finger_chapters {
+		BIGINT id PK ""
+		BIGINT unit_id FK ""
+		VARCHAR name_en ""
+		VARCHAR name_kh ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		INTEGER order_index "UK(unit_id, order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	finger_lessons {
+		BIGINT id PK ""
+		BIGINT chapter_id FK ""
+		VARCHAR name_en ""
+		VARCHAR name_kh ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		INTEGER order_index "UK(chapter_id, order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	finger_letters {
+		BIGINT id PK ""
+		VARCHAR letter_en ""
+		VARCHAR letter_kh UK ""
+		TEXT description_en ""
+		TEXT description_kh ""
+		BOOLEAN is_active ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	finger_lesson_letters {
+		BIGINT id PK ""
+		BIGINT lesson_id FK "UK(lesson_id, letter_id)"
+		BIGINT letter_id FK ""
+		INTEGER order_index "UK(lesson_id, order_index)"
+		TIMESTAMPTZ created_at ""
+	}
+
+	finger_letter_medias {
+		BIGINT id PK ""
+		BIGINT letter_id FK ""
+		BIGINT media_id FK ""
+		TIMESTAMPTZ created_at ""
+	}
+
+	finger_practice_contributions {
+		UUID id PK ""
+		UUID user_id FK ""
+		BIGINT letter_id FK "The specific letter demonstrated"
+		BIGINT finger_lesson_id FK "nullable — lesson context"
+		VARCHAR filename ""
+		BIGINT media_id FK ""
+		VARCHAR status "ENUM: pending|approved|rejected"
+		TEXT review_notes ""
+		UUID reviewed_by FK "nullable"
+		TIMESTAMPTZ reviewed_at "nullable"
+		TEXT rejection_reason "nullable"
+		VARCHAR consent_version ""
+		BOOLEAN consent_given ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	finger_exercises {
+		BIGINT id PK ""
+		BIGINT lesson_id FK ""
+		TEXT question_en ""
+		TEXT question_kh ""
+		VARCHAR exercise_type "ENUM: multiple_choice|free_form|image_select|matching"
+		BIGINT media_id FK "nullable — question media"
+		VARCHAR correct_answer "nullable — for free_form"
+		TEXT explanation_en ""
+		TEXT explanation_kh ""
+		INTEGER order_index "UK(lesson_id, order_index)"
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+
+	finger_exercise_options {
+		BIGINT id PK ""
+		BIGINT exercise_id FK ""
+		VARCHAR option_text_en ""
+		VARCHAR option_text_kh ""
+		BIGINT media_id FK "nullable — for image_select"
+		BOOLEAN is_correct ""
+		INTEGER points "CHECK (>= 0)"
+		INTEGER order_index "UK(exercise_id, order_index)"
+		TIMESTAMPTZ created_at ""
+	}
+
+	finger_practice_sessions {
+		BIGINT id PK ""
+		UUID user_id FK ""
+		BIGINT lesson_id FK ""
+		BIGINT media_id FK "nullable — recorded webcam practice"
+		TIMESTAMPTZ started_at ""
+		TIMESTAMPTZ ended_at "CHECK (>= started_at)"
+		INTEGER duration "seconds, CHECK (>= 0)"
+		NUMERIC(5,2) average_accuracy "CHECK (BETWEEN 0 AND 100)"
+		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
+		BOOLEAN is_completed ""
+		TIMESTAMPTZ created_at ""
+	}
+
+	finger_practice_session_letters {
+		BIGINT id PK ""
+		BIGINT session_id FK ""
+		BIGINT letter_id FK ""
+		NUMERIC(5,2) accuracy "CHECK (BETWEEN 0 AND 100)"
+		INTEGER attempts "CHECK (>= 0)"
+		INTEGER time_spent_seconds "CHECK (>= 0)"
+		BIGINT media_id FK "nullable"
+		TIMESTAMPTZ created_at ""
+	}
+
+	users ||--o{ user_oauth_providers : "authenticates via"
+	users ||--o{ user_sessions : "has"
+	users ||--o{ sign_user_lesson_progress : "tracks sign progress"
+	users ||--o{ finger_user_lesson_progress : "tracks finger progress"
+	users ||--o{ sign_user_exercise_results : "records sign results"
+	users ||--o{ finger_user_exercise_results : "records finger results"
+	users ||--o{ sign_practice_contributions : "submits"
+	users ||--o{ finger_practice_contributions : "submits"
+	users ||--o{ sign_practice_sessions : "practices"
+	users ||--o{ finger_practice_sessions : "practices"
+	
+
+	sign_user_lesson_progress ||--o{ sign_user_exercise_results : "contains"
+	finger_user_lesson_progress ||--o{ finger_user_exercise_results : "contains"
+
+	sign_lessons ||--o{ sign_user_lesson_progress : "tracks progress"
+	finger_lessons ||--o{ finger_user_lesson_progress : "tracks progress"
+
+	sign_exercises ||--o{ sign_user_exercise_results : "records result"
+	sign_exercise_options ||--o{ sign_user_exercise_results : "selected in"
+
+	finger_exercises ||--o{ finger_user_exercise_results : "records result"
+	finger_exercise_options ||--o{ finger_user_exercise_results : "selected in"
+
+	sign_units ||--o{ sign_chapters : "contains"
+	sign_chapters ||--o{ sign_lessons : "contains"
+	sign_lessons ||--o{ sign_lesson_words : "teaches"
+	sign_words ||--o{ sign_lesson_words : "taught in"
+	
+	sign_lessons ||--o{ sign_exercises : "has"
+	sign_exercises ||--o{ sign_exercise_options : "offers"
+	
+	medias ||--o{ sign_exercise_options : "used in"
+	medias ||--o{ sign_exercises : "used in question"
+	
+	sign_lessons ||--o{ sign_practice_sessions : "generates"
+	sign_practice_sessions ||--o{ sign_practice_session_words : "contains"
+	sign_words ||--o{ sign_practice_session_words : "practiced in"
+	medias ||--o{ sign_practice_session_words : "recorded for word"
+	
+	finger_units ||--o{ finger_chapters : "contains"
+	finger_chapters ||--o{ finger_lessons : "contains"
+	finger_lessons ||--o{ finger_lesson_letters : "teaches"
+	finger_letters ||--o{ finger_lesson_letters : "taught in"
+	
+	finger_lessons ||--o{ finger_exercises : "has"
+	finger_exercises ||--o{ finger_exercise_options : "offers"
+	
+	medias ||--o{ finger_exercise_options : "used in"
+	medias ||--o{ finger_exercises : "used in question"
+	
+	sign_words ||--o{ sign_word_medias : "has media"
+	medias ||--o{ sign_word_medias : "used by words"
+	
+	finger_letters ||--o{ finger_letter_medias : "has media"
+	medias ||--o{ finger_letter_medias : "used by letters"
+	
+	medias ||--o{ sign_practice_contributions : "submitted through"
+	sign_words ||--o{ sign_practice_contributions : "demonstrated in"
+	sign_lessons ||--o{ sign_practice_contributions : "referenced by"
+
+	medias ||--o{ finger_practice_contributions : "submitted through"
+	finger_letters ||--o{ finger_practice_contributions : "demonstrated in"
+	finger_lessons ||--o{ finger_practice_contributions : "referenced by"
+
+	medias ||--o{ sign_practice_sessions : "recorded as"
+	medias ||--o{ finger_practice_sessions : "recorded as"
+	
+	finger_lessons ||--o{ finger_practice_sessions : "generates"
+	finger_practice_sessions ||--o{ finger_practice_session_letters : "contains"
+	finger_letters ||--o{ finger_practice_session_letters : "practiced in"
+	medias ||--o{ finger_practice_session_letters : "recorded for letter"
