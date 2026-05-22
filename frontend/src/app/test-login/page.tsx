@@ -100,7 +100,7 @@ export default function TestLoginPage() {
       script.src = "https://telegram.org/js/telegram-widget.js?22";
       script.setAttribute("data-telegram-login", "KSL_Login_Bot");
       script.setAttribute("data-size", "large");
-      script.setAttribute("data-auth-url", `${API_BASE_URL}/api/auth/login/telegram/auth`);
+      script.setAttribute("data-auth-url", `${API_BASE_URL}/api/auth/login/telegram`);
       script.setAttribute("data-request-access", "write");
       script.onload = () => {
         setTelegramReady(true);
