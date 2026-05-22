@@ -3,6 +3,8 @@ services:
     image: postgres:17-alpine
     container_name: khmer_sign_postgres
     environment:
+      TZ: Asia/Phnom_Penh
+      PGTZ: Asia/Phnom_Penh
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: khmer_sign_db
@@ -10,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    command: ["postgres", "-c", "timezone=Asia/Phnom_Penh"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d khmer_sign_db"]
       interval: 10s
@@ -18,6 +21,20 @@ services:
     networks:
       - khmer_network
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: khmer_sign_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      postgres:
+        condition: service_healthy # Wait for postgres to pass healthcheck before starting pgadmin
+    networks:
+      - khmer_network
+  
 volumes:
   postgres_data:
 

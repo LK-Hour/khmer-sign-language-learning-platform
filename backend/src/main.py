@@ -7,11 +7,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from .routes.oauth import router as oauth_router
+from .routes.users import router as users_router
 
 app = FastAPI(title="Khmer Sign Language Platform")
 
-# Include OAuth routes
+# Include routes
 app.include_router(oauth_router)
+app.include_router(users_router)
 
 # Configure CORS
 ALLOWED_ORIGINS = [
