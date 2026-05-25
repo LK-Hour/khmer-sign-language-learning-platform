@@ -36,6 +36,33 @@ Use wipe when you want to start with a clean database and replace the current ro
 
 If you do not use wipe, the script tries to keep existing rows and only update matching ones.
 
+## Finger spelling curriculum
+
+The finger-spelling course tree (units → chapters → lessons → letters) is seeded separately:
+
+```bash
+cd backend
+alembic upgrade head   # ensure migrations through 003 (finger_letters uses letter_en / letter_kh)
+python seed_data/seed_curriculum.py           # upsert curriculum (safe to re-run)
+python scripts/verify_curriculum_seed.py      # check row counts vs expected 127-lesson curriculum
+python seed_data/seed_curriculum.py --wipe    # truncate curriculum tables then re-insert (drops related progress!)
+```
+
+Older databases stamped at Alembic `002` sometimes still had a legacy `letter_code` / `letter_display` layout on `finger_letters`. Migration `003_align_finger_letters_schema` normalizes that table so it matches the ORM and this seed script.
+
+## Users and OAuth (demo accounts)
+
+Demo users live in `seed_data.json` (6 users: 2 email/password students, 1 admin, 3 OAuth-linked accounts).
+
+```bash
+cd backend
+alembic upgrade head   # through 004 (user/auth tables match ORM)
+python seed_data/seed_database.py --output seed_data/seed_data.json
+python scripts/verify_users_seed.py
+```
+
+Migration `004_recreate_user_auth_tables` replaces legacy `users` columns (`first_name`, `hashed_password`, etc.) when those tables are still on the old layout. It is safe when user tables are empty.
+
 ## Current workflow
 ```bash
 # export the current database into a JSON fixture
