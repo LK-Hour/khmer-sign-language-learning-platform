@@ -13,7 +13,24 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.db.session import Base
-from src.models import User, UserOAuthProvider, UserSession  # noqa: F401
+from src.models import (  # noqa: F401
+    User,
+    UserOAuthProvider,
+    UserSession,
+    Media,
+    FingerUnit,
+    FingerChapter,
+    FingerLesson,
+    FingerLetter,
+    FingerLessonLetter,
+    FingerLetterMedia,
+    FingerExercise,
+    FingerExerciseOption,
+    FingerUserLessonProgress,
+    FingerUserExerciseResult,
+    FingerPracticeSession,
+    FingerPracticeSessionLetter,
+)
 
 config = context.config
 
