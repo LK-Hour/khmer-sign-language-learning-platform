@@ -148,6 +148,29 @@ These endpoints power the "Practice" tab in your bottom navigation bar, as well 
 
 # **Lorn Thornpunleu**
 
+## Finger Spelling Focus Plan
+
+This section is the working plan for the finger-spelling track only. The goal is to finish the full stack in 3 weeks in this order: database -> backend -> API testing -> frontend.
+
+### Ownership Split
+
+| Area | Kimhour | Puleu |
+| ----- | ----- | ----- |
+| Database design | Co-own the schema, migration, and seed data for finger spelling | Co-own the schema, migration, and seed data for finger spelling |
+| Backend implementation | Co-build the models, services, and API logic | Co-build the models, services, and API logic |
+| API testing | Co-own Postman/API verification and fix request/response issues | Co-own Postman/API verification and fix request/response issues |
+| Frontend implementation | Co-build the integration and UI wiring for the finger-spelling screens | Co-build the integration and UI wiring for the finger-spelling screens |
+| Final review | Review when needed and sign off on the final result | Work with Kimhour on any fixes before sign-off |
+
+### Done Criteria for Option 1
+
+* Database is complete and approved.
+* Backend endpoints are complete and tested.
+* API responses match frontend needs.
+* Frontend shows finger-spelling content correctly.
+* No layer starts before the previous layer is fully done.
+
+
 ## 1\. MVP (Minimum Viable Product) \- Core Features
 
 **Learning Platform (Curriculum Hierarchy)**

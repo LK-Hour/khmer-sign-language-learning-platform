@@ -4,7 +4,7 @@ This is the backend service for the Khmer Sign Language Platform, built with [Fa
 
 ## Prerequisites
 - Python 3.10 or higher
-- A supported database (e.g., PostgreSQL, MySQL, or SQLite)
+- PostgreSQL running locally or via Docker Compose
 
 ## Setup Instructions
 
@@ -39,6 +39,11 @@ Create a `.env` file in the `backend` directory. You will need to define your da
 DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 ```
 *(Check the source code in `test_db_connection.py` or `.env` examples if available for the exact driver).*
+
+For this repository, the usual local database URL is:
+```env
+DATABASE_URL=postgresql://admin:admin@localhost:5432/khmer_sign_db
+```
 
 > **Note on OAuth Setup:** For detailed instructions on how to set up and retrieve the required credentials for Google, Facebook, and Telegram authentication, please refer to the [`REAL_OAUTH_SETUP.md`](./REAL_OAUTH_SETUP.md) guide.
 
@@ -79,3 +84,26 @@ FastAPI automatically generates interactive API documentation. While the server 
 - `src/db/`: Database connection and session management.
 - `src/utils/`: Utility functions (JWT generation, password hashing, etc.).
 - `postman/`: Postman collections for testing the API.
+
+## Database Schema and Seed Workflow
+
+Use Alembic when the schema changes:
+```bash
+cd backend
+source venv/bin/activate
+alembic upgrade head
+```
+
+Use the seed utility when you need repeatable data import/export:
+```bash
+python seed_data/seed_database.py --export --output seed_data/seed_data.json
+python seed_data/seed_database.py --output seed_data/seed_data.json
+python seed_data/seed_database.py --output seed_data/seed_data.json --wipe
+```
+
+If you pull updates on another machine, the order should be:
+1. start PostgreSQL
+2. pull the latest code
+3. run `alembic upgrade head`
+4. import seed data only if you need shared reference/demo rows
+5. start the backend

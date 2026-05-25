@@ -68,40 +68,11 @@ erDiagram
 		TIMESTAMPTZ updated_at ""
 	}
 
-	finger_user_lesson_progress {
-		UUID id PK ""
-		UUID user_id FK "UK(user_id, finger_lesson_id)"
-		BIGINT finger_lesson_id FK ""
-		BOOLEAN is_completed ""
-		BOOLEAN is_locked ""
-		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
-		INTEGER attempts "CHECK (>= 0)"
-		INTEGER total_time_spent "seconds"
-		TIMESTAMPTZ started_at ""
-		TIMESTAMPTZ completed_at ""
-		TIMESTAMPTZ last_accessed_at ""
-		TIMESTAMPTZ created_at ""
-		TIMESTAMPTZ updated_at ""
-	}
-
 	sign_user_exercise_results {
 		UUID id PK ""
 		UUID user_id FK ""
 		BIGINT sign_exercise_id FK ""
 		UUID progress_id FK "-> sign_user_lesson_progress"
-		BIGINT selected_option_id FK "nullable — for multiple choice"
-		TEXT selected_answer "nullable — for free_form"
-		BOOLEAN is_correct ""
-		INTEGER time_taken "seconds, CHECK (>= 0)"
-		INTEGER attempt_number "CHECK (>= 0)"
-		TIMESTAMPTZ created_at ""
-	}
-
-	finger_user_exercise_results {
-		UUID id PK ""
-		UUID user_id FK ""
-		BIGINT finger_exercise_id FK ""
-		UUID progress_id FK "-> finger_user_lesson_progress"
 		BIGINT selected_option_id FK "nullable — for multiple choice"
 		TEXT selected_answer "nullable — for free_form"
 		BOOLEAN is_correct ""
@@ -379,6 +350,36 @@ erDiagram
 		BIGINT media_id FK "nullable"
 		TIMESTAMPTZ created_at ""
 	}
+
+	finger_user_lesson_progress {
+		UUID id PK ""
+		UUID user_id FK "UK(user_id, finger_lesson_id)"
+		BIGINT finger_lesson_id FK ""
+		BOOLEAN is_completed ""
+		BOOLEAN is_locked ""
+		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
+		INTEGER attempts "CHECK (>= 0)"
+		INTEGER total_time_spent "seconds"
+		TIMESTAMPTZ started_at ""
+		TIMESTAMPTZ completed_at ""
+		TIMESTAMPTZ last_accessed_at ""
+		TIMESTAMPTZ created_at ""
+		TIMESTAMPTZ updated_at ""
+	}
+	
+	finger_user_exercise_results {
+		UUID id PK ""
+		UUID user_id FK ""
+		BIGINT finger_exercise_id FK ""
+		UUID progress_id FK "-> finger_user_lesson_progress"
+		BIGINT selected_option_id FK "nullable — for multiple choice"
+		TEXT selected_answer "nullable — for free_form"
+		BOOLEAN is_correct ""
+		INTEGER time_taken "seconds, CHECK (>= 0)"
+		INTEGER attempt_number "CHECK (>= 0)"
+		TIMESTAMPTZ created_at ""
+	}
+
 
 	users ||--o{ user_oauth_providers : "authenticates via"
 	users ||--o{ user_sessions : "has"

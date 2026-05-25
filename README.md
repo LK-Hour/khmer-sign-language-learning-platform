@@ -56,7 +56,7 @@ A comprehensive web platform for learning Khmer sign language with AI-powered re
 ## 💻 System Requirements
 
 ### Required Software
-- **Docker & Docker Compose** - For PostgreSQL
+- **Docker & Docker Compose** - For PostgreSQL and pgAdmin only
 - **Node.js** - 18+ LTS
 - **Python** - 3.10+
 - **Git**
@@ -112,7 +112,7 @@ khmer-sign-language-platform/
 │   └── test_db_connection.py  # Database connection tester
 │
 │
-├── docker-compose.yml          # Docker Compose configuration
+├── docker-compose.yml          # Docker Compose configuration for PostgreSQL and pgAdmin
 ├── start.sh                    # Automated startup script
 └── README.md                   # This file
 ```
@@ -173,6 +173,20 @@ python test_db_connection.py
 cd ..
 ```
 
+### Step 5: Apply Database Migrations
+When you pull backend changes that include schema updates, run:
+```bash
+cd backend
+source venv/bin/activate
+alembic upgrade head
+```
+
+If you need to export or import shared data, use the seed utility:
+```bash
+python seed_data/seed_database.py --export --output seed_data/seed_data.json
+python seed_data/seed_database.py --output seed_data/seed_data.json --wipe
+```
+
 **Database Credentials:**
 ```
 Username: admin
@@ -220,6 +234,7 @@ bash start.sh
 - **Port:** 5432
 - **Credentials:** See Environment Variables
 - **Data Persistence:** Docker volume `postgres_data`
+- **Purpose:** local development database only
 
 ### Database Commands
 
@@ -251,6 +266,22 @@ SECRET_KEY=your_super_secret_random_string_change_this_in_production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ENVIRONMENT=development
+```
+
+### Local Database Workflow
+Use Alembic for schema changes and the seed utility for repeatable data:
+```bash
+cd backend
+source venv/bin/activate
+
+# sync the schema after pulling new migrations
+alembic upgrade head
+
+# export the current database snapshot
+python seed_data/seed_database.py --export --output seed_data/seed_data.json
+
+# import the same snapshot on another machine
+python seed_data/seed_database.py --output seed_data/seed_data.json
 ```
 
 ### Frontend `.env.local`
