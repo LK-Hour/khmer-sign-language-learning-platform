@@ -9,6 +9,10 @@ Run from the backend directory:
 Structure rules (1 lesson = 1 letter, 5 lessons per chapter):
   - Remainder <  4  → merge into last chapter
   - Remainder >= 4  → create a new smaller chapter
+
+Media linking:
+- This script now discovers and links images to letters automatically.
+- Images are loaded from: data_set/Fingerspelling data for development/
 """
 
 from __future__ import annotations
@@ -16,6 +20,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from collections import defaultdict
 
 
 def _configure_stdio_utf8() -> None:
@@ -212,43 +217,43 @@ INDEPENDENT_VOWELS = [
 UNITS_META = [
     {
         "id": 1,
-        "name_en": "Numbers",
-        "name_kh": "លេខ",
-        "description_en": "Learn Khmer sign language for numbers 0–9",
-        "description_kh": "រៀនភាសាសញ្ញាខ្មែរសម្រាប់លេខ ០–៩",
-        "order_index": 1,
-        "letters": NUMBERS,
-        "chapter_name_en": "Numbers",
-        "chapter_name_kh": "លេខ",
-    },
-    {
-        "id": 2,
         "name_en": "Dependent Vowels",
         "name_kh": "ស្រៈ",
         "description_en": "Learn the 24 Khmer dependent vowel signs",
         "description_kh": "រៀនស្រៈខ្មែរ ២៤",
-        "order_index": 2,
+        "order_index": 1,
         "letters": DEPENDENT_VOWELS,
         "chapter_name_en": "Dependent Vowels",
         "chapter_name_kh": "ស្រៈ",
     },
     {
-        "id": 3,
+        "id": 2,
         "name_en": "Main Consonants",
         "name_kh": "ព្យញ្ជនៈ",
         "description_en": "Learn the 33 main Khmer consonants",
         "description_kh": "រៀនព្យញ្ជនៈខ្មែរ ៣៣",
-        "order_index": 3,
+        "order_index": 2,
         "letters": MAIN_CONSONANTS,
         "chapter_name_en": "Main Consonants",
         "chapter_name_kh": "ព្យញ្ជនៈ",
+    },
+    {
+        "id": 3,
+        "name_en": "Numbers",
+        "name_kh": "លេខ",
+        "description_en": "Learn Khmer sign language for numbers 0–9",
+        "description_kh": "រៀនភាសាសញ្ញាខ្មែរសម្រាប់លេខ ០–៩",
+        "order_index": 3,
+        "letters": NUMBERS,
+        "chapter_name_en": "Numbers",
+        "chapter_name_kh": "លេខ",
     },
     {
         "id": 4,
         "name_en": "Sub Consonants",
         "name_kh": "ជើង",
         "description_en": "Learn the 32 Khmer sub-consonant​forms",
-        "description_kh": "រៀនព្យញ្ជនៈខ្មែរជើង ៣២",
+        "description_kh": "រៀនព្យញ្ជនៈខ្មែរ ជើងប្រកបទាំង ៣២",
         "order_index": 4,
         "letters": SUB_CONSONANTS,
         "chapter_name_en": "Sub Consonants",
@@ -270,7 +275,7 @@ UNITS_META = [
         "name_en": "Independent Vowels",
         "name_kh": "ស្រៈពេញតួ",
         "description_en": "Learn the 14 Khmer independent vowels",
-        "description_kh": "រៀនស្រៈពេញតួខ្មែរ ១៤",
+        "description_kh": "រៀនស្រៈពេញតួខ្មែរទាំង ១៤",
         "order_index": 6,
         "letters": INDEPENDENT_VOWELS,
         "chapter_name_en": "Independent Vowels",
@@ -295,25 +300,202 @@ CHAPTER_SIZE = 5
 def group_into_chapters(letters: list, size: int = CHAPTER_SIZE) -> list[list]:
     """
     Split a letter list into chapters using the curriculum rule:
-      remainder < 4  → merge into the last chapter
-      remainder >= 4 → start a new chapter
+      - use 5 lessons per chapter by default
+      - if the final remainder is small, try to rebalance the last two chapters
+      - if the combined tail would be 7 or 8 items, split it into two balanced chapters
+
+    Examples:
+      - 8 tail items  -> 4 + 4
+      - 7 tail items  -> 4 + 3
+      - 6 tail items  -> keep as one 6-item chapter
     """
     total = len(letters)
     remainder = total % size
     full_chapters = total // size
 
+    groups = [letters[i * size : (i + 1) * size] for i in range(full_chapters)]
+
     if remainder == 0:
-        return [letters[i * size : (i + 1) * size] for i in range(full_chapters)]
-    elif remainder < 4:
-        # Merge remainder into the last full chapter
-        groups = [letters[i * size : (i + 1) * size] for i in range(full_chapters - 1)]
-        groups.append(letters[(full_chapters - 1) * size :])
         return groups
-    else:
-        # New (smaller) chapter for the remainder
-        groups = [letters[i * size : (i + 1) * size] for i in range(full_chapters)]
-        groups.append(letters[full_chapters * size :])
+
+    tail = letters[full_chapters * size :]
+
+    if remainder < 4 and groups:
+        combined_tail = groups.pop() + tail
+
+        if len(combined_tail) > 6:
+            split_point = (len(combined_tail) + 1) // 2
+            groups.append(combined_tail[:split_point])
+            groups.append(combined_tail[split_point:])
+        else:
+            groups.append(combined_tail)
         return groups
+
+    groups.append(tail)
+    return groups
+
+
+# ── Media Discovery & Mapping ────────────────────────────────────────────────
+
+# Mapping of folder names in data_set to Khmer letters
+# Used for discovering and linking images to letters
+
+# Consonants can be found directly by their letter (ក, ខ, etc.)
+# These are already defined in MAIN_CONSONANTS and SUB_CONSONANTS
+
+# Independent vowels folder -> letter mapping (special cases for ឣ and ឤ)
+INDEPENDENT_VOWELS_FOLDER_MAP = {
+    "អ": "ឣ",      # dataset folder: "អ" -> letter: ឣ
+    "អា": "ឤ",     # dataset folder: "អា" -> letter: ឤ
+    "ឥ": "ឥ",
+    "ឦ": "ឦ",
+    "ឧ": "ឧ",
+    "ឩ": "ឩ",
+    "ឫ": "ឫ",
+    "ឬ": "ឬ",
+    "ឭ": "ឭ",
+    "ឮ": "ឮ",
+    "ឯ": "ឯ",
+    "ឰ": "ឰ",
+    "ឱ": "ឱ",
+    "ឳ": "ឳ",
+}
+
+# Numbers folder -> letter mapping
+NUMBERS_FOLDER_MAP = {
+    "០": "០",
+    "១": "១",
+    "២": "២",
+    "៣": "៣",
+    "៤": "៤",
+    "៥": "៥",
+    "៦": "៦",
+    "៧": "៧",
+    "៨": "៨",
+    "៩": "៩",
+}
+
+# Data directory paths
+DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "Fingerspelling data for development"
+
+
+def _discover_media_files() -> dict[str, list[Path]]:
+    """
+    Scan the data_set directory and discover all media (image) files.
+    
+    Returns:
+        dict[str, list[Path]]: Maps letter_kh -> list of image file paths
+        
+    Directory structure:
+        Consonants/{letter}/Main/*.png
+        Consonants/{letter}/Sub/*.png
+        Independent vowels/{folder}/*.png
+        Number/{digit}/*.png
+    """
+    media_by_letter: dict[str, list[Path]] = defaultdict(list)
+    
+    if not DATASET_DIR.exists():
+        print(f"⚠️  Data directory not found: {DATASET_DIR}")
+        return media_by_letter
+    
+    # Scan Consonants (Main)
+    consonants_dir = DATASET_DIR / "Consonants"
+    if consonants_dir.exists():
+        for consonant_folder in sorted(consonants_dir.iterdir()):
+            if not consonant_folder.is_dir():
+                continue
+            letter_kh = consonant_folder.name
+            
+            # Main consonants
+            main_dir = consonant_folder / "Main"
+            if main_dir.exists():
+                images = sorted(main_dir.glob("*.png"))
+                media_by_letter[letter_kh].extend(images)
+            
+            # Sub consonants (letter with ្ prefix)
+            sub_dir = consonant_folder / "Sub"
+            if sub_dir.exists():
+                images = sorted(sub_dir.glob("*.png"))
+                sub_letter = "្" + letter_kh
+                media_by_letter[sub_letter].extend(images)
+    
+    # Scan Independent Vowels
+    vowels_dir = DATASET_DIR / "Independent vowels"
+    if vowels_dir.exists():
+        for vowel_folder in sorted(vowels_dir.iterdir()):
+            if not vowel_folder.is_dir():
+                continue
+            folder_name = vowel_folder.name
+            letter_kh = INDEPENDENT_VOWELS_FOLDER_MAP.get(folder_name)
+            if letter_kh:
+                images = sorted(vowel_folder.glob("*.png"))
+                media_by_letter[letter_kh].extend(images)
+    
+    # Scan Numbers
+    numbers_dir = DATASET_DIR / "Number"
+    if numbers_dir.exists():
+        for number_folder in sorted(numbers_dir.iterdir()):
+            if not number_folder.is_dir():
+                continue
+            folder_name = number_folder.name
+            letter_kh = NUMBERS_FOLDER_MAP.get(folder_name)
+            if letter_kh:
+                images = sorted(number_folder.glob("*.png"))
+                media_by_letter[letter_kh].extend(images)
+    
+    return media_by_letter
+
+
+def _build_media_records(media_by_letter: dict[str, list[Path]], letter_id_map: dict[str, int]) -> tuple[list[dict], list[dict]]:
+    """
+    Build Media and FingerLetterMedia records from discovered images.
+    
+    Args:
+        media_by_letter: dict mapping letter_kh -> list of image file paths
+        letter_id_map: dict mapping letter_kh -> letter_id (from _build_curriculum)
+        
+    Returns:
+        (all_medias, all_letter_medias): Lists of dicts for Media and FingerLetterMedia tables
+    """
+    all_medias: list[dict] = []
+    all_letter_medias: list[dict] = []
+    
+    media_id = 1
+    letter_media_id = 1
+    
+    for letter_kh in sorted(media_by_letter.keys()):
+        image_paths = media_by_letter[letter_kh]
+        letter_id = letter_id_map.get(letter_kh)
+        
+        if letter_id is None:
+            print(f"⚠️  Letter '{letter_kh}' not found in curriculum (skipping {len(image_paths)} images)")
+            continue
+        
+        for image_path in image_paths:
+            # Store relative path from project root for file_url
+            try:
+                relative_path = image_path.relative_to(Path(__file__).resolve().parents[2])
+                file_url = str(relative_path)
+            except ValueError:
+                # Fallback to absolute path
+                file_url = str(image_path)
+            
+            all_medias.append({
+                "id": media_id,
+                "media_type": "image",
+                "file_url": file_url,
+            })
+            
+            all_letter_medias.append({
+                "id": letter_media_id,
+                "letter_id": letter_id,
+                "media_id": media_id,
+            })
+            
+            media_id += 1
+            letter_media_id += 1
+    
+    return all_medias, all_letter_medias
 
 
 # ── Database helpers ──────────────────────────────────────────────────────────
@@ -332,17 +514,34 @@ def _upsert(db, table, rows: list[dict]) -> None:
     db.execute(stmt)
 
 
-def _wipe_curriculum(db) -> None:
-    """Truncate all curriculum tables (preserves user accounts and progress)."""
-    db.execute(
-        text(
-            "TRUNCATE TABLE "
-            "finger_lesson_letters, finger_lessons, finger_chapters, "
-            "finger_units, finger_letters "
-            "RESTART IDENTITY CASCADE"
+def _wipe_curriculum(db, wipe_media: bool = False) -> None:
+    """
+    Truncate curriculum tables (preserves user accounts and progress).
+    
+    Args:
+        db: Database session
+        wipe_media: If True, also wipe medias and finger_letter_medias tables
+    """
+    if wipe_media:
+        db.execute(
+            text(
+                "TRUNCATE TABLE "
+                "finger_letter_medias, finger_lesson_letters, finger_lessons, finger_chapters, "
+                "finger_units, finger_letters, medias "
+                "RESTART IDENTITY CASCADE"
+            )
         )
-    )
-    print("Wiped curriculum tables.")
+        print("Wiped curriculum tables and media.")
+    else:
+        db.execute(
+            text(
+                "TRUNCATE TABLE "
+                "finger_letter_medias, finger_lesson_letters, finger_lessons, finger_chapters, "
+                "finger_units, finger_letters "
+                "RESTART IDENTITY CASCADE"
+            )
+        )
+        print("Wiped curriculum tables (media preserved).")
 
 
 # ── Seed builder ──────────────────────────────────────────────────────────────
@@ -350,6 +549,8 @@ def _wipe_curriculum(db) -> None:
 def _build_curriculum() -> dict[str, list[dict]]:
     """
     Walk UNITS_META and produce flat row lists for every curriculum table.
+    Additionally discovers and links media files to letters.
+    
     Returns a dict keyed by table name.
     """
     tables_meta = Base.metadata.tables
@@ -359,6 +560,9 @@ def _build_curriculum() -> dict[str, list[dict]]:
     all_chapters: list[dict] = []
     all_lessons: list[dict] = []
     all_lesson_letters: list[dict] = []
+    
+    # Build letter_id_map for media linking
+    letter_id_map: dict[str, int] = {}
 
     letter_id = 1
     chapter_id = 1
@@ -411,6 +615,9 @@ def _build_curriculum() -> dict[str, list[dict]]:
                         "is_active": True,
                     }
                 )
+                
+                # Store letter_id for media linking
+                letter_id_map[letter_kh] = letter_id
 
                 all_lessons.append(
                     {
@@ -439,6 +646,13 @@ def _build_curriculum() -> dict[str, list[dict]]:
                 lesson_letter_id += 1
 
             chapter_id += 1
+    
+    # Discover and build media records
+    print("\n📁 Discovering media files...")
+    media_by_letter = _discover_media_files()
+    all_medias, all_letter_medias = _build_media_records(media_by_letter, letter_id_map)
+    
+    print(f"✓ Found {len(all_medias)} media files")
 
     return {
         "finger_letters": all_letters,
@@ -446,13 +660,16 @@ def _build_curriculum() -> dict[str, list[dict]]:
         "finger_chapters": all_chapters,
         "finger_lessons": all_lessons,
         "finger_lesson_letters": all_lesson_letters,
+        "medias": all_medias,
+        "finger_letter_medias": all_letter_medias,
     }
 
 
 def _print_summary(data: dict[str, list[dict]]) -> None:
     print("\nCurriculum summary:")
     for table_name, rows in data.items():
-        print(f"  {table_name}: {len(rows)} rows")
+        if rows:  # Only show tables with data
+            print(f"  {table_name}: {len(rows)} rows")
 
     print("\nChapter breakdown:")
     chapters = data["finger_chapters"]
@@ -471,9 +688,17 @@ def _print_summary(data: dict[str, list[dict]]) -> None:
             print(f"\n  Unit {current_unit_id}: {unit_map[current_unit_id]}")
         n = lesson_count.get(ch["id"], 0)
         print(f"    Chapter {ch['order_index']:>2}: {ch['name_en']:<30}  {n} lessons  ({ch['description_en']})")
+    
+    # Media summary
+    medias = data.get("medias", [])
+    letter_medias = data.get("finger_letter_medias", [])
+    if medias or letter_medias:
+        print(f"\nMedia summary:")
+        print(f"  Total media files: {len(medias)}")
+        print(f"  Total letter-media links: {len(letter_medias)}")
 
 
-def seed_curriculum(wipe: bool = False) -> None:
+def seed_curriculum(wipe: bool = False, wipe_media: bool = False) -> None:
     data = _build_curriculum()
     _print_summary(data)
 
@@ -481,22 +706,37 @@ def seed_curriculum(wipe: bool = False) -> None:
 
     with SessionLocal.begin() as db:
         if wipe:
-            _wipe_curriculum(db)
+            _wipe_curriculum(db, wipe_media=wipe_media)
 
-        # Upsert in foreign-key dependency order
+        # Upsert in foreign-key dependency order:
+        #   medias:                  no FK deps
+        #   finger_letters:          no FK deps
+        #   finger_units:            no FK deps
+        #   finger_chapters:         FK -> finger_units.id
+        #   finger_lessons:          FK -> finger_chapters.id
+        #   finger_lesson_letters:   FK -> finger_lessons.id, finger_letters.id
+        #   finger_letter_medias:    FK -> finger_letters.id, medias.id
+        
+        _upsert(db, tables["medias"], data["medias"])
         _upsert(db, tables["finger_letters"], data["finger_letters"])
         _upsert(db, tables["finger_units"], data["finger_units"])
         _upsert(db, tables["finger_chapters"], data["finger_chapters"])
         _upsert(db, tables["finger_lessons"], data["finger_lessons"])
         _upsert(db, tables["finger_lesson_letters"], data["finger_lesson_letters"])
+        _upsert(db, tables["finger_letter_medias"], data["finger_letter_medias"])
 
     total_letters = len(data["finger_letters"])
     total_lessons = len(data["finger_lessons"])
+    total_medias = len(data["medias"])
+    total_letter_medias = len(data["finger_letter_medias"])
+    
     print(
-        f"\nSeeded {len(data['finger_units'])} units, "
+        f"\n✓ Seeded {len(data['finger_units'])} units, "
         f"{len(data['finger_chapters'])} chapters, "
         f"{total_lessons} lessons, "
-        f"{total_letters} letters successfully."
+        f"{total_letters} letters, "
+        f"{total_medias} media files, "
+        f"{total_letter_medias} letter-media links successfully."
     )
 
 
@@ -512,6 +752,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help=(
             "Truncate curriculum tables before seeding. "
             "WARNING: this also removes all user progress data (CASCADE)."
+        ),
+    )
+    parser.add_argument(
+        "--wipe-media",
+        action="store_true",
+        help=(
+            "Also wipe media tables when using --wipe. "
+            "By default, --wipe only clears curriculum tables, preserving media."
         ),
     )
     parser.add_argument(
@@ -532,7 +780,7 @@ def main() -> None:
         print("\nDry run complete — no changes written.")
         return
 
-    seed_curriculum(wipe=args.wipe)
+    seed_curriculum(wipe=args.wipe, wipe_media=args.wipe_media)
 
 
 if __name__ == "__main__":

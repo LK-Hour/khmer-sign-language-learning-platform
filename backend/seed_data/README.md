@@ -40,13 +40,22 @@ If you do not use wipe, the script tries to keep existing rows and only update m
 
 The finger-spelling course tree (units → chapters → lessons → letters) is seeded separately:
 
+- The script now also discovers and links image media from `data_set/Fingerspelling data for development`.
+- By default it scans PNG files and inserts rows into `medias` and `finger_letter_medias`.
+
 ```bash
 cd backend
 alembic upgrade head   # ensure migrations through 003 (finger_letters uses letter_en / letter_kh)
-python seed_data/seed_curriculum.py           # upsert curriculum (safe to re-run)
-python scripts/verify_curriculum_seed.py      # check row counts vs expected 127-lesson curriculum
-python seed_data/seed_curriculum.py --wipe    # truncate curriculum tables then re-insert (drops related progress!)
+python seed_data/seed_curriculum.py                    # upsert curriculum + media links (safe to re-run)
+python seed_data/seed_curriculum.py --dry-run          # preview summary only, no DB writes
+python seed_data/seed_curriculum.py --wipe             # wipe curriculum tables, then re-seed (keeps medias table)
+python seed_data/seed_curriculum.py --wipe --wipe-media # wipe curriculum + medias, then re-seed everything
 ```
+
+Behavior notes:
+- `--wipe` clears curriculum tables and related progress via CASCADE.
+- `--wipe-media` only takes effect when used together with `--wipe`.
+- Re-running without `--wipe` performs upsert behavior.
 
 Older databases stamped at Alembic `002` sometimes still had a legacy `letter_code` / `letter_display` layout on `finger_letters`. Migration `003_align_finger_letters_schema` normalizes that table so it matches the ORM and this seed script.
 

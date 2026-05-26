@@ -281,24 +281,6 @@ erDiagram
 		TIMESTAMPTZ created_at ""
 	}
 
-	finger_practice_contributions {
-		UUID id PK ""
-		UUID user_id FK ""
-		BIGINT letter_id FK "The specific letter demonstrated"
-		BIGINT finger_lesson_id FK "nullable — lesson context"
-		VARCHAR filename ""
-		BIGINT media_id FK ""
-		VARCHAR status "ENUM: pending|approved|rejected"
-		TEXT review_notes ""
-		UUID reviewed_by FK "nullable"
-		TIMESTAMPTZ reviewed_at "nullable"
-		TEXT rejection_reason "nullable"
-		VARCHAR consent_version ""
-		BOOLEAN consent_given ""
-		TIMESTAMPTZ created_at ""
-		TIMESTAMPTZ updated_at ""
-	}
-
 	finger_exercises {
 		BIGINT id PK ""
 		BIGINT lesson_id FK ""
@@ -388,7 +370,6 @@ erDiagram
 	users ||--o{ sign_user_exercise_results : "records sign results"
 	users ||--o{ finger_user_exercise_results : "records finger results"
 	users ||--o{ sign_practice_contributions : "submits"
-	users ||--o{ finger_practice_contributions : "submits"
 	users ||--o{ sign_practice_sessions : "practices"
 	users ||--o{ finger_practice_sessions : "practices"
 	
@@ -441,10 +422,6 @@ erDiagram
 	medias ||--o{ sign_practice_contributions : "submitted through"
 	sign_words ||--o{ sign_practice_contributions : "demonstrated in"
 	sign_lessons ||--o{ sign_practice_contributions : "referenced by"
-
-	medias ||--o{ finger_practice_contributions : "submitted through"
-	finger_letters ||--o{ finger_practice_contributions : "demonstrated in"
-	finger_lessons ||--o{ finger_practice_contributions : "referenced by"
 
 	medias ||--o{ sign_practice_sessions : "recorded as"
 	medias ||--o{ finger_practice_sessions : "recorded as"
