@@ -3,18 +3,47 @@
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useSearchParams } from "next/navigation";
+import { useTranslation } from "@/i18n/useTranslation";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { Locale } from "@/i18n/config";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-export default function TestLoginPage() {
+interface TestLoginPageProps {
+  params: Promise<{ locale: Locale }>;
+}
+
+type TestLoginTranslations = {
+  title: string;
+  subtitle: string;
+  currentLocation: string;
+  language: string;
+  khmerLabel?: string;
+  englishLabel?: string;
+  frontendOrigin: string;
+  backendApi: string;
+  loginWithFacebook: string;
+  logsHeader: string;
+  noLogs: string;
+};
+
+export default function TestLoginPage({ params }: TestLoginPageProps) {
+  const { t, locale } = useTranslation();
   const [logs, setLogs] = useState<string[]>([]);
   const [googleReady, setGoogleReady] = useState(false);
   const [facebookReady, setFacebookReady] = useState(false);
   const [telegramReady, setTelegramReady] = useState(false);
   const [frontendOrigin, setFrontendOrigin] = useState("loading...");
+  const [resolvedParams, setResolvedParams] = useState<{ locale: Locale } | null>(null);
+  const [translations, setTranslations] = useState<TestLoginTranslations | null>(null);
   const telegramContainerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
+
+  // Resolve async params
+  useEffect(() => {
+    params.then(setResolvedParams);
+  }, [params]);
 
   const addLog = (msg: string, data?: any) => {
     setLogs((prev) => [
@@ -89,8 +118,10 @@ export default function TestLoginPage() {
     setFrontendOrigin(window.location.origin);
     addLog("Frontend origin:", window.location.origin);
     addLog("Backend API:", API_BASE_URL);
+    addLog("Current locale:", locale);
+    addLog("Available locales:", ["kh", "en"]);
     addLog("Telegram widget using data-auth-url server-side flow");
-  }, []);
+  }, [locale]);
 
   // Inject Telegram Widget Script Dynamically
   useEffect(() => {
@@ -113,12 +144,41 @@ export default function TestLoginPage() {
 
   return (
     <div className="p-8 font-sans max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-black">
-        OAuth Real Credentials Test (Server-side Telegram)
-      </h1>
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-black">
+            {translations?.title || 'Loading...'}
+          </h1>
+          <p className="text-gray-600 mt-2">
+            {translations?.subtitle || 'Loading...'}
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <LocaleSwitcher />
+        </div>
+      </div>
 
-      <p className="mb-6 text-gray-500">Frontend origin: {frontendOrigin}</p>
-      <p className="mb-6 text-gray-500">Backend API: {API_BASE_URL}</p>
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-blue-800">
+          <strong>{translations?.currentLocation}</strong> 
+          <code className="ml-2 bg-blue-100 px-2 py-1 rounded">
+            /{locale}/test-login
+          </code>
+        </p>
+        <p className="text-sm text-blue-800 mt-2">
+          <strong>{translations?.language}</strong> 
+          <span className="ml-2">
+            {locale === 'kh' ? translations?.khmerLabel : translations?.englishLabel}
+          </span>
+        </p>
+      </div>
+
+      <p className="mb-6 text-gray-500">
+        {translations?.frontendOrigin} {frontendOrigin}
+      </p>
+      <p className="mb-6 text-gray-500">
+        {translations?.backendApi} {API_BASE_URL}
+      </p>
 
       <div className="mb-6 grid gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 sm:grid-cols-3">
         <div>Google SDK: {googleReady ? "✅ ready" : "⏳ not ready"}</div>
@@ -186,7 +246,7 @@ export default function TestLoginPage() {
             onClick={handleFacebookLogin}
             className="bg-[#1877F2] text-white px-5 py-2 rounded font-semibold h-[40px] hover:bg-[#166FE5] transition-colors"
           >
-            Login with Facebook
+            {translations?.loginWithFacebook || 'Login with Facebook'}
           </button>
         </div>
 
@@ -196,7 +256,7 @@ export default function TestLoginPage() {
 
       <div className="mt-8">
         <h2 className="text-xl font-bold mb-2 text-black">
-          Logs (Watch the magic happen):
+          {translations?.logsHeader || 'Logs:'}
         </h2>
         <div className="bg-slate-900 p-4 rounded min-h-[300px] overflow-auto whitespace-pre-wrap text-sm font-mono text-green-400">
           {logs.map((log, i) => (
@@ -206,7 +266,7 @@ export default function TestLoginPage() {
           ))}
           {logs.length === 0 && (
             <div className="text-slate-500">
-              No logs yet. Try logging in above.
+              {translations?.noLogs || 'No logs yet. Try logging in above.'}
             </div>
           )}
         </div>

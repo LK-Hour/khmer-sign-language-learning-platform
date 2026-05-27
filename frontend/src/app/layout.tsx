@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ThemeRegistry from "@/theme/ThemeRegistry";
+import { LocaleProvider } from "@/i18n/LocaleProvider";
+import { Locale } from "@/i18n/config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,18 +20,30 @@ export const metadata: Metadata = {
   description: "Learn Khmer sign language and finger spelling",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
+interface RootLayoutProps {
   children: React.ReactNode;
-}>) {
+  params: Promise<{ locale?: Locale }>;
+}
+
+export async function generateStaticParams() {
+  return [{ locale: "kh" }, { locale: "en" }];
+}
+
+export default async function RootLayout({
+  children,
+  params,
+}: RootLayoutProps) {
+  const { locale = "kh" } = await params;
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <LocaleProvider initialLocale={locale}>
+          <ThemeRegistry>{children}</ThemeRegistry>
+        </LocaleProvider>
       </body>
     </html>
   );
