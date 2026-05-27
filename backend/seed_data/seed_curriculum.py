@@ -13,6 +13,7 @@ Structure rules (1 lesson = 1 letter, 5 lessons per chapter):
 Media linking:
 - This script now discovers and links images to letters automatically.
 - Images are loaded from: data_set/Fingerspelling data for development/
+  (Consonants, Vowels, Diacritics, Independent vowels, Number)
 """
 
 from __future__ import annotations
@@ -55,6 +56,7 @@ for _mod in pkgutil.iter_modules(src.models.__path__, src.models.__name__ + ".")
 
 # ── Letter lists ─────────────────────────────────────────────────────────────
 # Each entry: (letter_kh, letter_en)
+# letter_en uses GD romanization per https://en.wikipedia.org/wiki/Khmer_script
 
 NUMBERS = [
     ("០", "0"),
@@ -69,146 +71,145 @@ NUMBERS = [
     ("៩", "9"),
 ]
 
-# 24 dependent vowels in standard Khmer teaching order:
+# 23 dependent vowels in standard Khmer teaching order:
 #   18 base vowels first, then 6 compound forms at the end.
-#   (ឹ and ៈ are curriculum-defined; hand-sign images not yet collected.)
+#   GD values use the a-series column from Wikipedia dependent-vowel table.
 DEPENDENT_VOWELS = [
-    # ── 18 base vowels ───────────────────────────────────────────
-    ("ា",  "aa"),
-    ("ិ",  "ik"),
+    ("ា",  "a"),
+    ("ិ",  "e"),
     ("ី",  "ei"),
-    ("ឹ",  "euk"),    # not yet in dataset
-    ("ឺ",  "ee"),
-    ("ុ",  "ouk (short)"),
-    ("ូ",  "oo"),
-    ("ួ",  "ua"),
-    ("ើ",  "er"),
-    ("ឿ",  "eur"),
-    ("ៀ",  "ear"),
-    ("េ",  "ay"),
+    ("ឹ",  "oe"),     
+    ("ឺ",  "eu"),
+    ("ុ",  "o"),
+    ("ូ",  "ou"),
+    ("ួ",  "uo"),
+    ("ើ",  "aeu"),
+    ("ឿ",  "oea"),
+    ("ៀ",  "ie"),
+    ("េ",  "e"),
     ("ែ",  "ae"),
     ("ៃ",  "ai"),
     ("ោ",  "ao"),
     ("ៅ",  "au"),
-    ("ំ",  "um"),
-    ("ះ",  "h (final)"),
-    # ── 6 compound vowels ────────────────────────────────────────
-    ("ាំ", "am"),
     ("ុំ", "om"),
-    ("ិះ",  "e (final)"),
+    ("ំ",  "am"),
+    ("ាំ", "am"),
+    ("ះ",  "ah"),
     ("ុះ", "oh"),
     ("េះ", "eh"),
     ("ោះ", "aoh"),
 ]
 
-# 33 main consonants in traditional Khmer alphabet order
+# 33 main consonants in traditional Khmer alphabet order (GD full names)
 MAIN_CONSONANTS = [
-    ("ក", "Ka"),
-    ("ខ", "Kha"),
-    ("គ", "Ko"),
-    ("ឃ", "Kho"),
-    ("ង", "Ngo"),
-    ("ច", "Cha"),
-    ("ឆ", "Chha"),
-    ("ជ", "Cho"),
-    ("ឈ", "Chho"),
-    ("ញ", "Nho"),
-    ("ដ", "Da"),
-    ("ឋ", "Tha"),
-    ("ឌ", "Do"),
-    ("ឍ", "Tho"),
-    ("ណ", "Na"),
-    ("ត", "Ta"),
-    ("ថ", "Tha"),
-    ("ទ", "To"),
-    ("ធ", "Tho"),
-    ("ន", "No"),
-    ("ប", "Ba"),
-    ("ផ", "Pha"),
-    ("ព", "Po"),
-    ("ភ", "Pho"),
-    ("ម", "Mo"),
-    ("យ", "Yo"),
-    ("រ", "Ro"),
-    ("ល", "Lo"),
-    ("វ", "Vo"),
-    ("ស", "So"),
-    ("ហ", "Ho"),
-    ("ឡ", "Lo (L)"),
-    ("អ", "Ah"),
+    ("ក", "ka"),
+    ("ខ", "kha"),
+    ("គ", "ko"),
+    ("ឃ", "kho"),
+    ("ង", "ngo"),
+    ("ច", "cha"),
+    ("ឆ", "chha"),
+    ("ជ", "cho"),
+    ("ឈ", "chho"),
+    ("ញ", "nho"),
+    ("ដ", "da"),
+    ("ឋ", "tha"),
+    ("ឌ", "do"),
+    ("ឍ", "tho"),
+    ("ណ", "na"),
+    ("ត", "ta"),
+    ("ថ", "tha"),
+    ("ទ", "to"),
+    ("ធ", "tho"),
+    ("ន", "no"),
+    ("ប", "ba"),
+    ("ផ", "pha"),
+    ("ព", "po"),
+    ("ភ", "pho"),
+    ("ម", "mo"),
+    ("យ", "yo"),
+    ("រ", "ro"),
+    ("ល", "lo"),
+    ("វ", "vo"),
+    ("ស", "sa"),
+    ("ហ", "ha"),
+    ("ឡ", "la"),
+    ("អ", "'a"),
 ]
 
-# 32 sub-consonants (coeng forms) — ឡ has no subscript form
+# 32 sub-consonants (coeng / cheung âksâr) — ឡ has no subscript form
 SUB_CONSONANTS = [
-    ("្ក", "Sub Ka"),
-    ("្ខ", "Sub Kha"),
-    ("្គ", "Sub Ko"),
-    ("្ឃ", "Sub Kho"),
-    ("្ង", "Sub Ngo"),
-    ("្ច", "Sub Cha"),
-    ("្ឆ", "Sub Chha"),
-    ("្ជ", "Sub Cho"),
-    ("្ឈ", "Sub Chho"),
-    ("្ញ", "Sub Nho"),
-    ("្ដ", "Sub Da"),
-    ("្ឋ", "Sub Tha"),
-    ("្ឌ", "Sub Do"),
-    ("្ឍ", "Sub Tho"),
-    ("្ណ", "Sub Na"),
-    ("្ត", "Sub Ta"),
-    ("្ថ", "Sub Tha"),
-    ("្ទ", "Sub To"),
-    ("្ធ", "Sub Tho"),
-    ("្ន", "Sub No"),
-    ("្ប", "Sub Ba"),
-    ("្ផ", "Sub Pha"),
-    ("្ព", "Sub Po"),
-    ("្ភ", "Sub Pho"),
-    ("្ម", "Sub Mo"),
-    ("្យ", "Sub Yo"),
-    ("្រ", "Sub Ro"),
-    ("្ល", "Sub Lo"),
-    ("្វ", "Sub Vo"),
-    ("្ស", "Sub So"),
-    ("្ហ", "Sub Ho"),
-    ("្អ", "Sub Ah"),
+    ("្ក", "sub ka"),
+    ("្ខ", "sub kha"),
+    ("្គ", "sub ko"),
+    ("្ឃ", "sub kho"),
+    ("្ង", "sub ngo"),
+    ("្ច", "sub cha"),
+    ("្ឆ", "sub chha"),
+    ("្ជ", "sub cho"),
+    ("្ឈ", "sub chho"),
+    ("្ញ", "sub nho"),
+    ("្ដ", "sub da"),
+    ("្ឋ", "sub tha"),
+    ("្ឌ", "sub do"),
+    ("្ឍ", "sub tho"),
+    ("្ណ", "sub na"),
+    ("្ត", "sub ta"),
+    ("្ថ", "sub tha"),
+    ("្ទ", "sub to"),
+    ("្ធ", "sub tho"),
+    ("្ន", "sub no"),
+    ("្ប", "sub ba"),
+    ("្ផ", "sub pha"),
+    ("្ព", "sub po"),
+    ("្ភ", "sub pho"),
+    ("្ម", "sub mo"),
+    ("្យ", "sub yo"),
+    ("្រ", "sub ro"),
+    ("្ល", "sub lo"),
+    ("្វ", "sub vo"),
+    ("្ស", "sub sa"),
+    ("្ហ", "sub ha"),
+    ("្អ", "sub 'a"),
 ]
 
-# 14 diacritics, punctuation, and special signs (វណ្ណយុត្តិ)
+# 15 diacritics, punctuation, and special signs (វណ្ណយុត្តិ)
+# Khmer names romanized per Wikipedia diacritics / punctuation tables
 DIACRITICS = [
-    ("៉", "Musekatos"),
-    ("៊", "Treisap"),
-    ("៌", "Kakabat"),
-    ("៍", "Toandakhiat"),
-    ("៎", "Ahsda"),
-    ("៏", "Samyok Sannya"),
-    ("័", "Viriam"),
-    ("។", "Khan (Period)"),
-    ("។ល។", "Ellipsis (Etc.)"),
-    ("៖", "Camnuc Pii Kuuh (Colon)"),
-    ("ៗ", "Lek Attanak"),
-    ("៚", "Koomuut"),
-    ("!", "Exclamation Mark"),
-    ("?", "Question Mark"),
+    ("់", "bânták"), 
+    ("៉", "musĕkâtônd"),
+    ("៊", "treisăpt"),
+    ("៌", "rôbat"),
+    ("៍", "tôndôkhéad"),
+    ("៎", "kakâbat"),
+    ("៏", "âsda"),
+    ("័", "sâmyoŭk sânhnhéa"),
+    ("។", "khând"),
+    ("។ល។", "lăk"),
+    ("៖", "châmnŏch pir kus"),
+    ("ៗ", "lékh toŭ"),
+    ("៚", "koŭmutr"),
+    ("!", "exclamation mark"),
+    ("?", "question mark"),
 ]
 
-# 14 independent vowels (ស្រៈឯករ)
-# U+17A3 ឣ and U+17A4 ឤ are the proper independent-vowel code points
-# (the dataset uses folder names "អ" and "អា" but those clash with the consonant)
+# 14 independent vowels (ស្រៈពេញតួ)
+# letter_en uses GD romanization per https://en.wikipedia.org/wiki/Khmer_script#Independent_vowels
+# U+17A3 ឣ and U+17A4 ឤ are deprecated code points (dataset folders "អ" / "អា")
 INDEPENDENT_VOWELS = [
-    ("ឣ", "a (short)"),    # dataset folder: "អ"
-    ("ឤ", "aa (long)"),    # dataset folder: "អា"
-    ("ឥ", "i (short)"),
-    ("ឦ", "ii (long)"),
-    ("ឧ", "u (short)"),
-    ("ឩ", "uu (long)"),
-    ("ឫ", "ry"),
-    ("ឬ", "ryy"),
-    ("ឭ", "ly"),
-    ("ឮ", "lyy"),
-    ("ឯ", "e"),
+    ("ឣ", "a"),       # dataset folder: "អ" (not in Wikipedia table; inherent-a form)
+    ("ឤ", "aa"),      # dataset folder: "អា"
+    ("ឥ", "e"),
+    ("ឦ", "ei"),
+    ("ឧ", "o"),
+    ("ឩ", "ou"),
+    ("ឫ", "rue"),
+    ("ឬ", "rueu"),
+    ("ឭ", "lue"),
+    ("ឮ", "lueu"),
+    ("ឯ", "ae"),
     ("ឰ", "ai"),
-    ("ឱ", "o"),
+    ("ឱ", "ao"),
     ("ឳ", "au"),
 ]
 
@@ -375,8 +376,18 @@ NUMBERS_FOLDER_MAP = {
     "៩": "៩",
 }
 
+# Diacritics folder -> letter mapping (folder names that differ from curriculum letters)
+DIACRITICS_FOLDER_MAP = {
+    "question": "?",
+}
+
 # Data directory paths
 DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "Fingerspelling data for development"
+CONSONANTS_DIR = DATASET_DIR / "Consonants"
+VOWELS_DIR = DATASET_DIR / "Vowels"
+DIACRITICS_DIR = DATASET_DIR / "Diacritics"
+INDEPENDENT_VOWELS_DIR = DATASET_DIR / "Independent vowels"
+NUMBERS_DIR = DATASET_DIR / "Number"
 
 
 def _discover_media_files() -> dict[str, list[Path]]:
@@ -389,6 +400,8 @@ def _discover_media_files() -> dict[str, list[Path]]:
     Directory structure:
         Consonants/{letter}/Main/*.png
         Consonants/{letter}/Sub/*.png
+        Vowels/{letter}/*.png
+        Diacritics/{folder}/*.png
         Independent vowels/{folder}/*.png
         Number/{digit}/*.png
     """
@@ -398,10 +411,9 @@ def _discover_media_files() -> dict[str, list[Path]]:
         print(f"⚠️  Data directory not found: {DATASET_DIR}")
         return media_by_letter
     
-    # Scan Consonants (Main)
-    consonants_dir = DATASET_DIR / "Consonants"
-    if consonants_dir.exists():
-        for consonant_folder in sorted(consonants_dir.iterdir()):
+    # Scan Consonants (Main + Sub)
+    if CONSONANTS_DIR.exists():
+        for consonant_folder in sorted(CONSONANTS_DIR.iterdir()):
             if not consonant_folder.is_dir():
                 continue
             letter_kh = consonant_folder.name
@@ -419,10 +431,28 @@ def _discover_media_files() -> dict[str, list[Path]]:
                 sub_letter = "្" + letter_kh
                 media_by_letter[sub_letter].extend(images)
     
+    # Scan Dependent Vowels (folder name matches letter_kh)
+    if VOWELS_DIR.exists():
+        for vowel_folder in sorted(VOWELS_DIR.iterdir()):
+            if not vowel_folder.is_dir():
+                continue
+            letter_kh = vowel_folder.name
+            images = sorted(vowel_folder.glob("*.png"))
+            media_by_letter[letter_kh].extend(images)
+    
+    # Scan Diacritics
+    if DIACRITICS_DIR.exists():
+        for diacritic_folder in sorted(DIACRITICS_DIR.iterdir()):
+            if not diacritic_folder.is_dir():
+                continue
+            folder_name = diacritic_folder.name
+            letter_kh = DIACRITICS_FOLDER_MAP.get(folder_name, folder_name)
+            images = sorted(diacritic_folder.glob("*.png"))
+            media_by_letter[letter_kh].extend(images)
+    
     # Scan Independent Vowels
-    vowels_dir = DATASET_DIR / "Independent vowels"
-    if vowels_dir.exists():
-        for vowel_folder in sorted(vowels_dir.iterdir()):
+    if INDEPENDENT_VOWELS_DIR.exists():
+        for vowel_folder in sorted(INDEPENDENT_VOWELS_DIR.iterdir()):
             if not vowel_folder.is_dir():
                 continue
             folder_name = vowel_folder.name
@@ -432,9 +462,8 @@ def _discover_media_files() -> dict[str, list[Path]]:
                 media_by_letter[letter_kh].extend(images)
     
     # Scan Numbers
-    numbers_dir = DATASET_DIR / "Number"
-    if numbers_dir.exists():
-        for number_folder in sorted(numbers_dir.iterdir()):
+    if NUMBERS_DIR.exists():
+        for number_folder in sorted(NUMBERS_DIR.iterdir()):
             if not number_folder.is_dir():
                 continue
             folder_name = number_folder.name

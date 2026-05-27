@@ -45,7 +45,10 @@ class Media(Base):
     __tablename__ = "medias"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    media_type: Mapped[str] = mapped_column(SQLEnum(MediaType, name="media_type"), nullable=False)
+    media_type: Mapped[str] = mapped_column(
+        SQLEnum(MediaType, name="media_type", values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
     file_url: Mapped[str] = mapped_column(String(500), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())

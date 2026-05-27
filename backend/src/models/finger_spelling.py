@@ -1,7 +1,13 @@
+from __future__ import annotations
+
+import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List
+from typing import TYPE_CHECKING, List, Optional
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from src.models.user import User
 
 from sqlalchemy import (
     BigInteger,
@@ -81,6 +87,7 @@ class FingerChapter(Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("unit_id", "order_index", name="uq_finger_chapters_unit_id_order_index"),
         Index("ix_finger_chapters_unit_id", "unit_id"),
         Index("ix_finger_chapters_order_index", "order_index"),
     )
@@ -117,6 +124,7 @@ class FingerLesson(Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("chapter_id", "order_index", name="uq_finger_lessons_chapter_id_order_index"),
         Index("ix_finger_lessons_chapter_id", "chapter_id"),
         Index("ix_finger_lessons_order_index", "order_index"),
     )
@@ -169,6 +177,7 @@ class FingerLessonLetter(Base):
 
     __table_args__ = (
         UniqueConstraint("lesson_id", "letter_id", name="uq_finger_lesson_letters_lesson_letter"),
+        UniqueConstraint("lesson_id", "order_index", name="uq_finger_lesson_letters_lesson_order"),
         Index("ix_finger_lesson_letters_lesson_id", "lesson_id"),
         Index("ix_finger_lesson_letters_letter_id", "letter_id"),
         Index("ix_finger_lesson_letters_order_index", "order_index"),
@@ -229,6 +238,7 @@ class FingerExercise(Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("lesson_id", "order_index", name="uq_finger_exercises_lesson_order"),
         Index("ix_finger_exercises_lesson_id", "lesson_id"),
         Index("ix_finger_exercises_media_id", "media_id"),
         Index("ix_finger_exercises_order_index", "order_index"),
@@ -259,6 +269,7 @@ class FingerExerciseOption(Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("exercise_id", "order_index", name="uq_finger_exercise_options_exercise_order"),
         Index("ix_finger_exercise_options_exercise_id", "exercise_id"),
         Index("ix_finger_exercise_options_media_id", "media_id"),
         Index("ix_finger_exercise_options_order_index", "order_index"),
@@ -271,8 +282,8 @@ class FingerUserLessonProgress(Base):
     """Per-user lesson completion and accuracy tracking."""
     __tablename__ = "finger_user_lesson_progress"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    user_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     finger_lesson_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_lessons.id"), nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, server_default="false")
     is_locked: Mapped[bool] = mapped_column(Boolean, server_default="false")
@@ -287,7 +298,7 @@ class FingerUserLessonProgress(Base):
 
     # Relationships
     lesson: Mapped["FingerLesson"] = relationship(back_populates="user_progress")
-    user: Mapped["User"] = relationship(back_populates="lesson_progress", foreign_keys=[user_id])
+    user: Mapped[User] = relationship(back_populates="lesson_progress", foreign_keys=[user_id])
     exercise_results: Mapped[List["FingerUserExerciseResult"]] = relationship(
         back_populates="progress", cascade="all, delete-orphan"
     )
@@ -303,10 +314,10 @@ class FingerUserExerciseResult(Base):
     """Individual exercise attempt result."""
     __tablename__ = "finger_user_exercise_results"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    user_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     finger_exercise_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_exercises.id"), nullable=False)
-    progress_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("finger_user_lesson_progress.id"), nullable=False)
+    progress_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("finger_user_lesson_progress.id"), nullable=False)
     selected_option_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("finger_exercise_options.id"))
     selected_answer: Mapped[Optional[str]] = mapped_column(Text)
     is_correct: Mapped[bool] = mapped_column(Boolean, server_default="false")
@@ -316,7 +327,7 @@ class FingerUserExerciseResult(Base):
 
     # Relationships
     exercise: Mapped["FingerExercise"] = relationship(back_populates="user_results")
-    user: Mapped["User"] = relationship(back_populates="exercise_results", foreign_keys=[user_id])
+    user: Mapped[User] = relationship(back_populates="exercise_results", foreign_keys=[user_id])
     progress: Mapped["FingerUserLessonProgress"] = relationship(back_populates="exercise_results")
     selected_option: Mapped[Optional["FingerExerciseOption"]] = relationship(
         back_populates="user_results", foreign_keys=[selected_option_id]
@@ -336,7 +347,7 @@ class FingerPracticeSession(Base):
     __tablename__ = "finger_practice_sessions"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    user_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     lesson_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_lessons.id"), nullable=False)
     media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
     started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -348,7 +359,7 @@ class FingerPracticeSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     # Relationships
-    user: Mapped["User"] = relationship(back_populates="practice_sessions", foreign_keys=[user_id])
+    user: Mapped[User] = relationship(back_populates="practice_sessions", foreign_keys=[user_id])
     lesson: Mapped["FingerLesson"] = relationship(back_populates="practice_sessions")
     media: Mapped[Optional["Media"]] = relationship(
         back_populates="finger_practice_sessions", foreign_keys=[media_id]

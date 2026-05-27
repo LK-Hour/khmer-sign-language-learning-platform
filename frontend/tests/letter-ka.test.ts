@@ -125,7 +125,7 @@ async function testGetLetterData(): Promise<void> {
   // Validate letter info
   const letter = data.letter;
   assertEqual(letter.letter_kh, "ក", "Letter Khmer text should be 'ក'");
-  assertEqual(letter.letter_en, "Ka", "Letter English name should be 'Ka'");
+  assertEqual(letter.letter_en, "ka", "Letter English name should be 'ka'");
   assertTrue(letter.is_active, "Letter should be active");
 
   console.log(`  Letter: ${letter.letter_kh} (${letter.letter_en})`);
@@ -178,7 +178,7 @@ async function testLetterMediaEndpoint(): Promise<void> {
   const data: MediaListResponse = await response.json();
 
   assertEqual(data.letter_kh, "ក", "Letter should be 'ក'");
-  assertEqual(data.letter_en, "Ka", "English name should be 'Ka'");
+  assertEqual(data.letter_en, "ka", "English name should be 'ka'");
   assertEqual(data.total_medias, 5, "Should have 5 media files");
   assertEqual(
     data.medias.length,
