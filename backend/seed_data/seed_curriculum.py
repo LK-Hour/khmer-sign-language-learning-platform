@@ -511,7 +511,7 @@ def _build_media_records(media_by_letter: dict[str, list[Path]], letter_id_map: 
             
             all_medias.append({
                 "id": media_id,
-                "media_type": "image",
+                "media_type": "IMAGE",
                 "file_url": file_url,
             })
             
