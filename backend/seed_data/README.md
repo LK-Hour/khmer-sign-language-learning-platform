@@ -50,6 +50,7 @@ python seed_data/seed_curriculum.py                    # upsert curriculum + med
 python seed_data/seed_curriculum.py --dry-run          # preview summary only, no DB writes
 python seed_data/seed_curriculum.py --wipe             # wipe curriculum tables, then re-seed (keeps medias table)
 python seed_data/seed_curriculum.py --wipe --wipe-media # wipe curriculum + medias, then re-seed everything
+alembic revision --autogenerate -m "description"        # create new migration if you need to change the schema
 ```
 
 Behavior notes:
