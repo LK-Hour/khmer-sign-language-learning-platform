@@ -82,3 +82,4 @@ alembic/versions/
 instance/
 .webassets-cache
 run_server.sh
+*.backup
