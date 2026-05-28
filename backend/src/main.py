@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 from dotenv import load_dotenv
 
@@ -8,12 +9,23 @@ load_dotenv()
 
 from .routes.oauth import router as oauth_router
 from .routes.users import router as users_router
+from .routes.curriculum import router as curriculum_router
+from .routes.finger_spelling import router as finger_spelling_router
 
 app = FastAPI(title="Khmer Sign Language Platform")
 
 # Include routes
 app.include_router(oauth_router)
 app.include_router(users_router)
+app.include_router(curriculum_router)
+app.include_router(finger_spelling_router)
+
+# Serve local dataset files for browser previews (e.g., /data_set/...png)
+_BACKEND_DIR = os.path.dirname(os.path.dirname(__file__))
+_REPO_ROOT_DIR = os.path.dirname(_BACKEND_DIR)
+_DATASET_DIR = os.path.join(_REPO_ROOT_DIR, "data_set")
+if os.path.isdir(_DATASET_DIR):
+    app.mount("/data_set", StaticFiles(directory=_DATASET_DIR), name="data_set")
 
 # Configure CORS
 ALLOWED_ORIGINS = [
