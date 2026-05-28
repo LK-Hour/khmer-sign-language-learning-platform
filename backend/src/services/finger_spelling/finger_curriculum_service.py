@@ -14,8 +14,12 @@ from src.models.finger_spelling import (
     FingerUnit,
 )
 from src.models.media import Media
-from src.repositories.finger_curriculum_repository import FingerCurriculumRepository
-from src.repositories.finger_progress_repository import FingerProgressRepository
+from src.repositories.finger_spelling.finger_curriculum_repository import (
+    FingerCurriculumRepository,
+)
+from src.repositories.finger_spelling.finger_progress_repository import (
+    FingerProgressRepository,
+)
 
 
 @dataclass

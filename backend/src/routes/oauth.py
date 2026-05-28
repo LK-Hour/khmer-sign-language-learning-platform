@@ -17,9 +17,9 @@ from ..schemas.oauth import OAuthLoginRequest, AuthTokenResponse
 from ..services.google_oauth_service import google_oauth_service
 from ..services.facebook_oauth_service import facebook_oauth_service
 from ..services.telegram_oauth_service import telegram_oauth_service
-from ..services.oauth_user_service import find_or_create_oauth_user
+from ..services.oauth_user_service import find_or_create_oauth_user, migrate_guest_progress_to_user
 from ..models.user import User
-from ..utils.jwt_utils import create_access_token
+from ..utils.jwt_utils import create_access_token, verify_token
 from ..utils.password import verify_password
 
 router = APIRouter(prefix="/api/auth/login", tags=["auth"])
@@ -38,6 +38,24 @@ def _user_response(user) -> dict:
         "last_name": name_parts[1] if len(name_parts) > 1 else None,
         "picture": user.avatar_url,
     }
+
+
+def _extract_guest_user_id_from_token(guest_token: str | None) -> uuid.UUID | None:
+    if not guest_token:
+        return None
+    try:
+        payload = verify_token(guest_token)
+    except HTTPException:
+        return None
+
+    provider = payload.get("provider")
+    sub = payload.get("sub")
+    if provider != "guest" or not sub:
+        return None
+    try:
+        return uuid.UUID(str(sub))
+    except ValueError:
+        return None
 
 
 @router.get("/telegram")
@@ -96,6 +114,13 @@ async def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)
             last_name=user_info["last_name"],
             picture=user_info["picture"],
         )
+        guest_user_id = _extract_guest_user_id_from_token(request.guest_token)
+        if guest_user_id is not None:
+            migrate_guest_progress_to_user(
+                db,
+                guest_user_id=guest_user_id,
+                target_user_id=user.id,
+            )
 
         access_token = create_access_token(
             data={"sub": str(user.id), "provider": "google"}
@@ -123,6 +148,13 @@ async def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_d
             last_name=user_info["last_name"],
             picture=user_info["picture"],
         )
+        guest_user_id = _extract_guest_user_id_from_token(request.guest_token)
+        if guest_user_id is not None:
+            migrate_guest_progress_to_user(
+                db,
+                guest_user_id=guest_user_id,
+                target_user_id=user.id,
+            )
 
         access_token = create_access_token(
             data={"sub": str(user.id), "provider": "facebook"}
@@ -154,6 +186,13 @@ async def telegram_login(request: OAuthLoginRequest, db: Session = Depends(get_d
             last_name=user_info["last_name"],
             picture=user_info["picture"],
         )
+        guest_user_id = _extract_guest_user_id_from_token(request.guest_token)
+        if guest_user_id is not None:
+            migrate_guest_progress_to_user(
+                db,
+                guest_user_id=guest_user_id,
+                target_user_id=user.id,
+            )
 
         access_token = create_access_token(
             data={"sub": str(user.id), "provider": "telegram"}

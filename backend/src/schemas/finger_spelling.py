@@ -216,3 +216,39 @@ class PracticeEndResponse(BaseModel):
     peak_accuracy: float | None = None
     duration_seconds: int
     lesson_completed: bool
+
+
+class PracticeAccuracyResponse(BaseModel):
+    session_id: int
+    lesson_id: int
+    average_accuracy: float | None = None
+    peak_accuracy: float | None = None
+    samples: int = 0
+    is_completed: bool
+
+
+class FsLessonProgressResponse(BaseModel):
+    lessonId: int
+    progressStatus: str
+    isLocked: bool
+    attempts: int
+    totalTimeSpent: int
+    peakAccuracy: float | None = None
+    startedAt: datetime | None = None
+    completedAt: datetime | None = None
+    lastAccessedAt: datetime | None = None
+
+
+class FsChapterLessonProgressItem(BaseModel):
+    lessonId: int
+    orderIndex: int
+    progressStatus: str
+    isLocked: bool
+
+
+class FsChapterProgressResponse(BaseModel):
+    chapterId: int
+    completedLessonCount: int
+    totalLessonCount: int
+    isQuizUnlocked: bool
+    lessons: List[FsChapterLessonProgressItem] = []

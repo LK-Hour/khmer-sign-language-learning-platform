@@ -25,10 +25,18 @@ from src.db.session import SessionLocal  # noqa: E402
 from src.main import app  # noqa: E402
 from src.models.finger_spelling import FingerLetter  # noqa: E402
 from src.models.user import User  # noqa: E402
-from src.repositories.finger_curriculum_repository import FingerCurriculumRepository  # noqa: E402
-from src.repositories.finger_exercise_repository import FingerExerciseRepository  # noqa: E402
-from src.repositories.finger_practice_repository import FingerPracticeRepository  # noqa: E402
-from src.repositories.finger_progress_repository import FingerProgressRepository  # noqa: E402
+from src.repositories.finger_spelling.finger_curriculum_repository import (  # noqa: E402
+    FingerCurriculumRepository,
+)
+from src.repositories.finger_spelling.finger_exercise_repository import (  # noqa: E402
+    FingerExerciseRepository,
+)
+from src.repositories.finger_spelling.finger_practice_repository import (  # noqa: E402
+    FingerPracticeRepository,
+)
+from src.repositories.finger_spelling.finger_progress_repository import (  # noqa: E402
+    FingerProgressRepository,
+)
 from src.services.finger_spelling.finger_curriculum_service import FingerCurriculumService  # noqa: E402
 from src.services.finger_spelling.finger_exercise_service import FingerExerciseService  # noqa: E402
 from src.services.finger_spelling.finger_practice_service import FingerPracticeService  # noqa: E402
@@ -50,7 +58,7 @@ def _configure_stdio() -> None:
                 pass
 
 
-def test_letter_data_service() -> bool:
+def _case_letter_data_service() -> bool:
     print("\nTest: Letter data service (ka / U+1780)")
     print("-" * 50)
     db = SessionLocal()
@@ -83,7 +91,7 @@ def test_letter_data_service() -> bool:
         db.close()
 
 
-def test_letter_belongs_to_lesson() -> bool:
+def _case_letter_belongs_to_lesson() -> bool:
     print("\nTest: letter_belongs_to_lesson validation")
     print("-" * 50)
     db = SessionLocal()
@@ -120,7 +128,7 @@ def test_letter_belongs_to_lesson() -> bool:
         db.close()
 
 
-def test_practice_upsert_and_foreign_letter() -> bool:
+def _case_practice_upsert_and_foreign_letter() -> bool:
     print("\nTest: practice upsert + reject foreign letter")
     print("-" * 50)
     db = SessionLocal()
@@ -198,7 +206,7 @@ def test_practice_upsert_and_foreign_letter() -> bool:
         db.close()
 
 
-def test_lesson_locking() -> bool:
+def _case_lesson_locking() -> bool:
     print("\nTest: lesson locking by order")
     print("-" * 50)
     db = SessionLocal()
@@ -230,7 +238,7 @@ def test_lesson_locking() -> bool:
         db.close()
 
 
-def test_curriculum_repository_hierarchy() -> bool:
+def _case_curriculum_repository_hierarchy() -> bool:
     print("\nTest: FingerCurriculumRepository hierarchy + counts")
     print("-" * 50)
     db = SessionLocal()
@@ -280,7 +288,7 @@ def test_curriculum_repository_hierarchy() -> bool:
         db.close()
 
 
-def test_progress_repository() -> bool:
+def _case_progress_repository() -> bool:
     print("\nTest: FingerProgressRepository get_or_create + completed counts")
     print("-" * 50)
     db = SessionLocal()
@@ -323,7 +331,7 @@ def test_progress_repository() -> bool:
         db.close()
 
 
-def test_exercise_repository_and_service() -> bool:
+def _case_exercise_repository_and_service() -> bool:
     print("\nTest: FingerExerciseRepository + FingerExerciseService")
     print("-" * 50)
     db = SessionLocal()
@@ -367,7 +375,7 @@ def test_exercise_repository_and_service() -> bool:
         db.close()
 
 
-def test_practice_end_sets_is_completed() -> bool:
+def _case_practice_end_sets_is_completed() -> bool:
     print("\nTest: end_session sets is_completed (ERD column)")
     print("-" * 50)
     db = SessionLocal()
@@ -427,35 +435,35 @@ def test_practice_end_sets_is_completed() -> bool:
         db.close()
 
 
-def test_api_finger_spelling_with_auth() -> bool:
+def _case_api_finger_spelling_with_auth() -> bool:
     print("\nTest: finger_spelling API (units + auth on practice)")
     print("-" * 50)
     client = TestClient(app)
     try:
-        units = client.get("/api/finger_spelling/units")
+        units = client.get("/api/finger_spelling/curriculum/units")
         if units.status_code != 200 or len(units.json()) < 1:
             print(f"FAIL: units {units.status_code}")
             return False
 
         unit_id = units.json()[0]["id"]
-        chapters = client.get(f"/api/finger_spelling/units/{unit_id}/chapters")
+        chapters = client.get(f"/api/finger_spelling/curriculum/units/{unit_id}/chapters")
         if chapters.status_code != 200:
             print(f"FAIL: chapters {chapters.status_code}")
             return False
 
         ch_id = chapters.json()[0]["id"]
-        lessons = client.get(f"/api/finger_spelling/chapters/{ch_id}/lessons")
+        lessons = client.get(f"/api/finger_spelling/curriculum/chapters/{ch_id}/lessons")
         if lessons.status_code != 200 or not lessons.json():
             print("FAIL: lessons empty or error")
             return False
 
         lesson_id = lessons.json()[0]["id"]
-        detail = client.get(f"/api/finger_spelling/lessons/{lesson_id}")
+        detail = client.get(f"/api/finger_spelling/curriculum/lessons/{lesson_id}")
         if detail.status_code != 200:
             print(f"FAIL: lesson detail {detail.status_code}")
             return False
 
-        unauth = client.post(f"/api/finger_spelling/lessons/{lesson_id}/practice/sessions", json={})
+        unauth = client.post(f"/api/finger_spelling/practice/lessons/{lesson_id}/sessions", json={})
         if unauth.status_code != 401:
             print(f"FAIL: expected 401 without token, got {unauth.status_code}")
             return False
@@ -465,7 +473,7 @@ def test_api_finger_spelling_with_auth() -> bool:
         if user:
             token = create_access_token(data={"sub": str(user.id)})
             auth = client.post(
-                f"/api/finger_spelling/lessons/{lesson_id}/practice/sessions",
+                f"/api/finger_spelling/practice/lessons/{lesson_id}/sessions",
                 json={},
                 headers={"Authorization": f"Bearer {token}"},
             )
@@ -480,7 +488,7 @@ def test_api_finger_spelling_with_auth() -> bool:
         return False
 
 
-def test_api_curriculum_letter() -> bool:
+def _case_api_curriculum_letter() -> bool:
     print("\nTest: GET /api/curriculum/letters/{ka}")
     print("-" * 50)
     client = TestClient(app)
@@ -507,7 +515,7 @@ def test_api_curriculum_letter() -> bool:
             print("FAIL: medias endpoint count mismatch")
             return False
 
-        units_resp = client.get("/api/finger_spelling/units")
+        units_resp = client.get("/api/finger_spelling/curriculum/units")
         if units_resp.status_code != 200:
             print(f"FAIL: units endpoint status {units_resp.status_code}")
             return False
@@ -522,6 +530,46 @@ def test_api_curriculum_letter() -> bool:
         return False
 
 
+def test_letter_data_service() -> None:
+    assert _case_letter_data_service()
+
+
+def test_letter_belongs_to_lesson() -> None:
+    assert _case_letter_belongs_to_lesson()
+
+
+def test_practice_upsert_and_foreign_letter() -> None:
+    assert _case_practice_upsert_and_foreign_letter()
+
+
+def test_lesson_locking() -> None:
+    assert _case_lesson_locking()
+
+
+def test_curriculum_repository_hierarchy() -> None:
+    assert _case_curriculum_repository_hierarchy()
+
+
+def test_progress_repository() -> None:
+    assert _case_progress_repository()
+
+
+def test_exercise_repository_and_service() -> None:
+    assert _case_exercise_repository_and_service()
+
+
+def test_practice_end_sets_is_completed() -> None:
+    assert _case_practice_end_sets_is_completed()
+
+
+def test_api_finger_spelling_with_auth() -> None:
+    assert _case_api_finger_spelling_with_auth()
+
+
+def test_api_curriculum_letter() -> None:
+    assert _case_api_curriculum_letter()
+
+
 def run_all() -> int:
     _configure_stdio()
     print("=" * 50)
@@ -529,16 +577,16 @@ def run_all() -> int:
     print("=" * 50)
 
     results = [
-        ("Curriculum repository", test_curriculum_repository_hierarchy()),
-        ("Progress repository", test_progress_repository()),
-        ("Letter data service", test_letter_data_service()),
-        ("Letter belongs to lesson", test_letter_belongs_to_lesson()),
-        ("Exercise repository/service", test_exercise_repository_and_service()),
-        ("Practice upsert + validation", test_practice_upsert_and_foreign_letter()),
-        ("Practice end is_completed", test_practice_end_sets_is_completed()),
-        ("Lesson locking", test_lesson_locking()),
-        ("API curriculum letter", test_api_curriculum_letter()),
-        ("API finger_spelling + auth", test_api_finger_spelling_with_auth()),
+        ("Curriculum repository", _case_curriculum_repository_hierarchy()),
+        ("Progress repository", _case_progress_repository()),
+        ("Letter data service", _case_letter_data_service()),
+        ("Letter belongs to lesson", _case_letter_belongs_to_lesson()),
+        ("Exercise repository/service", _case_exercise_repository_and_service()),
+        ("Practice upsert + validation", _case_practice_upsert_and_foreign_letter()),
+        ("Practice end is_completed", _case_practice_end_sets_is_completed()),
+        ("Lesson locking", _case_lesson_locking()),
+        ("API curriculum letter", _case_api_curriculum_letter()),
+        ("API finger_spelling + auth", _case_api_finger_spelling_with_auth()),
     ]
 
     print("\n" + "=" * 50)

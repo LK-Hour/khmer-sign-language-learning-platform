@@ -58,6 +58,22 @@ Behavior notes:
 - `--wipe-media` only takes effect when used together with `--wipe`.
 - Re-running without `--wipe` performs upsert behavior.
 
+### Rename image files + reseed media paths
+
+When you add new cropped/background-removed images, run this helper to normalize file names and refresh `medias.file_url` values:
+
+```bash
+cd backend
+python seed_data/rename_and_reseed_media.py --dry-run
+python seed_data/rename_and_reseed_media.py --reseed
+python seed_data/rename_and_reseed_media.py --reseed --wipe --wipe-media
+```
+
+Notes:
+- `--dry-run` previews rename operations without changing files.
+- `--reseed` runs `seed_curriculum.py` after renaming to sync DB media paths.
+- `--wipe --wipe-media` is the cleanest full refresh, but it clears curriculum/progress data.
+
 Older databases stamped at Alembic `002` sometimes still had a legacy `letter_code` / `letter_display` layout on `finger_letters`. Migration `003_align_finger_letters_schema` normalizes that table so it matches the ORM and this seed script.
 
 ## Users and OAuth (demo accounts)

@@ -10,6 +10,7 @@ class OAuthLoginRequest(BaseModel):
     """OAuth login request — accepts id_token or access_token from provider."""
     code: str
     redirect_uri: Optional[str] = None
+    guest_token: Optional[str] = None
 
 
 class OAuthUserResponse(BaseModel):

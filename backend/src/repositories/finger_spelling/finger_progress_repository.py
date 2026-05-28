@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.models.finger_spelling import FingerUserExerciseResult, FingerUserLessonProgress
+
+
+def _utc_now_naive() -> datetime:
+    """Return UTC now as naive datetime for current DB column type."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class FingerProgressRepository:
@@ -39,7 +44,7 @@ class FingerProgressRepository:
         if progress:
             return progress
 
-        now = datetime.utcnow()
+        now = _utc_now_naive()
         progress = FingerUserLessonProgress(
             user_id=user_id,
             finger_lesson_id=lesson_id,

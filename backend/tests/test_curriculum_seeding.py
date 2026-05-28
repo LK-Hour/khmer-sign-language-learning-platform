@@ -34,7 +34,7 @@ from src.models.finger_spelling import (
 from src.models.media import Media, MediaType
 
 
-def test_database_connection():
+def _case_database_connection():
     """Test that we can connect to the database."""
     print("\n📋 Test 1: Database Connection")
     print("-" * 50)
@@ -49,7 +49,7 @@ def test_database_connection():
         return False
 
 
-def test_units_seeded():
+def _case_units_seeded():
     """Test that all 6 units are seeded."""
     print("\n📋 Test 2: Units Seeding")
     print("-" * 50)
@@ -87,7 +87,7 @@ def test_units_seeded():
         db.close()
 
 
-def test_chapters_seeded():
+def _case_chapters_seeded():
     """Test that chapters are properly seeded."""
     print("\n📋 Test 3: Chapters Seeding")
     print("-" * 50)
@@ -117,7 +117,7 @@ def test_chapters_seeded():
         db.close()
 
 
-def test_letters_seeded():
+def _case_letters_seeded():
     """Test that all letters are seeded."""
     print("\n📋 Test 4: Letters Seeding")
     print("-" * 50)
@@ -145,7 +145,7 @@ def test_letters_seeded():
         db.close()
 
 
-def test_lessons_and_relationships():
+def _case_lessons_and_relationships():
     """Test that lessons and letter relationships are intact."""
     print("\n📋 Test 5: Lessons & Relationships")
     print("-" * 50)
@@ -184,7 +184,7 @@ def test_lessons_and_relationships():
         db.close()
 
 
-def test_media_seeded():
+def _case_media_seeded():
     """Test that media files are seeded and linked."""
     print("\n📋 Test 6: Media Files")
     print("-" * 50)
@@ -224,7 +224,7 @@ def test_media_seeded():
         db.close()
 
 
-def test_data_integrity():
+def _case_data_integrity():
     """Test overall data integrity."""
     print("\n📋 Test 7: Data Integrity")
     print("-" * 50)
@@ -242,8 +242,8 @@ def test_data_integrity():
         print(f"  Chapters:           {chapter_count:4d} (expected 27)")
         print(f"  Lessons:            {lesson_count:4d} (expected 127)")
         print(f"  Letters:            {letter_count:4d} (expected 127)")
-        print(f"  Media files:        {media_count:4d} (expected 440)")
-        print(f"  Letter-media links: {letter_media_count:4d} (expected 440)")
+        print(f"  Media files:        {media_count:4d} (expected >= 440)")
+        print(f"  Letter-media links: {letter_media_count:4d} (expected == media files)")
         
         # Verify foreign keys aren't broken
         chapters_with_unit = db.query(FingerChapter).filter(FingerChapter.unit_id.isnot(None)).count()
@@ -257,8 +257,8 @@ def test_data_integrity():
             chapter_count == 27 and
             lesson_count == 127 and
             letter_count == 127 and
-            media_count == 440 and
-            letter_media_count == 440 and
+            media_count >= 440 and
+            letter_media_count == media_count and
             chapters_with_unit == 27 and
             lessons_with_chapter == 127
         )
@@ -277,6 +277,34 @@ def test_data_integrity():
         db.close()
 
 
+def test_database_connection() -> None:
+    assert _case_database_connection()
+
+
+def test_units_seeded() -> None:
+    assert _case_units_seeded()
+
+
+def test_chapters_seeded() -> None:
+    assert _case_chapters_seeded()
+
+
+def test_letters_seeded() -> None:
+    assert _case_letters_seeded()
+
+
+def test_lessons_and_relationships() -> None:
+    assert _case_lessons_and_relationships()
+
+
+def test_media_seeded() -> None:
+    assert _case_media_seeded()
+
+
+def test_data_integrity() -> None:
+    assert _case_data_integrity()
+
+
 def run_all_tests():
     """Run all tests and report results."""
     print("\n" + "=" * 50)
@@ -285,13 +313,13 @@ def run_all_tests():
     
     results = []
     
-    results.append(("Database Connection", test_database_connection()))
-    results.append(("Units Seeding", test_units_seeded()))
-    results.append(("Chapters Seeding", test_chapters_seeded()))
-    results.append(("Letters Seeding", test_letters_seeded()))
-    results.append(("Lessons & Relationships", test_lessons_and_relationships()))
-    results.append(("Media Files", test_media_seeded()))
-    results.append(("Data Integrity", test_data_integrity()))
+    results.append(("Database Connection", _case_database_connection()))
+    results.append(("Units Seeding", _case_units_seeded()))
+    results.append(("Chapters Seeding", _case_chapters_seeded()))
+    results.append(("Letters Seeding", _case_letters_seeded()))
+    results.append(("Lessons & Relationships", _case_lessons_and_relationships()))
+    results.append(("Media Files", _case_media_seeded()))
+    results.append(("Data Integrity", _case_data_integrity()))
     
     # Summary
     print("\n" + "=" * 50)

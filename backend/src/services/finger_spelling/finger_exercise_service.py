@@ -8,9 +8,11 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 
 from src.models.finger_spelling import FingerExercise, FingerExerciseType
-from src.repositories.finger_curriculum_repository import FingerCurriculumRepository
-from src.repositories.finger_exercise_repository import FingerExerciseRepository
-from src.repositories.finger_progress_repository import FingerProgressRepository
+from src.repositories.finger_spelling.finger_curriculum_repository import (
+    FingerCurriculumRepository,
+)
+from src.repositories.finger_spelling.finger_exercise_repository import FingerExerciseRepository
+from src.repositories.finger_spelling.finger_progress_repository import FingerProgressRepository
 from src.services.finger_spelling.finger_progress_service import FingerProgressService
 
 

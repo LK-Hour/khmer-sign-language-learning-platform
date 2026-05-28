@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
 from src.models.finger_spelling import FingerUserLessonProgress
-from src.repositories.finger_exercise_repository import FingerExerciseRepository
-from src.repositories.finger_progress_repository import FingerProgressRepository
+from src.repositories.finger_spelling.finger_exercise_repository import FingerExerciseRepository
+from src.repositories.finger_spelling.finger_progress_repository import FingerProgressRepository
+
+
+def _utc_now_naive() -> datetime:
+    """Return UTC now as naive datetime for current DB column type."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class FingerProgressService:
@@ -26,7 +31,7 @@ class FingerProgressService:
         return self.progress.get_lesson_progress(user_id, lesson_id)
 
     def touch_progress(self, progress: FingerUserLessonProgress) -> None:
-        progress.last_accessed_at = datetime.utcnow()
+        progress.last_accessed_at = _utc_now_naive()
         if progress.started_at is None:
             progress.started_at = progress.last_accessed_at
 
@@ -42,7 +47,7 @@ class FingerProgressService:
         self.touch_progress(progress)
 
         progress.is_completed = True
-        progress.completed_at = datetime.utcnow()
+        progress.completed_at = _utc_now_naive()
         progress.attempts = (progress.attempts or 0) + 1
         progress.total_time_spent = (progress.total_time_spent or 0) + max(time_spent, 0)
 
@@ -73,7 +78,7 @@ class FingerProgressService:
             return False
 
         progress.is_completed = True
-        progress.completed_at = datetime.utcnow()
+        progress.completed_at = _utc_now_naive()
         return True
 
     def is_lesson_locked(
@@ -91,7 +96,9 @@ class FingerProgressService:
         if order_index <= 1:
             return False
 
-        from src.repositories.finger_curriculum_repository import FingerCurriculumRepository
+        from src.repositories.finger_spelling.finger_curriculum_repository import (
+            FingerCurriculumRepository,
+        )
 
         curriculum = FingerCurriculumRepository(self.db)
         lessons = curriculum.list_lessons_by_chapter(chapter_id, active_only=active_only)
@@ -109,7 +116,9 @@ class FingerProgressService:
         *,
         active_only: bool = True,
     ) -> bool:
-        from src.repositories.finger_curriculum_repository import FingerCurriculumRepository
+        from src.repositories.finger_spelling.finger_curriculum_repository import (
+            FingerCurriculumRepository,
+        )
 
         lesson = FingerCurriculumRepository(self.db).get_lesson_by_id(
             lesson_id, active_only=active_only

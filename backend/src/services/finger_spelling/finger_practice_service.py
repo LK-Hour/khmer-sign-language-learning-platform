@@ -4,14 +4,21 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
 from src.models.finger_spelling import FingerPracticeSession
-from src.repositories.finger_curriculum_repository import FingerCurriculumRepository
-from src.repositories.finger_practice_repository import FingerPracticeRepository
+from src.repositories.finger_spelling.finger_curriculum_repository import (
+    FingerCurriculumRepository,
+)
+from src.repositories.finger_spelling.finger_practice_repository import FingerPracticeRepository
 from src.services.finger_spelling.finger_progress_service import FingerProgressService
+
+
+def _utc_now_naive() -> datetime:
+    """Return UTC now as naive datetime for current DB column type."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 @dataclass
@@ -27,6 +34,14 @@ class PracticeEndResult:
     average_accuracy: float | None
     peak_accuracy: float | None
     duration_seconds: int
+
+
+@dataclass
+class PracticeAccuracyResult:
+    session: FingerPracticeSession
+    average_accuracy: float | None
+    peak_accuracy: float | None
+    samples: int
 
 
 class FingerPracticeService:
@@ -49,7 +64,7 @@ class FingerPracticeService:
         session = self.practice.create_session(
             user_id=user_id,
             lesson_id=lesson_id,
-            started_at=datetime.utcnow(),
+            started_at=_utc_now_naive(),
             media_id=media_id,
         )
         self.db.commit()
@@ -103,7 +118,7 @@ class FingerPracticeService:
         if session is None or session.is_completed:
             return None
 
-        ended_at = datetime.utcnow()
+        ended_at = _utc_now_naive()
         session.ended_at = ended_at
         session.duration = max(int((ended_at - session.started_at).total_seconds()), 0)
         session.is_completed = True
@@ -139,4 +154,26 @@ class FingerPracticeService:
             average_accuracy=average_accuracy,
             peak_accuracy=peak_accuracy,
             duration_seconds=session.duration,
+        )
+
+    def get_session_accuracy(
+        self,
+        *,
+        user_id: uuid.UUID,
+        session_id: int,
+    ) -> PracticeAccuracyResult | None:
+        session = self.practice.get_session_with_letters(session_id, user_id)
+        if session is None:
+            return None
+
+        accuracies = [
+            float(row.accuracy) for row in session.session_letters if row.accuracy is not None
+        ]
+        average_accuracy = round(sum(accuracies) / len(accuracies), 2) if accuracies else None
+        peak_accuracy = round(max(accuracies), 2) if accuracies else None
+        return PracticeAccuracyResult(
+            session=session,
+            average_accuracy=average_accuracy,
+            peak_accuracy=peak_accuracy,
+            samples=len(accuracies),
         )

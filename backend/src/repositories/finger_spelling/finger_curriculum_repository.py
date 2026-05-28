@@ -1,4 +1,4 @@
-"""Data access for finger spelling curriculum (units → chapters → lessons → letters)."""
+"""Data access for finger spelling curriculum (units -> chapters -> lessons -> letters)."""
 
 from __future__ import annotations
 
