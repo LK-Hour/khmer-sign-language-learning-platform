@@ -637,8 +637,8 @@ def _build_curriculum() -> dict[str, list[dict]]:
                 all_letters.append(
                     {
                         "id": letter_id,
-                        "letter_kh": letter_kh,
                         "letter_en": letter_en,
+                        "letter_kh": letter_kh,
                         "description_en": None,
                         "description_kh": None,
                         "is_active": True,
