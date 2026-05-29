@@ -286,7 +286,7 @@ class FingerUserLessonProgress(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     finger_lesson_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_lessons.id"), nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, server_default="false")
-    is_locked: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    is_locked: Mapped[bool] = mapped_column(Boolean, server_default="true")
     peak_accuracy: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
     attempts: Mapped[int] = mapped_column(BigInteger, default=0)
     total_time_spent: Mapped[int] = mapped_column(BigInteger, default=0)  # in seconds

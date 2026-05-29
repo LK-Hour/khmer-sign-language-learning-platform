@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -17,8 +17,8 @@ from src.services.finger_spelling.finger_progress_service import FingerProgressS
 
 
 def _utc_now_naive() -> datetime:
-    """Return UTC now as naive datetime for current DB column type."""
-    return datetime.now(UTC).replace(tzinfo=None)
+    """Return current datetime (DB configured for Asia/Phnom_Penh timezone)."""
+    return datetime.now()
 
 
 @dataclass

@@ -112,6 +112,7 @@ class FsUnitResponse(BaseModel):
     chapterCount: int
     completedLessonCount: int
     totalLessonCount: int
+    isLocked: bool = False
 
 
 class FsChapterResponse(BaseModel):
@@ -125,6 +126,7 @@ class FsChapterResponse(BaseModel):
     lessonCount: int
     completedLessonCount: int
     isQuizUnlocked: bool
+    isLocked: bool = False
 
 
 class FsLessonResponse(BaseModel):
