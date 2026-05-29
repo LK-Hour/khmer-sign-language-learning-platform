@@ -1,4 +1,7 @@
-"""Composed finger spelling API router."""
+"""Composed finger spelling API router (learner-facing).
+
+Admin content management lives in ``src.routes.admin`` (centralized, multi-track).
+"""
 
 from fastapi import APIRouter
 

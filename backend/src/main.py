@@ -11,6 +11,7 @@ from .routes.oauth import router as oauth_router
 from .routes.users import router as users_router
 from .routes.curriculum import router as curriculum_router
 from .routes.finger_spelling import router as finger_spelling_router
+from .routes.admin import router as admin_router
 
 app = FastAPI(title="Khmer Sign Language Platform")
 
@@ -19,6 +20,7 @@ app.include_router(oauth_router)
 app.include_router(users_router)
 app.include_router(curriculum_router)
 app.include_router(finger_spelling_router)
+app.include_router(admin_router)
 
 # Serve local dataset files for browser previews (e.g., /data_set/...png)
 _BACKEND_DIR = os.path.dirname(os.path.dirname(__file__))
