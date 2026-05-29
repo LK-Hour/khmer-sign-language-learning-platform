@@ -440,25 +440,25 @@ def _case_api_finger_spelling_with_auth() -> bool:
     print("-" * 50)
     client = TestClient(app)
     try:
-        units = client.get("/api/finger_spelling/curriculum/units")
+        units = client.get("/api/finger_spelling/units")
         if units.status_code != 200 or len(units.json()) < 1:
             print(f"FAIL: units {units.status_code}")
             return False
 
         unit_id = units.json()[0]["id"]
-        chapters = client.get(f"/api/finger_spelling/curriculum/units/{unit_id}/chapters")
+        chapters = client.get(f"/api/finger_spelling/units/{unit_id}/chapters")
         if chapters.status_code != 200:
             print(f"FAIL: chapters {chapters.status_code}")
             return False
 
         ch_id = chapters.json()[0]["id"]
-        lessons = client.get(f"/api/finger_spelling/curriculum/chapters/{ch_id}/lessons")
+        lessons = client.get(f"/api/finger_spelling/chapters/{ch_id}/lessons")
         if lessons.status_code != 200 or not lessons.json():
             print("FAIL: lessons empty or error")
             return False
 
         lesson_id = lessons.json()[0]["id"]
-        detail = client.get(f"/api/finger_spelling/curriculum/lessons/{lesson_id}")
+        detail = client.get(f"/api/finger_spelling/lessons/{lesson_id}")
         if detail.status_code != 200:
             print(f"FAIL: lesson detail {detail.status_code}")
             return False
@@ -515,7 +515,7 @@ def _case_api_curriculum_letter() -> bool:
             print("FAIL: medias endpoint count mismatch")
             return False
 
-        units_resp = client.get("/api/finger_spelling/curriculum/units")
+        units_resp = client.get("/api/finger_spelling/units")
         if units_resp.status_code != 200:
             print(f"FAIL: units endpoint status {units_resp.status_code}")
             return False

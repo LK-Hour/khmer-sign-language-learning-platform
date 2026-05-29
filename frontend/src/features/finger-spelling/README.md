@@ -21,7 +21,18 @@ Do **not** add finger-spelling screens under `src/app/words/` or `src/features/w
 
 ## API
 
-Backend contract (when ready): `/api/finger_spelling/*`. Until then, mock data is used (`NEXT_PUBLIC_FS_USE_MOCK=false` to force live API).
+Live backend paths (see `api/curriculum.ts`). Set `NEXT_PUBLIC_FS_USE_MOCK=false` to use the API instead of mocks.
+
+| Method | Path |
+|--------|------|
+| GET | `/api/finger_spelling/units` |
+| GET | `/api/finger_spelling/units/{unitId}` |
+| GET | `/api/finger_spelling/units/{unitId}/chapters` |
+| GET | `/api/finger_spelling/chapters/{chapterId}` |
+| GET | `/api/finger_spelling/chapters/{chapterId}/lessons` |
+| GET | `/api/finger_spelling/lessons/{lessonId}` |
+
+Practice, exercise, and progress use `/api/finger_spelling/practice`, `/exercise`, and `/progress` respectively. Letter media lookup uses the separate legacy route `/api/curriculum/letters/{letterKh}`.
 
 ## Figma
 

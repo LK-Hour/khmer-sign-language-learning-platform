@@ -1,4 +1,8 @@
-"""Curriculum letter endpoints used by integration tests."""
+"""Letter lookup endpoints (``/api/curriculum/letters/...``).
+
+Not the finger-spelling course tree; units/chapters/lessons live under
+``/api/finger_spelling/*`` (see ``routes.finger_spelling.finger_curriculum``).
+"""
 
 from __future__ import annotations
 

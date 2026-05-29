@@ -19,7 +19,7 @@ from src.services.finger_spelling.finger_progress_service import FingerProgressS
 
 from .finger_shared import lesson_detail_to_response, to_fs_lesson
 
-router = APIRouter(prefix="/api/finger_spelling/curriculum", tags=["finger-spelling-curriculum"])
+router = APIRouter(prefix="/api/finger_spelling", tags=["finger-spelling"])
 
 
 @router.get("/units", response_model=list[FsUnitResponse])
