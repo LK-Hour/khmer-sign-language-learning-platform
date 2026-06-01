@@ -1,11 +1,11 @@
-"""Data access for finger spelling exercises and options."""
+"""Data access for finger spelling lesson exercises and options."""
 
 from __future__ import annotations
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from src.models.finger_spelling import FingerExercise, FingerExerciseOption
+from src.models.finger_spelling import FingerExercise, FingerExerciseOption, FingerLesson
 
 
 class FingerExerciseRepository:
@@ -38,6 +38,23 @@ class FingerExerciseRepository:
             stmt = stmt.where(FingerExercise.is_active.is_(True))
         return list(self.db.scalars(stmt).unique().all())
 
+    def list_with_options_by_chapter(
+        self, chapter_id: int, *, active_only: bool = True
+    ) -> list[FingerExercise]:
+        stmt = (
+            select(FingerExercise)
+            .join(FingerLesson, FingerExercise.lesson_id == FingerLesson.id)
+            .options(
+                selectinload(FingerExercise.options),
+                joinedload(FingerExercise.media),
+            )
+            .where(FingerLesson.chapter_id == chapter_id)
+            .order_by(FingerLesson.order_index, FingerExercise.order_index)
+        )
+        if active_only:
+            stmt = stmt.where(FingerExercise.is_active.is_(True))
+        return list(self.db.scalars(stmt).unique().all())
+
     def get_by_id(self, exercise_id: int, *, active_only: bool = True) -> FingerExercise | None:
         stmt = select(FingerExercise).where(FingerExercise.id == exercise_id)
         if active_only:
@@ -63,19 +80,20 @@ class FingerExerciseRepository:
         return self.db.get(FingerExerciseOption, option_id)
 
     def count_by_lesson(self, lesson_id: int, *, active_only: bool = True) -> int:
-        stmt = select(func.count()).select_from(FingerExercise).where(FingerExercise.lesson_id == lesson_id)
+        stmt = select(func.count()).select_from(FingerExercise).where(
+            FingerExercise.lesson_id == lesson_id
+        )
         if active_only:
             stmt = stmt.where(FingerExercise.is_active.is_(True))
         return int(self.db.scalar(stmt) or 0)
 
-    def count_active_lessons_with_exercises(self, lesson_ids: list[int]) -> int:
-        if not lesson_ids:
-            return 0
+    def count_by_chapter(self, chapter_id: int, *, active_only: bool = True) -> int:
         stmt = (
-            select(func.count(func.distinct(FingerExercise.lesson_id)))
-            .where(
-                FingerExercise.lesson_id.in_(lesson_ids),
-                FingerExercise.is_active.is_(True),
-            )
+            select(func.count())
+            .select_from(FingerExercise)
+            .join(FingerLesson, FingerExercise.lesson_id == FingerLesson.id)
+            .where(FingerLesson.chapter_id == chapter_id)
         )
+        if active_only:
+            stmt = stmt.where(FingerExercise.is_active.is_(True))
         return int(self.db.scalar(stmt) or 0)

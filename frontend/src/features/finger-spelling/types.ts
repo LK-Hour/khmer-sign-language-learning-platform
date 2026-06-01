@@ -21,7 +21,7 @@ export interface FsChapter {
   orderIndex: number;
   lessonCount: number;
   completedLessonCount: number;
-  isQuizUnlocked: boolean;
+  isExerciseUnlocked: boolean;
 }
 
 export interface FsLesson {

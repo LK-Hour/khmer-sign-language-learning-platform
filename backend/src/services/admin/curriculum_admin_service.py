@@ -7,6 +7,7 @@ the exact same create/read/update/soft-delete logic.
 
 from __future__ import annotations
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.repositories.admin.base_crud_repository import BaseCrudRepository
@@ -43,12 +44,19 @@ class CurriculumAdminService:
     def _chapter_response(self, chapter) -> ChapterResponse:
         data = ChapterResponse.model_validate(chapter)
         data.lesson_count = self.lessons.count(chapter_id=chapter.id)
+        lesson_model = self.cfg.lesson_model
+        exercise_model = self.cfg.exercise_model
+        stmt = (
+            select(func.count())
+            .select_from(exercise_model)
+            .join(lesson_model, exercise_model.lesson_id == lesson_model.id)
+            .where(lesson_model.chapter_id == chapter.id)
+        )
+        data.exercise_count = int(self.db.scalar(stmt) or 0)
         return data
 
     def _lesson_response(self, lesson) -> LessonResponse:
-        data = LessonResponse.model_validate(lesson)
-        data.exercise_count = self.exercises.count(lesson_id=lesson.id)
-        return data
+        return LessonResponse.model_validate(lesson)
 
     # ── Units ────────────────────────────────────────────────────────────
 

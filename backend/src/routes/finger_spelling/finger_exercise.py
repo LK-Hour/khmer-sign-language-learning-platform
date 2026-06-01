@@ -1,4 +1,4 @@
-"""Finger spelling exercise routes."""
+"""Finger spelling chapter exercise routes."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from src.db.session import get_db
-from src.dependencies.auth import get_current_user
+from src.dependencies.auth import get_current_user, get_optional_user
 from src.models.user import User
 from src.schemas.finger_spelling import (
     ExerciseResponse,
@@ -18,14 +18,16 @@ from src.services.finger_spelling.finger_exercise_service import FingerExerciseS
 router = APIRouter(prefix="/api/finger_spelling/exercise", tags=["finger-spelling-exercise"])
 
 
-@router.get("/lessons/{lesson_id}", response_model=list[ExerciseResponse])
-def list_lesson_exercises(
-    lesson_id: int,
+@router.get("/chapters/{chapter_id}", response_model=list[ExerciseResponse])
+def list_chapter_exercises(
+    chapter_id: int,
     db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
 ) -> list[ExerciseResponse]:
-    exercises = FingerExerciseService(db).list_lesson_exercises(lesson_id)
+    user_id = user.id if user else None
+    exercises = FingerExerciseService(db).list_chapter_exercises(chapter_id, user_id)
     if exercises is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
     return [ExerciseResponse.model_validate(ex) for ex in exercises]
 
 
@@ -48,7 +50,8 @@ def submit_exercise(
     return ExerciseSubmitResponse(
         is_correct=result.is_correct,
         attempt_number=result.attempt_number,
-        progress_id=str(result.progress_id),
+        lesson_id=result.lesson_id,
+        progress_id=result.progress_id,
         explanation_en=result.explanation_en,
         explanation_kh=result.explanation_kh,
     )

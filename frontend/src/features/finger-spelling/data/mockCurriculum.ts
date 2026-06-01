@@ -36,7 +36,7 @@ export const mockChapters: Record<number, FsChapter[]> = {
       orderIndex: 1,
       lessonCount: 4,
       completedLessonCount: 2,
-      isQuizUnlocked: false,
+      isExerciseUnlocked: false,
     },
     {
       id: 102,
@@ -46,7 +46,7 @@ export const mockChapters: Record<number, FsChapter[]> = {
       orderIndex: 2,
       lessonCount: 4,
       completedLessonCount: 1,
-      isQuizUnlocked: true,
+      isExerciseUnlocked: true,
     },
   ],
   2: [
@@ -58,7 +58,7 @@ export const mockChapters: Record<number, FsChapter[]> = {
       orderIndex: 1,
       lessonCount: 4,
       completedLessonCount: 0,
-      isQuizUnlocked: false,
+      isExerciseUnlocked: false,
     },
   ],
 };

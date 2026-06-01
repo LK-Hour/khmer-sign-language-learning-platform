@@ -255,3 +255,46 @@ class FingerCurriculumRepository:
                 FingerChapter.is_active.is_(True),
             )
         return list(self.db.scalars(stmt).all())
+
+    def list_lessons_in_curriculum_order(
+        self, *, active_only: bool = True
+    ) -> list[FingerLesson]:
+        """All lessons flattened in unit -> chapter -> lesson order."""
+        stmt = (
+            select(FingerLesson)
+            .join(FingerChapter, FingerLesson.chapter_id == FingerChapter.id)
+            .join(FingerUnit, FingerChapter.unit_id == FingerUnit.id)
+            .order_by(
+                FingerUnit.order_index,
+                FingerChapter.order_index,
+                FingerLesson.order_index,
+            )
+        )
+        if active_only:
+            stmt = stmt.where(
+                FingerLesson.is_active.is_(True),
+                FingerChapter.is_active.is_(True),
+                FingerUnit.is_active.is_(True),
+            )
+        return list(self.db.scalars(stmt).all())
+
+    def get_first_lesson_in_curriculum(
+        self, *, active_only: bool = True
+    ) -> FingerLesson | None:
+        lessons = self.list_lessons_in_curriculum_order(active_only=active_only)
+        return lessons[0] if lessons else None
+
+    def get_prior_lesson_in_curriculum_order(
+        self, lesson_id: int, *, active_only: bool = True
+    ) -> FingerLesson | None:
+        lessons = self.list_lessons_in_curriculum_order(active_only=active_only)
+        for index, lesson in enumerate(lessons):
+            if lesson.id == lesson_id:
+                return lessons[index - 1] if index > 0 else None
+        return None
+
+    def is_first_lesson_in_curriculum(
+        self, lesson_id: int, *, active_only: bool = True
+    ) -> bool:
+        first = self.get_first_lesson_in_curriculum(active_only=active_only)
+        return first is not None and first.id == lesson_id

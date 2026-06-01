@@ -45,10 +45,13 @@ def _svc(track: str, db: Session) -> ExerciseAdminService:
 def list_exercises(
     track: str,
     lesson_id: int | None = Query(None),
+    chapter_id: int | None = Query(None),
     active_only: bool = Query(False),
     db: Session = Depends(get_db),
 ):
-    return _svc(track, db).list_exercises(lesson_id=lesson_id, active_only=active_only)
+    return _svc(track, db).list_exercises(
+        lesson_id=lesson_id, chapter_id=chapter_id, active_only=active_only
+    )
 
 
 @router.post(

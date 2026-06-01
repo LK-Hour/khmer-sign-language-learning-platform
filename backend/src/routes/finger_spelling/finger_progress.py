@@ -63,7 +63,7 @@ def get_chapter_progress(
         chapterId=chapter_id,
         completedLessonCount=completed,
         totalLessonCount=len(lesson_ids),
-        isQuizUnlocked=curriculum.is_chapter_quiz_unlocked(user.id, chapter_id),
+        isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user.id, chapter_id),
         lessons=[
             FsChapterLessonProgressItem(
                 lessonId=lesson.id,

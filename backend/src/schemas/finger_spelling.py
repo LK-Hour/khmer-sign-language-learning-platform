@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
@@ -125,7 +127,7 @@ class FsChapterResponse(BaseModel):
     orderIndex: int
     lessonCount: int
     completedLessonCount: int
-    isQuizUnlocked: bool
+    isExerciseUnlocked: bool
     isLocked: bool = False
 
 
@@ -181,7 +183,8 @@ class ExerciseSubmitRequest(BaseModel):
 class ExerciseSubmitResponse(BaseModel):
     is_correct: bool
     attempt_number: int
-    progress_id: str
+    lesson_id: int
+    progress_id: uuid.UUID
     explanation_en: str | None = None
     explanation_kh: str | None = None
 
@@ -252,5 +255,5 @@ class FsChapterProgressResponse(BaseModel):
     chapterId: int
     completedLessonCount: int
     totalLessonCount: int
-    isQuizUnlocked: bool
+    isExerciseUnlocked: bool
     lessons: List[FsChapterLessonProgressItem] = []

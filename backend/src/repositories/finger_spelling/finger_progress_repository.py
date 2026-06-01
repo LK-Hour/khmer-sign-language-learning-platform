@@ -104,15 +104,12 @@ class FingerProgressRepository:
         )
         return int(self.db.scalar(stmt) or 0)
 
-    def next_exercise_attempt_number(
-        self, user_id: uuid.UUID, exercise_id: int, progress_id: uuid.UUID
-    ) -> int:
+    def next_exercise_attempt_number(self, user_id: uuid.UUID, exercise_id: int) -> int:
         stmt = (
             select(func.coalesce(func.max(FingerUserExerciseResult.attempt_number), 0))
             .where(
                 FingerUserExerciseResult.user_id == user_id,
                 FingerUserExerciseResult.finger_exercise_id == exercise_id,
-                FingerUserExerciseResult.progress_id == progress_id,
             )
         )
         return int(self.db.scalar(stmt) or 0) + 1
@@ -121,8 +118,8 @@ class FingerProgressRepository:
         self,
         *,
         user_id: uuid.UUID,
-        exercise_id: int,
         progress_id: uuid.UUID,
+        exercise_id: int,
         is_correct: bool,
         time_taken: int,
         attempt_number: int,
@@ -131,8 +128,8 @@ class FingerProgressRepository:
     ) -> FingerUserExerciseResult:
         result = FingerUserExerciseResult(
             user_id=user_id,
-            finger_exercise_id=exercise_id,
             progress_id=progress_id,
+            finger_exercise_id=exercise_id,
             selected_option_id=selected_option_id,
             selected_answer=selected_answer,
             is_correct=is_correct,
@@ -142,13 +139,3 @@ class FingerProgressRepository:
         self.db.add(result)
         self.db.flush()
         return result
-
-    def count_correct_results_for_progress(self, progress_id: uuid.UUID) -> int:
-        stmt = (
-            select(func.count(func.distinct(FingerUserExerciseResult.finger_exercise_id)))
-            .where(
-                FingerUserExerciseResult.progress_id == progress_id,
-                FingerUserExerciseResult.is_correct.is_(True),
-            )
-        )
-        return int(self.db.scalar(stmt) or 0)

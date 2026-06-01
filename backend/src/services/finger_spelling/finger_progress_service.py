@@ -8,8 +8,8 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from src.models.finger_spelling import FingerUserLessonProgress
-from src.repositories.finger_spelling.finger_exercise_repository import FingerExerciseRepository
 from src.repositories.finger_spelling.finger_progress_repository import FingerProgressRepository
+from src.services.finger_spelling.finger_locking_service import FingerLockingService
 
 
 def _utc_now_naive() -> datetime:
@@ -23,7 +23,6 @@ class FingerProgressService:
     def __init__(self, db: Session) -> None:
         self.db = db
         self.progress = FingerProgressRepository(db)
-        self.exercises = FingerExerciseRepository(db)
 
     def get_lesson_progress(
         self, user_id: uuid.UUID, lesson_id: int
@@ -57,57 +56,8 @@ class FingerProgressService:
 
         self.db.commit()
         self.db.refresh(progress)
+        FingerLockingService.clear_cache()
         return progress
-
-    def maybe_complete_lesson(
-        self,
-        user_id: uuid.UUID,
-        lesson_id: int,
-        progress: FingerUserLessonProgress,
-    ) -> bool:
-        """Mark lesson complete when every active exercise has a correct attempt."""
-        if progress.is_completed:
-            return True
-
-        total_exercises = self.exercises.count_by_lesson(lesson_id, active_only=True)
-        if total_exercises == 0:
-            return False
-
-        correct_count = self.progress.count_correct_results_for_progress(progress.id)
-        if correct_count < total_exercises:
-            return False
-
-        progress.is_completed = True
-        progress.completed_at = _utc_now_naive()
-        return True
-
-    def is_lesson_locked(
-        self,
-        user_id: uuid.UUID | None,
-        order_index: int,
-        chapter_id: int,
-        *,
-        active_only: bool = True,
-    ) -> bool:
-        """First lesson in a chapter is unlocked; others require prior lesson completion."""
-        if user_id is None:
-            return order_index > 1
-
-        if order_index <= 1:
-            return False
-
-        from src.repositories.finger_spelling.finger_curriculum_repository import (
-            FingerCurriculumRepository,
-        )
-
-        curriculum = FingerCurriculumRepository(self.db)
-        lessons = curriculum.list_lessons_by_chapter(chapter_id, active_only=active_only)
-        prior = next((lesson for lesson in lessons if lesson.order_index == order_index - 1), None)
-        if prior is None:
-            return False
-
-        prior_progress = self.progress.get_lesson_progress(user_id, prior.id)
-        return prior_progress is None or not prior_progress.is_completed
 
     def is_lesson_locked_by_id(
         self,
@@ -116,21 +66,8 @@ class FingerProgressService:
         *,
         active_only: bool = True,
     ) -> bool:
-        from src.repositories.finger_spelling.finger_curriculum_repository import (
-            FingerCurriculumRepository,
-        )
-
-        lesson = FingerCurriculumRepository(self.db).get_lesson_by_id(
-            lesson_id, active_only=active_only
-        )
-        if lesson is None:
-            return True
-        return self.is_lesson_locked(
-            user_id,
-            lesson.order_index,
-            lesson.chapter_id,
-            active_only=active_only,
-        )
+        """Linear unlock: only the first curriculum lesson is free; each next needs the prior completed."""
+        return FingerLockingService(self.db).is_lesson_locked(lesson_id, user_id)
 
     def progress_status_for_lesson(
         self, user_id: uuid.UUID | None, lesson_id: int

@@ -81,6 +81,7 @@ class ChapterResponse(BaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     lesson_count: int = 0
+    exercise_count: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -118,6 +119,5 @@ class LessonResponse(BaseModel):
     is_active: bool
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    exercise_count: int = 0
 
     model_config = {"from_attributes": True}

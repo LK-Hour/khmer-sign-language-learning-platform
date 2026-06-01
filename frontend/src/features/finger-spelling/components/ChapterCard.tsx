@@ -66,11 +66,11 @@ export default function ChapterCard({ chapter }: ChapterCardProps) {
             <Typography variant="caption" color="text.secondary">
               {chapter.completedLessonCount}/{chapter.lessonCount} lessons
             </Typography>
-            {chapter.isQuizUnlocked ? (
+            {chapter.isExerciseUnlocked ? (
               <Chip
                 size="small"
                 icon={<QuizOutlinedIcon />}
-                label="Quiz ready"
+                label="Exercise ready"
                 color="primary"
                 variant="outlined"
               />
@@ -78,7 +78,7 @@ export default function ChapterCard({ chapter }: ChapterCardProps) {
               <Chip
                 size="small"
                 icon={<LockOutlinedIcon />}
-                label="Quiz locked"
+                label="Exercise locked"
                 variant="outlined"
               />
             )}

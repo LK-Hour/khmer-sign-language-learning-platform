@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 load_dotenv(BASE_DIR / ".env")
 
 from fastapi.testclient import TestClient  # noqa: E402
+from fastapi import HTTPException, status  # noqa: E402
 from sqlalchemy import select  # noqa: E402
 
 from src.db.session import SessionLocal  # noqa: E402
@@ -207,27 +208,58 @@ def _case_practice_upsert_and_foreign_letter() -> bool:
 
 
 def _case_lesson_locking() -> bool:
-    print("\nTest: lesson locking by order")
+    print("\nTest: linear lesson locking (unit 1 -> chapter 1 -> lesson 1 only)")
     print("-" * 50)
     db = SessionLocal()
     try:
         repo = FingerCurriculumRepository(db)
         progress = FingerProgressService(db)
-        chapter = repo.list_chapters_by_unit(2)[0] if repo.list_units() else None
-        if chapter is None:
+        units = repo.list_units()
+        if not units:
+            print("SKIP: no units")
+            return True
+
+        first_unit = units[0]
+        chapters = repo.list_chapters_by_unit(first_unit.id)
+        if not chapters:
             print("SKIP: no chapters")
             return True
 
-        lessons = repo.list_lessons_by_chapter(chapter.id)
+        first_chapter = chapters[0]
+        lessons = repo.list_lessons_by_chapter(first_chapter.id)
         if len(lessons) < 2:
             print("SKIP: chapter has fewer than 2 lessons")
             return True
 
-        first, second = lessons[0], lessons[1]
-        guest_locked = progress.is_lesson_locked_by_id(None, second.id)
-        if not guest_locked:
-            print("FAIL: second lesson should be locked for guest")
+        curriculum_first = repo.get_first_lesson_in_curriculum()
+        if curriculum_first is None:
+            print("SKIP: no lessons in curriculum")
+            return True
+
+        second = lessons[1]
+
+        if progress.is_lesson_locked_by_id(None, curriculum_first.id):
+            print("FAIL: first curriculum lesson should be unlocked for guest")
             return False
+
+        guest_second_locked = progress.is_lesson_locked_by_id(None, second.id)
+        if not guest_second_locked:
+            print("FAIL: second lesson in chapter 1 should be locked for guest")
+            return False
+
+        if len(chapters) >= 2:
+            ch2_lessons = repo.list_lessons_by_chapter(chapters[1].id)
+            if ch2_lessons and not progress.is_lesson_locked_by_id(None, ch2_lessons[0].id):
+                print("FAIL: first lesson in chapter 2 should be locked for guest")
+                return False
+
+        if len(units) >= 2:
+            u2_chapters = repo.list_chapters_by_unit(units[1].id)
+            if u2_chapters:
+                u2_lessons = repo.list_lessons_by_chapter(u2_chapters[0].id)
+                if u2_lessons and not progress.is_lesson_locked_by_id(None, u2_lessons[0].id):
+                    print("FAIL: first lesson in unit 2 should be locked for guest")
+                    return False
 
         print("PASS")
         return True
@@ -332,21 +364,18 @@ def _case_progress_repository() -> bool:
 
 
 def _case_exercise_repository_and_service() -> bool:
-    print("\nTest: FingerExerciseRepository + FingerExerciseService")
+    print("\nTest: FingerExerciseRepository + FingerExerciseService (ERD lesson scope)")
     print("-" * 50)
     db = SessionLocal()
     try:
         ex_repo = FingerExerciseRepository(db)
         curriculum = FingerCurriculumRepository(db)
-        lesson = curriculum.get_lesson_by_id(1)
-        if lesson is None:
-            lesson = curriculum.list_lessons_by_chapter(
-                curriculum.list_chapters_by_unit(curriculum.list_units()[0].id)[0].id
-            )[0]
+        unit = curriculum.list_units()[0]
+        chapter = curriculum.list_chapters_by_unit(unit.id)[0]
 
-        exercises = ex_repo.list_with_options_by_lesson(lesson.id)
+        exercises = ex_repo.list_with_options_by_chapter(chapter.id)
         if not exercises:
-            print("  SKIP: no exercises seeded for lesson (repository OK, empty data)")
+            print("  SKIP: no exercises seeded for chapter (repository OK, empty data)")
             return True
 
         ex = ex_repo.get_with_options(exercises[0].id)
@@ -360,12 +389,18 @@ def _case_exercise_repository_and_service() -> bool:
             return True
 
         svc = FingerExerciseService(db)
-        listed = svc.list_lesson_exercises(lesson.id)
+        try:
+            listed = svc.list_chapter_exercises(chapter.id, user.id)
+        except HTTPException as exc:
+            if exc.status_code == status.HTTP_403_FORBIDDEN:
+                print("  SKIP: chapter exercises locked (lessons not complete)")
+                return True
+            raise
         if listed is None or len(listed) != len(exercises):
-            print("FAIL: list_lesson_exercises mismatch")
+            print("FAIL: list_chapter_exercises mismatch")
             return False
 
-        print(f"  lesson_id={lesson.id}, exercises={len(exercises)}")
+        print(f"  chapter_id={chapter.id}, exercises={len(exercises)}")
         print("PASS")
         return True
     except Exception as exc:

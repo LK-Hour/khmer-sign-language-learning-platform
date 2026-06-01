@@ -111,7 +111,7 @@ def list_chapters(
                 orderIndex=chapter.order_index,
                 lessonCount=len(lesson_ids),
                 completedLessonCount=completed,
-                isQuizUnlocked=curriculum.is_chapter_quiz_unlocked(user_id, chapter.id),
+                isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id),
                 isLocked=locking.is_chapter_locked(chapter.id, user_id),
             )
         )
@@ -145,7 +145,7 @@ def get_chapter(
         orderIndex=chapter.order_index,
         lessonCount=len(lesson_ids),
         completedLessonCount=completed,
-        isQuizUnlocked=curriculum.is_chapter_quiz_unlocked(user_id, chapter.id),
+        isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id),
         isLocked=locking.is_chapter_locked(chapter.id, user_id),
     )
 
