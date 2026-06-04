@@ -1,21 +1,28 @@
-import Stack from "@mui/material/Stack";
 import { notFound } from "next/navigation";
-import FsMobileShell from "@/features/finger-spelling/components/shell/FsMobileShell";
-import ChapterCard from "@/features/finger-spelling/components/ChapterCard";
 import {
   fetchFsChapters,
   fetchFsUnit,
 } from "@/features/finger-spelling/api/curriculum";
-import { ROUTES } from "@/constants/routes";
+import {
+  ChapterList,
+  FingerSpellingShell,
+} from "@/features/finger-spelling/components";
 
 type PageProps = {
   params: Promise<{ unitId: string }>;
+  searchParams: Promise<{ chapter?: string }>;
 };
 
-export default async function UnitChaptersPage({ params }: PageProps) {
+export default async function UnitChaptersPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { unitId } = await params;
+  const { chapter: chapterParam } = await searchParams;
   const id = Number(unitId);
   if (Number.isNaN(id)) notFound();
+
+  const expandedChapterId = chapterParam ? Number(chapterParam) : undefined;
 
   const [unit, chapters] = await Promise.all([
     fetchFsUnit(id),
@@ -24,17 +31,22 @@ export default async function UnitChaptersPage({ params }: PageProps) {
   if (!unit) notFound();
 
   return (
-    <FsMobileShell
+    <FingerSpellingShell
       title={unit.title}
-      subtitle={unit.titleKh}
-      showBack
-      backHref={ROUTES.fingerSpelling.root}
+      titleKh={unit.titleKh}
+      contextUnitIndex={unit.orderIndex}
+      contextTitle={unit.title}
+      contextTitleKh={unit.titleKh}
     >
-      <Stack spacing={2}>
-        {chapters.map((chapter) => (
-          <ChapterCard key={chapter.id} chapter={chapter} />
-        ))}
-      </Stack>
-    </FsMobileShell>
+      <ChapterList
+        chapters={chapters}
+        defaultExpandedFirst={expandedChapterId == null}
+        expandedChapterId={
+          expandedChapterId != null && !Number.isNaN(expandedChapterId)
+            ? expandedChapterId
+            : undefined
+        }
+      />
+    </FingerSpellingShell>
   );
 }

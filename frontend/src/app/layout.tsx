@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ThemeRegistry from "@/theme/ThemeRegistry";
-import { LocaleProvider } from "@/i18n/LocaleProvider";
-import { Locale } from "@/i18n/config";
+import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import { inter, montserrat, publicSans } from "@/theme/fonts";
+import { DEFAULT_LOCALE } from "@/i18n/config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,28 +23,18 @@ export const metadata: Metadata = {
 
 interface RootLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ locale?: Locale }>;
 }
 
-export async function generateStaticParams() {
-  return [{ locale: "kh" }, { locale: "en" }];
-}
-
-export default async function RootLayout({
-  children,
-  params,
-}: RootLayoutProps) {
-  const { locale = "kh" } = await params;
-
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
-      lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang={DEFAULT_LOCALE}
+      className={`${geistSans.variable} ${geistMono.variable} ${publicSans.variable} ${inter.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <LocaleProvider initialLocale={locale}>
+        <ReactQueryProvider>
           <ThemeRegistry>{children}</ThemeRegistry>
-        </LocaleProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

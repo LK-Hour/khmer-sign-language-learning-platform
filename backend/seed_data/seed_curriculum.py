@@ -626,8 +626,8 @@ def _build_curriculum() -> dict[str, list[dict]]:
                     "unit_id": unit_meta["id"],
                     "name_en": f"{unit_meta['chapter_name_en']} {ch_num}",
                     "name_kh": f"{unit_meta['chapter_name_kh']} ទី {ch_num_kh}",
-                    "description_en": f"{first_kh} – {last_kh}",
-                    "description_kh": f"{first_kh} – {last_kh}",
+                    "description_en": f"{unit_meta['chapter_name_en'].rstrip('s')} {first_kh} - {last_kh}",
+                    "description_kh": f"{unit_meta['chapter_name_kh']} {first_kh} - {last_kh}",
                     "order_index": ch_num,
                     "is_active": True,
                 }

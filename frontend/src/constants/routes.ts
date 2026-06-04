@@ -6,16 +6,25 @@
 export const ROUTES = {
   home: "/",
 
+  /** App-wide sections (outside finger-spelling URL tree) */
+  dictionary: "/dictionary",
+  dictionaryWord: (wordId: string | number) => `/dictionary/${wordId}`,
+  profile: "/profile",
+
   fingerSpelling: {
     root: "/finger-spelling",
     unit: (unitId: string | number) => `/finger-spelling/units/${unitId}`,
+    unitChapter: (unitId: string | number, chapterId: string | number) =>
+      `/finger-spelling/units/${unitId}?chapter=${chapterId}`,
     chapter: (chapterId: string | number) =>
       `/finger-spelling/chapters/${chapterId}`,
     lesson: (lessonId: string | number) =>
       `/finger-spelling/lessons/${lessonId}`,
-    practice: "/finger-spelling/practice",
-    dictionary: "/finger-spelling/dictionary",
-    profile: "/finger-spelling/profile",
+    exercise: "/finger-spelling/exercise",
+    exerciseChapter: (chapterId: string | number) =>
+      `/finger-spelling/exercise/${chapterId}`,
+    exerciseQuiz: (chapterId: string | number) =>
+      `/finger-spelling/exercise/${chapterId}/quiz`,
   },
 
   words: {

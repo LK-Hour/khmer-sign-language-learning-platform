@@ -29,7 +29,8 @@
       "@/theme/*": ["./src/theme/*"],
       "@/auth/*": ["./src/auth/*"],
       "@/assets/*": ["./src/assets/*"],
-      "@/features/*": ["./src/features/*"]
+      "@/features/*": ["./src/features/*"],
+      "@/http/*": ["./src/http/*"]
     }
   },
   "include": [

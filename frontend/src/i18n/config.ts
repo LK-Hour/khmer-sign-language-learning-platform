@@ -7,7 +7,7 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'kh'; // Khmer as default
 
 export const LOCALE_NAMES: Record<Locale, string> = {
-  kh: 'ខ្មែរ',
+  kh: 'ភាសាខ្មែរ',
   en: 'English',
 };
 

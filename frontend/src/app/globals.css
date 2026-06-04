@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --ksl-font-sm: 14px;
+  --ksl-font-md: 16px;
+  --ksl-font-lg: 20px;
+  --ksl-leading-sm: 20px;
+  --ksl-leading-md: 24px;
+  --ksl-leading-lg: 30px;
 }
 
 @theme inline {
@@ -10,6 +16,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --text-sm: var(--ksl-font-sm);
+  --text-sm--line-height: var(--ksl-leading-sm);
+  --text-base: var(--ksl-font-md);
+  --text-base--line-height: var(--ksl-leading-md);
+  --text-lg: var(--ksl-font-lg);
+  --text-lg--line-height: var(--ksl-leading-lg);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,5 +35,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: var(--ksl-font-md);
+  line-height: var(--ksl-leading-md);
   margin: 0;
 }

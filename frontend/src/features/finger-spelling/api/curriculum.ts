@@ -7,72 +7,88 @@ import {
   mockUnits,
 } from "../data/mockCurriculum";
 import type { FsChapter, FsLesson, FsLessonDetail, FsUnit } from "../types";
+import {
+  normalizeChapter,
+  normalizeLesson,
+  normalizeLessonDetail,
+  normalizeUnit,
+} from "./adapters";
+import { FS_USE_MOCK } from "./config";
 import { fsFetch } from "./client";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_FS_USE_MOCK !== "false";
-
 export async function fetchFsUnits(): Promise<FsUnit[]> {
-  if (USE_MOCK) return mockUnits;
-  try {
-    return await fsFetch<FsUnit[]>("/api/finger_spelling/units");
-  } catch {
-    return mockUnits;
-  }
+  const raw = FS_USE_MOCK
+    ? mockUnits
+    : await fsFetch<FsUnit[]>("/api/finger_spelling/units");
+  return raw.map(normalizeUnit);
 }
 
 export async function fetchFsUnit(unitId: number): Promise<FsUnit | null> {
-  if (USE_MOCK) return getMockUnit(unitId) ?? null;
+  if (FS_USE_MOCK) {
+    const unit = getMockUnit(unitId);
+    return unit ? normalizeUnit(unit) : null;
+  }
+
   try {
-    return await fsFetch<FsUnit>(`/api/finger_spelling/units/${unitId}`);
+    const unit = await fsFetch<FsUnit>(
+      `/api/finger_spelling/units/${unitId}`
+    );
+    return normalizeUnit(unit);
   } catch {
-    return getMockUnit(unitId) ?? null;
+    return null;
   }
 }
 
 export async function fetchFsChapters(unitId: number): Promise<FsChapter[]> {
-  if (USE_MOCK) return getMockChapters(unitId);
-  try {
-    return await fsFetch<FsChapter[]>(
-      `/api/finger_spelling/units/${unitId}/chapters`
-    );
-  } catch {
-    return getMockChapters(unitId);
-  }
+  const raw = FS_USE_MOCK
+    ? getMockChapters(unitId)
+    : await fsFetch<FsChapter[]>(
+        `/api/finger_spelling/units/${unitId}/chapters`
+      );
+  return raw.map(normalizeChapter);
 }
 
 export async function fetchFsChapter(
   chapterId: number
 ): Promise<FsChapter | null> {
-  if (USE_MOCK) return getMockChapter(chapterId) ?? null;
+  if (FS_USE_MOCK) {
+    const chapter = getMockChapter(chapterId);
+    return chapter ? normalizeChapter(chapter) : null;
+  }
+
   try {
-    return await fsFetch<FsChapter>(
+    const chapter = await fsFetch<FsChapter>(
       `/api/finger_spelling/chapters/${chapterId}`
     );
+    return normalizeChapter(chapter);
   } catch {
-    return getMockChapter(chapterId) ?? null;
+    return null;
   }
 }
 
 export async function fetchFsLessons(chapterId: number): Promise<FsLesson[]> {
-  if (USE_MOCK) return getMockLessons(chapterId);
-  try {
-    return await fsFetch<FsLesson[]>(
-      `/api/finger_spelling/chapters/${chapterId}/lessons`
-    );
-  } catch {
-    return getMockLessons(chapterId);
-  }
+  const raw = FS_USE_MOCK
+    ? getMockLessons(chapterId)
+    : await fsFetch<FsLesson[]>(
+        `/api/finger_spelling/chapters/${chapterId}/lessons`
+      );
+  return raw.map(normalizeLesson);
 }
 
 export async function fetchFsLesson(
   lessonId: number
 ): Promise<FsLessonDetail | null> {
-  if (USE_MOCK) return getMockLesson(lessonId) ?? null;
+  if (FS_USE_MOCK) {
+    const lesson = getMockLesson(lessonId);
+    return lesson ? normalizeLessonDetail(lesson) : null;
+  }
+
   try {
-    return await fsFetch<FsLessonDetail>(
+    const lesson = await fsFetch<FsLessonDetail>(
       `/api/finger_spelling/lessons/${lessonId}`
     );
+    return normalizeLessonDetail(lesson);
   } catch {
-    return getMockLesson(lessonId) ?? null;
+    return null;
   }
 }
