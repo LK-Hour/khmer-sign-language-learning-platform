@@ -1,10 +1,10 @@
-# 🤟 Khmer Sign Language Platform
+# Khmer Sign Language Platform
 
 A comprehensive web platform for learning Khmer sign language with AI-powered real-time feedback through computer vision. This platform enables users to practice sign language gestures and receive instant accuracy assessments.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 - [Tech Stack](#tech-stack)
 - [System Requirements](#system-requirements)
 - [Project Structure](#project-structure)
@@ -15,7 +15,7 @@ A comprehensive web platform for learning Khmer sign language with AI-powered re
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 ### **Frontend**
 | Component | Version | Notes |
@@ -53,7 +53,7 @@ A comprehensive web platform for learning Khmer sign language with AI-powered re
 
 ---
 
-## 💻 System Requirements
+## System Requirements
 
 ### Required Software
 - **Docker & Docker Compose** - For PostgreSQL and pgAdmin only
@@ -63,7 +63,7 @@ A comprehensive web platform for learning Khmer sign language with AI-powered re
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 khmer-sign-language-platform/
@@ -119,7 +119,7 @@ khmer-sign-language-platform/
 
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### Step 1: Clone Repository
 ```bash
@@ -198,7 +198,7 @@ Port: 5432
 
 ---
 
-## 🎯 Running the Application
+## Running the Application
 
 ### Terminal 1: Start Backend
 ```bash
@@ -226,7 +226,7 @@ bash start.sh
 
 ---
 
-## 🗄️ Database
+## Database
 
 ### PostgreSQL Setup
 - **Image:** `postgres:17-alpine`
@@ -257,7 +257,7 @@ docker compose down -v
 
 ---
 
-## 📝 Environment Variables
+## Environment Variables
 
 ### Backend `.env`
 ```
@@ -291,7 +291,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 Once backend is running, visit:
 - **Swagger UI:** http://localhost:8000/docs
@@ -302,7 +302,7 @@ Once backend is running, visit:
 
 ---
 
-## 🔄 Development Workflow
+## Development Workflow
 
 ### Frontend Project Structure - `src/` Wrapper
 
@@ -402,7 +402,7 @@ npm run lint                        # Run ESLint
 
 ---
 
-## 📦 Frontend Dependencies Overview
+## Frontend Dependencies Overview
 
 | Package | Purpose |
 |---------|---------|
@@ -416,31 +416,31 @@ npm run lint                        # Run ESLint
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
-- ⚠️ Never commit `.env` files with real secrets
-- ⚠️ Change `SECRET_KEY` in production
-- ⚠️ Use environment variables for all sensitive data
-- ✅ JWT tokens expire after 30 minutes (configurable)
+- Never commit `.env` files with real secrets
+- Change `SECRET_KEY` in production
+- Use environment variables for all sensitive data
+- JWT tokens expire after 30 minutes (configurable)
 
 ---
 
-## 🚧 Development Status
+## Development Status
 
-**Current Sprint:** Sprint 1.1 - Infrastructure & Environment ✅
+**Current Sprint:** Sprint 1.1 - Infrastructure & Environment
 
 **Completed:**
-- ✅ Backend infrastructure setup
-- ✅ Frontend setup with Next.js & MUI
-- ✅ Docker PostgreSQL configuration
-- ✅ Environment variables
-- ✅ CORS configuration
+- Backend infrastructure setup
+- Frontend setup with Next.js & MUI
+- Docker PostgreSQL configuration
+- Environment variables
+- CORS configuration
 
 **Next:** Sprint 1.2 - Authentication & User Models
 
 ---
 
-## 📞 Support
+## Support
 
 For issues or questions:
 1. Check existing documentation in `docs.local/`
@@ -449,11 +449,11 @@ For issues or questions:
 
 ---
 
-## 📄 License
+## License
 
 This project is part of the CADT Internship Program.
 
 ---
 
-**Last Updated:** May 12, 2026  
+**Last Updated:** May 12, 2026
 **Project Version:** 0.1.0

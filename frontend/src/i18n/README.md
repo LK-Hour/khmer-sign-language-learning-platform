@@ -27,13 +27,13 @@ middleware.ts                   # Next.js middleware for locale routing
 
 ## Features
 
-- ✅ Default locale: Khmer (kh)
-- ✅ Supported locales: Khmer and English
-- ✅ URL-based routing: `/kh/...` and `/en/...`
-- ✅ Persistent locale preference (localStorage)
-- ✅ Browser language detection
-- ✅ Locale cookie for server-side detection
-- ✅ Easy translation hook with TypeScript support
+- Default locale: Khmer (kh)
+- Supported locales: Khmer and English
+- URL-based routing: `/kh/...` and `/en/...`
+- Persistent locale preference (localStorage)
+- Browser language detection
+- Locale cookie for server-side detection
+- Easy translation hook with TypeScript support
 
 ## Usage
 
@@ -149,10 +149,10 @@ export const SUPPORTED_LOCALES = ['kh', 'en'];
 
 ## Next Steps
 
-1. ✅ Add more translation keys as you build features
-2. ✅ Create nested translation objects for complex structures
-3. ✅ Consider using JSON files for easier translation management
-4. ✅ Integrate with translation management services (optional)
+1. Add more translation keys as you build features
+2. Create nested translation objects for complex structures
+3. Consider using JSON files for easier translation management
+4. Integrate with translation management services (optional)
 
 ## TypeScript Support
 

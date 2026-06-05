@@ -58,22 +58,22 @@ LETTER 'ក' (Ka) FRONTEND TEST SUITE
 ============================================================
 API Base URL: http://localhost:8000
 
-✅ Test 1: Get Letter Data
-✅ Test 2: Letter Media Files
-✅ Test 3: Media Endpoint
-✅ Test 4: Lesson Associations
-✅ Test 5: Curriculum Path
-✅ Test 6: Complete Structure
+Test 1: Get Letter Data
+Test 2: Letter Media Files
+Test 3: Media Endpoint
+Test 4: Lesson Associations
+Test 5: Curriculum Path
+Test 6: Complete Structure
 
 ============================================================
 TEST REPORT
 ============================================================
 Total Tests: 6
-Passed: 6 ✅
-Failed: 0 ❌
+Passed: 6
+Failed: 0
 ============================================================
 
-✅ ALL TESTS PASSED! The letter 'ក' API is working correctly.
+ALL TESTS PASSED! The letter 'ក' API is working correctly.
 ```
 
 ## Sample API Responses
