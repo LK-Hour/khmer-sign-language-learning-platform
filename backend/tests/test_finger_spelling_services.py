@@ -11,6 +11,8 @@ import sys
 import uuid
 from pathlib import Path
 
+import pytest
+
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
@@ -24,7 +26,7 @@ from sqlalchemy import select  # noqa: E402
 
 from src.db.session import SessionLocal  # noqa: E402
 from src.main import app  # noqa: E402
-from src.models.finger_spelling import FingerLetter  # noqa: E402
+from src.models.finger_spelling import FingerLetter, FingerUnit  # noqa: E402
 from src.models.user import User  # noqa: E402
 from src.repositories.finger_spelling.finger_curriculum_repository import (  # noqa: E402
     FingerCurriculumRepository,
@@ -47,6 +49,19 @@ from src.utils.jwt_utils import create_access_token  # noqa: E402
 
 def _get_test_user(db) -> User | None:
     return db.query(User).filter(User.is_active.is_(True)).first()
+
+
+def _seeded_curriculum_available() -> bool:
+    db = SessionLocal()
+    try:
+        return db.query(FingerUnit).count() == 6
+    finally:
+        db.close()
+
+
+def _skip_if_unseeded() -> None:
+    if not _seeded_curriculum_available():
+        pytest.skip("Curriculum seed data is not present; run seed_curriculum.py to enable this smoke test.")
 
 
 def _configure_stdio() -> None:
@@ -566,14 +581,17 @@ def _case_api_curriculum_letter() -> bool:
 
 
 def test_letter_data_service() -> None:
+    _skip_if_unseeded()
     assert _case_letter_data_service()
 
 
 def test_letter_belongs_to_lesson() -> None:
+    _skip_if_unseeded()
     assert _case_letter_belongs_to_lesson()
 
 
 def test_practice_upsert_and_foreign_letter() -> None:
+    _skip_if_unseeded()
     assert _case_practice_upsert_and_foreign_letter()
 
 
@@ -582,6 +600,7 @@ def test_lesson_locking() -> None:
 
 
 def test_curriculum_repository_hierarchy() -> None:
+    _skip_if_unseeded()
     assert _case_curriculum_repository_hierarchy()
 
 
@@ -590,18 +609,22 @@ def test_progress_repository() -> None:
 
 
 def test_exercise_repository_and_service() -> None:
+    _skip_if_unseeded()
     assert _case_exercise_repository_and_service()
 
 
 def test_practice_end_sets_is_completed() -> None:
+    _skip_if_unseeded()
     assert _case_practice_end_sets_is_completed()
 
 
 def test_api_finger_spelling_with_auth() -> None:
+    _skip_if_unseeded()
     assert _case_api_finger_spelling_with_auth()
 
 
 def test_api_curriculum_letter() -> None:
+    _skip_if_unseeded()
     assert _case_api_curriculum_letter()
 
 

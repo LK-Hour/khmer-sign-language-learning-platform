@@ -45,7 +45,7 @@ class FacebookOAuthService:
                 "access_token": f"{FACEBOOK_APP_ID}|{FACEBOOK_APP_SECRET}"
             }
             
-            debug_response = requests.get(token_debug_url, params=debug_params)
+            debug_response = requests.get(token_debug_url, params=debug_params, timeout=5)
             debug_response.raise_for_status()
             debug_data = debug_response.json()
             
@@ -59,7 +59,7 @@ class FacebookOAuthService:
                 "fields": "id,name,email,picture.type(large)",
             }
             
-            response = requests.get(user_info_url, params=params)
+            response = requests.get(user_info_url, params=params, timeout=5)
             response.raise_for_status()
             
             return response.json()

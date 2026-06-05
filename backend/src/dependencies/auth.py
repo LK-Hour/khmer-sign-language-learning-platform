@@ -22,7 +22,10 @@ def get_optional_user(
 ) -> User | None:
     if credentials is None or not credentials.credentials:
         return None
-    payload = verify_token(credentials.credentials)
+    try:
+        payload = verify_token(credentials.credentials)
+    except HTTPException:
+        return None
     user_id = payload.get("sub")
     if not user_id:
         return None
@@ -30,7 +33,7 @@ def get_optional_user(
         uid = uuid.UUID(str(user_id))
     except ValueError:
         return None
-    return db.query(User).filter(User.id == uid).first()
+    return db.query(User).filter(User.id == uid, User.is_active.is_(True)).first()
 
 
 def get_current_user(

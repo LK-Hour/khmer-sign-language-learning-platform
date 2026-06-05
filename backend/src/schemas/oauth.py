@@ -13,6 +13,11 @@ class OAuthLoginRequest(BaseModel):
     guest_token: Optional[str] = None
 
 
+class EmailLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
 class OAuthUserResponse(BaseModel):
     """OAuth user response"""
     id: str

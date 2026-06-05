@@ -1,13 +1,17 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-import os
+from src.core.config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://admin:admin@localhost:5432/khmer_sign_db")
-DATABASE_TIMEZONE = os.getenv("DATABASE_TIMEZONE", "Asia/Phnom_Penh")
+DATABASE_URL = settings.database_url
+DATABASE_TIMEZONE = settings.database_timezone
 
 engine = create_engine(
     DATABASE_URL,
     connect_args={"options": f"-c timezone={DATABASE_TIMEZONE}"},
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
 )
 
 
@@ -29,5 +33,8 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
