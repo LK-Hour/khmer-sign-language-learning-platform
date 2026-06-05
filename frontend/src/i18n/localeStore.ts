@@ -1,1 +1,1 @@
-export { useLocaleStore } from "@/zustand/locale.store";
+export { useLocaleStore } from "@/store/locale.store";

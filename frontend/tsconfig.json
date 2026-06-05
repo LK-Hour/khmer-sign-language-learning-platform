@@ -24,13 +24,12 @@
       "@/hooks/*": ["./src/hooks/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/types/*": ["./src/types/*"],
-      "@/constants/*": ["./src/constants/*"],
-      "@/zustand/*": ["./src/zustand/*"],
+      "@/core/*": ["./src/core/*"],
+      "@/store/*": ["./src/store/*"],
       "@/theme/*": ["./src/theme/*"],
       "@/auth/*": ["./src/auth/*"],
       "@/assets/*": ["./src/assets/*"],
-      "@/features/*": ["./src/features/*"],
-      "@/http/*": ["./src/http/*"]
+      "@/features/*": ["./src/features/*"]
     }
   },
   "include": [

@@ -20,18 +20,12 @@ export const useLocaleStore = create<LocaleStore>()(
       setLocale: (locale: Locale) => {
         if (isValidLocale(locale)) {
           set({ locale });
-          if (typeof document !== "undefined") {
-            document.documentElement.lang = locale;
-          }
         }
       },
 
       toggleLocale: () => {
         set((state) => {
           const newLocale: Locale = state.locale === "kh" ? "en" : "kh";
-          if (typeof document !== "undefined") {
-            document.documentElement.lang = newLocale;
-          }
           return { locale: newLocale };
         });
       },

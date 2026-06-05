@@ -14,7 +14,7 @@ export default async function LocaleLayout({
   const { locale: rawLocale } = await params;
 
   if (!isValidLocale(rawLocale)) {
-    redirect(`/${DEFAULT_LOCALE}/${rawLocale}`);
+    redirect(`/${DEFAULT_LOCALE}`);
   }
 
   return (

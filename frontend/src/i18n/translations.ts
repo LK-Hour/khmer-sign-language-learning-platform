@@ -1,6 +1,6 @@
 import { Locale } from './config';
 
-type Translations = Record<string, string | Record<string, string>>;
+type Translations = Record<string, string>;
 
 const translations: Record<Locale, Translations> = {
   kh: {

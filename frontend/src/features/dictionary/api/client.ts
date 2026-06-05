@@ -1,4 +1,4 @@
-import { apiFetch } from "@/http/client";
+import { apiFetch } from "@/utils/api/client";
 
 export async function dictFetch<T>(
   path: string,

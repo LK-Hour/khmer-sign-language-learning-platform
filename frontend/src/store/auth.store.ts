@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 /** Matches backend `OAuthUserResponse`. */
 export interface AuthUser {
@@ -25,23 +24,15 @@ interface AuthState {
   clear: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      user: null,
+export const useAuthStore = create<AuthState>()((set) => ({
+  token: null,
+  user: null,
 
-      setAuth: (response) =>
-        set({
-          token: response.access_token,
-          user: response.user,
-        }),
-
-      clear: () => set({ token: null, user: null }),
+  setAuth: (response) =>
+    set({
+      token: response.access_token,
+      user: response.user,
     }),
-    {
-      name: "auth-storage",
-      partialize: (state) => ({ token: state.token, user: state.user }),
-    }
-  )
-);
+
+  clear: () => set({ token: null, user: null }),
+}));
