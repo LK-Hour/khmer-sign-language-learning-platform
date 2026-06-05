@@ -1,19 +1,61 @@
-import { Inter, Montserrat, Public_Sans } from "next/font/google";
+import localFont from "next/font/local";
 
-export const publicSans = Public_Sans({
-  subsets: ["latin"],
-  variable: "--font-public-sans",
-  weight: ["400", "600", "700"],
+export const niradei = localFont({
+  src: [
+    {
+      path: "../../public/Fonts/CADTNiradei/Niradei-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/Fonts/CADTNiradei/Niradei-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-niradei",
+  display: "swap",
 });
 
-export const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["400", "600", "700"],
+export const kohSantepheap = localFont({
+  src: [
+    {
+      path: "../../public/Fonts/Koh_Santepheap/KohSantepheap-Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../../public/Fonts/Koh_Santepheap/KohSantepheap-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/Fonts/Koh_Santepheap/KohSantepheap-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../public/Fonts/Koh_Santepheap/KohSantepheap-Black.ttf",
+      weight: "900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-koh-santepheap",
+  display: "swap",
 });
 
-export const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-  weight: ["400", "500", "600"],
+export const mono = localFont({
+  src: "../../public/Fonts/CADTMonoDisplay/CADTMonoDisplay-Regular.ttf",
+  variable: "--font-mono-local",
+  display: "swap",
 });
+
+export const appFonts = `${niradei.variable} ${kohSantepheap.variable} ${mono.variable}`;
+
+export const fontFamilies = {
+  english: 'var(--font-niradei), "Niradei", system-ui, sans-serif',
+  khmer: 'var(--font-koh-santepheap), "Koh Santepheap", serif',
+  sans:
+    'var(--font-niradei), var(--font-koh-santepheap), system-ui, sans-serif',
+  mono: 'var(--font-mono-local), ui-monospace, monospace',
+} as const;

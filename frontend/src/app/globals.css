@@ -1,8 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ksl-primary: #1f9f6f;
+  --ksl-primary-dark: #147b55;
+  --ksl-primary-light: #dff7ed;
+  --ksl-primary-lighter: #f2fbf7;
+  --ksl-secondary: #137FEC;
+  --ksl-secondary-dark: #0f66bd;
+  --ksl-secondary-light: #e7f2ff;
+  --ksl-secondary-lighter: #f3f9ff;
+  --ksl-success: #1f9f6f;
+  --ksl-fail: #FF4438;
+  --ksl-error: #FF4438;
+  --ksl-alert: #f3b83f;
+  --ksl-warning: #f3b83f;
+  --ksl-in-progress: #137FEC;
+  --ksl-text: #11284C;
+  --ksl-muted: #65746e;
+  --ksl-disabled: #65746e;
+  --ksl-card: #ffffff;
+  --ksl-page: #f6faf8;
+  --ksl-border: #d8e3df;
+  --background: var(--ksl-page);
+  --foreground: var(--ksl-text);
+  --font-english: var(--font-niradei);
+  --font-khmer: var(--font-koh-santepheap);
+  --font-app-sans: var(--font-english), var(--font-khmer), system-ui, sans-serif;
+  --font-app-mono: var(--font-mono-local), ui-monospace, monospace;
+  --font-inter: var(--font-english);
+  --font-public-sans: var(--font-english);
+  --font-montserrat: var(--font-english);
+  --font-geist-sans: var(--font-app-sans);
+  --font-geist-mono: var(--font-app-mono);
   --ksl-font-sm: 14px;
   --ksl-font-md: 16px;
   --ksl-font-lg: 20px;
@@ -14,8 +43,28 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--ksl-primary);
+  --color-primary-dark: var(--ksl-primary-dark);
+  --color-primary-light: var(--ksl-primary-light);
+  --color-primary-lighter: var(--ksl-primary-lighter);
+  --color-secondary: var(--ksl-secondary);
+  --color-secondary-dark: var(--ksl-secondary-dark);
+  --color-secondary-light: var(--ksl-secondary-light);
+  --color-secondary-lighter: var(--ksl-secondary-lighter);
+  --color-success: var(--ksl-success);
+  --color-fail: var(--ksl-fail);
+  --color-error: var(--ksl-error);
+  --color-alert: var(--ksl-alert);
+  --color-warning: var(--ksl-warning);
+  --color-in-progress: var(--ksl-in-progress);
+  --color-text: var(--ksl-text);
+  --color-muted: var(--ksl-muted);
+  --color-disabled: var(--ksl-disabled);
+  --color-card: var(--ksl-card);
+  --color-page: var(--ksl-page);
+  --color-border: var(--ksl-border);
+  --font-sans: var(--font-app-sans);
+  --font-mono: var(--font-app-mono);
   --text-sm: var(--ksl-font-sm);
   --text-sm--line-height: var(--ksl-leading-sm);
   --text-base: var(--ksl-font-md);
@@ -26,15 +75,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--ksl-page);
+    --foreground: var(--ksl-text);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-app-sans);
   font-size: var(--ksl-font-md);
   line-height: var(--ksl-leading-md);
   margin: 0;
