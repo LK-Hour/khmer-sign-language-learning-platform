@@ -1,7 +1,7 @@
 """Letter lookup endpoints (``/api/curriculum/letters/...``).
 
 Not the finger-spelling course tree; units/chapters/lessons live under
-``/api/finger_spelling/*`` (see ``routes.finger_spelling.finger_curriculum``).
+``/api/finger_spelling/*`` (see ``api.routes.finger_spelling.finger_curriculum``).
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from src.db.session import get_db
+from src.api.deps import get_db
 from src.schemas.finger_spelling import (
     ChapterResponse,
     LetterDataResponse,

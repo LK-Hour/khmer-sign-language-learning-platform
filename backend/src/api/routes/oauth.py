@@ -4,7 +4,6 @@ Handles authentication endpoints for Google, Facebook, and Telegram
 """
 
 import json
-import os
 import uuid
 from urllib.parse import urlencode
 
@@ -12,18 +11,21 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from ..db.session import get_db
-from ..schemas.oauth import OAuthLoginRequest, AuthTokenResponse
-from ..services.google_oauth_service import google_oauth_service
-from ..services.facebook_oauth_service import facebook_oauth_service
-from ..services.telegram_oauth_service import telegram_oauth_service
-from ..services.oauth_user_service import find_or_create_oauth_user, migrate_guest_progress_to_user
-from ..models.user import User
-from ..utils.jwt_utils import create_access_token, verify_token
-from ..utils.password import verify_password
+from src.api.deps import get_db
+from src.api.deps import get_current_user
+from src.core.config import settings
+from src.schemas.oauth import OAuthLoginRequest, AuthTokenResponse, EmailLoginRequest
+from src.schemas.user import UserResponse
+from src.services.google_oauth_service import google_oauth_service
+from src.services.facebook_oauth_service import facebook_oauth_service
+from src.services.telegram_oauth_service import telegram_oauth_service
+from src.services.oauth_user_service import find_or_create_oauth_user, migrate_guest_progress_to_user
+from src.models.user import User
+from src.utils.jwt_utils import create_access_token, verify_token
+from src.utils.password import verify_password
 
 router = APIRouter(prefix="/api/auth/login", tags=["auth"])
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+FRONTEND_URL = settings.frontend_url
 
 
 def _user_response(user) -> dict:
@@ -59,7 +61,7 @@ def _extract_guest_user_id_from_token(guest_token: str | None) -> uuid.UUID | No
 
 
 @router.get("/telegram")
-async def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
+def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
     """
     Telegram Login Widget redirect endpoint.
     Telegram sends user data as query params with HMAC hash.
@@ -99,7 +101,7 @@ async def telegram_widget_redirect(request: Request, db: Session = Depends(get_d
 
 
 @router.post("/google", response_model=AuthTokenResponse)
-async def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
+def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
     """Google OAuth login — verifies ID token, creates/finds user, returns JWT."""
     try:
         token_info = google_oauth_service.verify_token(request.code)
@@ -133,7 +135,7 @@ async def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)
 
 
 @router.post("/facebook", response_model=AuthTokenResponse)
-async def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
+def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
     """Facebook OAuth login — verifies access token, creates/finds user, returns JWT."""
     try:
         user_data = facebook_oauth_service.verify_token(request.code)
@@ -167,7 +169,7 @@ async def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_d
 
 
 @router.post("/telegram", response_model=AuthTokenResponse)
-async def telegram_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
+def telegram_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
     """
     Telegram OIDC login.
     Accepts the id_token JWT from Telegram's login library, validates it
@@ -207,7 +209,7 @@ async def telegram_login(request: OAuthLoginRequest, db: Session = Depends(get_d
 
 
 @router.post("/guest", response_model=AuthTokenResponse)
-async def guest_login(db: Session = Depends(get_db)):
+def guest_login(db: Session = Depends(get_db)):
     """Create a guest user and return JWT. Persisted in database."""
     guest_id = str(uuid.uuid4())[:8]
     user = User(
@@ -228,23 +230,28 @@ async def guest_login(db: Session = Depends(get_db)):
 
 
 @router.post("/email", response_model=AuthTokenResponse)
-async def email_login(request: Request, db: Session = Depends(get_db)):
+def email_login(request: EmailLoginRequest, db: Session = Depends(get_db)):
     """Email/password login. Body: {"email": "...", "password": "..."}"""
-    body = await request.json()
-    email = body.get("email")
-    password = body.get("password")
-
-    if not email or not password:
-        raise HTTPException(status_code=400, detail="Email and password required")
-
-    user = db.query(User).filter(User.email == email).first()
+    user = (
+        db.query(User)
+        .filter(User.email == request.email, User.is_active.is_(True))
+        .first()
+    )
     if not user or not user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not verify_password(password, user.password_hash):
+    if not verify_password(request.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_access_token(
         data={"sub": str(user.id), "provider": "email", "account_type": user.account_type}
     )
     return AuthTokenResponse(access_token=access_token, token_type="bearer", user=_user_response(user))
+
+
+@router.get("/me", response_model=UserResponse)
+def get_current_user_profile(
+    current_user: User = Depends(get_current_user),
+) -> UserResponse:
+    """Get current authenticated user's profile."""
+    return UserResponse.model_validate(current_user)

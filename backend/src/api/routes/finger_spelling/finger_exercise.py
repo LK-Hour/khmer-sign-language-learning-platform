@@ -5,8 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from src.db.session import get_db
-from src.dependencies.auth import get_current_user, get_optional_user
+from src.api.deps import get_db
+from src.api.deps import get_current_user
 from src.models.user import User
 from src.schemas.finger_spelling import (
     ExerciseResponse,
@@ -22,10 +22,9 @@ router = APIRouter(prefix="/api/finger_spelling/exercise", tags=["finger-spellin
 def list_chapter_exercises(
     chapter_id: int,
     db: Session = Depends(get_db),
-    user: User | None = Depends(get_optional_user),
 ) -> list[ExerciseResponse]:
-    user_id = user.id if user else None
-    exercises = FingerExerciseService(db).list_chapter_exercises(chapter_id, user_id)
+    """Get all exercises for all lessons in a chapter."""
+    exercises = FingerExerciseService(db).list_chapter_exercises(chapter_id)
     if exercises is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
     return [ExerciseResponse.model_validate(ex) for ex in exercises]

@@ -15,8 +15,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from src.db.session import get_db
-from src.dependencies.auth import get_admin_user
+from src.api.deps import get_db
+from src.api.deps import get_admin_user
 from src.schemas.admin.exercise import (
     ExerciseCreate,
     ExerciseOptionCreate,
@@ -58,7 +58,10 @@ def list_exercises(
     "/exercises", response_model=ExerciseResponse, status_code=status.HTTP_201_CREATED
 )
 def create_exercise(track: str, body: ExerciseCreate, db: Session = Depends(get_db)):
-    result = _svc(track, db).create_exercise(body)
+    try:
+        result = _svc(track, db).create_exercise(body)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
     if result is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Parent lesson not found")
     return result
@@ -76,7 +79,10 @@ def get_exercise(track: str, exercise_id: int, db: Session = Depends(get_db)):
 def update_exercise(
     track: str, exercise_id: int, body: ExerciseUpdate, db: Session = Depends(get_db)
 ):
-    result = _svc(track, db).update_exercise(exercise_id, body)
+    try:
+        result = _svc(track, db).update_exercise(exercise_id, body)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
     if result is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Exercise not found")
     return result

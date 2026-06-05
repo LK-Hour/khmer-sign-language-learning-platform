@@ -1,4 +1,4 @@
-"""Admin data-access layer (generic, track-agnostic)."""
+"""Base repository classes for generic CRUD operations."""
 
 from .base_crud_repository import BaseCrudRepository
 

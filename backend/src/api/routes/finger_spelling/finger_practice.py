@@ -5,8 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from src.db.session import get_db
-from src.dependencies.auth import get_current_user
+from src.api.deps import get_db
+from src.api.deps import get_current_user
 from src.models.user import User
 from src.schemas.finger_spelling import (
     PracticeAccuracyResponse,
