@@ -18,7 +18,7 @@ def _utc_now_naive() -> datetime:
 
 
 class FingerProgressService:
-    PRACTICE_PASS_ACCURACY = 80.0
+    PRACTICE_PASS_ACCURACY = 70.0
 
     def __init__(self, db: Session) -> None:
         self.db = db

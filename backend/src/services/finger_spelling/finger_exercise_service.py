@@ -56,6 +56,28 @@ class FingerExerciseService:
             )
         return self.exercises.list_with_options_by_chapter(chapter_id, active_only=active_only)
 
+    def list_chapter_exercises(
+        self, chapter_id: int, *, active_only: bool = True
+    ) -> list[FingerExercise] | None:
+        """Get all exercises for all lessons in a chapter, grouped by lesson."""
+        # Verify chapter exists
+        chapter = self.curriculum.get_chapter_by_id(chapter_id, active_only=active_only)
+        if chapter is None:
+            return None
+
+        # Get all lessons in chapter
+        lessons = self.curriculum.list_lessons_by_chapter(chapter_id, active_only=active_only)
+        if not lessons:
+            return []
+
+        # Aggregate exercises from all lessons
+        all_exercises: list[FingerExercise] = []
+        for lesson in lessons:
+            exercises = self.exercises.list_with_options_by_lesson(lesson.id, active_only=active_only)
+            all_exercises.extend(exercises)
+
+        return all_exercises
+
     def get_exercise(
         self, exercise_id: int, *, active_only: bool = True
     ) -> FingerExercise | None:
