@@ -4,8 +4,6 @@ export { default as FingerSpellingExerciseShell } from "./FingerSpellingExercise
 export { default as FingerSpellingDictionaryShell } from "./FingerSpellingDictionaryShell";
 export { default as FingerSpellingProfileShell } from "./FingerSpellingProfileShell";
 export { default as ExercisePageContent } from "./ExercisePageContent";
-export { default as DictionaryPageContent } from "@/features/dictionary/components/DictionaryPageContent";
-export { default as DictionaryWordDetail } from "@/features/dictionary/components/DictionaryWordDetail";
 export { default as ProfilePageContent } from "./ProfilePageContent";
 export { default as UnitCard } from "./cards/UnitCard";
 export { default as ChapterCard } from "./cards/ChapterCard";

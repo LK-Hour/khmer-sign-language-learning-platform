@@ -1,6 +1,6 @@
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Box from "@mui/material/Box";
-import { kslColors } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 
 type PlayButtonProps = {
   size?: number;
@@ -13,7 +13,7 @@ export default function PlayButton({ size = 44 }: PlayButtonProps) {
         width: size,
         height: size,
         borderRadius: "50%",
-        bgcolor: kslColors.primary,
+        bgcolor: KslColors.primary,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box";
 import Image from "next/image";
-import { kslRadii, kslShadows } from "@/theme/theme";
+import { KslRadii, KslShadows } from "@/theme/theme";
 import OptionButton from "./OptionButton";
 import type { QuizQuestion } from "./types";
 
@@ -33,9 +33,9 @@ export default function MultipleChoiceQuestion({
             width: 390,
             maxWidth: "100%",
             height: 390,
-            borderRadius: `${kslRadii.signImage}px`,
+            borderRadius: `${KslRadii.signImage}px`,
             overflow: "hidden",
-            boxShadow: kslShadows.drop,
+            boxShadow: KslShadows.drop,
           }}
         >
           <Image

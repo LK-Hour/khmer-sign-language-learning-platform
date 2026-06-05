@@ -23,7 +23,7 @@ export default function LessonCard({ lesson }: LessonCardProps) {
       }
       badgeLabel={`Lesson ${lesson.orderIndex}`}
       title={lesson.letter}
-      subtitle={lesson.romanization ?? lesson.letterNameKh}
+      subtitle={lesson.romanization ?? lesson.letterNameKh ?? undefined}
       progressText={
         lesson.progressStatus === "COMPLETED"
           ? "100%"

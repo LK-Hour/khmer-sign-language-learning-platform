@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 import type { QuizQuestion } from "./types";
 
 type FreeInputQuestionProps = {
@@ -31,9 +31,9 @@ export default function FreeInputQuestion({
         <Typography
           variant="h5"
           sx={{
-            fontSize: kslFontSizes.lg,
+            fontSize: KslFontSizes.lg,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             textAlign: "center",
           }}
         >
@@ -47,9 +47,9 @@ export default function FreeInputQuestion({
             width: 360,
             maxWidth: "100%",
             height: 360,
-            borderRadius: `${kslRadii.signImage}px`,
+            borderRadius: `${KslRadii.signImage}px`,
             overflow: "hidden",
-            boxShadow: kslShadows.drop,
+            boxShadow: KslShadows.drop,
           }}
         >
           <Image
@@ -65,13 +65,15 @@ export default function FreeInputQuestion({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Type the letter or romanization"
-        inputProps={{ "aria-label": "Answer input" }}
+        slotProps={{
+          htmlInput: { "aria-label": "Answer input" },
+        }}
         sx={{
           maxWidth: 886,
           "& .MuiOutlinedInput-root": {
             minHeight: 84,
             borderRadius: 2,
-            fontSize: kslFontSizes.md,
+            fontSize: KslFontSizes.md,
           },
         }}
       />

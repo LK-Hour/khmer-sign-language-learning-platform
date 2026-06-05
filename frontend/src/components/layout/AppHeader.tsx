@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { kslColors, kslFontSizes, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslShadows } from "@/theme/theme";
 
 export type AppHeaderVariant = "curriculum" | "lesson" | "exercise";
 
@@ -40,8 +40,8 @@ export default function AppHeader({
         sx={{
           fontFamily: "var(--font-inter), sans-serif",
           fontWeight: 700,
-          fontSize: { xs: kslFontSizes.md, md: kslFontSizes.lg },
-          color: kslColors.secondary,
+          fontSize: { xs: KslFontSizes.md, md: KslFontSizes.lg },
+          color: KslColors.secondary,
           lineHeight: 1.25,
         }}
       >
@@ -53,8 +53,8 @@ export default function AppHeader({
           sx={{
             fontFamily: "var(--font-inter), sans-serif",
             fontWeight: 400,
-            fontSize: kslFontSizes.sm,
-            color: kslColors.textSecondary,
+            fontSize: KslFontSizes.sm,
+            color: KslColors.textSecondary,
             mt: 0.25,
           }}
         >
@@ -74,7 +74,7 @@ export default function AppHeader({
         bgcolor: "background.paper",
         borderBottomLeftRadius: { xs: 20, md: 40 },
         borderBottomRightRadius: { xs: 20, md: 40 },
-        boxShadow: kslShadows.header,
+        boxShadow: KslShadows.header,
         px: { xs: 2, md: 4 },
         py: { xs: 1.5, md: 2 },
         display: "flex",

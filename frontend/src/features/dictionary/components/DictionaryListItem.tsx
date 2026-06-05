@@ -6,7 +6,7 @@ import Link from "next/link";
 import PlayButton from "@/components/ui/PlayButton";
 import { ROUTES } from "@/constants/routes";
 import type { DictionaryWord } from "@/features/dictionary/types";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 type DictionaryListItemProps = {
   word: DictionaryWord;
@@ -26,13 +26,13 @@ export default function DictionaryListItem({ word }: DictionaryListItemProps) {
           py: { xs: 1.5, md: 2 },
           mb: 1.5,
           bgcolor: "background.paper",
-          borderRadius: `${kslRadii.card}px`,
-          boxShadow: kslShadows.card,
+          borderRadius: `${KslRadii.card}px`,
+          boxShadow: KslShadows.card,
           transition: "border-color 0.15s ease, box-shadow 0.15s ease",
           border: `1px solid transparent`,
           "&:hover": {
-            borderColor: kslColors.primary,
-            boxShadow: kslShadows.drop,
+            borderColor: KslColors.primary,
+            boxShadow: KslShadows.drop,
           },
         }}
       >
@@ -40,9 +40,9 @@ export default function DictionaryListItem({ word }: DictionaryListItemProps) {
           sx={{
             flex: 1,
             minWidth: 0,
-            fontSize: kslFontSizes.md,
+            fontSize: KslFontSizes.md,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             lineHeight: 1.25,
           }}
         >
@@ -54,9 +54,9 @@ export default function DictionaryListItem({ word }: DictionaryListItemProps) {
             flex: 1,
             minWidth: 0,
             textAlign: "center",
-            fontSize: kslFontSizes.md,
+            fontSize: KslFontSizes.md,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             lineHeight: 1.25,
           }}
         >

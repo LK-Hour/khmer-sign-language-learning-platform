@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { kslColors } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 
 type BadgeProps = {
   label: string;
@@ -17,7 +17,7 @@ export default function Badge({ label }: BadgeProps) {
         height: 32,
         px: 1.5,
         borderRadius: 1,
-        bgcolor: kslColors.primary,
+        bgcolor: KslColors.primary,
         color: "white",
       }}
     >

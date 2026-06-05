@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
 import Badge from "@/components/ui/Badge";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 type ContextBarProps = {
   badgeLabel: string;
@@ -25,8 +25,8 @@ export default function ContextBar({
         alignItems: "center",
         gap: 2,
         bgcolor: "background.paper",
-        borderRadius: `${kslRadii.card}px`,
-        boxShadow: kslShadows.card,
+        borderRadius: `${KslRadii.card}px`,
+        boxShadow: KslShadows.card,
         p: { xs: 2, md: 3 },
         mb: 3,
         maxWidth: 913,
@@ -51,8 +51,8 @@ export default function ContextBar({
           sx={{
             width: 24,
             height: 3,
-            bgcolor: kslColors.secondary,
-            boxShadow: `0 8px 0 ${kslColors.secondary}, 0 16px 0 ${kslColors.secondary}`,
+            bgcolor: KslColors.secondary,
+            boxShadow: `0 8px 0 ${KslColors.secondary}, 0 16px 0 ${KslColors.secondary}`,
           }}
         />
       </Box>
@@ -62,8 +62,8 @@ export default function ContextBar({
           sx={{
             fontFamily: "var(--font-inter), sans-serif",
             fontWeight: 700,
-            fontSize: kslFontSizes.lg,
-            color: kslColors.secondary,
+            fontSize: KslFontSizes.lg,
+            color: KslColors.secondary,
           }}
         >
           {title}
@@ -75,8 +75,8 @@ export default function ContextBar({
               variant="body1"
               sx={{
                 fontFamily: "var(--font-inter), sans-serif",
-                fontSize: { xs: kslFontSizes.md, md: kslFontSizes.lg },
-                color: kslColors.secondary,
+                fontSize: { xs: KslFontSizes.md, md: KslFontSizes.lg },
+                color: KslColors.secondary,
               }}
             >
               {subtitle}

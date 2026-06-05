@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import BackButton from "@/components/ui/BackButton";
-import { kslColors, kslFontSizes, kslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
 type QuizHeaderProps = {
   percent: number;
@@ -31,8 +31,8 @@ export default function QuizHeader({
         sx={{
           flex: 1,
           height: 18,
-          borderRadius: kslRadii.progress,
-          bgcolor: kslColors.primaryTrack,
+          borderRadius: KslRadii.progress,
+          bgcolor: KslColors.primaryTrack,
           overflow: "hidden",
         }}
         role="progressbar"
@@ -44,8 +44,8 @@ export default function QuizHeader({
           sx={{
             width: `${percent}%`,
             height: "100%",
-            bgcolor: kslColors.primary,
-            borderRadius: kslRadii.progress,
+            bgcolor: KslColors.primary,
+            borderRadius: KslRadii.progress,
             transition: "width 0.3s ease",
           }}
         />
@@ -55,8 +55,8 @@ export default function QuizHeader({
         sx={{
           fontFamily: "var(--font-inter), sans-serif",
           fontWeight: 700,
-          fontSize: kslFontSizes.lg,
-          color: kslColors.secondary,
+          fontSize: KslFontSizes.lg,
+          color: KslColors.secondary,
           minWidth: 80,
           textAlign: "right",
         }}

@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 type OptionButtonProps = {
   letter: string;
@@ -27,9 +27,9 @@ export default function OptionButton({
       disabled={disabled}
       aria-pressed={selected}
       sx={{
-        border: `4px solid ${selected ? kslColors.primary : kslColors.primaryTrack}`,
-        borderRadius: `${kslRadii.wordCard}px`,
-        boxShadow: kslShadows.button,
+        border: `4px solid ${selected ? KslColors.primary : KslColors.primaryTrack}`,
+        borderRadius: `${KslRadii.wordCard}px`,
+        boxShadow: KslShadows.button,
         px: 4,
         py: 1,
         textAlign: "center",
@@ -41,14 +41,14 @@ export default function OptionButton({
         transition: "border-color 0.2s, transform 0.2s",
         transform: selected ? "scale(1.02)" : "none",
         "&:hover:not(:disabled)": {
-          borderColor: kslColors.primary,
+          borderColor: KslColors.primary,
         },
       }}
     >
       <Typography
         variant="h5"
         component="span"
-        sx={{ fontSize: kslFontSizes.lg }}
+        sx={{ fontSize: KslFontSizes.lg }}
       >
         {letter}
       </Typography>
@@ -57,9 +57,9 @@ export default function OptionButton({
           component="p"
           variant="body1"
           sx={{
-            fontSize: kslFontSizes.md,
+            fontSize: KslFontSizes.md,
             opacity: 0.5,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             fontWeight: 700,
           }}
         >

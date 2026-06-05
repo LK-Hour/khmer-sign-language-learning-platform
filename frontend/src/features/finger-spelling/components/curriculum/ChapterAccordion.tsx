@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import ExpandToggle from "@/components/ui/ExpandToggle";
 import { ROUTES } from "@/constants/routes";
@@ -20,7 +19,7 @@ import {
   resolveLessonStates,
 } from "@/features/finger-spelling/utils/progress";
 import { useTranslation } from "@/i18n/useTranslation";
-import { kslColors, kslFontSizes, kslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 import LessonProgressRow from "./LessonProgressRow";
 
 type ChapterAccordionProps = {
@@ -64,8 +63,8 @@ export default function ChapterAccordion({
   return (
     <Box
       sx={{
-        border: `1px solid ${kslColors.border}`,
-        borderRadius: `${kslRadii.card}px`,
+        border: `1px solid ${KslColors.border}`,
+        borderRadius: `${KslRadii.card}px`,
         bgcolor: "background.paper",
         overflow: "hidden",
         opacity: locked ? 0.6 : 1,
@@ -83,7 +82,7 @@ export default function ChapterAccordion({
           width: "100%",
           p: { xs: 1.5, md: 2 },
           border: "none",
-          bgcolor: expanded && !locked ? "rgba(250, 171, 97, 0.12)" : "transparent",
+          bgcolor: expanded && !locked ? KslColors.primaryLight : "transparent",
           cursor: locked ? "not-allowed" : "pointer",
           textAlign: "left",
         }}
@@ -91,11 +90,11 @@ export default function ChapterAccordion({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
-              fontSize: kslFontSizes.sm,
+              fontSize: KslFontSizes.sm,
               fontWeight: 700,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
-              color: kslColors.primary,
+              color: KslColors.primary,
             }}
           >
             {chapterBadge}
@@ -103,9 +102,9 @@ export default function ChapterAccordion({
           <Typography
             sx={{
               mt: 0.25,
-              fontSize: { xs: kslFontSizes.md, md: kslFontSizes.lg },
+              fontSize: { xs: KslFontSizes.md, md: KslFontSizes.lg },
               fontWeight: 700,
-              color: kslColors.secondary,
+              color: KslColors.secondary,
               lineHeight: 1.25,
             }}
           >
@@ -115,8 +114,8 @@ export default function ChapterAccordion({
             <Typography
               sx={{
                 mt: 0.5,
-                fontSize: kslFontSizes.sm,
-                color: kslColors.textSecondary,
+                fontSize: KslFontSizes.sm,
+                color: KslColors.textSecondary,
               }}
             >
               {secondary}
@@ -125,8 +124,8 @@ export default function ChapterAccordion({
           <Typography
             sx={{
               mt: 0.5,
-              fontSize: kslFontSizes.sm,
-              color: kslColors.textSecondary,
+              fontSize: KslFontSizes.sm,
+              color: KslColors.textSecondary,
             }}
           >
             {metaLine}
@@ -182,4 +181,4 @@ export default function ChapterAccordion({
     </Box>
   );
 }
-
+

@@ -4,9 +4,9 @@ import Add from "@mui/icons-material/Add";
 import Check from "@mui/icons-material/Check";
 import Close from "@mui/icons-material/Close";
 import Edit from "@mui/icons-material/Edit";
-import ErrorOutline from "@mui/icons-material/ErrorOutline";
+import ErrorOutline from "@mui/icons-material/ErrorOutlineOutlined";
 import FormatListNumbered from "@mui/icons-material/FormatListNumbered";
-import Image as ImageIcon from "@mui/icons-material/Image";
+import ImageIcon from "@mui/icons-material/Image";
 import Layers from "@mui/icons-material/Layers";
 import MenuBook from "@mui/icons-material/MenuBook";
 import TextFields from "@mui/icons-material/TextFields";
@@ -66,7 +66,7 @@ export default function AdminQuizManager() {
 
   const handleTypeChange = (newType: AdminQuizQuestionType) => {
     let newOptions: string[] = [];
-    let newCorrectAnswer = "";
+    const newCorrectAnswer = "";
 
     if (newType === "MULTIPLE_CHOICE") {
       newOptions = ["", "", "", ""];

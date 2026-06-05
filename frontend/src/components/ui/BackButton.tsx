@@ -3,7 +3,7 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import IconButton from "@mui/material/IconButton";
 import { useRouter } from "next/navigation";
-import { kslColors } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 
 type BackButtonProps = {
   href?: string;
@@ -37,7 +37,7 @@ export default function BackButton({
       sx={{
         width: 41,
         height: 41,
-        color: kslColors.secondary,
+        color: KslColors.secondary,
       }}
     >
       <ArrowBackIcon />

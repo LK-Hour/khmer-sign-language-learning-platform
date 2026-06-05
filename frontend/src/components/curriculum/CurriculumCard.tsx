@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import Badge from "@/components/ui/Badge";
 import LockBadge from "@/components/ui/LockBadge";
 import PlayButton from "@/components/ui/PlayButton";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 type CurriculumCardProps = {
   href?: string;
@@ -55,8 +55,8 @@ export default function CurriculumCard({
               mt: 1.5,
               fontFamily: "var(--font-inter), sans-serif",
               fontWeight: 400,
-              fontSize: kslFontSizes.lg,
-              color: kslColors.secondary,
+              fontSize: KslFontSizes.lg,
+              color: KslColors.secondary,
             }}
           >
             {title}
@@ -66,8 +66,8 @@ export default function CurriculumCard({
               variant="body1"
               sx={{
                 mt: 0.5,
-                fontSize: { xs: kslFontSizes.md, md: kslFontSizes.lg },
-                color: kslColors.secondary,
+                fontSize: { xs: KslFontSizes.md, md: KslFontSizes.lg },
+                color: KslColors.secondary,
               }}
             >
               {subtitle}
@@ -78,8 +78,8 @@ export default function CurriculumCard({
               variant="body2"
               sx={{
                 mt: 1,
-                fontSize: kslFontSizes.sm,
-                color: kslColors.textSecondary,
+                fontSize: KslFontSizes.sm,
+                color: KslColors.textSecondary,
               }}
             >
               {progressText}
@@ -105,8 +105,8 @@ export default function CurriculumCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
       sx={{
-        borderRadius: `${kslRadii.card}px`,
-        boxShadow: kslShadows.card,
+        borderRadius: `${KslRadii.card}px`,
+        boxShadow: KslShadows.card,
         opacity: locked ? 0.75 : 1,
         mb: 2,
       }}

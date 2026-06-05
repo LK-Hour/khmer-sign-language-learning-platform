@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Image from "next/image";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
-import { kslRadii, kslShadows } from "@/theme/theme";
+import { KslRadii, KslShadows } from "@/theme/theme";
 
 type SignImageCardProps = {
   src: string;
@@ -16,9 +16,9 @@ export default function SignImageCard({ src, alt }: SignImageCardProps) {
         width: "100%",
         maxWidth: 640,
         aspectRatio: "16 / 9",
-        borderRadius: `${kslRadii.signImage}px`,
+        borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
-        boxShadow: kslShadows.drop,
+        boxShadow: KslShadows.drop,
         mx: "auto",
       }}
     >

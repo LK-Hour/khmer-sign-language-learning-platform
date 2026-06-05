@@ -9,7 +9,7 @@ import PlayButton from "@/components/ui/PlayButton";
 import { ROUTES } from "@/constants/routes";
 import { getExerciseRangeDescriptionPair } from "@/features/finger-spelling/utils/chapter";
 import { useTranslation } from "@/i18n/useTranslation";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 import type { FsExercise } from "../../types";
 
 type ExerciseCardProps = {
@@ -36,13 +36,13 @@ export default function ExerciseCard({
           alignItems: "center",
           gap: 2,
           p: { xs: 1.25, md: 1.5 },
-          borderRadius: `${kslRadii.wordCard}px`,
-          border: `1px solid ${kslColors.border}`,
+          borderRadius: `${KslRadii.wordCard}px`,
+          border: `1px solid ${KslColors.border}`,
           bgcolor: "background.paper",
           ...(href && {
             "&:hover": {
-              borderColor: kslColors.primary,
-              bgcolor: "rgba(250, 171, 97, 0.08)",
+              borderColor: KslColors.primary,
+              bgcolor: KslColors.primaryLighter,
             },
           }),
         }}
@@ -50,9 +50,9 @@ export default function ExerciseCard({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
-              fontSize: kslFontSizes.md,
+              fontSize: KslFontSizes.md,
               fontWeight: 700,
-              color: kslColors.secondary,
+              color: KslColors.secondary,
             }}
           >
             {t("fsExerciseTitle")}
@@ -60,8 +60,8 @@ export default function ExerciseCard({
           <Typography
             sx={{
               mt: 0.25,
-              fontSize: kslFontSizes.sm,
-              color: kslColors.textSecondary,
+              fontSize: KslFontSizes.sm,
+              color: KslColors.textSecondary,
             }}
           >
             {t("fsExerciseScore")
@@ -99,8 +99,8 @@ export default function ExerciseCard({
   return (
     <Box
       sx={{
-        borderRadius: `${kslRadii.card}px`,
-        boxShadow: kslShadows.card,
+        borderRadius: `${KslRadii.card}px`,
+        boxShadow: KslShadows.card,
         bgcolor: "background.paper",
         opacity: locked ? 0.75 : 1,
         mb: 2,
@@ -112,9 +112,9 @@ export default function ExerciseCard({
             <Typography
               variant="h5"
               sx={{
-                fontSize: kslFontSizes.lg,
+                fontSize: KslFontSizes.lg,
                 fontWeight: 700,
-                color: kslColors.secondary,
+                color: KslColors.secondary,
               }}
             >
               {primary}
@@ -123,8 +123,8 @@ export default function ExerciseCard({
               <Typography
                 sx={{
                   mt: 0.5,
-                  fontSize: kslFontSizes.sm,
-                  color: kslColors.textSecondary,
+                  fontSize: KslFontSizes.sm,
+                  color: KslColors.textSecondary,
                 }}
               >
                 {secondary}
@@ -133,8 +133,8 @@ export default function ExerciseCard({
             <Typography
               sx={{
                 mt: 1,
-                fontSize: kslFontSizes.sm,
-                color: kslColors.textSecondary,
+                fontSize: KslFontSizes.sm,
+                color: KslColors.textSecondary,
               }}
             >
               {t("fsExerciseScore")

@@ -5,10 +5,10 @@ import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import {
-  kslColors,
-  kslFontSizes,
-  kslRadii,
-  kslShadows,
+  KslColors,
+  KslFontSizes,
+  KslRadii,
+  KslShadows,
 } from "@/theme/theme";
 
 type LessonWebcamPanelProps = {
@@ -59,8 +59,14 @@ export default function LessonWebcamPanel({
   }, [t]);
 
   useEffect(() => {
-    void startCamera();
-    return () => stopStream(streamRef.current);
+    const timer = window.setTimeout(() => {
+      void startCamera();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+      stopStream(streamRef.current);
+    };
   }, [startCamera, resetKey]);
 
   return (
@@ -70,9 +76,9 @@ export default function LessonWebcamPanel({
           position: "relative",
           width: "100%",
           aspectRatio: "552 / 508",
-          borderRadius: `${kslRadii.signImage}px`,
+          borderRadius: `${KslRadii.signImage}px`,
           overflow: "hidden",
-          boxShadow: kslShadows.drop,
+          boxShadow: KslShadows.drop,
           bgcolor: "grey.900",
         }}
       >
@@ -104,8 +110,7 @@ export default function LessonWebcamPanel({
             <Typography
               variant="body2"
               color="common.white"
-              textAlign="center"
-              sx={{ fontSize: kslFontSizes.md }}
+              sx={{ fontSize: KslFontSizes.md, textAlign: "center" }}
             >
               {cameraError}
             </Typography>
@@ -211,16 +216,16 @@ export default function LessonWebcamPanel({
         >
           <Typography
             component="span"
-            sx={{ fontSize: kslFontSizes.lg, fontWeight: 700, color: kslColors.secondary }}
+            sx={{ fontSize: KslFontSizes.lg, fontWeight: 700, color: KslColors.secondary }}
           >
             {t("fsAccuracy")}{" "}
           </Typography>
           <Typography
             component="span"
             sx={{
-              fontSize: kslFontSizes.lg,
+              fontSize: KslFontSizes.lg,
               fontWeight: 700,
-              color: accuracy != null ? kslColors.success : kslColors.locked,
+              color: accuracy != null ? KslColors.success : KslColors.locked,
             }}
           >
             {accuracy != null ? `${accuracy}%` : "—"}

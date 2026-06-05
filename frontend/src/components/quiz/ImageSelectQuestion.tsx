@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 import type { QuizQuestion } from "./types";
 
 type ImageSelectQuestionProps = {
@@ -30,9 +30,9 @@ export default function ImageSelectQuestion({
         <Typography
           variant="h5"
           sx={{
-            fontSize: kslFontSizes.lg,
+            fontSize: KslFontSizes.lg,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             textAlign: "center",
             maxWidth: 518,
           }}
@@ -62,13 +62,13 @@ export default function ImageSelectQuestion({
                 width: 390,
                 maxWidth: "100%",
                 border: selected
-                  ? `3px solid ${kslColors.primary}`
+                  ? `3px solid ${KslColors.primary}`
                   : "3px solid transparent",
-                borderRadius: `${kslRadii.signImage}px`,
+                borderRadius: `${KslRadii.signImage}px`,
                 p: 0,
                 cursor: "pointer",
                 bgcolor: "transparent",
-                boxShadow: kslShadows.drop,
+                boxShadow: KslShadows.drop,
               }}
             >
               <Box
@@ -76,7 +76,7 @@ export default function ImageSelectQuestion({
                   position: "relative",
                   width: "100%",
                   height: 390,
-                  borderRadius: `${kslRadii.signImage}px`,
+                  borderRadius: `${KslRadii.signImage}px`,
                   overflow: "hidden",
                 }}
               >
@@ -97,13 +97,13 @@ export default function ImageSelectQuestion({
                   width: 29,
                   height: 29,
                   borderRadius: 1,
-                  bgcolor: selected ? kslColors.primary : "grey.400",
+                  bgcolor: selected ? KslColors.primary : "grey.400",
                   color: "white",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontWeight: 700,
-                  fontSize: kslFontSizes.sm,
+                  fontSize: KslFontSizes.sm,
                 }}
               >
                 {index + 1}

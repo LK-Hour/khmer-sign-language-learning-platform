@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import { useTranslation } from "@/i18n/useTranslation";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 type DictionarySearchBarProps = {
   value: string;
@@ -40,15 +40,15 @@ export default function DictionarySearchBar({
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: kslColors.textSecondary, fontSize: 22 }} />
+                <SearchIcon sx={{ color: KslColors.textSecondary, fontSize: 22 }} />
               </InputAdornment>
             ),
             sx: {
-              fontSize: kslFontSizes.md,
+              fontSize: KslFontSizes.md,
               bgcolor: "background.paper",
-              borderRadius: `${kslRadii.card}px`,
-              boxShadow: kslShadows.card,
-              "& fieldset": { borderColor: kslColors.border },
+              borderRadius: `${KslRadii.card}px`,
+              boxShadow: KslShadows.card,
+              "& fieldset": { borderColor: KslColors.border },
             },
           },
         }}
@@ -61,10 +61,10 @@ export default function DictionarySearchBar({
           height: 48,
           flexShrink: 0,
           bgcolor: "background.paper",
-          border: `1px solid ${kslColors.border}`,
-          borderRadius: `${kslRadii.card}px`,
-          boxShadow: kslShadows.card,
-          color: kslColors.secondary,
+          border: `1px solid ${KslColors.border}`,
+          borderRadius: `${KslRadii.card}px`,
+          boxShadow: KslShadows.card,
+          color: KslColors.secondary,
         }}
       >
         <TuneIcon />

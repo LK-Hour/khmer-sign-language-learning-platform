@@ -17,7 +17,7 @@ export const StyledNotistack = styled(MaterialDesignContent)(({ theme }) => {
       padding: theme.spacing(0.5),
       paddingRight: theme.spacing(2),
       color: theme.palette.text.primary,
-      boxShadow: theme.customShadows.z8,
+      boxShadow: theme.shadows[8],
       borderRadius: theme.shape.borderRadius,
       backgroundColor: theme.palette.background.paper,
     },

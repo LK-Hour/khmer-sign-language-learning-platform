@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { motion } from "framer-motion";
 import PrimaryActionButton from "@/components/ui/PrimaryActionButton";
-import { kslColors, kslFontSizes } from "@/theme/theme";
+import { KslColors, KslFontSizes } from "@/theme/theme";
 
 type ResultCardProps = {
   title: string;
@@ -44,8 +44,8 @@ export default function ResultCard({
         sx={{
           fontFamily: "var(--font-inter), sans-serif",
           fontWeight: 700,
-          fontSize: kslFontSizes.lg,
-          color: kslColors.secondary,
+          fontSize: KslFontSizes.lg,
+          color: KslColors.secondary,
         }}
       >
         {title}
@@ -53,8 +53,8 @@ export default function ResultCard({
       <Typography
         variant="body1"
         sx={{
-          fontSize: kslFontSizes.md,
-          color: kslColors.secondary,
+          fontSize: KslFontSizes.md,
+          color: KslColors.secondary,
         }}
       >
         {subtitle}
@@ -64,11 +64,11 @@ export default function ResultCard({
           width: { xs: 200, md: 300 },
           height: { xs: 200, md: 300 },
           borderRadius: "50%",
-          bgcolor: kslColors.primaryTrack,
+          bgcolor: KslColors.primaryTrack,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: kslColors.secondary,
+          color: KslColors.secondary,
         }}
         aria-hidden
       >
@@ -84,8 +84,8 @@ export default function ResultCard({
             border: "none",
             bgcolor: "transparent",
             cursor: "pointer",
-            fontSize: kslFontSizes.lg,
-            color: kslColors.primary,
+            fontSize: KslFontSizes.lg,
+            color: KslColors.primary,
             textDecoration: "underline",
           }}
         >

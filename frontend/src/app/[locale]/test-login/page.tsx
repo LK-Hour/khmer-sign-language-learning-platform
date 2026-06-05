@@ -1,274 +1,305 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Script from "next/script";
 import { useSearchParams } from "next/navigation";
-import { useTranslation } from "@/i18n/useTranslation";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { Locale } from "@/i18n/config";
+import { useTranslation } from "@/i18n/useTranslation";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
-interface TestLoginPageProps {
-  params: Promise<{ locale: Locale }>;
-}
-
-type TestLoginTranslations = {
-  title: string;
-  subtitle: string;
-  currentLocation: string;
-  language: string;
-  khmerLabel?: string;
-  englishLabel?: string;
-  frontendOrigin: string;
-  backendApi: string;
-  loginWithFacebook: string;
-  logsHeader: string;
-  noLogs: string;
+type GoogleCredentialResponse = {
+  credential: string;
 };
 
-export default function TestLoginPage({ params }: TestLoginPageProps) {
-  const { t, locale } = useTranslation();
-  const [logs, setLogs] = useState<string[]>([]);
-  const [googleReady, setGoogleReady] = useState(false);
-  const [facebookReady, setFacebookReady] = useState(false);
-  const [telegramReady, setTelegramReady] = useState(false);
-  const [frontendOrigin, setFrontendOrigin] = useState("loading...");
-  const [resolvedParams, setResolvedParams] = useState<{ locale: Locale } | null>(null);
-  const [translations, setTranslations] = useState<TestLoginTranslations | null>(null);
-  const telegramContainerRef = useRef<HTMLDivElement>(null);
-  const searchParams = useSearchParams();
-
-  // Resolve async params
-  useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
-
-  const addLog = (msg: string, data?: any) => {
-    setLogs((prev) => [
-      ...prev,
-      `[${new Date().toLocaleTimeString()}] ${msg} ${
-        data ? JSON.stringify(data, null, 2) : ""
-      }`,
-    ]);
+type FacebookLoginResponse = {
+  authResponse?: {
+    accessToken: string;
   };
+};
 
-  // Check for Telegram redirect params from server-side auth
-  useEffect(() => {
+type GoogleAccountsApi = {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id: string;
+        callback: (response: GoogleCredentialResponse) => void;
+      }) => void;
+      renderButton: (
+        parent: HTMLElement | null,
+        options: { theme: "outline" | "filled_blue" | "filled_black"; size: "large" | "medium" | "small" }
+      ) => void;
+    };
+  };
+};
+
+type FacebookSdk = {
+  init: (config: {
+    appId: string;
+    cookie: boolean;
+    xfbml: boolean;
+    version: string;
+  }) => void;
+  login: (
+    callback: (response: FacebookLoginResponse) => void,
+    options: { scope: string }
+  ) => void;
+};
+
+declare global {
+  interface Window {
+    google?: GoogleAccountsApi;
+    FB?: FacebookSdk;
+  }
+}
+
+function serializeLogData(data: unknown): string {
+  if (data === undefined) return "";
+  if (typeof data === "string") return data;
+
+  try {
+    return JSON.stringify(data, null, 2);
+  } catch {
+    return String(data);
+  }
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+export default function TestLoginPage() {
+  const { locale } = useTranslation();
+  const searchParams = useSearchParams();
+  const telegramContainerRef = useRef<HTMLDivElement>(null);
+  const [logs, setLogs] = useState<string[]>(() => {
+    const initialLogs = [
+      `Frontend origin: ${typeof window === "undefined" ? "loading" : window.location.origin}`,
+      `Backend API: ${API_BASE_URL}`,
+      `Current locale: ${locale}`,
+    ];
+    const error = searchParams.get("error");
     const token = searchParams.get("token");
     const provider = searchParams.get("provider");
     const user = searchParams.get("user");
-    const error = searchParams.get("error");
 
     if (error) {
-      addLog("❌ Telegram auth error:", decodeURIComponent(error));
+      initialLogs.push(`Telegram auth error: ${decodeURIComponent(error)}`);
     } else if (token && provider === "telegram") {
-      addLog("✅ Telegram authentication successful!", {
-        token: token.substring(0, 30) + "...",
-        user: user,
-      });
-    }
-  }, [searchParams]);
-
-  // 1. Google Auth Callback
-  const handleGoogleSuccess = async (response: any) => {
-    addLog("Google response received", response);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: response.credential }),
-      });
-      const data = await res.json();
-      addLog("✅ Backend Google verification", data);
-    } catch (e: any) {
-      addLog("❌ Google validation error", e.message);
-    }
-  };
-
-  // 2. Facebook Auth Callback
-  const handleFacebookLogin = () => {
-    addLog("Initiating Facebook Login...");
-    if (typeof window !== "undefined" && (window as any).FB) {
-      (window as any).FB.login(
-        (response: any) => {
-          addLog("Facebook login response:", response);
-          if (response.authResponse) {
-            fetch(`${API_BASE_URL}/api/auth/login/facebook`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ code: response.authResponse.accessToken }),
-            })
-              .then((r) => r.json())
-              .then((data) => addLog("✅ Backend Facebook verification:", data))
-              .catch((e) => addLog("❌ Facebook validation error:", e.message));
-          } else {
-            addLog("User cancelled Facebook login or did not fully authorize.");
-          }
-        },
-        { scope: "public_profile,email" }
+      initialLogs.push(
+        `Telegram authentication successful: ${serializeLogData({
+          token: `${token.substring(0, 30)}...`,
+          user,
+        })}`
       );
-    } else {
-      addLog("❌ Facebook SDK not loaded yet.");
     }
-  };
 
-  useEffect(() => {
-    setFrontendOrigin(window.location.origin);
-    addLog("Frontend origin:", window.location.origin);
-    addLog("Backend API:", API_BASE_URL);
-    addLog("Current locale:", locale);
-    addLog("Available locales:", ["kh", "en"]);
-    addLog("Telegram widget using data-auth-url server-side flow");
-  }, [locale]);
+    return initialLogs.map((message) => `[initial] ${message}`);
+  });
+  const [googleReady, setGoogleReady] = useState(false);
+  const [facebookReady, setFacebookReady] = useState(false);
+  const [telegramReady, setTelegramReady] = useState(false);
 
-  // Inject Telegram Widget Script Dynamically
-  useEffect(() => {
-    if (telegramContainerRef.current && !telegramContainerRef.current.querySelector('script')) {
-      const script = document.createElement("script");
-      script.async = true;
-      script.src = "https://telegram.org/js/telegram-widget.js?22";
-      script.setAttribute("data-telegram-login", "KSL_Login_Bot");
-      script.setAttribute("data-size", "large");
-      script.setAttribute("data-auth-url", `${API_BASE_URL}/api/auth/login/telegram`);
-      script.setAttribute("data-request-access", "write");
-      script.onload = () => {
-        setTelegramReady(true);
-        addLog("✅ Telegram widget loaded");
-      };
-      script.onerror = () => addLog("❌ Telegram widget failed to load");
-      telegramContainerRef.current.appendChild(script);
-    }
+  const frontendOrigin =
+    typeof window === "undefined" ? "loading" : window.location.origin;
+
+  const addLog = useCallback((message: string, data?: unknown) => {
+    const serialized = serializeLogData(data);
+    setLogs((previous) => [
+      ...previous,
+      `[${new Date().toLocaleTimeString()}] ${message}${serialized ? ` ${serialized}` : ""}`,
+    ]);
   }, []);
 
+  const handleGoogleSuccess = useCallback(
+    async (response: GoogleCredentialResponse) => {
+      addLog("Google response received", {
+        credential: `${response.credential.substring(0, 30)}...`,
+      });
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: response.credential }),
+        });
+        addLog("Backend Google verification", await res.json());
+      } catch (error) {
+        addLog("Google validation error", getErrorMessage(error));
+      }
+    },
+    [addLog]
+  );
+
+  const handleFacebookLogin = useCallback(() => {
+    addLog("Initiating Facebook Login");
+
+    if (!window.FB) {
+      addLog("Facebook SDK is not loaded yet");
+      return;
+    }
+
+    window.FB.login(
+      (response) => {
+        addLog("Facebook login response", response);
+
+        if (!response.authResponse) {
+          addLog("User cancelled Facebook login or did not fully authorize");
+          return;
+        }
+
+        fetch(`${API_BASE_URL}/api/auth/login/facebook`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: response.authResponse.accessToken }),
+        })
+          .then((res) => res.json())
+          .then((data: unknown) => addLog("Backend Facebook verification", data))
+          .catch((error: unknown) =>
+            addLog("Facebook validation error", getErrorMessage(error))
+          );
+      },
+      { scope: "public_profile,email" }
+    );
+  }, [addLog]);
+
+  useEffect(() => {
+    const container = telegramContainerRef.current;
+    if (!container || container.querySelector("script")) return;
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.setAttribute("data-telegram-login", "KSL_Login_Bot");
+    script.setAttribute("data-size", "large");
+    script.setAttribute("data-auth-url", `${API_BASE_URL}/api/auth/login/telegram`);
+    script.setAttribute("data-request-access", "write");
+    script.onload = () => {
+      setTelegramReady(true);
+      addLog("Telegram widget loaded");
+    };
+    script.onerror = () => addLog("Telegram widget failed to load");
+    container.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [addLog]);
+
+  const statusRows = useMemo(
+    () => [
+      ["Google SDK", googleReady ? "ready" : "not ready"],
+      ["Facebook SDK", facebookReady ? "ready" : "not ready"],
+      ["Telegram widget", telegramReady ? "ready" : "not ready"],
+    ],
+    [facebookReady, googleReady, telegramReady]
+  );
+
   return (
-    <div className="p-8 font-sans max-w-5xl mx-auto">
-      <div className="flex justify-between items-start mb-8">
+    <div className="mx-auto max-w-5xl p-8 font-sans">
+      <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-black">
-            {translations?.title || 'Loading...'}
-          </h1>
-          <p className="text-gray-600 mt-2">
-            {translations?.subtitle || 'Loading...'}
+          <h1 className="text-3xl font-bold text-black">OAuth Diagnostics</h1>
+          <p className="mt-2 text-gray-600">
+            Validate provider handshakes against the local backend.
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
           <LocaleSwitcher />
         </div>
       </div>
 
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-800">
-          <strong>{translations?.currentLocation}</strong> 
-          <code className="ml-2 bg-blue-100 px-2 py-1 rounded">
+          <strong>Current location</strong>
+          <code className="ml-2 rounded bg-blue-100 px-2 py-1">
             /{locale}/test-login
           </code>
         </p>
-        <p className="text-sm text-blue-800 mt-2">
-          <strong>{translations?.language}</strong> 
-          <span className="ml-2">
-            {locale === 'kh' ? translations?.khmerLabel : translations?.englishLabel}
-          </span>
+        <p className="mt-2 text-sm text-blue-800">
+          <strong>Language</strong>
+          <span className="ml-2">{locale === "kh" ? "Khmer" : "English"}</span>
         </p>
       </div>
 
-      <p className="mb-6 text-gray-500">
-        {translations?.frontendOrigin} {frontendOrigin}
-      </p>
-      <p className="mb-6 text-gray-500">
-        {translations?.backendApi} {API_BASE_URL}
-      </p>
+      <p className="mb-2 text-gray-500">Frontend origin: {frontendOrigin}</p>
+      <p className="mb-6 text-gray-500">Backend API: {API_BASE_URL}</p>
 
       <div className="mb-6 grid gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 sm:grid-cols-3">
-        <div>Google SDK: {googleReady ? "✅ ready" : "⏳ not ready"}</div>
-        <div>Facebook SDK: {facebookReady ? "✅ ready" : "⏳ not ready"}</div>
-        <div>Telegram widget: {telegramReady ? "✅ ready" : "⏳ not ready"}</div>
+        {statusRows.map(([label, value]) => (
+          <div key={label}>
+            {label}: {value}
+          </div>
+        ))}
       </div>
 
-      {/* Load Google SDK */}
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
         onLoad={() => {
           try {
-            if ((window as any).google) {
-              (window as any).google.accounts.id.initialize({
-                client_id: "678656172154-0ptvidknubu87g62r3u2fnffo3c7msst.apps.googleusercontent.com",
-                callback: handleGoogleSuccess,
-              });
-              (window as any).google.accounts.id.renderButton(
-                document.getElementById("google-buttonDiv"),
-                { theme: "outline", size: "large" }
-              );
-              setGoogleReady(true);
-              addLog("✅ Google SDK initialized");
-            }
-          } catch (error: any) {
-            addLog("❌ Google SDK initialization failed:", error?.message ?? error);
+            if (!window.google) return;
+
+            window.google.accounts.id.initialize({
+              client_id:
+                "678656172154-0ptvidknubu87g62r3u2fnffo3c7msst.apps.googleusercontent.com",
+              callback: handleGoogleSuccess,
+            });
+            window.google.accounts.id.renderButton(
+              document.getElementById("google-buttonDiv"),
+              { theme: "outline", size: "large" }
+            );
+            setGoogleReady(true);
+            addLog("Google SDK initialized");
+          } catch (error) {
+            addLog("Google SDK initialization failed", getErrorMessage(error));
           }
         }}
-        onError={() => addLog("❌ Google SDK failed to load")}
+        onError={() => addLog("Google SDK failed to load")}
       />
 
-      {/* Load Facebook SDK */}
       <Script
         src="https://connect.facebook.net/en_US/sdk.js"
         strategy="afterInteractive"
         onLoad={() => {
           try {
-            if ((window as any).FB) {
-              (window as any).FB.init({
-                appId: "1599530575505984",
-                cookie: true,
-                xfbml: true,
-                version: "v18.0",
-              });
-              setFacebookReady(true);
-              addLog("✅ Facebook SDK initialized");
-            }
-          } catch (error: any) {
-            addLog("❌ Facebook SDK initialization failed:", error?.message ?? error);
+            if (!window.FB) return;
+
+            window.FB.init({
+              appId: "1599530575505984",
+              cookie: true,
+              xfbml: true,
+              version: "v18.0",
+            });
+            setFacebookReady(true);
+            addLog("Facebook SDK initialized");
+          } catch (error) {
+            addLog("Facebook SDK initialization failed", getErrorMessage(error));
           }
         }}
-        onError={() => addLog("❌ Facebook SDK failed to load")}
+        onError={() => addLog("Facebook SDK failed to load")}
       />
 
-      <div className="flex flex-wrap gap-6 mb-8 items-center bg-gray-50 p-6 rounded-lg border border-gray-200">
-        {/* Google Test Button Container */}
-        <div>
-          <div id="google-buttonDiv" className="h-[40px]"></div>
-        </div>
-
-        {/* Facebook Test Button */}
-        <div>
-          <button
-            onClick={handleFacebookLogin}
-            className="bg-[#1877F2] text-white px-5 py-2 rounded font-semibold h-[40px] hover:bg-[#166FE5] transition-colors"
-          >
-            {translations?.loginWithFacebook || 'Login with Facebook'}
-          </button>
-        </div>
-
-        {/* Telegram Server-side Auth Widget - Container for dynamic injection */}
-        <div ref={telegramContainerRef} className="h-[40px] flex items-center"></div>
+      <div className="mb-8 flex flex-wrap items-center gap-6 rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <div id="google-buttonDiv" className="h-[40px]" />
+        <button
+          onClick={handleFacebookLogin}
+          className="h-[40px] rounded bg-[#1877F2] px-5 py-2 font-semibold text-white transition-colors hover:bg-[#166FE5]"
+        >
+          Login with Facebook
+        </button>
+        <div ref={telegramContainerRef} className="flex h-[40px] items-center" />
       </div>
 
       <div className="mt-8">
-        <h2 className="text-xl font-bold mb-2 text-black">
-          {translations?.logsHeader || 'Logs:'}
-        </h2>
-        <div className="bg-slate-900 p-4 rounded min-h-[300px] overflow-auto whitespace-pre-wrap text-sm font-mono text-green-400">
-          {logs.map((log, i) => (
-            <div key={i} className="mb-2 pb-2 border-b border-slate-800">
+        <h2 className="mb-2 text-xl font-bold text-black">Logs</h2>
+        <div className="min-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-slate-900 p-4 font-mono text-sm text-green-400">
+          {logs.map((log, index) => (
+            <div key={`${log}-${index}`} className="mb-2 border-b border-slate-800 pb-2">
               {log}
             </div>
           ))}
-          {logs.length === 0 && (
-            <div className="text-slate-500">
-              {translations?.noLogs || 'No logs yet. Try logging in above.'}
-            </div>
-          )}
         </div>
       </div>
     </div>

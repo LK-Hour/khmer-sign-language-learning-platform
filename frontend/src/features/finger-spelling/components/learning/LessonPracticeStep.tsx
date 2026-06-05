@@ -8,10 +8,10 @@ import { motion } from "framer-motion";
 import PrimaryActionButton from "@/components/ui/PrimaryActionButton";
 import { useTranslation } from "@/i18n/useTranslation";
 import {
-  kslColors,
-  kslFontSizes,
-  kslRadii,
-  kslShadows,
+  KslColors,
+  KslFontSizes,
+  KslRadii,
+  KslShadows,
 } from "@/theme/theme";
 import LessonWebcamPanel from "./LessonWebcamPanel";
 import SignImageCard from "./SignImageCard";
@@ -19,7 +19,6 @@ import WordCard from "./WordCard";
 
 type LessonPracticeStepProps = {
   letter: string;
-  romanization?: string | null;
   imageUrl: string;
   description?: string | null;
   accuracy: number | null;
@@ -30,7 +29,6 @@ type LessonPracticeStepProps = {
 
 export default function LessonPracticeStep({
   letter,
-  romanization,
   imageUrl,
   description,
   accuracy,
@@ -85,9 +83,9 @@ export default function LessonPracticeStep({
           <Typography
             variant="body1"
             sx={{
-              fontSize: kslFontSizes.md,
-              lineHeight: kslFontSizes.lg,
-              color: kslColors.textSecondary,
+              fontSize: KslFontSizes.md,
+              lineHeight: KslFontSizes.lg,
+              color: KslColors.textSecondary,
               textAlign: { xs: "center", lg: "left" },
               width: "100%",
             }}
@@ -113,18 +111,18 @@ export default function LessonPracticeStep({
             onClick={onRetry}
             sx={{
               bgcolor: "background.paper",
-              color: kslColors.secondary,
+              color: KslColors.secondary,
               minHeight: 72,
               px: 2,
-              borderRadius: `${kslRadii.button}px`,
-              boxShadow: kslShadows.card,
-              fontSize: kslFontSizes.lg,
+              borderRadius: `${KslRadii.button}px`,
+              boxShadow: KslShadows.card,
+              fontSize: KslFontSizes.lg,
               fontWeight: 700,
               flex: { sm: 1 },
               maxWidth: { sm: 418 },
               "&:hover": {
                 bgcolor: "background.paper",
-                boxShadow: kslShadows.button,
+                boxShadow: KslShadows.button,
               },
             }}
           >

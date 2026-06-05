@@ -7,7 +7,6 @@ import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 //
 import Iconify from '../iconify';
-import { useSettingsContext } from '../settings';
 //
 import { StyledIcon, StyledNotistack } from './styles';
 
@@ -18,11 +17,7 @@ type Props = {
 };
 
 export default function SnackbarProvider({ children }: Props) {
-  const settings = useSettingsContext();
-
-  const isRTL = settings.themeDirection === 'rtl';
-
-  const notistackRef = useRef<any>(null);
+  const notistackRef = useRef<React.ElementRef<typeof NotistackProvider>>(null);
 
   return (
     <NotistackProvider
@@ -30,7 +25,7 @@ export default function SnackbarProvider({ children }: Props) {
       maxSnack={5}
       preventDuplicate
       autoHideDuration={3000}
-      TransitionComponent={isRTL ? Collapse : undefined}
+      TransitionComponent={Collapse}
       variant="success" // Set default variant
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       iconVariant={{

@@ -9,10 +9,10 @@ import type { DictionaryWord } from "@/features/dictionary/types";
 import { useLocalizedPair } from "@/i18n/useLocalizedPair";
 import { useTranslation } from "@/i18n/useTranslation";
 import {
-  kslColors,
-  kslFontSizes,
-  kslRadii,
-  kslShadows,
+  KslColors,
+  KslFontSizes,
+  KslRadii,
+  KslShadows,
 } from "@/theme/theme";
 
 const FALLBACK_MEDIA = "/finger-spelling/placeholder-sign.svg";
@@ -37,9 +37,9 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
       <Box
         sx={{
           mt: 1,
-          borderRadius: `${kslRadii.signImage}px`,
+          borderRadius: `${KslRadii.signImage}px`,
           overflow: "hidden",
-          boxShadow: kslShadows.card,
+          boxShadow: KslShadows.card,
           bgcolor: "background.paper",
           aspectRatio: "4 / 3",
           position: "relative",
@@ -76,9 +76,9 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
           mt: 2,
           mx: "auto",
           maxWidth: 418,
-          border: `4px solid rgba(250, 171, 97, 0.5)`,
-          borderRadius: `${kslRadii.wordCard}px`,
-          boxShadow: kslShadows.button,
+          border: `4px solid ${KslColors.primaryTrack}`,
+          borderRadius: `${KslRadii.wordCard}px`,
+          boxShadow: KslShadows.button,
           px: { xs: 4, md: 8 },
           py: 1.5,
           textAlign: "center",
@@ -88,9 +88,9 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
         <Typography
           component="p"
           sx={{
-            fontSize: kslFontSizes.lg,
+            fontSize: KslFontSizes.lg,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             lineHeight: 1.25,
           }}
         >
@@ -101,9 +101,9 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
             component="p"
             sx={{
               mt: 0.5,
-              fontSize: kslFontSizes.md,
+              fontSize: KslFontSizes.md,
               fontWeight: 400,
-              color: kslColors.textSecondary,
+              color: KslColors.textSecondary,
               lineHeight: 1.25,
             }}
           >

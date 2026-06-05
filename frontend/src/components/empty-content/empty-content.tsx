@@ -25,10 +25,10 @@ export default function EmptyContent({
 }: EmptyContentProps) {
   return (
     <Stack
-      flexGrow={1}
-      alignItems="center"
-      justifyContent="center"
       sx={{
+        flexGrow: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
         px: 3,
         height: 1,
         ...(filled && {

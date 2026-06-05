@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import { usePathname, useRouter } from "next/navigation";
-import { kslColors, kslFontSizes } from "@/theme/theme";
+import { KslColors, KslFontSizes } from "@/theme/theme";
 
 export type BottomNavItem = {
   key: string;
@@ -48,18 +48,18 @@ export default function BottomNav({ items, resolveActive }: BottomNavProps) {
           maxWidth: 1920,
           mx: "auto",
           "& .MuiBottomNavigationAction-root": {
-            color: kslColors.textSecondary,
+            color: KslColors.textSecondary,
             minWidth: { xs: 64, md: 120 },
             maxWidth: { xs: 120, md: 240 },
             "&.Mui-selected": {
-              color: kslColors.primary,
+              color: KslColors.primary,
             },
           },
           "& .MuiBottomNavigationAction-label": {
             fontFamily: "var(--font-inter), sans-serif",
-            fontSize: kslFontSizes.sm,
+            fontSize: KslFontSizes.sm,
             "&.Mui-selected": {
-              fontSize: kslFontSizes.sm,
+              fontSize: KslFontSizes.sm,
             },
           },
         }}

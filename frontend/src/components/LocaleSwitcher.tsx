@@ -10,7 +10,7 @@ import { useState } from "react";
 import LocaleFlag from "@/components/ui/LocaleFlag";
 import { LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from "@/i18n/config";
 import { useLocaleStore } from "@/i18n/localeStore";
-import { kslColors, kslFontSizes, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslShadows } from "@/theme/theme";
 
 const rowSx = {
   display: "flex",
@@ -33,9 +33,9 @@ const rowSx = {
 const labelSx = {
   flex: 1,
   fontFamily: "var(--font-inter), sans-serif",
-  fontSize: kslFontSizes.sm,
+  fontSize: KslFontSizes.sm,
   fontWeight: 400,
-  color: kslColors.secondary,
+  color: KslColors.secondary,
   lineHeight: 1.2,
   whiteSpace: "nowrap" as const,
 };
@@ -50,6 +50,7 @@ export function LocaleSwitcher() {
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
+    document.cookie = `NEXT_LOCALE=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     setOpen(false);
 
     const segments = pathname.split("/");
@@ -71,8 +72,8 @@ export function LocaleSwitcher() {
           minWidth: { xs: 132, sm: 168 },
           bgcolor: "background.paper",
           borderRadius: "10px",
-          border: `1px solid ${kslColors.border}`,
-          boxShadow: open ? kslShadows.card : "none",
+          border: `1px solid ${KslColors.border}`,
+          boxShadow: open ? KslShadows.card : "none",
         }}
       >
         <Box
@@ -90,11 +91,11 @@ export function LocaleSwitcher() {
           </Typography>
           {open ? (
             <KeyboardArrowUpIcon
-              sx={{ fontSize: 20, color: kslColors.textSecondary }}
+              sx={{ fontSize: 20, color: KslColors.textSecondary }}
             />
           ) : (
             <KeyboardArrowDownIcon
-              sx={{ fontSize: 20, color: kslColors.textSecondary }}
+              sx={{ fontSize: 20, color: KslColors.textSecondary }}
             />
           )}
         </Box>
@@ -108,8 +109,8 @@ export function LocaleSwitcher() {
               right: 0,
               bgcolor: "background.paper",
               borderRadius: "10px",
-              border: `1px solid ${kslColors.border}`,
-              boxShadow: kslShadows.card,
+              border: `1px solid ${KslColors.border}`,
+              boxShadow: KslShadows.card,
               overflow: "hidden",
               zIndex: 1,
             }}

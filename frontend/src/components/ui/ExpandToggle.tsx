@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import IconButton from "@mui/material/IconButton";
-import { kslColors } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 
 type ExpandToggleProps = {
   expanded: boolean;
@@ -29,13 +29,13 @@ export default function ExpandToggle({
         width: 44,
         height: 44,
         flexShrink: 0,
-        bgcolor: disabled ? "grey.200" : kslColors.primaryTrack,
-        color: disabled ? kslColors.locked : kslColors.primary,
+        bgcolor: disabled ? "grey.200" : KslColors.primaryTrack,
+        color: disabled ? KslColors.locked : KslColors.primary,
         "&:hover": {
-          bgcolor: disabled ? "grey.200" : kslColors.primaryLight,
+          bgcolor: disabled ? "grey.200" : KslColors.primaryLight,
         },
         "&.Mui-disabled": {
-          color: kslColors.locked,
+          color: KslColors.locked,
         },
       }}
     >

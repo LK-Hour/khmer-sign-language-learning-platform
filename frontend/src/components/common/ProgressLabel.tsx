@@ -1,5 +1,5 @@
 import Typography from "@mui/material/Typography";
-import { kslColors } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 
 type ProgressLabelProps = {
   completed: number;
@@ -17,7 +17,7 @@ export default function ProgressLabel({
       variant="body2"
       sx={{
         fontFamily: "var(--font-inter), sans-serif",
-        color: kslColors.textSecondary,
+        color: KslColors.textSecondary,
       }}
     >
       {completed}/{total} {suffix}

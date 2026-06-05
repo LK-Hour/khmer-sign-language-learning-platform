@@ -1,7 +1,7 @@
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { kslColors, kslRadii } from "@/theme/theme";
+import { KslColors, KslRadii } from "@/theme/theme";
 
 export default function CameraFeedPlaceholder() {
   return (
@@ -10,7 +10,7 @@ export default function CameraFeedPlaceholder() {
         width: "100%",
         maxWidth: 552,
         aspectRatio: "552 / 508",
-        borderRadius: `${kslRadii.signImage}px`,
+        borderRadius: `${KslRadii.signImage}px`,
         bgcolor: "grey.200",
         display: "flex",
         flexDirection: "column",
@@ -23,8 +23,8 @@ export default function CameraFeedPlaceholder() {
       }}
       aria-label="Camera feed placeholder"
     >
-      <VideocamOutlinedIcon sx={{ fontSize: 48, color: kslColors.locked }} />
-      <Typography variant="body2" color="text.secondary" textAlign="center">
+      <VideocamOutlinedIcon sx={{ fontSize: 48, color: KslColors.locked }} />
+      <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
         AI hand detection coming soon
       </Typography>
     </Box>

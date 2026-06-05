@@ -55,10 +55,7 @@ export default function LessonLearningView({
   }, [phase, lessonIndex]);
 
   useEffect(() => {
-    if (phase !== "practice") {
-      setAccuracy(null);
-      return;
-    }
+    if (phase !== "practice") return;
 
     const timer = window.setTimeout(() => {
       setAccuracy(MOCK_ACCURACY);
@@ -83,6 +80,11 @@ export default function LessonLearningView({
     window.setTimeout(() => setAccuracy(MOCK_ACCURACY), ACCURACY_DELAY_MS);
   };
 
+  const handleStartPractice = () => {
+    setAccuracy(null);
+    setPhase("practice");
+  };
+
   if (phase === "complete") {
     return (
       <ResultCard
@@ -93,7 +95,10 @@ export default function LessonLearningView({
         }
         retakeLabel={t("fsRetakeLesson")}
         onContinue={navigateNext}
-        onRetake={() => setPhase("intro")}
+        onRetake={() => {
+          setAccuracy(null);
+          setPhase("intro");
+        }}
       />
     );
   }
@@ -121,13 +126,12 @@ export default function LessonLearningView({
             letter={lesson.letter}
             romanization={lesson.romanization}
             imageUrl={lesson.imageUrl}
-            onContinue={() => setPhase("practice")}
+            onContinue={handleStartPractice}
           />
         ) : (
           <LessonPracticeStep
             key="practice"
             letter={lesson.letter}
-            romanization={lesson.romanization}
             imageUrl={lesson.imageUrl}
             description={description}
             accuracy={accuracy}

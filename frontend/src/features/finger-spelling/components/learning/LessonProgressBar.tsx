@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { kslColors, kslRadii } from "@/theme/theme";
+import { KslColors, KslRadii } from "@/theme/theme";
 
 type LessonProgressBarProps = {
   value: number;
@@ -22,8 +22,8 @@ export default function LessonProgressBar({
         width: "100%",
         maxWidth: 1105,
         height: 18,
-        borderRadius: kslRadii.progress,
-        bgcolor: kslColors.primaryTrack,
+        borderRadius: KslRadii.progress,
+        bgcolor: KslColors.primaryTrack,
         overflow: "hidden",
       }}
     >
@@ -31,8 +31,8 @@ export default function LessonProgressBar({
         sx={{
           width: `${percent}%`,
           height: "100%",
-          bgcolor: kslColors.primary,
-          borderRadius: kslRadii.progress,
+          bgcolor: KslColors.primary,
+          borderRadius: KslRadii.progress,
           transition: "width 0.4s ease",
         }}
       />

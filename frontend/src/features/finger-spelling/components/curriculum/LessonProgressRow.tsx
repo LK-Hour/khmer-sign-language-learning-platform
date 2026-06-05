@@ -6,13 +6,13 @@ import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import type { FsLesson } from "@/features/finger-spelling/types";
 import type { LessonDisplayState } from "@/features/finger-spelling/utils/progress";
-import { kslColors, kslFontSizes, kslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
 type LessonProgressRowProps = {
   lesson?: FsLesson;
   state?: LessonDisplayState;
   progressPercent?: number;
-  variant?: "lesson";
+  variant?: "lesson" | "practice";
   title?: string;
   subtitle?: string;
   locked?: boolean;
@@ -24,9 +24,9 @@ const stateBadge: Record<
   LessonDisplayState,
   { label: string; bgcolor: string; color: string }
 > = {
-  done: { label: "Done", bgcolor: "rgba(46, 125, 50, 0.12)", color: kslColors.success },
-  now: { label: "Now", bgcolor: kslColors.primaryTrack, color: kslColors.primaryDark },
-  lock: { label: "Lock", bgcolor: "rgba(158, 158, 158, 0.15)", color: kslColors.locked },
+  done: { label: "Done", bgcolor: KslColors.primaryLighter, color: KslColors.success },
+  now: { label: "Now", bgcolor: KslColors.primaryTrack, color: KslColors.primaryDark },
+  lock: { label: "Lock", bgcolor: "rgba(101, 116, 110, 0.15)", color: KslColors.locked },
 };
 
 export default function LessonProgressRow(props: LessonProgressRowProps) {
@@ -54,13 +54,13 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
         alignItems: "center",
         gap: { xs: 1.25, md: 2 },
         p: { xs: 1.25, md: 1.5 },
-        borderRadius: `${kslRadii.wordCard}px`,
+        borderRadius: `${KslRadii.wordCard}px`,
         border: `1px solid ${
-          state === "now" ? kslColors.primary : kslColors.border
+          state === "now" ? KslColors.primary : KslColors.border
         }`,
         bgcolor:
           state === "now"
-            ? "rgba(250, 171, 97, 0.08)"
+            ? KslColors.primaryLighter
             : state === "lock"
               ? "rgba(0,0,0,0.02)"
               : "background.paper",
@@ -69,8 +69,8 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
         ...(isInteractive &&
           href && {
             "&:hover": {
-              borderColor: kslColors.primary,
-              bgcolor: "rgba(250, 171, 97, 0.12)",
+              borderColor: KslColors.primary,
+              bgcolor: KslColors.primaryLight,
             },
           }),
       }}
@@ -102,9 +102,9 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           sx={{
-            fontSize: kslFontSizes.md,
+            fontSize: KslFontSizes.md,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             lineHeight: 1.25,
           }}
         >
@@ -112,9 +112,9 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
         </Typography>
         <Typography
           sx={{
-            fontSize: kslFontSizes.lg,
+            fontSize: KslFontSizes.lg,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             mt: 0.25,
             lineHeight: 1.2,
           }}
@@ -126,14 +126,14 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
       <Typography
         sx={{
           flexShrink: 0,
-          fontSize: kslFontSizes.sm,
+          fontSize: KslFontSizes.sm,
           fontWeight: 700,
           color:
             state === "done"
-              ? kslColors.success
+              ? KslColors.success
               : state === "now"
-                ? kslColors.primaryDark
-                : kslColors.textSecondary,
+                ? KslColors.primaryDark
+                : KslColors.textSecondary,
         }}
       >
         {state === "done" && `${progressPercent}%`}
@@ -176,15 +176,15 @@ function PracticeRow({
         alignItems: "center",
         gap: { xs: 1.25, md: 2 },
         p: { xs: 1.25, md: 1.5 },
-        borderRadius: `${kslRadii.wordCard}px`,
-        border: `1px solid ${kslColors.border}`,
+        borderRadius: `${KslRadii.wordCard}px`,
+        border: `1px solid ${KslColors.border}`,
         bgcolor: locked ? "rgba(0,0,0,0.02)" : "background.paper",
         opacity: locked ? 0.65 : 1,
         ...(!locked &&
           href && {
             "&:hover": {
-              borderColor: kslColors.primary,
-              bgcolor: "rgba(250, 171, 97, 0.08)",
+              borderColor: KslColors.primary,
+              bgcolor: KslColors.primaryLighter,
             },
           }),
       }}
@@ -215,9 +215,9 @@ function PracticeRow({
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           sx={{
-            fontSize: kslFontSizes.md,
+            fontSize: KslFontSizes.md,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
           }}
         >
           {title}
@@ -225,8 +225,8 @@ function PracticeRow({
         {subtitle && (
           <Typography
             sx={{
-              fontSize: kslFontSizes.sm,
-              color: kslColors.textSecondary,
+              fontSize: KslFontSizes.sm,
+              color: KslColors.textSecondary,
               mt: 0.25,
             }}
           >
@@ -238,9 +238,9 @@ function PracticeRow({
       <Typography
         sx={{
           flexShrink: 0,
-          fontSize: kslFontSizes.sm,
+          fontSize: KslFontSizes.sm,
           fontWeight: 700,
-          color: locked ? kslColors.textSecondary : kslColors.primaryDark,
+          color: locked ? KslColors.textSecondary : KslColors.primaryDark,
         }}
       >
         {locked ? actionLabel : actionLabel}

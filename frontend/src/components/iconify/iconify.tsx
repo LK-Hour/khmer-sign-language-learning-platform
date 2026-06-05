@@ -10,6 +10,7 @@ import { IconifyProps } from './types';
 
 interface Props extends BoxProps {
   icon: IconifyProps;
+  width?: number | string;
 }
 
 const Iconify = forwardRef<SVGElement, Props>(({ icon, width = 20, sx, ...other }, ref) => (
@@ -22,5 +23,7 @@ const Iconify = forwardRef<SVGElement, Props>(({ icon, width = 20, sx, ...other 
     {...other}
   />
 ));
+
+Iconify.displayName = 'Iconify';
 
 export default Iconify;

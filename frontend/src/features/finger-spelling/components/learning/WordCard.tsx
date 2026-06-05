@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { kslColors, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslRadii, KslShadows } from "@/theme/theme";
 
 type WordCardProps = {
   letter: string;
@@ -17,9 +17,9 @@ export default function WordCard({
   return (
     <Box
       sx={{
-        border: `4px solid ${kslColors.primaryTrack}`,
-        borderRadius: `${kslRadii.wordCard}px`,
-        boxShadow: kslShadows.button,
+        border: `4px solid ${KslColors.primaryTrack}`,
+        borderRadius: `${KslRadii.wordCard}px`,
+        boxShadow: KslShadows.button,
         px: { xs: 4, md: 8 },
         py: 1,
         textAlign: "center",

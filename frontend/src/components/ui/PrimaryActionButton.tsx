@@ -2,7 +2,7 @@
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Button from "@mui/material/Button";
-import { kslColors, kslFontSizes, kslRadii, kslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 type PrimaryActionButtonProps = {
   label: string;
@@ -28,30 +28,30 @@ export default function PrimaryActionButton({
       endIcon={
         <ArrowForwardIcon
           sx={{
-            bgcolor: kslColors.secondary,
+            bgcolor: KslColors.secondary,
             color: "white",
             borderRadius: "50%",
             p: 0.5,
-            fontSize: kslFontSizes.lg,
+            fontSize: KslFontSizes.lg,
           }}
         />
       }
       sx={{
         bgcolor: "background.paper",
-        color: kslColors.secondary,
+        color: KslColors.secondary,
         minHeight: 72,
         px: 2,
         py: 1.5,
-        borderRadius: `${kslRadii.button}px`,
-        boxShadow: kslShadows.card,
-        fontSize: kslFontSizes.lg,
+        borderRadius: `${KslRadii.button}px`,
+        boxShadow: KslShadows.card,
+        fontSize: KslFontSizes.lg,
         fontWeight: 700,
-        textShadow: kslShadows.text,
+        textShadow: KslShadows.text,
         width: fullWidth ? "100%" : { xs: "100%", md: 418 },
         maxWidth: 418,
         "&:hover": {
           bgcolor: "background.paper",
-          boxShadow: kslShadows.button,
+          boxShadow: KslShadows.button,
         },
         "&.Mui-disabled": {
           bgcolor: "grey.100",

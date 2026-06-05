@@ -1,6 +1,6 @@
 import LockIcon from "@mui/icons-material/Lock";
 import Box from "@mui/material/Box";
-import { kslColors } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 
 type LockBadgeProps = {
   size?: number;
@@ -13,7 +13,7 @@ export default function LockBadge({ size = 44 }: LockBadgeProps) {
         width: size,
         height: size,
         borderRadius: "50%",
-        bgcolor: kslColors.locked,
+        bgcolor: KslColors.locked,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

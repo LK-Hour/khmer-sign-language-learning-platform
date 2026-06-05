@@ -13,7 +13,7 @@ import {
   getExerciseRangeDescriptionPair,
 } from "@/features/finger-spelling/utils/chapter";
 import { useTranslation } from "@/i18n/useTranslation";
-import { kslColors, kslFontSizes, kslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
 type ExerciseChapterRowProps = {
   exercise: FsExercise;
@@ -42,14 +42,14 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
         alignItems: "center",
         gap: { xs: 1.25, md: 2 },
         p: { xs: 1.25, md: 1.5 },
-        borderRadius: `${kslRadii.wordCard}px`,
-        border: `1px solid ${kslColors.border}`,
+        borderRadius: `${KslRadii.wordCard}px`,
+        border: `1px solid ${KslColors.border}`,
         bgcolor: locked ? "rgba(0,0,0,0.02)" : "background.paper",
         opacity: locked ? 0.65 : 1,
         ...(href && {
           "&:hover": {
-            borderColor: kslColors.primary,
-            bgcolor: "rgba(250, 171, 97, 0.08)",
+            borderColor: KslColors.primary,
+            bgcolor: KslColors.primaryLighter,
           },
         }),
       }}
@@ -57,11 +57,11 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           sx={{
-            fontSize: kslFontSizes.sm,
+            fontSize: KslFontSizes.sm,
             fontWeight: 700,
             letterSpacing: "0.06em",
             textTransform: "uppercase",
-            color: kslColors.primary,
+            color: KslColors.primary,
           }}
         >
           {chapterBadge}
@@ -69,9 +69,9 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
         <Typography
           sx={{
             mt: 0.25,
-            fontSize: kslFontSizes.md,
+            fontSize: KslFontSizes.md,
             fontWeight: 700,
-            color: kslColors.secondary,
+            color: KslColors.secondary,
             lineHeight: 1.25,
           }}
         >
@@ -81,8 +81,8 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
           <Typography
             sx={{
               mt: 0.25,
-              fontSize: kslFontSizes.sm,
-              color: kslColors.textSecondary,
+              fontSize: KslFontSizes.sm,
+              color: KslColors.textSecondary,
             }}
           >
             {secondary}
@@ -91,8 +91,8 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
         <Typography
           sx={{
             mt: 0.5,
-            fontSize: kslFontSizes.sm,
-            color: kslColors.textSecondary,
+            fontSize: KslFontSizes.sm,
+            color: KslColors.textSecondary,
           }}
         >
           {locked
