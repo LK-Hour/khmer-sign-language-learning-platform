@@ -5,7 +5,7 @@ import {
   SUPPORTED_LOCALES,
 } from "@/i18n/config";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const pathnameHasLocale = SUPPORTED_LOCALES.some(
