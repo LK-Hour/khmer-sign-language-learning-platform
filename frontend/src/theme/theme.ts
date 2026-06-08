@@ -7,25 +7,23 @@ export const KslPalette = {
     dark: "#147b55",
     light: "#dff7ed",
     lighter: "#f2fbf7",
-    contrastText: "#ffffff",
   },
   secondary: {
     main: "#137FEC",
     dark: "#0f66bd",
     light: "#e7f2ff",
     lighter: "#f3f9ff",
-    contrastText: "#ffffff",
   },
   status: {
     success: "#1f9f6f",
     fail: "#FF4438",
     error: "#FF4438",
-    alert: "#f3b83f",
-    warning: "#f3b83f",
-    inProgress: "#137FEC",
+    alert: "#FF4438",
+    warning: "#FF4438",
+    inProgress: "#f3b83f",
   },
   neutral: {
-    text: "#11284C",
+    text: "#14284C",
     muted: "#65746e",
     disabled: "#65746e",
     card: "#ffffff",
@@ -68,7 +66,7 @@ export const KslShadows = {
   drop: "0 8px 48px rgba(145, 158, 171, 0.5)",
   header: "0 8px 24px rgba(145, 158, 171, 0.5)",
   text: "2px 2px 4px rgba(0, 0, 0, 0.25)",
-  card: "4px 4px 10px rgba(0, 0, 0, 0.24)",
+  card: "0px 10px 25px rgba(0, 0, 0, 0.2)",
 } as const;
 
 export const KslRadii = {
@@ -100,13 +98,11 @@ const KslTheme = createTheme({
       main: KslPalette.primary.main,
       light: KslPalette.primary.light,
       dark: KslPalette.primary.dark,
-      contrastText: KslPalette.primary.contrastText,
     },
     secondary: {
       main: KslPalette.secondary.main,
       light: KslPalette.secondary.light,
       dark: KslPalette.secondary.dark,
-      contrastText: KslPalette.secondary.contrastText,
     },
     background: {
       default: KslPalette.neutral.background,
