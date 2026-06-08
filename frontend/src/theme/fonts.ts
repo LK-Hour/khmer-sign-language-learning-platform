@@ -4,12 +4,12 @@ export const niradei = localFont({
   src: [
     {
       path: "../../public/Fonts/CADTNiradei/Niradei-Regular.ttf",
-      weight: "400",
+      weight: "500",
       style: "normal",
     },
     {
       path: "../../public/Fonts/CADTNiradei/Niradei-Bold.ttf",
-      weight: "700",
+      weight: "600",
       style: "normal",
     },
   ],
@@ -31,12 +31,12 @@ export const kohSantepheap = localFont({
     },
     {
       path: "../../public/Fonts/Koh_Santepheap/KohSantepheap-Bold.ttf",
-      weight: "700",
+      weight: "600",
       style: "normal",
     },
     {
       path: "../../public/Fonts/Koh_Santepheap/KohSantepheap-Black.ttf",
-      weight: "900",
+      weight: "700",
       style: "normal",
     },
   ],
