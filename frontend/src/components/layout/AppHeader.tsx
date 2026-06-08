@@ -1,7 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Stack, Typography } from "@mui/material";
 import Image from "next/image";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { KslColors, KslFontSizes, KslShadows } from "@/theme/theme";
@@ -26,7 +25,7 @@ export default function AppHeader({
   const isLesson = variant === "lesson";
 
   const titleBlock = (
-    <Box
+    <Stack
       sx={{
         minWidth: 0,
         textAlign: { xs: "left", md: "center" },
@@ -61,12 +60,13 @@ export default function AppHeader({
           {subtitle}
         </Typography>
       )}
-    </Box>
+    </Stack>
   );
 
   return (
-    <Box
+    <Stack
       component="header"
+      direction={{ xs: "column", md: "row" }}
       sx={{
         position: "sticky",
         top: 0,
@@ -77,16 +77,14 @@ export default function AppHeader({
         boxShadow: KslShadows.header,
         px: { xs: 2, md: 4 },
         py: { xs: 1.5, md: 2 },
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" },
         alignItems: { xs: "stretch", md: "center" },
         gap: { xs: 1.5, md: 2 },
       }}
     >
       {/* Top row: logo + language switcher */}
-      <Box
+      <Stack
+        direction="row"
         sx={{
-          display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: 2,
@@ -107,17 +105,17 @@ export default function AppHeader({
           priority
         />
         {/* Switcher shown here on mobile only */}
-        <Box sx={{ display: { xs: "block", md: "none" } }}>
+        <Stack sx={{ display: { xs: "block", md: "none" } }}>
           <LocaleSwitcher />
-        </Box>
-      </Box>
+        </Stack>
+      </Stack>
 
       {titleBlock}
 
       {/* Switcher shown here on desktop only */}
-      <Box sx={{ display: { xs: "none", md: "block" }, flexShrink: 0 }}>
+      <Stack sx={{ display: { xs: "none", md: "block" }, flexShrink: 0 }}>
         <LocaleSwitcher />
-      </Box>
-    </Box>
+      </Stack>
+    </Stack>
   );
 }

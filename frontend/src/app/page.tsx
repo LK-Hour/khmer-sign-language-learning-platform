@@ -1,65 +1,106 @@
+import { Button, Link, Stack, Typography } from "@mui/material";
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <Stack
+      sx={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "background.default",
+      }}
+    >
+      <Stack
+        component="main"
+        spacing={6}
+        sx={{
+          flex: 1,
+          width: "100%",
+          maxWidth: 768,
+          minHeight: "100vh",
+          alignItems: { xs: "center", sm: "flex-start" },
+          justifyContent: "space-between",
+          bgcolor: "background.paper",
+          px: { xs: 3, sm: 8 },
+          py: { xs: 8, sm: 16 },
+        }}
+      >
         <Image
-          className="dark:invert"
           src="/assets/next.svg"
           alt="Next.js logo"
           width={100}
           height={20}
           priority
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+        <Stack
+          spacing={3}
+          sx={{
+            alignItems: { xs: "center", sm: "flex-start" },
+            textAlign: { xs: "center", sm: "left" },
+          }}
+        >
+          <Typography
+            component="h1"
+            sx={{
+              maxWidth: 320,
+              fontSize: 30,
+              lineHeight: "40px",
+              fontWeight: 600,
+              color: "text.primary",
+            }}
+          >
             To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+          </Typography>
+          <Typography sx={{ maxWidth: 448, fontSize: 18, lineHeight: "32px", color: "text.secondary" }}>
             Looking for a starting point or more instructions? Head over to{" "}
-            <a
+            <Link
               href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              color="inherit"
+              sx={{ fontWeight: 600 }}
             >
               Templates
-            </a>{" "}
+            </Link>{" "}
             or the{" "}
-            <a
+            <Link
               href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              color="inherit"
+              sx={{ fontWeight: 600 }}
             >
               Learning
-            </a>{" "}
+            </Link>{" "}
             center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
+          </Typography>
+        </Stack>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ width: { xs: "100%", sm: "auto" } }}>
+          <Button
+            component="a"
             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
+            variant="contained"
+            sx={{ height: 48, minWidth: { xs: "100%", md: 158 }, borderRadius: 999, gap: 1 }}
           >
             <Image
-              className="dark:invert"
               src="/favicon/favicon.ico"
               alt="Vercel logomark"
               width={16}
               height={16}
             />
             Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+          </Button>
+          <Button
+            component="a"
             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
+            variant="outlined"
+            sx={{ height: 48, minWidth: { xs: "100%", md: 158 }, borderRadius: 999 }}
           >
             Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          </Button>
+        </Stack>
+      </Stack>
+    </Stack>
   );
 }

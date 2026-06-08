@@ -1,5 +1,4 @@
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
+import { Alert, Stack } from "@mui/material";
 import { fetchFsUnits } from "@/features/finger-spelling/api/curriculum";
 import {
   FingerSpellingHomeShell,

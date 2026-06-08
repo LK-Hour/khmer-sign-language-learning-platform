@@ -1,7 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 import Image from "next/image";
 import BackButton from "@/components/ui/BackButton";
 import { ROUTES } from "@/constants/routes";
@@ -28,13 +27,14 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
   const isVideo = Boolean(word.videoUrl);
 
   return (
-    <Box sx={{ maxWidth: 720, mx: "auto" }}>
+    <Stack sx={{ maxWidth: 720, mx: "auto" }}>
       <BackButton
         href={ROUTES.dictionary}
         aria-label={t("fsDictionaryBack")}
       />
 
-      <Box
+      <Paper
+        elevation={0}
         sx={{
           mt: 1,
           borderRadius: `${KslRadii.signImage}px`,
@@ -69,9 +69,10 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
             priority
           />
         )}
-      </Box>
+      </Paper>
 
-      <Box
+      <Paper
+        elevation={0}
         sx={{
           mt: 2,
           mx: "auto",
@@ -110,7 +111,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
             {secondary}
           </Typography>
         )}
-      </Box>
-    </Box>
+      </Paper>
+    </Stack>
   );
 }

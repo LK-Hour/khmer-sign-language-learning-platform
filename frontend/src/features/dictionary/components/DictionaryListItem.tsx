@@ -1,7 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
 import PlayButton from "@/components/ui/PlayButton";
 import { ROUTES } from "@/constants/routes";
@@ -17,9 +16,11 @@ export default function DictionaryListItem({ word }: DictionaryListItemProps) {
 
   return (
     <Link href={href} style={{ textDecoration: "none", color: "inherit" }}>
-      <Box
+      <Paper
+        elevation={0}
+        component={Stack}
+        direction="row"
         sx={{
-          display: "flex",
           alignItems: "center",
           gap: { xs: 1.5, md: 2 },
           px: { xs: 2, md: 2.5 },
@@ -64,7 +65,7 @@ export default function DictionaryListItem({ word }: DictionaryListItemProps) {
         </Typography>
 
         <PlayButton />
-      </Box>
+      </Paper>
     </Link>
   );
 }

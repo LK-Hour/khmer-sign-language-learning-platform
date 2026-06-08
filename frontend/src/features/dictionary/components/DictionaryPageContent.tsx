@@ -1,8 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
+import { Stack, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import type { DictionaryWord } from "../types";
@@ -31,7 +29,7 @@ export default function DictionaryPageContent({
   }, [search, words]);
 
   return (
-    <Box sx={{ maxWidth: 1120, mx: "auto" }}>
+    <Stack sx={{ maxWidth: 1120, mx: "auto" }}>
       <DictionarySearchBar value={search} onChange={setSearch} />
 
       {filtered.length === 0 ? (
@@ -45,6 +43,6 @@ export default function DictionaryPageContent({
           ))}
         </Stack>
       )}
-    </Box>
+    </Stack>
   );
 }

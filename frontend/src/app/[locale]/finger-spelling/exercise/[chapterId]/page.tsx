@@ -1,4 +1,4 @@
-import Box from "@mui/material/Box";
+import { Stack } from "@mui/material";
 import { notFound } from "next/navigation";
 import StartExerciseLink from "@/components/common/StartExerciseLink";
 import { fetchFsChapterExercise } from "@/features/finger-spelling/api/practice";
@@ -25,17 +25,15 @@ export default async function ChapterExerciseIntroPage({ params }: PageProps) {
       hideBottomNav
       fullWidth
     >
-      <Box
+      <Stack
         sx={{
-          display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           gap: 3,
           py: 6,
         }}
       >
         <StartExerciseLink href={ROUTES.fingerSpelling.exerciseQuiz(id)} />
-      </Box>
+      </Stack>
     </FingerSpellingShell>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Collapse from "@mui/material/Collapse";
-import Typography from "@mui/material/Typography";
+import { Box, Collapse, Paper, Stack, Typography } from "@mui/material";
 import { useState } from "react";
 import ExpandToggle from "@/components/ui/ExpandToggle";
 import type { FsExercise, FsUnit } from "@/features/finger-spelling/types";
@@ -48,7 +46,8 @@ export default function ExerciseUnitAccordion({
       );
 
   return (
-    <Box
+    <Paper
+      elevation={0}
       sx={{
         border: `1px solid ${KslColors.border}`,
         borderRadius: `${KslRadii.card}px`,
@@ -75,7 +74,7 @@ export default function ExerciseUnitAccordion({
           textAlign: "left",
         }}
       >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Stack sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
               fontSize: KslFontSizes.sm,
@@ -118,7 +117,7 @@ export default function ExerciseUnitAccordion({
           >
             {metaLine}
           </Typography>
-        </Box>
+        </Stack>
         <ExpandToggle
           expanded={expanded}
           disabled={locked}
@@ -128,20 +127,18 @@ export default function ExerciseUnitAccordion({
       </Box>
 
       <Collapse in={expanded && !locked} unmountOnExit>
-        <Box
+        <Stack
           sx={{
             px: { xs: 1.5, md: 2 },
             pb: { xs: 1.5, md: 2 },
-            display: "flex",
-            flexDirection: "column",
             gap: 1,
           }}
         >
           {sortedExercises.map((exercise) => (
             <ExerciseChapterRow key={exercise.id} exercise={exercise} />
           ))}
-        </Box>
+        </Stack>
       </Collapse>
-    </Box>
+    </Paper>
   );
 }

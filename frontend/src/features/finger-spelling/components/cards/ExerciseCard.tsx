@@ -1,8 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import LinearProgress from "@mui/material/LinearProgress";
-import Typography from "@mui/material/Typography";
+import { LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
 import LockBadge from "@/components/ui/LockBadge";
 import PlayButton from "@/components/ui/PlayButton";
@@ -30,9 +28,11 @@ export default function ExerciseCard({
 
   if (embedded) {
     const content = (
-      <Box
+      <Paper
+        elevation={0}
+        component={Stack}
+        direction="row"
         sx={{
-          display: "flex",
           alignItems: "center",
           gap: 2,
           p: { xs: 1.25, md: 1.5 },
@@ -47,7 +47,7 @@ export default function ExerciseCard({
           }),
         }}
       >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Stack sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
               fontSize: KslFontSizes.md,
@@ -75,9 +75,9 @@ export default function ExerciseCard({
               sx={{ mt: 1, width: "100%" }}
             />
           )}
-        </Box>
+        </Stack>
         {locked ? <LockBadge /> : <PlayButton />}
-      </Box>
+      </Paper>
     );
 
     if (href) {
@@ -97,7 +97,8 @@ export default function ExerciseCard({
   );
 
   return (
-    <Box
+    <Paper
+      elevation={0}
       sx={{
         borderRadius: `${KslRadii.card}px`,
         boxShadow: KslShadows.card,
@@ -106,9 +107,9 @@ export default function ExerciseCard({
         mb: 2,
       }}
     >
-      <Box sx={{ p: { xs: 2, md: 3 } }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Stack sx={{ p: { xs: 2, md: 3 } }}>
+        <Stack direction="row" sx={{ alignItems: "center", gap: 2 }}>
+          <Stack sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               variant="h5"
               sx={{
@@ -141,7 +142,7 @@ export default function ExerciseCard({
                 .replace("{score}", String(exercise.score))
                 .replace("{max}", String(exercise.maxScore))}
             </Typography>
-          </Box>
+          </Stack>
           {locked ? (
             <LockBadge />
           ) : href ? (
@@ -151,7 +152,7 @@ export default function ExerciseCard({
           ) : (
             <PlayButton />
           )}
-        </Box>
+        </Stack>
         {!locked && exercise.maxScore > 0 && (
           <LinearProgress
             variant="determinate"
@@ -159,7 +160,7 @@ export default function ExerciseCard({
             sx={{ mt: 1.5, width: "100%" }}
           />
         )}
-      </Box>
-    </Box>
+      </Stack>
+    </Paper>
   );
 }

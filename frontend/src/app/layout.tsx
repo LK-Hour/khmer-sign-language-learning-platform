@@ -15,11 +15,8 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html
-      lang={DEFAULT_LOCALE}
-      className={`${appFonts} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang={DEFAULT_LOCALE} className={appFonts} style={{ height: "100%" }}>
+      <body style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

@@ -2,10 +2,7 @@
 
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import TextField from "@mui/material/TextField";
+import { IconButton, InputAdornment, Stack, TextField } from "@mui/material";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
@@ -23,9 +20,9 @@ export default function DictionarySearchBar({
   const { t } = useTranslation();
 
   return (
-    <Box
+    <Stack
+      direction="row"
       sx={{
-        display: "flex",
         alignItems: "center",
         gap: 1.5,
         mb: 2,
@@ -69,6 +66,6 @@ export default function DictionarySearchBar({
       >
         <TuneIcon />
       </IconButton>
-    </Box>
+    </Stack>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import LinearProgress from "@mui/material/LinearProgress";
-import Typography from "@mui/material/Typography";
+import { LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
 import LockBadge from "@/components/ui/LockBadge";
 import PlayButton from "@/components/ui/PlayButton";
@@ -36,9 +34,11 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
   );
 
   const content = (
-    <Box
+    <Paper
+      elevation={0}
+      component={Stack}
+      direction="row"
       sx={{
-        display: "flex",
         alignItems: "center",
         gap: { xs: 1.25, md: 2 },
         p: { xs: 1.25, md: 1.5 },
@@ -54,7 +54,7 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
         }),
       }}
     >
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Stack sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           sx={{
             fontSize: KslFontSizes.sm,
@@ -108,9 +108,9 @@ export default function ExerciseChapterRow({ exercise }: ExerciseChapterRowProps
             sx={{ mt: 1, width: "100%" }}
           />
         )}
-      </Box>
+      </Stack>
       {locked ? <LockBadge /> : <PlayButton />}
-    </Box>
+    </Paper>
   );
 
   if (href) {

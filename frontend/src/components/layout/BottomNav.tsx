@@ -1,9 +1,11 @@
 "use client";
 
 import type { SvgIconComponent } from "@mui/icons-material";
-import Box from "@mui/material/Box";
-import BottomNavigation from "@mui/material/BottomNavigation";
-import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import {
+  BottomNavigation,
+  BottomNavigationAction,
+  Paper,
+} from "@mui/material";
 import { usePathname, useRouter } from "next/navigation";
 import { KslColors, KslFontSizes } from "@/theme/theme";
 
@@ -25,8 +27,10 @@ export default function BottomNav({ items, resolveActive }: BottomNavProps) {
   const value = resolveActive(pathname);
 
   return (
-    <Box
+    <Paper
       component="nav"
+      square
+      elevation={0}
       sx={{
         position: "fixed",
         bottom: 0,
@@ -73,6 +77,6 @@ export default function BottomNav({ items, resolveActive }: BottomNavProps) {
           />
         ))}
       </BottomNavigation>
-    </Box>
+    </Paper>
   );
 }

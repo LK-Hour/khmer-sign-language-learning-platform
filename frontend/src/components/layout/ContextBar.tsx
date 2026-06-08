@@ -1,5 +1,4 @@
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 import Image from "next/image";
 import Badge from "@/components/ui/Badge";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
@@ -19,7 +18,8 @@ export default function ContextBar({
   mascotSrc = "/finger-spelling/ksl-mascot.svg",
 }: ContextBarProps) {
   return (
-    <Box
+    <Paper
+      elevation={0}
       sx={{
         display: "flex",
         alignItems: "center",
@@ -56,7 +56,7 @@ export default function ContextBar({
           }}
         />
       </Box>
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Stack sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="h5"
           sx={{
@@ -69,7 +69,7 @@ export default function ContextBar({
           {title}
         </Typography>
         {subtitle && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+          <Stack direction="row" sx={{ alignItems: "center", gap: 1, mt: 1 }}>
             <Badge label={badgeLabel} />
             <Typography
               variant="body1"
@@ -81,9 +81,9 @@ export default function ContextBar({
             >
               {subtitle}
             </Typography>
-          </Box>
+          </Stack>
         )}
-      </Box>
+      </Stack>
       <Box
         sx={{
           flexShrink: 0,
@@ -100,6 +100,6 @@ export default function ContextBar({
           style={{ objectFit: "contain" }}
         />
       </Box>
-    </Box>
+    </Paper>
   );
 }

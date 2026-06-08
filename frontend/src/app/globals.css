@@ -1,5 +1,3 @@
-@import "tailwindcss";
-
 :root {
   --ksl-primary: #1f9f6f;
   --ksl-primary-dark: #147b55;
@@ -38,39 +36,6 @@
   --ksl-leading-sm: 20px;
   --ksl-leading-md: 24px;
   --ksl-leading-lg: 30px;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--ksl-primary);
-  --color-primary-dark: var(--ksl-primary-dark);
-  --color-primary-light: var(--ksl-primary-light);
-  --color-primary-lighter: var(--ksl-primary-lighter);
-  --color-secondary: var(--ksl-secondary);
-  --color-secondary-dark: var(--ksl-secondary-dark);
-  --color-secondary-light: var(--ksl-secondary-light);
-  --color-secondary-lighter: var(--ksl-secondary-lighter);
-  --color-success: var(--ksl-success);
-  --color-fail: var(--ksl-fail);
-  --color-error: var(--ksl-error);
-  --color-alert: var(--ksl-alert);
-  --color-warning: var(--ksl-warning);
-  --color-in-progress: var(--ksl-in-progress);
-  --color-text: var(--ksl-text);
-  --color-muted: var(--ksl-muted);
-  --color-disabled: var(--ksl-disabled);
-  --color-card: var(--ksl-card);
-  --color-page: var(--ksl-page);
-  --color-border: var(--ksl-border);
-  --font-sans: var(--font-app-sans);
-  --font-mono: var(--font-app-mono);
-  --text-sm: var(--ksl-font-sm);
-  --text-sm--line-height: var(--ksl-leading-sm);
-  --text-base: var(--ksl-font-md);
-  --text-base--line-height: var(--ksl-leading-md);
-  --text-lg: var(--ksl-font-lg);
-  --text-lg--line-height: var(--ksl-leading-lg);
 }
 
 @media (prefers-color-scheme: dark) {

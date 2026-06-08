@@ -1,7 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Box, Stack, Typography } from "@mui/material";
 import Image from "next/image";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 import type { QuizQuestion } from "./types";
@@ -18,10 +17,8 @@ export default function ImageSelectQuestion({
   onToggle,
 }: ImageSelectQuestionProps) {
   return (
-    <Box
+    <Stack
       sx={{
-        display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         gap: 3,
       }}
@@ -40,9 +37,9 @@ export default function ImageSelectQuestion({
           {question.promptText}
         </Typography>
       )}
-      <Box
+      <Stack
+        direction="row"
         sx={{
-          display: "flex",
           flexWrap: "wrap",
           gap: 3,
           justifyContent: "center",
@@ -111,7 +108,7 @@ export default function ImageSelectQuestion({
             </Box>
           );
         })}
-      </Box>
-    </Box>
+      </Stack>
+    </Stack>
   );
 }

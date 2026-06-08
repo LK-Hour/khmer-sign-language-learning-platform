@@ -1,5 +1,4 @@
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Box, Stack, Typography } from "@mui/material";
 import BackButton from "@/components/ui/BackButton";
 import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
@@ -15,9 +14,9 @@ export default function QuizHeader({
   backHref,
 }: QuizHeaderProps) {
   return (
-    <Box
+    <Stack
+      direction="row"
       sx={{
-        display: "flex",
         alignItems: "center",
         gap: 2,
         mb: 4,
@@ -63,6 +62,6 @@ export default function QuizHeader({
       >
         {points} pts
       </Typography>
-    </Box>
+    </Stack>
   );
 }

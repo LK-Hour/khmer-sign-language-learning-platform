@@ -1,4 +1,4 @@
-import Box from "@mui/material/Box";
+import { Container, Stack } from "@mui/material";
 import AppHeader, { type AppHeaderVariant } from "./AppHeader";
 import BottomNav, { type BottomNavItem } from "./BottomNav";
 import ContextBar from "./ContextBar";
@@ -41,12 +41,10 @@ export default function AppShell({
   const showContext = contextBadge && contextTitle;
 
   return (
-    <Box
+    <Stack
       sx={{
         minHeight: "100dvh",
         bgcolor: "background.default",
-        display: "flex",
-        flexDirection: "column",
       }}
     >
       <AppHeader
@@ -57,13 +55,12 @@ export default function AppShell({
         logoAlt={logoAlt}
       />
 
-      <Box
+      <Container
         component="main"
+        maxWidth={fullWidth ? false : "lg"}
         sx={{
           flex: 1,
           width: "100%",
-          maxWidth: fullWidth ? "none" : 1200,
-          mx: "auto",
           px: { xs: 2, md: 4 },
           pt: { xs: 2, md: 3 },
           pb: hideBottomNav ? 4 : { xs: 10, md: 16 },
@@ -78,11 +75,11 @@ export default function AppShell({
           />
         )}
         {children}
-      </Box>
+      </Container>
 
       {!hideBottomNav && navItems.length > 0 && (
         <BottomNav items={navItems} resolveActive={resolveActiveNav} />
       )}
-    </Box>
+    </Stack>
   );
 }

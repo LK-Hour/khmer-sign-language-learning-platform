@@ -1,6 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
+import { Box, Grid, Stack } from "@mui/material";
 import Image from "next/image";
 import { KslRadii, KslShadows } from "@/theme/theme";
 import OptionButton from "./OptionButton";
@@ -18,10 +18,8 @@ export default function MultipleChoiceQuestion({
   onSelect,
 }: MultipleChoiceQuestionProps) {
   return (
-    <Box
+    <Stack
       sx={{
-        display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         gap: 4,
       }}
@@ -46,25 +44,18 @@ export default function MultipleChoiceQuestion({
           />
         </Box>
       )}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-          gap: 2,
-          width: "100%",
-          maxWidth: 900,
-        }}
-      >
+      <Grid container spacing={2} sx={{ width: "100%", maxWidth: 900 }}>
         {question.options.map((opt) => (
-          <OptionButton
-            key={opt.id}
-            letter={opt.letter}
-            romanization={opt.romanization}
-            selected={selectedId === opt.id}
-            onClick={() => onSelect(opt.id)}
-          />
+          <Grid key={opt.id} size={{ xs: 12, sm: 6 }}>
+            <OptionButton
+              letter={opt.letter}
+              romanization={opt.romanization}
+              selected={selectedId === opt.id}
+              onClick={() => onSelect(opt.id)}
+            />
+          </Grid>
         ))}
-      </Box>
-    </Box>
+      </Grid>
+    </Stack>
   );
 }

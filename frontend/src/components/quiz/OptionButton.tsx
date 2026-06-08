@@ -1,7 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Box, Typography } from "@mui/material";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 type OptionButtonProps = {

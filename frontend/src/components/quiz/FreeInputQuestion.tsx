@@ -1,8 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+import { Box, Stack, TextField, Typography } from "@mui/material";
 import Image from "next/image";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 import type { QuizQuestion } from "./types";
@@ -19,10 +17,8 @@ export default function FreeInputQuestion({
   onChange,
 }: FreeInputQuestionProps) {
   return (
-    <Box
+    <Stack
       sx={{
-        display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         gap: 4,
       }}
@@ -77,6 +73,6 @@ export default function FreeInputQuestion({
           },
         }}
       />
-    </Box>
+    </Stack>
   );
 }

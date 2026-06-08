@@ -1,6 +1,4 @@
-import Box from "@mui/material/Box";
-import Skeleton from "@mui/material/Skeleton";
-import Stack from "@mui/material/Stack";
+import { Container, Grid, Paper, Skeleton, Stack } from "@mui/material";
 import { KslColors, KslRadii } from "@/theme/theme";
 
 type PageSkeletonVariant =
@@ -22,7 +20,9 @@ const compactRows = Array.from({ length: 6 }, (_, index) => index);
 
 function HeaderSkeleton() {
   return (
-    <Box
+    <Paper
+      square
+      elevation={0}
       sx={{
         bgcolor: KslColors.primary,
         borderBottomLeftRadius: { xs: 24, md: KslRadii.headerBottom },
@@ -31,23 +31,24 @@ function HeaderSkeleton() {
         py: { xs: 2, md: 3 },
       }}
     >
-      <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+      <Container maxWidth="lg">
         <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
           <Skeleton variant="circular" width={52} height={52} />
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Stack sx={{ flex: 1, minWidth: 0 }}>
             <Skeleton width="42%" height={34} />
             <Skeleton width="28%" height={24} />
-          </Box>
+          </Stack>
           <Skeleton variant="rounded" width={132} height={42} />
         </Stack>
-      </Box>
-    </Box>
+      </Container>
+    </Paper>
   );
 }
 
 function ContextSkeleton() {
   return (
-    <Box
+    <Paper
+      elevation={0}
       sx={{
         mb: 3,
         p: { xs: 2, md: 2.5 },
@@ -59,7 +60,7 @@ function ContextSkeleton() {
       <Skeleton width={84} height={20} />
       <Skeleton width="45%" height={32} />
       <Skeleton width="32%" height={22} />
-    </Box>
+    </Paper>
   );
 }
 
@@ -67,8 +68,9 @@ function ListSkeleton() {
   return (
     <Stack spacing={0}>
       {listRows.map((row) => (
-        <Box
+        <Paper
           key={row}
+          elevation={0}
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "96px 1fr 160px" },
@@ -81,13 +83,13 @@ function ListSkeleton() {
           }}
         >
           <Skeleton variant="rounded" width={72} height={72} />
-          <Box>
+          <Stack>
             <Skeleton width="54%" height={30} />
             <Skeleton width="36%" height={22} />
             <Skeleton width="70%" height={18} />
-          </Box>
+          </Stack>
           <Skeleton variant="rounded" width="100%" height={44} />
-        </Box>
+        </Paper>
       ))}
     </Stack>
   );
@@ -98,8 +100,9 @@ function DictionarySkeleton() {
     <Stack spacing={2}>
       <Skeleton variant="rounded" width="100%" height={56} />
       {compactRows.map((row) => (
-        <Box
+        <Paper
           key={row}
+          elevation={0}
           sx={{
             display: "grid",
             gridTemplateColumns: "72px 1fr 28px",
@@ -113,12 +116,12 @@ function DictionarySkeleton() {
           }}
         >
           <Skeleton variant="rounded" width={64} height={64} />
-          <Box>
+          <Stack>
             <Skeleton width="35%" height={28} />
             <Skeleton width="58%" height={20} />
-          </Box>
+          </Stack>
           <Skeleton variant="circular" width={28} height={28} />
-        </Box>
+        </Paper>
       ))}
     </Stack>
   );
@@ -126,78 +129,60 @@ function DictionarySkeleton() {
 
 function DetailSkeleton() {
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: { xs: "1fr", md: "minmax(280px, 420px) 1fr" },
-        gap: { xs: 3, md: 5 },
-        alignItems: "start",
-      }}
-    >
-      <Skeleton variant="rounded" width="100%" height={360} />
-      <Stack spacing={2}>
+    <Grid container spacing={{ xs: 3, md: 5 }} sx={{ alignItems: "flex-start" }}>
+      <Grid size={{ xs: 12, md: 5 }}>
+        <Skeleton variant="rounded" width="100%" height={360} />
+      </Grid>
+      <Grid size={{ xs: 12, md: 7 }} component={Stack} spacing={2}>
         <Skeleton width="45%" height={44} />
         <Skeleton width="80%" height={24} />
         <Skeleton width="72%" height={24} />
         <Skeleton width="64%" height={24} />
         <Skeleton variant="rounded" width={180} height={48} />
-      </Stack>
-    </Box>
+      </Grid>
+    </Grid>
   );
 }
 
 function LessonSkeleton() {
   return (
     <Stack spacing={3}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
         <Skeleton variant="circular" width={44} height={44} />
         <Skeleton variant="rounded" width="100%" height={18} />
-      </Box>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
-          gap: { xs: 3, lg: 5 },
-          alignItems: "start",
-        }}
-      >
-        <Stack spacing={2} sx={{ alignItems: "center" }}>
+      </Stack>
+      <Grid container spacing={{ xs: 3, lg: 5 }} sx={{ alignItems: "flex-start" }}>
+        <Grid size={{ xs: 12, lg: 6 }} component={Stack} spacing={2} sx={{ alignItems: "center" }}>
           <Skeleton variant="rounded" width="100%" height={420} />
           <Skeleton variant="rounded" width="70%" height={84} />
-        </Stack>
-        <Stack spacing={2}>
+        </Grid>
+        <Grid size={{ xs: 12, lg: 6 }} component={Stack} spacing={2}>
           <Skeleton width="85%" height={24} />
           <Skeleton variant="rounded" width="100%" height={420} />
-          <Box sx={{ display: "flex", gap: 2 }}>
+          <Stack direction="row" spacing={2}>
             <Skeleton variant="rounded" width="50%" height={72} />
             <Skeleton variant="rounded" width="50%" height={72} />
-          </Box>
-        </Stack>
-      </Box>
+          </Stack>
+        </Grid>
+      </Grid>
     </Stack>
   );
 }
 
 function ProfileSkeleton() {
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: { xs: "1fr", md: "280px 1fr" },
-        gap: 3,
-      }}
-    >
-      <Stack spacing={2} sx={{ alignItems: "center" }}>
+    <Grid container spacing={3}>
+      <Grid size={{ xs: 12, md: 4 }} component={Stack} spacing={2} sx={{ alignItems: "center" }}>
         <Skeleton variant="circular" width={128} height={128} />
         <Skeleton width="60%" height={32} />
         <Skeleton width="42%" height={20} />
-      </Stack>
-      <Stack spacing={2}>
+      </Grid>
+      <Grid size={{ xs: 12, md: 8 }} component={Stack} spacing={2}>
         {compactRows.slice(0, 4).map((row) => (
           <Skeleton key={row} variant="rounded" width="100%" height={76} />
         ))}
-      </Stack>
-    </Box>
+      </Grid>
+    </Grid>
   );
 }
 
@@ -215,24 +200,21 @@ export default function PageSkeleton({
   fullWidth,
 }: PageSkeletonProps) {
   return (
-    <Box
+    <Stack
       role="status"
       aria-label="Loading"
       sx={{
         minHeight: "100dvh",
         bgcolor: "background.default",
-        display: "flex",
-        flexDirection: "column",
       }}
     >
       <HeaderSkeleton />
-      <Box
+      <Container
         component="main"
+        maxWidth={fullWidth ? false : "lg"}
         sx={{
           flex: 1,
           width: "100%",
-          maxWidth: fullWidth ? "none" : 1200,
-          mx: "auto",
           px: { xs: 2, md: 4 },
           pt: { xs: 2, md: 3 },
           pb: { xs: 10, md: 16 },
@@ -240,7 +222,7 @@ export default function PageSkeleton({
       >
         {showContext && <ContextSkeleton />}
         <ContentSkeleton variant={variant} />
-      </Box>
-    </Box>
+      </Container>
+    </Stack>
   );
 }

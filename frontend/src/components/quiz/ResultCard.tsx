@@ -1,8 +1,7 @@
 "use client";
 
 import CheckIcon from "@mui/icons-material/Check";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Box, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import PrimaryActionButton from "@/components/ui/PrimaryActionButton";
 import { KslColors, KslFontSizes } from "@/theme/theme";
