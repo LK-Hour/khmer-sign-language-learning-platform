@@ -1,12 +1,6 @@
 "use client";
 
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import AppShell, {
-  type AppHeaderVariant,
-} from "@/components/layout/AppShell";
+
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { getLocalizedPair } from "@/i18n/localizedText";

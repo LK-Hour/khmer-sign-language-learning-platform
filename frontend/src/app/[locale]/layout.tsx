@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AppLayout } from "@/components/layout";
 import { DEFAULT_LOCALE, isValidLocale } from "@/i18n/config";
 import { LocaleProvider } from "@/i18n/LocaleProvider";
 
@@ -18,6 +19,8 @@ export default async function LocaleLayout({
   }
 
   return (
-    <LocaleProvider initialLocale={rawLocale}>{children}</LocaleProvider>
+    <LocaleProvider initialLocale={rawLocale}>
+      <AppLayout>{children}</AppLayout>
+    </LocaleProvider>
   );
 }

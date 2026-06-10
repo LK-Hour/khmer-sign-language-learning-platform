@@ -105,7 +105,7 @@ const KslTheme = createTheme({
       dark: KslPalette.secondary.dark,
     },
     background: {
-      default: KslPalette.neutral.background,
+      default: "#ffffff",
       paper: KslPalette.neutral.card,
     },
     text: {

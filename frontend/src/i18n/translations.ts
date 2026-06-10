@@ -11,6 +11,19 @@ const translations: Record<Locale, Translations> = {
     
     // Navigation
     home: 'ទំព័រដើម',
+    navHome: 'ទំព័រដើម',
+    navFingerSpelling: 'ការបង្ហាញម្រាមដៃ',
+    navWordDetection: 'ការស្គាល់ពាក្យ',
+    navDictionary: 'វចនានុក្រម',
+    navProfile: 'ប្រវត្តិ',
+    navLogout: 'ចាកចេញ',
+    logoutConfirmTitle: 'ចាកចេញ?',
+    logoutConfirmMessage: 'តើអ្នកប្រាកដថាចង់ចាកចេញមែនទេ?',
+    navGuest: 'ភ្ញៀវ',
+    navMenu: 'ម៉ឺនុយ',
+    navLearningMode: 'មុខងារ',
+    navFingerSpellingDesc: 'រៀនអក្សរខ្មែរពីរូបភាពគំរូ',
+    navWordDetectionDesc: 'ចាប់ផ្តើមពី ២០ ថ្នាក់ពាក្យជាមួយវីដេអូគំរូ',
     about: 'អំពី',
     contact: 'ទាក់ទង',
     settings: 'ការកំណត់',
@@ -47,6 +60,24 @@ const translations: Record<Locale, Translations> = {
     myProgress: 'វឌ្ឍនភាពរបស់ខ្ញុំ',
     continueLesson: 'បន្តមេរៀន',
     startLesson: 'ចាប់ផ្តើមមេរៀន',
+
+    // Landing page
+    landingEyebrow: 'របៀបរៀន',
+    landingTitle: 'បន្តដំណើរការបង្ហាញសញ្ញាខ្មែររបស់អ្នក',
+    landingSubtitle:
+      'ជ្រើស Finger Spelling ឬ Word Detection រួចបន្តតាមវគ្គ ជំពូក មេរៀន លំហាត់ និងសាកល្បងតាមលំដាប់។',
+    landingFingerSpellingCta: 'រៀន Finger Spelling',
+    landingWordDetectionCta: 'រៀន Word Detection',
+    landingHeroAlt: 'ការតាមដានម្រាមដៃផ្ទាល់សម្រាប់ការរៀនសញ្ញាខ្មែរ',
+    landingLiveBadge: 'LIVE',
+    landingMode01: 'Mode 01',
+    landingMode02: 'Mode 02',
+    landingFingerSpellingDesc:
+      'រៀនអក្សរខ្មែរនីមួយៗពីរូបភាពគំរូ និងការកែ keypoint ជាមួយពេលវេលាពិតប្រាកដ។',
+    landingWordDetectionDesc:
+      'ចាប់ផ្តើមពី ២០ ថ្នាក់ពាក្យជាមួយវីដេអូគំរូ និងភាគរយបង្ហាញផ្ទាល់។',
+    landingFingerSpellingStat: '១៤/២០ មេរៀន',
+    landingWordDetectionStat: '២០ ថ្នាក់ដំបូង',
 
     // Finger spelling nav
     fsNavHome: 'ទំព័រដើម',
@@ -108,6 +139,19 @@ const translations: Record<Locale, Translations> = {
     
     // Navigation
     home: 'Home',
+    navHome: 'Home',
+    navFingerSpelling: 'Finger Spelling',
+    navWordDetection: 'Word Detection',
+    navDictionary: 'Dictionary',
+    navProfile: 'Profile',
+    navLogout: 'Logout',
+    logoutConfirmTitle: 'Log out?',
+    logoutConfirmMessage: 'Are you sure you want to log out?',
+    navGuest: 'Guest',
+    navMenu: 'Menu',
+    navLearningMode: 'Modes',
+    navFingerSpellingDesc: 'Learn each Khmer character from sample images',
+    navWordDetectionDesc: 'Start from 20 word classes with video samples',
     about: 'About',
     contact: 'Contact',
     settings: 'Settings',
@@ -144,6 +188,24 @@ const translations: Record<Locale, Translations> = {
     myProgress: 'My Progress',
     continueLesson: 'Continue Lesson',
     startLesson: 'Start Lesson',
+
+    // Landing page
+    landingEyebrow: 'Learner Workspace',
+    landingTitle: 'Continue your Khmer signing journey',
+    landingSubtitle:
+      'Choose Finger Spelling or Word Detection, then continue through units, chapters, lessons, practice, and quizzes in order.',
+    landingFingerSpellingCta: 'Learn Finger Spelling',
+    landingWordDetectionCta: 'Learn Word Detection',
+    landingHeroAlt: 'Live hand tracking preview for Khmer sign learning',
+    landingLiveBadge: 'LIVE',
+    landingMode01: 'Mode 01',
+    landingMode02: 'Mode 02',
+    landingFingerSpellingDesc:
+      'Learn each Khmer character from sample images and real-time keypoint correction.',
+    landingWordDetectionDesc:
+      'Start from 20 word classes with video samples and live signing probability.',
+    landingFingerSpellingStat: '14/20 lessons',
+    landingWordDetectionStat: '20 starter classes',
 
     // Finger spelling nav
     fsNavHome: 'Home',
