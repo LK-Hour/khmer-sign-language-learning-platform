@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     "*.ngrok-free.dev",
   ],
   images: {
+    // Next.js 16 SSRF protection blocks localhost/127.0.0.1 unless enabled.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
     remotePatterns: [
       {
         protocol: "http",

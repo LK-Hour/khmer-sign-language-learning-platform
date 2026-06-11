@@ -5,7 +5,7 @@ import {
   useFingerSpellingStore,
   type FsTrackUnit,
 } from "../store";
-import FingerSpellingTrackView from "./FingerSpellingTrackView";
+import FingerSpellingTrackView from "../components/FingerSpellingTrackView";
 
 type FingerSpellingTrackProps = {
   units: FsTrackUnit[];

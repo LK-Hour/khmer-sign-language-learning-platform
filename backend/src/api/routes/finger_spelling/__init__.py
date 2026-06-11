@@ -10,6 +10,14 @@ from .finger_exercise import router as exercise_router
 from .finger_practice import router as practice_router
 from .finger_progress import router as progress_router
 
+try:
+    from .finger_hand_predict import router as hand_predict_router
+
+    practice_router.include_router(hand_predict_router)
+except ImportError:
+    # Optional: MLP inference only (keypoints extracted in the browser).
+    pass
+
 router = APIRouter(tags=["finger-spelling"])
 router.include_router(curriculum_router)
 router.include_router(practice_router)

@@ -2,14 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   endPracticeSession,
-  fetchPracticeAccuracy,
   startPracticeSession,
   submitPracticeLetter,
 } from "../api/practiceSession";
+import { predictHandFromFeatures } from "../api/handPredict";
 import { findResumeLesson } from "../utils/progress";
 import {
-  FS_MOCK_ACCURACY,
-  FS_MOCK_DELAY_MS,
   FS_PASS_THRESHOLD,
   type FsTrackUnit,
   type PracticeContext,
@@ -102,6 +100,7 @@ interface FingerSpellingState {
   practiceContext: PracticeContext | null;
   sessionId: number | null;
   accuracy: number | null;
+  predictedLetter: string | null;
   cameraResetKey: number;
   isSubmitting: boolean;
 
@@ -116,7 +115,11 @@ interface FingerSpellingState {
   incrementCameraResetKey: () => void;
 
   initializePracticeSession: (lessonId: number) => Promise<void>;
-  runPracticeRec: (lessonId: number) => Promise<void>;
+  runPracticeRec: (
+    lessonId: number,
+    features: number[],
+    handedness?: string
+  ) => Promise<void>;
   completePractice: () => Promise<void>;
   markLessonCompleted: (lessonId: number) => void;
 }
@@ -131,6 +134,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
       practiceContext: null,
       sessionId: null,
       accuracy: null,
+      predictedLetter: null,
       cameraResetKey: 0,
       isSubmitting: false,
 
@@ -176,6 +180,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           practiceContext: context,
           sessionId: null,
           accuracy: null,
+          predictedLetter: null,
           isSubmitting: false,
         }),
 
@@ -184,6 +189,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           practiceContext: null,
           sessionId: null,
           accuracy: null,
+          predictedLetter: null,
           isSubmitting: false,
         }),
 
@@ -191,6 +197,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
         set({
           sessionId: null,
           accuracy: null,
+          predictedLetter: null,
           isSubmitting: false,
         }),
 
@@ -206,34 +213,35 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
         }
       },
 
-      runPracticeRec: async (lessonId) => {
-        set({ isSubmitting: true, accuracy: null });
-
-        const sessionId = get().sessionId;
-        if (sessionId == null) {
-          window.setTimeout(() => {
-            set({ accuracy: FS_MOCK_ACCURACY, isSubmitting: false });
-          }, FS_MOCK_DELAY_MS);
-          return;
-        }
+      runPracticeRec: async (lessonId, features, handedness) => {
+        set({ isSubmitting: true, accuracy: null, predictedLetter: null });
 
         try {
-          await submitPracticeLetter(sessionId, {
-            letter_id: lessonId,
-            attempts: 1,
-          });
-          const result = await fetchPracticeAccuracy(sessionId);
-          const score = Math.round(
-            result.average_accuracy ?? result.peak_accuracy ?? 0
-          );
+          const prediction = await predictHandFromFeatures(features, handedness);
+          const score = Math.round(prediction.match_confidence);
+          const predicted = String(prediction.predicted_class_index);
+
+          const sessionId = get().sessionId;
+          if (sessionId != null) {
+            try {
+              await submitPracticeLetter(sessionId, {
+                letter_id: lessonId,
+                accuracy: score,
+                attempts: 1,
+              });
+            } catch {
+              // Non-blocking: prediction result still shown in the UI.
+            }
+          }
+
           set({
-            accuracy: score > 0 ? score : FS_MOCK_ACCURACY,
+            accuracy: score,
+            predictedLetter: predicted,
             isSubmitting: false,
           });
         } catch {
-          window.setTimeout(() => {
-            set({ accuracy: FS_MOCK_ACCURACY, isSubmitting: false });
-          }, FS_MOCK_DELAY_MS);
+          set({ isSubmitting: false });
+          throw new Error("Hand prediction failed");
         }
       },
 

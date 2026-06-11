@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "best_mlp_khmer_model.h5"
+_DEFAULT_LANDMARKER = _BACKEND_ROOT / "ml" / "models" / "hand_landmarker.task"
 
 
 class Settings(BaseSettings):
@@ -27,6 +32,16 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
+    ml_enabled: bool = Field(default=True, validation_alias="ML_ENABLED")
+    ml_model_path: Path = Field(
+        default=_DEFAULT_ML_MODEL,
+        validation_alias="ML_MODEL_PATH",
+    )
+    ml_landmarker_path: Path = Field(
+        default=_DEFAULT_LANDMARKER,
+        validation_alias="ML_LANDMARKER_PATH",
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -40,6 +55,14 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+    @field_validator("ml_model_path", "ml_landmarker_path", mode="before")
+    @classmethod
+    def resolve_ml_paths(cls, value: object) -> Path:
+        path = Path(str(value)) if value is not None else Path()
+        if not path.is_absolute():
+            return (_BACKEND_ROOT / path).resolve()
+        return path.resolve()
 
     def validate_runtime_security(self) -> None:
         if self.environment.lower() in {"production", "prod"} and (

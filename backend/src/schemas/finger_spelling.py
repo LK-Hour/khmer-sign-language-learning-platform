@@ -232,6 +232,22 @@ class PracticeAccuracyResponse(BaseModel):
     is_completed: bool
 
 
+class HandPredictFeaturesRequest(BaseModel):
+    features: list[float]
+    handedness: str | None = None
+
+
+class HandPredictResponse(BaseModel):
+    match_confidence: float
+    predicted_class_index: int
+    handedness: str
+
+
+class HandPredictStatusResponse(BaseModel):
+    available: bool
+    model_loaded: bool = False
+
+
 class FsLessonProgressResponse(BaseModel):
     lessonId: int
     progressStatus: str

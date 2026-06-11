@@ -272,7 +272,7 @@ function NumberBadge({ children }: { children: React.ReactNode }) {
         color: KslColors.primaryDark,
         flexShrink: 0,
         fontFamily: fontFamilies.english,
-        fontSize: KslFontSizes.sm,
+        fontSize: KslFontSizes.lg,
         fontWeight: 700,
         height: 42,
         justifyContent: "center",
@@ -463,13 +463,13 @@ function ChapterTrackSection({
             <Typography
               sx={{
                 color: KslColors.primaryDark,
-                fontSize: 12,
+                fontSize: KslFontSizes.md,
                 fontWeight: 700,
                 letterSpacing: locale === "kh" ? 0 : "0.06em",
                 textTransform: locale === "kh" ? "none" : "uppercase",
               }}
             >
-              {formatChapterBadge(chapter.orderIndex, locale, chapterLabel)}
+              {formatChapterBadge(chapter.orderIndex, locale, chapterLabel)}:
             </Typography>
             <Typography
               sx={{
@@ -582,7 +582,7 @@ function LessonTrackRow({
         }),
       }}
     >
-      <Stack sx={{ flex: 1, minWidth: 0 }}>
+      <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           sx={{
             color: KslColors.textPrimary,
@@ -591,13 +591,14 @@ function LessonTrackRow({
             lineHeight: 1.25,
           }}
         >
-          {title}
+          {title}:
         </Typography>
         <Typography
           sx={{
-            color: KslColors.textSecondary,
-            fontSize: KslFontSizes.sm,
-            lineHeight: 1.35,
+            color: KslColors.textPrimary,
+            fontSize: KslFontSizes.md,
+            fontWeight: 700,
+            lineHeight: 1.25,
           }}
         >
           {subtitle}

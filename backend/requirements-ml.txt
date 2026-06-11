@@ -1,0 +1,2 @@
+# Browser-side MediaPipe extracts keypoints; backend only runs NumPy MLP inference.
+#   pip install -r requirements.txt

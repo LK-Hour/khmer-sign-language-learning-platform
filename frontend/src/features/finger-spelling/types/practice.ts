@@ -40,3 +40,9 @@ export interface PracticeAccuracyResponse {
   samples: number;
   is_completed: boolean;
 }
+
+export interface HandPredictResponse {
+  match_confidence: number;
+  predicted_class_index: number;
+  handedness: string;
+}

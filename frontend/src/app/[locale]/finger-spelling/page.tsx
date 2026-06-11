@@ -42,9 +42,9 @@ export default async function FingerSpellingHomePage() {
   } catch {
     return (
       <PageContainer>
-        <Alert severity="error" sx={{ maxWidth: 1120, mx: "auto" }}>
-          Could not load units from the backend. Make sure the API is running at{" "}
-          {process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}.
+        <Alert severity="error" sx={{ mx: "auto" }}>
+        
+          {process.env.NEXT_PUBLIC_API_URL}.
         </Alert>
       </PageContainer>
     );

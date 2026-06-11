@@ -215,7 +215,7 @@ function ProfileLogoutBlock({
           >
             {logoutLabel}
           </Typography>
-          <Iconify icon="eva:log-out-fill" width={18} sx={{ color: KslColors.error }} />
+          <Iconify icon="eva:log-out-fill" sx={{ width: 18, height: 18, color: KslColors.error }} />
         </Stack>
       </Tooltip>
     </Stack>
