@@ -1,10 +1,13 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardActionArea from "@mui/material/CardActionArea";
-import LinearProgress from "@mui/material/LinearProgress";
-import Typography from "@mui/material/Typography";
+import {
+  Card,
+  CardActionArea,
+  CardContent,
+  LinearProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Badge from "@/components/ui/Badge";
@@ -34,20 +37,15 @@ export default function CurriculumCard({
   onClick,
 }: CurriculumCardProps) {
   const content = (
-    <Box
+    <CardContent
       sx={{
         p: { xs: 2, md: 3 },
         minHeight: { xs: 120, md: 140 },
+        "&:last-child": { pb: { xs: 2, md: 3 } },
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-        }}
-      >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Stack direction="row" sx={{ alignItems: "center", gap: 2 }}>
+        <Stack sx={{ flex: 1, minWidth: 0 }}>
           <Badge label={badgeLabel} />
           <Typography
             variant="h5"
@@ -85,9 +83,9 @@ export default function CurriculumCard({
               {progressText}
             </Typography>
           )}
-        </Box>
+        </Stack>
         {locked ? <LockBadge /> : <PlayButton />}
-      </Box>
+      </Stack>
       {!locked && progressPercent > 0 && (
         <LinearProgress
           variant="determinate"
@@ -95,7 +93,7 @@ export default function CurriculumCard({
           sx={{ mt: 1.5, width: "100%" }}
         />
       )}
-    </Box>
+    </CardContent>
   );
 
   return (
@@ -115,10 +113,12 @@ export default function CurriculumCard({
         <CardActionArea component={Link} href={href} onClick={onClick}>
           {content}
         </CardActionArea>
-      ) : (
-        <Box onClick={onClick} sx={{ cursor: locked ? "not-allowed" : "default" }}>
+      ) : onClick ? (
+        <CardActionArea disabled={locked} onClick={onClick}>
           {content}
-        </Box>
+        </CardActionArea>
+      ) : (
+        content
       )}
     </Card>
   );

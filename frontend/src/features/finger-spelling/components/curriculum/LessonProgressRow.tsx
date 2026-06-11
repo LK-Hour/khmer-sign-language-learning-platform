@@ -1,7 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import type { FsLesson } from "@/features/finger-spelling/types";
@@ -48,9 +47,11 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
   const href = lesson.isLocked ? undefined : ROUTES.fingerSpelling.lesson(lesson.id);
 
   const content = (
-    <Box
+    <Paper
+      elevation={0}
+      component={Stack}
+      direction="row"
       sx={{
-        display: "flex",
         alignItems: "center",
         gap: { xs: 1.25, md: 2 },
         p: { xs: 1.25, md: 1.5 },
@@ -75,7 +76,7 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
           }),
       }}
     >
-      <Box
+      <Stack
         sx={{
           minWidth: 52,
           px: 1,
@@ -97,9 +98,9 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
         >
           {badge.label}
         </Typography>
-      </Box>
+      </Stack>
 
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Stack sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           sx={{
             fontSize: KslFontSizes.md,
@@ -121,7 +122,7 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
         >
           {lesson.letter}
         </Typography>
-      </Box>
+      </Stack>
 
       <Typography
         sx={{
@@ -140,7 +141,7 @@ export default function LessonProgressRow(props: LessonProgressRowProps) {
         {state === "now" && "Continue"}
         {state === "lock" && "Next"}
       </Typography>
-    </Box>
+    </Paper>
   );
 
   if (href && isInteractive) {
@@ -170,9 +171,11 @@ function PracticeRow({
   const badge = stateBadge.lock;
 
   const content = (
-    <Box
+    <Paper
+      elevation={0}
+      component={Stack}
+      direction="row"
       sx={{
-        display: "flex",
         alignItems: "center",
         gap: { xs: 1.25, md: 2 },
         p: { xs: 1.25, md: 1.5 },
@@ -189,7 +192,7 @@ function PracticeRow({
           }),
       }}
     >
-      <Box
+      <Stack
         sx={{
           minWidth: 52,
           px: 1,
@@ -210,9 +213,9 @@ function PracticeRow({
         >
           {locked ? "Lock" : "Go"}
         </Typography>
-      </Box>
+      </Stack>
 
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Stack sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           sx={{
             fontSize: KslFontSizes.md,
@@ -233,7 +236,7 @@ function PracticeRow({
             {subtitle}
           </Typography>
         )}
-      </Box>
+      </Stack>
 
       <Typography
         sx={{
@@ -245,7 +248,7 @@ function PracticeRow({
       >
         {locked ? actionLabel : actionLabel}
       </Typography>
-    </Box>
+    </Paper>
   );
 
   if (!locked && href) {
