@@ -1,3 +1,5 @@
+import { useAuthStore } from "@/store/auth.store";
+
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:8000";
@@ -15,21 +17,25 @@ export class ApiError extends Error {
 
 export type ApiFetchOptions = RequestInit & {
   accessToken?: string;
-  onUnauthorized?: () => void;
+  skipAuth?: boolean;
 };
 
 export async function apiFetch<T>(
   path: string,
   init: ApiFetchOptions = {}
 ): Promise<T> {
-  const { accessToken, onUnauthorized, headers: initHeaders, ...requestInit } = init;
+  const { accessToken, skipAuth, headers: initHeaders, ...requestInit } = init;
 
   const headers = new Headers(initHeaders);
   if (requestInit.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  if (accessToken) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
+
+  if (!skipAuth) {
+    const token = accessToken ?? useAuthStore.getState().token;
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
   }
 
   const res = await fetch(`${baseURL}${path}`, {
@@ -38,7 +44,7 @@ export async function apiFetch<T>(
   });
 
   if (res.status === 401) {
-    onUnauthorized?.();
+    useAuthStore.getState().clear();
   }
 
   if (!res.ok) {
