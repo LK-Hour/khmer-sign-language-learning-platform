@@ -1,6 +1,5 @@
-/** When `"true"`, finger-spelling uses local mock data instead of the backend API. */
-export const FS_USE_MOCK = process.env.NEXT_PUBLIC_FS_USE_MOCK === "true";
-
+/** Live API is required — mock curriculum files were removed. */
+export const FS_USE_MOCK = false;
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:8000";

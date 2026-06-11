@@ -6,6 +6,6 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  useMock: process.env.NEXT_PUBLIC_FS_USE_MOCK === "true",
+  useMock: false,
   setUseMock: (useMock) => set({ useMock }),
 }));

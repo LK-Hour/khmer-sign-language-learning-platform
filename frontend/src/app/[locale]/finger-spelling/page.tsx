@@ -1,33 +1,58 @@
-import { Alert, Stack } from "@mui/material";
-import { fetchFsUnits } from "@/features/finger-spelling/api/curriculum";
+import { Alert } from "@mui/material";
+import { PageContainer } from "@/components/layout";
 import {
-  FingerSpellingHomeShell,
-  UnitCard,
-} from "@/features/finger-spelling/components";
+  fetchFsChapters,
+  fetchFsLessons,
+  fetchFsUnits,
+} from "@/features/finger-spelling/api/curriculum";
+import FingerSpellingTrack from "@/features/finger-spelling/components/FingerSpellingTrack";
+import type { FsTrackUnit } from "@/features/finger-spelling/components/FingerSpellingTrack";
 
 export default async function FingerSpellingHomePage() {
-  let units;
+  let units: FsTrackUnit[];
 
   try {
-    units = await fetchFsUnits();
+    const baseUnits = (await fetchFsUnits()).sort(
+      (a, b) => a.orderIndex - b.orderIndex
+    );
+    units = await Promise.all(
+      baseUnits.map(async (unit) => {
+        const chapters = (await fetchFsChapters(unit.id)).sort(
+          (a, b) => a.orderIndex - b.orderIndex
+        );
+        const chaptersWithLessons = await Promise.all(
+          chapters.map(async (chapter) => {
+            const lessons = (await fetchFsLessons(chapter.id)).sort(
+              (a, b) => a.orderIndex - b.orderIndex
+            );
+
+            return {
+              ...chapter,
+              lessons,
+            };
+          })
+        );
+
+        return {
+          ...unit,
+          chapters: chaptersWithLessons,
+        };
+      })
+    );
   } catch {
     return (
-      <FingerSpellingHomeShell>
+      <PageContainer>
         <Alert severity="error" sx={{ maxWidth: 1120, mx: "auto" }}>
           Could not load units from the backend. Make sure the API is running at{" "}
           {process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}.
         </Alert>
-      </FingerSpellingHomeShell>
+      </PageContainer>
     );
   }
 
   return (
-    <FingerSpellingHomeShell>
-      <Stack spacing={0} sx={{ maxWidth: 1120, mx: "auto" }}>
-        {units.map((unit) => (
-          <UnitCard key={unit.id} unit={unit} />
-        ))}
-      </Stack>
-    </FingerSpellingHomeShell>
+    <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
+      <FingerSpellingTrack units={units} />
+    </PageContainer>
   );
 }

@@ -28,22 +28,20 @@ App-wide bottom nav also links to `/dictionary` and `/profile` (see `src/app/[lo
 
 ## API & data layer
 
-Finger spelling data flows through one adapter layer (`api/adapters.ts`) so **mock and backend use the same shapes**:
+Finger spelling reads curriculum from the backend API only (`api/curriculum.ts`).
 
 | Source | When | Normalization |
 |--------|------|----------------|
-| Backend API | Default (`NEXT_PUBLIC_FS_USE_MOCK` unset) | `normalizeUnit`, `normalizeChapter`, `normalizeLesson`, `adaptBackendChapterExercise` |
-| Mock data | `NEXT_PUBLIC_FS_USE_MOCK=true` | Same adapters — mock mirrors `FsUnitResponse`, `FsChapterResponse`, `FsLessonResponse`, `ExerciseResponse` |
+| Backend API | Always (default) | `normalizeUnit`, `normalizeChapter`, `normalizeLesson`, `adaptBackendChapterExercise` |
 
 Copy `frontend/.env.example` → `frontend/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_FS_USE_MOCK=false
 ```
 
 Ensure the backend is running and curriculum is seeded (`python seed_data/seed_curriculum.py` from `backend/`).
-
-For offline UI only: `NEXT_PUBLIC_FS_USE_MOCK=true`
 
 | Method | Path |
 |--------|------|

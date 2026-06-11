@@ -1,5 +1,6 @@
 export { default as FingerSpellingShell } from "./FingerSpellingShell";
 export { default as FingerSpellingHomeShell } from "./FingerSpellingHomeShell";
+export { default as FingerSpellingTrack } from "./FingerSpellingTrack";
 export { default as FingerSpellingExerciseShell } from "./FingerSpellingExerciseShell";
 export { default as FingerSpellingDictionaryShell } from "./FingerSpellingDictionaryShell";
 export { default as FingerSpellingProfileShell } from "./FingerSpellingProfileShell";

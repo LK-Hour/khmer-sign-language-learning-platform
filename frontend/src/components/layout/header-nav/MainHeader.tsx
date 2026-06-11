@@ -44,6 +44,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { KslColors } from "@/theme/theme";
 
 
+
 const LOGO_SRC = "/assets/logo.png";
 
 function persistLocaleCookie(locale: Locale) {
@@ -57,7 +58,8 @@ const navItemBase = {
   py: 0.75,
   borderRadius: "8px",
   border: "none",
-  fontSize: 13.5,
+  fontSize: 16,
+  fontFamily: "niradei",
   cursor: "pointer",
   textDecoration: "none",
   transition: "background-color 0.15s, color 0.15s",
@@ -138,7 +140,7 @@ function ProfileLogoutBlock({
   onLogoutClick,
   avatarSize = 24,
   nameFontSize = 13,
-  logoutFontSize = 10,
+  logoutFontSize = 14,
 }: ProfileLogoutBlockProps) {
   return (
     <Stack
@@ -197,7 +199,7 @@ function ProfileLogoutBlock({
             border: "none",
             cursor: "pointer",
             p: 0,
-            fontFamily: "inherit",
+            fontFamily: "niradei",
             transition: "opacity 0.1s",
             "&:hover": { opacity: 0.7 },
           }}
@@ -213,10 +215,7 @@ function ProfileLogoutBlock({
           >
             {logoutLabel}
           </Typography>
-          <Iconify
-            icon="eva:log-out-fill"
-            sx={{ width: 13, height: 13, color: KslColors.error }}
-          />
+          <Iconify icon="eva:log-out-fill" width={18} sx={{ color: KslColors.error }} />
         </Stack>
       </Tooltip>
     </Stack>
