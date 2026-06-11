@@ -1,10 +1,12 @@
 "use client";
 
+import { Chip, Stack, Typography } from "@mui/material";
 
-import { ROUTES } from "@/constants/routes";
+import { PageContainer } from "@/components/layout";
 import { useTranslation } from "@/i18n/useTranslation";
 import { getLocalizedPair } from "@/i18n/localizedText";
 import { formatUnitBadge } from "@/features/finger-spelling/utils/chapter";
+import { KslColors, KslFontSizes, KslLineHeights } from "@/theme/theme";
 
 type FingerSpellingShellProps = {
   children: React.ReactNode;
@@ -12,7 +14,7 @@ type FingerSpellingShellProps = {
   subtitle?: string;
   /** Khmer counterpart — when set, title/subtitle swap by locale. */
   titleKh?: string;
-  headerVariant?: AppHeaderVariant;
+  headerVariant?: "default" | "compact" | "exercise" | "lesson";
   contextBadge?: string;
   contextUnitIndex?: number;
   contextTitle?: string;
@@ -21,22 +23,6 @@ type FingerSpellingShellProps = {
   hideBottomNav?: boolean;
   fullWidth?: boolean;
 };
-
-function resolveFingerSpellingNav(pathname: string): string {
-  if (pathname.includes("/finger-spelling/exercise")) {
-    return ROUTES.fingerSpelling.exercise;
-  }
-  if (pathname.includes("/dictionary")) {
-    return ROUTES.dictionary;
-  }
-  if (pathname.includes("/profile")) {
-    return ROUTES.profile;
-  }
-  if (pathname.includes("/finger-spelling")) {
-    return ROUTES.fingerSpelling.root;
-  }
-  return ROUTES.fingerSpelling.root;
-}
 
 export default function FingerSpellingShell({
   children,
@@ -48,7 +34,6 @@ export default function FingerSpellingShell({
   contextTitleKh,
   contextUnitIndex,
   contextBadge: contextBadgeProp,
-  ...props
 }: FingerSpellingShellProps) {
   const { t, locale } = useTranslation();
 
@@ -68,45 +53,85 @@ export default function FingerSpellingShell({
         contextTitleKh ?? contextSubtitle ?? titleKh ?? subtitle
       )
     : null;
-  const navItems = [
-    {
-      key: "fsNavHome",
-      label: t("fsNavHome"),
-      href: ROUTES.fingerSpelling.root,
-      icon: HomeOutlinedIcon,
-    },
-    {
-      key: "fsNavExercise",
-      label: t("fsNavExercise"),
-      href: ROUTES.fingerSpelling.exercise,
-      icon: EditOutlinedIcon,
-    },
-    {
-      key: "fsNavDictionary",
-      label: t("fsNavDictionary"),
-      href: ROUTES.dictionary,
-      icon: MenuBookOutlinedIcon,
-    },
-    {
-      key: "fsNavProfile",
-      label: t("fsNavProfile"),
-      href: ROUTES.profile,
-      icon: PersonOutlinedIcon,
-    },
-  ];
 
   return (
-    <AppShell
-      {...props}
-      contextBadge={contextBadge}
-      title={header.primary}
-      subtitle={header.secondary}
-      contextTitle={context?.primary}
-      contextSubtitle={context?.secondary}
-      navItems={navItems}
-      resolveActiveNav={resolveFingerSpellingNav}
-    >
-      {children}
-    </AppShell>
+    <PageContainer>
+      <Stack spacing={{ xs: 2.5, md: 3.5 }}>
+        <Stack spacing={1}>
+          {contextBadge ? (
+            <Chip
+              label={contextBadge}
+              color="primary"
+              variant="outlined"
+              sx={{
+                alignSelf: "flex-start",
+                fontWeight: 700,
+              }}
+            />
+          ) : null}
+
+          <Typography
+            component="h1"
+            sx={{
+              color: KslColors.textPrimary,
+              fontSize: { xs: 28, md: 36 },
+              fontWeight: 700,
+              lineHeight: 1.15,
+            }}
+          >
+            {header.primary}
+          </Typography>
+
+          {header.secondary ? (
+            <Typography
+              sx={{
+                maxWidth: 760,
+                color: KslColors.textSecondary,
+                fontSize: KslFontSizes.md,
+                lineHeight: KslLineHeights.md,
+              }}
+            >
+              {header.secondary}
+            </Typography>
+          ) : null}
+
+          {context ? (
+            <Stack
+              sx={{
+                mt: 1,
+                p: 2,
+                borderRadius: "8px",
+                bgcolor: KslColors.surface,
+                border: `1px solid ${KslColors.border}`,
+              }}
+            >
+              <Typography
+                sx={{
+                  color: KslColors.textPrimary,
+                  fontSize: KslFontSizes.md,
+                  fontWeight: 700,
+                  lineHeight: KslLineHeights.md,
+                }}
+              >
+                {context.primary}
+              </Typography>
+              {context.secondary ? (
+                <Typography
+                  sx={{
+                    color: KslColors.textSecondary,
+                    fontSize: KslFontSizes.sm,
+                    lineHeight: KslLineHeights.sm,
+                  }}
+                >
+                  {context.secondary}
+                </Typography>
+              ) : null}
+            </Stack>
+          ) : null}
+        </Stack>
+
+        {children}
+      </Stack>
+    </PageContainer>
   );
 }

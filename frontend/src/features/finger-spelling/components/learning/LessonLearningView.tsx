@@ -1,6 +1,7 @@
 "use client";
 
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -9,6 +10,7 @@ import BackButton from "@/components/ui/BackButton";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocalizedPair } from "@/i18n/useLocalizedPair";
+import { KslColors, KslFontSizes, KslLineHeights } from "@/theme/theme";
 import type { FsLessonDetail } from "../../types";
 import LessonIntroStep from "./LessonIntroStep";
 import LessonPracticeStep from "./LessonPracticeStep";
@@ -105,6 +107,7 @@ export default function LessonLearningView({
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+      {/* Top bar: back button + progress */}
       <Box
         sx={{
           display: "flex",
@@ -116,6 +119,43 @@ export default function LessonLearningView({
         <BackButton href={chapterListHref} />
         <Box sx={{ flex: 1 }}>
           <LessonProgressBar value={progressValue} max={totalLessons} />
+        </Box>
+      </Box>
+
+      {/* Stage header: eyebrow + title */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        <Box>
+          <Typography
+            sx={{
+              color: KslColors.primaryDark,
+              fontSize: 12,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: 0,
+            }}
+          >
+            Unit 01 / Chapter 01 / Lesson {String(lesson.orderIndex).padStart(2, "0")}
+          </Typography>
+          <Typography
+            component="h3"
+            sx={{
+              mt: 0.5,
+              fontSize: 30,
+              fontWeight: 700,
+              color: KslColors.textPrimary,
+              lineHeight: 1.15,
+            }}
+          >
+            Character: {lesson.letter}
+          </Typography>
         </Box>
       </Box>
 
