@@ -13,18 +13,8 @@ export const ROUTES = {
 
   fingerSpelling: {
     root: "/finger-spelling",
-    unit: (unitId: string | number) => `/finger-spelling/units/${unitId}`,
-    unitChapter: (unitId: string | number, chapterId: string | number) =>
-      `/finger-spelling/units/${unitId}?chapter=${chapterId}`,
-    chapter: (chapterId: string | number) =>
-      `/finger-spelling/chapters/${chapterId}`,
     lesson: (lessonId: string | number) =>
       `/finger-spelling/lessons/${lessonId}`,
-    exercise: "/finger-spelling/exercise",
-    exerciseChapter: (chapterId: string | number) =>
-      `/finger-spelling/exercise/${chapterId}`,
-    exerciseQuiz: (chapterId: string | number) =>
-      `/finger-spelling/exercise/${chapterId}/quiz`,
   },
 
   words: {

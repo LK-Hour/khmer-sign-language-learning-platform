@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
+import { PageContainer } from "@/components/layout";
 import {
   fetchFsChapter,
   fetchFsLesson,
   fetchFsLessons,
+  fetchFsUnit,
 } from "@/features/finger-spelling/api/curriculum";
-import {
-  FingerSpellingShell,
-  LessonLearningView,
-} from "@/features/finger-spelling/components";
+import { LessonLearningView } from "@/features/finger-spelling/components";
 import { getNextLessonInChapter } from "@/features/finger-spelling/utils/progress";
 
 type PageProps = {
@@ -27,29 +26,20 @@ export default async function LessonDetailPage({ params }: PageProps) {
     fetchFsChapter(lesson.chapterId),
   ]);
   if (!chapter) notFound();
-  const sortedLessons = [...chapterLessons].sort(
-    (a, b) => a.orderIndex - b.orderIndex
-  );
-  const currentIndex = sortedLessons.findIndex((l) => l.id === lesson.id);
+
+  const unit = await fetchFsUnit(chapter.unitId);
+  if (!unit) notFound();
+
   const nextLesson = getNextLessonInChapter(chapterLessons, lesson.id);
-  const nextLessonId = nextLesson?.id;
 
   return (
-    <FingerSpellingShell
-      title={`Lesson ${lesson.orderIndex}`}
-      subtitle="learn basic finger spelling with AI-powered"
-      headerVariant="lesson"
-      hideBottomNav
-      fullWidth
-    >
+    <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
       <LessonLearningView
         lesson={lesson}
-        chapterId={lesson.chapterId}
-        unitId={chapter.unitId}
-        nextLessonId={nextLessonId}
-        lessonIndex={currentIndex >= 0 ? currentIndex : 0}
-        totalLessons={chapterLessons.length}
+        unit={unit}
+        chapter={chapter}
+        nextLessonId={nextLesson?.id}
       />
-    </FingerSpellingShell>
+    </PageContainer>
   );
 }

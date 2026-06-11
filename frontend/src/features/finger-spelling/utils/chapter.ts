@@ -1,7 +1,4 @@
 import type { Locale } from "@/i18n/config";
-import { getLocalizedPair } from "@/i18n/localizedText";
-import type { FsChapter } from "../types";
-import type { FsExercise } from "../types/exercise";
 
 const KHMER_DIGITS = ["០", "១", "២", "៣", "៤", "៥", "៦", "៧", "៨", "៩"];
 
@@ -12,106 +9,18 @@ export function toKhmerNumeral(value: number): string {
     .join("");
 }
 
-function normalizeRange(value: string | null | undefined): string {
-  return (value ?? "").replace(/\s*[–—]\s*/g, " - ").trim();
-}
-
-function stripChapterNumber(title: string, locale: Locale): string {
-  let base = title
-    .replace(/\s+ទី\s+[\u17E0-\u17E9\d]+$/u, "")
-    .replace(/\s+\d+$/u, "")
-    .trim();
-
-  if (locale === "en") {
-    base = base.replace(/s$/i, "");
-  }
-
-  return base;
-}
-
-function buildChapterRangeLabel(
-  chapter: FsChapter,
-  locale: Locale
-): string | undefined {
-  const rangeRaw =
-    locale === "kh"
-      ? chapter.descriptionKh ?? chapter.description
-      : chapter.description ?? chapter.descriptionKh;
-
-  const range = normalizeRange(rangeRaw);
-  if (!range) return undefined;
-
-  if (
-    /^(Dependent Vowel|Main Consonant|Sub Consonant|Independent Vowel|Numbers|Diacritics|ស្រៈ|ព្យញ្ជនៈ|ជើង|លេខ|វណ្ណយុត្តិ)/i.test(
-      range
-    )
-  ) {
-    return range;
-  }
-
-  const title =
-    locale === "kh"
-      ? chapter.titleKh || chapter.title
-      : chapter.title || chapter.titleKh;
-
-  const base = stripChapterNumber(title, locale);
-  return `${base} ${range}`;
-}
-
-/** e.g. EN "Dependent Vowel ា - ឺ", KH "ស្រៈ ា - ឺ" */
-export function getChapterRangeDescriptionPair(
-  chapter: FsChapter,
-  locale: Locale
-) {
-  const en = buildChapterRangeLabel(chapter, "en") ?? "";
-  const kh = buildChapterRangeLabel(chapter, "kh") ?? en;
-  return getLocalizedPair(locale, en, kh);
-}
-
-/** @deprecated Use getChapterRangeDescriptionPair */
-export function getChapterRangeDescription(
-  chapter: FsChapter,
-  locale: Locale
-): string | undefined {
-  return getChapterRangeDescriptionPair(chapter, locale).primary || undefined;
-}
-
 export function formatChapterBadge(
   orderIndex: number,
   locale: Locale,
   chapterLabel: string
 ): string {
-  const num =
-    locale === "kh"
-      ? toKhmerNumeral(orderIndex).padStart(2, "០")
-      : String(orderIndex).padStart(2, "0");
+  const num = formatOrderIndex(orderIndex, locale);
+
+  if (locale === "kh") {
+    return `${chapterLabel}ទី ${num}`;
+  }
 
   return `${chapterLabel} ${num}`;
-}
-
-export function exerciseToChapterSnapshot(exercise: FsExercise): FsChapter {
-  return {
-    id: exercise.chapterId,
-    unitId: exercise.unitId,
-    title: exercise.title,
-    titleKh: exercise.titleKh,
-    description: exercise.chapterDescription ?? null,
-    descriptionKh: exercise.chapterDescriptionKh ?? null,
-    orderIndex: exercise.chapterOrderIndex,
-    lessonCount: 0,
-    completedLessonCount: 0,
-    isExerciseUnlocked: exercise.isUnlocked,
-  };
-}
-
-export function getExerciseRangeDescriptionPair(
-  exercise: FsExercise,
-  locale: Locale
-) {
-  return getChapterRangeDescriptionPair(
-    exerciseToChapterSnapshot(exercise),
-    locale
-  );
 }
 
 export function formatUnitBadge(
@@ -120,4 +29,50 @@ export function formatUnitBadge(
   unitLabel: string
 ): string {
   return formatChapterBadge(orderIndex, locale, unitLabel);
+}
+
+export function formatOrderIndex(orderIndex: number, locale: Locale): string {
+  return locale === "kh"
+    ? toKhmerNumeral(orderIndex).padStart(2, "០")
+    : String(orderIndex).padStart(2, "0");
+}
+
+export function formatBadgeStep(orderIndex: number, locale: Locale): string {
+  return formatOrderIndex(orderIndex, locale);
+}
+
+export function formatLessonLabel(orderIndex: number, locale: Locale): string {
+  const num = formatOrderIndex(orderIndex, locale);
+
+  if (locale === "kh") {
+    return `មេរៀនទី ${num}`;
+  }
+
+  return `Lesson ${num}`;
+}
+
+const KHMER_SCRIPT = /[\u1780-\u17FF\u19E0-\u19FF]/;
+
+/** Khmer sign character for lesson rows — matches lesson detail display. */
+export function getLessonDisplayLetter(lesson: {
+  letter: string;
+  letterNameKh?: string | null;
+  letterNameEn?: string | null;
+  romanization?: string | null;
+}): string {
+  const candidates = [
+    lesson.letter,
+    lesson.letterNameKh,
+    lesson.letterNameEn,
+    lesson.romanization,
+  ];
+
+  return (
+    candidates.find((value) => value && KHMER_SCRIPT.test(value)) ??
+    lesson.letter ??
+    lesson.letterNameKh ??
+    lesson.letterNameEn ??
+    lesson.romanization ??
+    ""
+  );
 }

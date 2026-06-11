@@ -67,3 +67,39 @@ export function getNextLessonInChapter(
   if (currentIndex < 0) return undefined;
   return sorted[currentIndex + 1];
 }
+
+type UnitWithLessons = {
+  orderIndex: number;
+  chapters: Array<{
+    orderIndex: number;
+    lessons: FsLesson[];
+  }>;
+};
+
+/** First active lesson across units/chapters — the one marked "now" in track order. */
+export function findResumeLesson(
+  units: UnitWithLessons[]
+): FsLesson | undefined {
+  const sortedUnits = [...units].sort((a, b) => a.orderIndex - b.orderIndex);
+
+  for (const unit of sortedUnits) {
+    const sortedChapters = [...unit.chapters].sort(
+      (a, b) => a.orderIndex - b.orderIndex
+    );
+
+    for (const chapter of sortedChapters) {
+      const states = resolveLessonStates(chapter.lessons);
+      const sortedLessons = [...chapter.lessons].sort(
+        (a, b) => a.orderIndex - b.orderIndex
+      );
+
+      for (const lesson of sortedLessons) {
+        if (states.get(lesson.id) === "now") {
+          return lesson;
+        }
+      }
+    }
+  }
+
+  return undefined;
+}

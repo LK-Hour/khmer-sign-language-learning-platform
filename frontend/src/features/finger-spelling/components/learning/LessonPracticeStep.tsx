@@ -11,10 +11,12 @@ import SignImageCard from "./SignImageCard";
 type LessonPracticeStepProps = {
   letter: string;
   imageUrl: string;
-  description?: string | null;
   accuracy: number | null;
+  passThreshold: number;
   cameraResetKey: number;
+  isSubmitting?: boolean;
   onRetry: () => void;
+  onRec: () => void;
   onContinue: () => void;
 };
 
@@ -50,10 +52,12 @@ function animateScore(
 export default function LessonPracticeStep({
   letter,
   imageUrl,
-  description,
   accuracy,
+  passThreshold,
   cameraResetKey,
+  isSubmitting = false,
   onRetry,
+  onRec,
   onContinue,
 }: LessonPracticeStepProps) {
   const targets = SCORE_TARGETS[letter] ?? DEFAULT_SCORES;
@@ -71,11 +75,13 @@ export default function LessonPracticeStep({
     animateScore((v) => setDisplayScores((s) => [s[0], s[1], v]), targets[2]);
   }, [accuracy, hasAnimated, targets]);
 
-  const passed = accuracy != null && accuracy >= 85;
+  const passed = accuracy != null && accuracy >= passThreshold;
 
   const correctionText = passed
-    ? "Correct. Nice match. You can continue or repeat for a higher score."
-    : "Almost there. Adjust your hand angle and keep the palm closer to the sample.";
+    ? "Correct. Your thumb placement is strong. Raise the index finger slightly for a cleaner shape."
+    : accuracy != null
+      ? "Almost there. Adjust your hand angle and keep the palm closer to the sample."
+      : "Press REC to start practice";
 
   return (
     <Box
@@ -196,7 +202,8 @@ export default function LessonPracticeStep({
             <Box
               component="button"
               type="button"
-              onClick={onRetry}
+              onClick={accuracy == null ? onRec : onRetry}
+              disabled={isSubmitting}
               sx={{
                 position: "absolute",
                 left: "50%",
@@ -316,14 +323,14 @@ export default function LessonPracticeStep({
               lineHeight: 1.55,
             }}
           >
-            {accuracy != null ? correctionText : "Press REC to start practice"}
+            {correctionText}
           </Typography>
         </Box>
         <Box
           component="button"
           type="button"
           onClick={onContinue}
-          disabled={accuracy == null}
+          disabled={!passed}
           sx={{
             minWidth: 150,
             minHeight: 46,
@@ -331,17 +338,13 @@ export default function LessonPracticeStep({
             border: 0,
             borderRadius: `${KslRadii.button}px`,
             color: "white",
-            bgcolor:
-              accuracy != null ? KslColors.primary : KslColors.disabled,
+            bgcolor: passed ? KslColors.primary : KslColors.disabled,
             fontSize: KslFontSizes.md,
             fontWeight: 800,
-            cursor: accuracy != null ? "pointer" : "default",
-            opacity: accuracy != null ? 1 : 0.6,
+            cursor: passed ? "pointer" : "default",
+            opacity: passed ? 1 : 0.6,
             transition: "opacity 0.2s, background-color 0.2s",
-            "&:hover":
-              accuracy != null
-                ? { bgcolor: KslColors.primaryDark }
-                : {},
+            "&:hover": passed ? { bgcolor: KslColors.primaryDark } : {},
           }}
         >
           Continue Lesson

@@ -6,7 +6,7 @@ import {
   fetchFsUnits,
 } from "@/features/finger-spelling/api/curriculum";
 import FingerSpellingTrack from "@/features/finger-spelling/components/FingerSpellingTrack";
-import type { FsTrackUnit } from "@/features/finger-spelling/components/FingerSpellingTrack";
+import type { FsTrackUnit } from "@/features/finger-spelling/store";
 
 export default async function FingerSpellingHomePage() {
   let units: FsTrackUnit[];

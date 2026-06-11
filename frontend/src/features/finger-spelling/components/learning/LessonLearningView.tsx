@@ -1,186 +1,144 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { AnimatePresence } from "framer-motion";
+import { Stack, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import ResultCard from "@/components/quiz/ResultCard";
+import { useEffect } from "react";
 import BackButton from "@/components/ui/BackButton";
 import { ROUTES } from "@/constants/routes";
+import {
+  FS_PASS_THRESHOLD,
+  useFingerSpellingStore,
+} from "@/features/finger-spelling/store";
+import {
+  formatOrderIndex,
+  getLessonDisplayLetter,
+} from "@/features/finger-spelling/utils/chapter";
 import { useTranslation } from "@/i18n/useTranslation";
-import { useLocalizedPair } from "@/i18n/useLocalizedPair";
-import { KslColors, KslFontSizes, KslLineHeights } from "@/theme/theme";
-import type { FsLessonDetail } from "../../types";
-import LessonIntroStep from "./LessonIntroStep";
+import { KslColors } from "@/theme/theme";
+import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
 import LessonPracticeStep from "./LessonPracticeStep";
-import LessonProgressBar from "./LessonProgressBar";
 
 type LessonLearningViewProps = {
   lesson: FsLessonDetail;
-  chapterId: number;
-  unitId: number;
+  unit: FsUnit;
+  chapter: FsChapter;
   nextLessonId?: number;
-  lessonIndex: number;
-  totalLessons: number;
 };
-
-type LessonPhase = "intro" | "practice" | "complete";
-
-const MOCK_ACCURACY = 83;
-const ACCURACY_DELAY_MS = 2000;
 
 export default function LessonLearningView({
   lesson,
-  chapterId,
-  unitId,
+  unit,
+  chapter,
   nextLessonId,
-  lessonIndex,
-  totalLessons,
 }: LessonLearningViewProps) {
   const router = useRouter();
-  const { t } = useTranslation();
-  const [phase, setPhase] = useState<LessonPhase>("intro");
-  const [accuracy, setAccuracy] = useState<number | null>(null);
-  const [cameraResetKey, setCameraResetKey] = useState(0);
+  const { t, locale } = useTranslation();
 
-  const descriptionPair = useLocalizedPair(
-    lesson.description ?? "",
-    lesson.descriptionKh
+  const setPracticeContext = useFingerSpellingStore(
+    (state) => state.setPracticeContext
   );
-  const description = descriptionPair.primary || undefined;
+  const clearPracticeContext = useFingerSpellingStore(
+    (state) => state.clearPracticeContext
+  );
+  const initializePracticeSession = useFingerSpellingStore(
+    (state) => state.initializePracticeSession
+  );
+  const runPracticeRec = useFingerSpellingStore((state) => state.runPracticeRec);
+  const completePractice = useFingerSpellingStore(
+    (state) => state.completePractice
+  );
+  const incrementCameraResetKey = useFingerSpellingStore(
+    (state) => state.incrementCameraResetKey
+  );
+  const accuracy = useFingerSpellingStore((state) => state.accuracy);
+  const cameraResetKey = useFingerSpellingStore((state) => state.cameraResetKey);
+  const isSubmitting = useFingerSpellingStore((state) => state.isSubmitting);
 
-  const progressValue = useMemo(() => {
-    if (phase === "complete") return lessonIndex + 1;
-    if (phase === "practice") return lessonIndex + 0.75;
-    return lessonIndex + 0.25;
-  }, [phase, lessonIndex]);
+  const displayLetter = getLessonDisplayLetter(lesson);
+  const trackHref = ROUTES.fingerSpelling.root;
+
+  const unitStep = formatOrderIndex(unit.orderIndex, locale);
+  const chapterStep = formatOrderIndex(chapter.orderIndex, locale);
+  const lessonStep = formatOrderIndex(lesson.orderIndex, locale);
 
   useEffect(() => {
-    if (phase !== "practice") return;
+    setPracticeContext({ lesson, unit, chapter, nextLessonId });
+    void initializePracticeSession(lesson.id);
 
-    const timer = window.setTimeout(() => {
-      setAccuracy(MOCK_ACCURACY);
-    }, ACCURACY_DELAY_MS);
+    return () => {
+      clearPracticeContext();
+    };
+  }, [
+    chapter,
+    clearPracticeContext,
+    initializePracticeSession,
+    lesson,
+    nextLessonId,
+    setPracticeContext,
+    unit,
+  ]);
 
-    return () => window.clearTimeout(timer);
-  }, [phase]);
+  const handleRec = () => {
+    void runPracticeRec(lesson.id);
+  };
 
-  const chapterListHref = ROUTES.fingerSpelling.unitChapter(unitId, chapterId);
+  const handleContinue = async () => {
+    await completePractice();
 
-  const navigateNext = () => {
     if (nextLessonId) {
       router.push(ROUTES.fingerSpelling.lesson(nextLessonId));
       return;
     }
-    router.push(chapterListHref);
+
+    router.push(trackHref);
   };
 
   const handleRetry = () => {
-    setAccuracy(null);
-    setCameraResetKey((key) => key + 1);
-    window.setTimeout(() => setAccuracy(MOCK_ACCURACY), ACCURACY_DELAY_MS);
+    incrementCameraResetKey();
+    void runPracticeRec(lesson.id);
   };
-
-  const handleStartPractice = () => {
-    setAccuracy(null);
-    setPhase("practice");
-  };
-
-  if (phase === "complete") {
-    return (
-      <ResultCard
-        title={t("fsLessonCompleteTitle")}
-        subtitle={t("fsLessonCompleteSubtitle")}
-        continueLabel={
-          nextLessonId ? t("fsNextLesson") : t("fsBackToChapter")
-        }
-        retakeLabel={t("fsRetakeLesson")}
-        onContinue={navigateNext}
-        onRetake={() => {
-          setAccuracy(null);
-          setPhase("intro");
-        }}
-      />
-    );
-  }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
-      {/* Top bar: back button + progress */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          mb: 3,
-        }}
-      >
-        <BackButton href={chapterListHref} />
-        <Box sx={{ flex: 1 }}>
-          <LessonProgressBar value={progressValue} max={totalLessons} />
-        </Box>
-      </Box>
+    <Stack spacing={3} sx={{ maxWidth: 1200, mx: "auto" }}>
+      <BackButton href={trackHref} />
 
-      {/* Stage header: eyebrow + title */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 2,
-          mb: 2,
-        }}
-      >
-        <Box>
-          <Typography
-            sx={{
-              color: KslColors.primaryDark,
-              fontSize: 12,
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: 0,
-            }}
-          >
-            Unit 01 / Chapter 01 / Lesson {String(lesson.orderIndex).padStart(2, "0")}
-          </Typography>
-          <Typography
-            component="h3"
-            sx={{
-              mt: 0.5,
-              fontSize: 30,
-              fontWeight: 700,
-              color: KslColors.textPrimary,
-              lineHeight: 1.15,
-            }}
-          >
-            Character: {lesson.letter}
-          </Typography>
-        </Box>
-      </Box>
+      <Stack spacing={0.5}>
+        <Typography
+          sx={{
+            color: KslColors.primaryDark,
+            fontSize: 12,
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: 0,
+          }}
+        >
+          {t("fsUnit")} {unitStep} / {t("fsChapter")} {chapterStep} /{" "}
+          {t("fsLesson")} {lessonStep}
+        </Typography>
+        <Typography
+          component="h1"
+          sx={{
+            fontSize: { xs: 26, md: 30 },
+            fontWeight: 700,
+            color: KslColors.textPrimary,
+            lineHeight: 1.15,
+          }}
+        >
+          {t("fsCharacterLabel")}: {displayLetter}
+        </Typography>
+      </Stack>
 
-      <AnimatePresence mode="wait">
-        {phase === "intro" ? (
-          <LessonIntroStep
-            key="intro"
-            letter={lesson.letter}
-            romanization={lesson.romanization}
-            imageUrl={lesson.imageUrl}
-            onContinue={handleStartPractice}
-          />
-        ) : (
-          <LessonPracticeStep
-            key="practice"
-            letter={lesson.letter}
-            imageUrl={lesson.imageUrl}
-            description={description}
-            accuracy={accuracy}
-            cameraResetKey={cameraResetKey}
-            onRetry={handleRetry}
-            onContinue={() => setPhase("complete")}
-          />
-        )}
-      </AnimatePresence>
-    </Box>
+      <LessonPracticeStep
+        letter={displayLetter}
+        imageUrl={lesson.imageUrl}
+        accuracy={accuracy}
+        passThreshold={FS_PASS_THRESHOLD}
+        cameraResetKey={cameraResetKey}
+        isSubmitting={isSubmitting}
+        onRetry={handleRetry}
+        onRec={handleRec}
+        onContinue={() => void handleContinue()}
+      />
+    </Stack>
   );
 }

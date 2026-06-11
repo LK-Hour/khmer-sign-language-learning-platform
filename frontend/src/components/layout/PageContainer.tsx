@@ -26,6 +26,7 @@ export default function PageContainer({
       sx={{
         flex: 1,
         width: "100%",
+        px: { xs: 2, md: 3 },
         py: { xs: 3, md: 4, lg: 6 },
         ...sx,
       }}
