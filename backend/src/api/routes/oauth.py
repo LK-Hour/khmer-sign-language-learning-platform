@@ -5,7 +5,7 @@ Handles authentication endpoints for Google, Facebook, and Telegram
 
 import json
 import uuid
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
@@ -26,6 +26,7 @@ from src.utils.password import verify_password
 
 router = APIRouter(prefix="/api/auth/login", tags=["auth"])
 FRONTEND_URL = settings.frontend_url
+TELEGRAM_REDIRECT_PARAM = "redirect_to"
 
 
 def _user_response(user) -> dict:
@@ -60,6 +61,33 @@ def _extract_guest_user_id_from_token(guest_token: str | None) -> uuid.UUID | No
         return None
 
 
+def _origin(url: str) -> str:
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def _telegram_redirect_url(request: Request) -> str:
+    redirect_to = request.query_params.get(TELEGRAM_REDIRECT_PARAM)
+    if not redirect_to:
+        return FRONTEND_URL
+
+    allowed_origins = set(settings.allowed_origins)
+    allowed_origins.add(_origin(FRONTEND_URL))
+
+    try:
+        if _origin(redirect_to) in allowed_origins:
+            return redirect_to
+    except Exception:
+        pass
+
+    return FRONTEND_URL
+
+
+def _redirect_with_params(url: str, params: dict[str, str]) -> RedirectResponse:
+    separator = "&" if "?" in url else "?"
+    return RedirectResponse(url=f"{url}{separator}{urlencode(params)}", status_code=302)
+
+
 @router.get("/telegram")
 def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
     """
@@ -67,8 +95,14 @@ def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
     Telegram sends user data as query params with HMAC hash.
     We verify, create/find user, mint JWT, and redirect to frontend.
     """
+    redirect_url = _telegram_redirect_url(request)
+
     try:
-        query_data = dict(request.query_params)
+        query_data = {
+            key: value
+            for key, value in dict(request.query_params).items()
+            if key != TELEGRAM_REDIRECT_PARAM
+        }
         verified_data = telegram_oauth_service.verify_widget_auth(query_data)
         user_info = telegram_oauth_service.extract_user_info(verified_data)
 
@@ -86,18 +120,16 @@ def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
             data={"sub": str(user.id), "provider": "telegram"}
         )
 
-        redirect_params = urlencode({
+        redirect_params = {
             "token": access_token,
             "provider": "telegram",
             "user": json.dumps(_user_response(user)),
-        })
-        return RedirectResponse(url=f"{FRONTEND_URL}?{redirect_params}", status_code=302)
+        }
+        return _redirect_with_params(redirect_url, redirect_params)
     except ValueError as e:
-        redirect_params = urlencode({"error": str(e)})
-        return RedirectResponse(url=f"{FRONTEND_URL}?{redirect_params}", status_code=302)
+        return _redirect_with_params(redirect_url, {"error": str(e)})
     except Exception as e:
-        redirect_params = urlencode({"error": f"Telegram login failed: {e}"})
-        return RedirectResponse(url=f"{FRONTEND_URL}?{redirect_params}", status_code=302)
+        return _redirect_with_params(redirect_url, {"error": f"Telegram login failed: {e}"})
 
 
 @router.post("/google", response_model=AuthTokenResponse)

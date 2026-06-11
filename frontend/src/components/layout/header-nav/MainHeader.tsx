@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 import {
   AppBar,
@@ -44,6 +45,10 @@ import { KslColors } from "@/theme/theme";
 
 
 const LOGO_SRC = "/assets/logo.png";
+
+function persistLocaleCookie(locale: Locale) {
+  document.cookie = `NEXT_LOCALE=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}
 
 const navItemBase = {
   display: "inline-flex",
@@ -149,7 +154,7 @@ function ProfileLogoutBlock({
       {/* Row 1: avatar + display name */}
       <Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
         <Avatar
-          src={picture ?? <Iconify icon="eva:person-fill" width={24} />}
+          src={picture ?? undefined}
           alt={displayName}
           sx={{
             width: avatarSize,
@@ -159,7 +164,7 @@ function ProfileLogoutBlock({
             flexShrink: 0,
           }}
         >
-          {initials}
+          {picture ? initials : <Iconify icon="eva:person-fill" />}
         </Avatar>
         <Typography
           sx={{
@@ -208,9 +213,57 @@ function ProfileLogoutBlock({
           >
             {logoutLabel}
           </Typography>
-          <Iconify icon="eva:log-out-fill" width={13} sx={{ color: KslColors.error }} />
+          <Iconify
+            icon="eva:log-out-fill"
+            sx={{ width: 13, height: 13, color: KslColors.error }}
+          />
         </Stack>
       </Tooltip>
+    </Stack>
+  );
+}
+
+function BrandLogo({ locale }: { locale: Locale }) {
+  return (
+    <Stack
+      component={Link}
+      href={`/${locale}`}
+      direction="row"
+      spacing={1.5}
+      sx={{ alignItems: "center", textDecoration: "none", color: "inherit" }}
+    >
+      <Image
+        src={LOGO_SRC}
+        alt="Smart Khmer logo"
+        width={44}
+        height={44}
+        style={{ borderRadius: 6, objectFit: "cover" }}
+      />
+      <Stack spacing={0} sx={{ justifyContent: "center" }}>
+        <Typography
+          sx={{
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: KslColors.primary,
+            lineHeight: 1.2,
+          }}
+        >
+          Smart Khmer
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: { xs: "14px", md: "16px" },
+            fontWeight: 700,
+            color: KslColors.text,
+            lineHeight: 1.2,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Sign Language Learning
+        </Typography>
+      </Stack>
     </Stack>
   );
 }
@@ -222,6 +275,7 @@ export default function MainHeader() {
   const { locale, setLocale } = useLocaleStore();
   const clearAuth = useAuthStore((state) => state.clear);
   const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const [modesOpen, setModesOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -303,7 +357,7 @@ export default function MainHeader() {
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
-    document.cookie = `NEXT_LOCALE=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    persistLocaleCookie(newLocale);
     setLangOpen(false);
     const segments = pathname.split("/");
     if (SUPPORTED_LOCALES.includes(segments[1] as Locale)) {
@@ -318,49 +372,6 @@ export default function MainHeader() {
     setModesOpen(false);
     router.push(`/${locale}${href}`);
   };
-
-  const BrandLogo = () => (
-    <Stack
-      component={Link}
-      href={`/${locale}`}
-      direction="row"
-      spacing={1.5}
-      sx={{ alignItems: "center", textDecoration: "none", color: "inherit" }}
-    >
-      <img
-        src={LOGO_SRC}
-        alt="Smart Khmer logo"
-        width={44}
-        height={44}
-        style={{ borderRadius: 6, objectFit: "cover", }}
-      />
-      <Stack spacing={0} sx={{ justifyContent: "center" }}>
-        <Typography
-          sx={{
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: KslColors.primary,
-            lineHeight: 1.2,
-          }}
-        >
-          Smart Khmer
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: { xs: "14px", md: "16px" },
-            fontWeight: 700,
-            color: KslColors.text,
-            lineHeight: 1.2,
-            whiteSpace: "nowrap",
-          }}
-        >
-          Sign Language Learning
-        </Typography>
-      </Stack>
-    </Stack>
-  );
 
   return (
     <AppBar
@@ -380,7 +391,7 @@ export default function MainHeader() {
 
             {/* ── Left · size=4 · brand ── */}
             <Grid size={4}>
-              <BrandLogo />
+              <BrandLogo locale={locale} />
             </Grid>
 
             {/* ── Right · size=8 · desktop nav (md+) ── */}
@@ -419,8 +430,9 @@ export default function MainHeader() {
                     {t("navLearningMode")}
                     <Iconify
                       icon="eva:chevron-down-fill"
-                      width={16}
                       sx={{
+                        width: 16,
+                        height: 16,
                         transition: "transform 0.2s",
                         transform: modesOpen ? "rotate(180deg)" : "none",
                       }}
@@ -526,17 +538,35 @@ export default function MainHeader() {
                   )}
                 </Stack>
 
-    <Divider orientation="vertical" flexItem sx={{ mx: 1, my: "auto", height: 20, display: { xl:"none" ,md:"none" }}} />                {/* User profile card — with left margin for breathing room */}
+    <Divider orientation="vertical" flexItem sx={{ mx: 1, my: "auto", height: 20, display: { xl:"none" ,md:"none" }}} />                {/* User profile card or Login button */}
                 <Box sx={{ ml: 1.5 }}>
-                  <ProfileLogoutBlock
-                    displayName={displayName}
-                    initials={initials}
-                    // picture={user?.picture} // TODO: restore when done testing
-                    picture="https://scontent.fpnh11-2.fna.fbcdn.net/v/t39.30808-6/464046602_1978195995987376_2047958749823216233_n.jpg?stp=dst-jpg_tt6&cstp=mx958x960&ctp=s958x960&_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGv7a9S9iA09qPKL5rp8XmtpquxaXY-us2mq7Fpdj66zfnnVW0IkJ9wiD9DdKQCetTsxqZhnmh5gmNe2i3tIJ6v&_nc_ohc=KbRshetVNu0Q7kNvwH20lns&_nc_oc=AdogVbxLE7mIspYVOvxi4gRGoIPNpbfye8Z5UGSl0A6wdqD4wkyxd01NB_Xf7OQFR_Q&_nc_zt=23&_nc_ht=scontent.fpnh11-2.fna&_nc_gid=MmMm861kjHODzChfU4gvPA&_nc_ss=7b2a8&oh=00_Af8vOLeU4Dn9FAmMK95E4o6uNhejU9yB3hBDdCFPoi4z7w&oe=6A2D806A"
-                    pictureIcon={<Iconify icon="eva:person-fill" width={24} />}
-                    logoutLabel={t("navLogout")}
-                    onLogoutClick={requestLogout}
-                  />
+                  {isAuthenticated && user ? (
+                    <ProfileLogoutBlock
+                      displayName={displayName}
+                      initials={initials}
+                      picture={user.picture}
+                      pictureIcon={<Iconify icon="eva:person-fill" />}
+                      logoutLabel={t("navLogout")}
+                      onLogoutClick={requestLogout}
+                    />
+                  ) : (
+                    <Button
+                      component={Link}
+                      href={`/${locale}/login`}
+                      sx={{
+                        color: KslColors.text,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        textTransform: "none",
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: "8px",
+                        "&:hover": { bgcolor: "rgba(0,0,0,0.04)" },
+                      }}
+                    >
+                      {t("Login") ?? "Login"}
+                    </Button>
+                  )}
                 </Box>
 
               </Stack>
@@ -552,7 +582,7 @@ export default function MainHeader() {
                 onClick={() => setDrawerOpen(true)}
                 sx={{ color: KslColors.text }}
               >
-                <Iconify icon="eva:menu-2-fill" width={22} />
+                <Iconify icon="eva:menu-2-fill" sx={{ width: 22, height: 22 }} />
               </IconButton>
             </Grid>
 
@@ -602,7 +632,7 @@ export default function MainHeader() {
             aria-label="Close menu"
             sx={{ color: KslColors.text, borderRadius: "8px" }}
           >
-            <Iconify icon="eva:close-fill" width={20} />
+            <Iconify icon="eva:close-fill" sx={{ width: 20, height: 20 }} />
           </IconButton>
         </Stack>
 
@@ -767,8 +797,7 @@ export default function MainHeader() {
           <ProfileLogoutBlock
             displayName={displayName}
             initials={initials}
-            // picture={user?.picture} // TODO: restore when done testing
-            picture="https://scontent.fpnh11-2.fna.fbcdn.net/v/t39.30808-6/464046602_1978195995987376_2047958749823216233_n.jpg?stp=dst-jpg_tt6&cstp=mx958x960&ctp=s958x960&_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGv7a9S9iA09qPKL5rp8XmtpquxaXY-us2mq7Fpdj66zfnnVW0IkJ9wiD9DdKQCetTsxqZhnmh5gmNe2i3tIJ6v&_nc_ohc=KbRshetVNu0Q7kNvwH20lns&_nc_oc=AdogVbxLE7mIspYVOvxi4gRGoIPNpbfye8Z5UGSl0A6wdqD4wkyxd01NB_Xf7OQFR_Q&_nc_zt=23&_nc_ht=scontent.fpnh11-2.fna&_nc_gid=MmMm861kjHODzChfU4gvPA&_nc_ss=7b2a8&oh=00_Af8vOLeU4Dn9FAmMK95E4o6uNhejU9yB3hBDdCFPoi4z7w&oe=6A2D806A"
+            picture={user?.picture}
             logoutLabel={t("navLogout")}
             onLogoutClick={() => {
               setDrawerOpen(false);
