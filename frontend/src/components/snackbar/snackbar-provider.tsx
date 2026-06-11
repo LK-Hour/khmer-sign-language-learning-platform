@@ -31,22 +31,22 @@ export default function SnackbarProvider({ children }: Props) {
       iconVariant={{
         info: (
           <StyledIcon color="info">
-            <Iconify icon="eva:info-fill" width={24} />
+            <Iconify icon="eva:info-fill" />
           </StyledIcon>
         ),
         success: (
           <StyledIcon color="success">
-            <Iconify icon="eva:checkmark-circle-2-fill" width={24} />
+            <Iconify icon="eva:checkmark-circle-2-fill" />
           </StyledIcon>
         ),
         warning: (
           <StyledIcon color="warning">
-            <Iconify icon="eva:alert-triangle-fill" width={24} />
+            <Iconify icon="eva:alert-triangle-fill" />
           </StyledIcon>
         ),
         error: (
           <StyledIcon color="error">
-            <Iconify icon="solar:danger-bold" width={24} />
+            <Iconify icon="solar:danger-bold" />
           </StyledIcon>
         ),
       }}
@@ -60,7 +60,7 @@ export default function SnackbarProvider({ children }: Props) {
       // with close as default
       action={(snackbarId) => (
         <IconButton size="small" onClick={() => closeSnackbar(snackbarId)} sx={{ p: 0.5 }}>
-          <Iconify width={16} icon="mingcute:close-line" />
+          <Iconify icon="mingcute:close-line" sx={{ width: 16, height: 16 }} />
         </IconButton>
       )}
     >

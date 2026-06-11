@@ -16,9 +16,8 @@ export default function LocaleFlag({ locale, size = 22 }: LocaleFlagProps) {
   return (
     <Iconify
       icon={LOCALE_FLAG_ICONS[locale]}
-      width={size}
       aria-hidden
-      sx={{ flexShrink: 0 }}
+      sx={{ width: size, height: size, flexShrink: 0 }}
     />
   );
 }
