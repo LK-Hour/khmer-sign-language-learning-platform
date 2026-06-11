@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         port: "8000",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "khmersignlanguage.share.zrok.io",
+        pathname: "/**",
+      },
     ],
   },
 };
