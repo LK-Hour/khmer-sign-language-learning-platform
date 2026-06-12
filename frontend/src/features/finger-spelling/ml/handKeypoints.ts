@@ -32,7 +32,9 @@ export function buildModelFeatures(
 ): HandKeypointExtraction {
   let rightHand = zeroHandKeypoints();
   let leftHand = zeroHandKeypoints();
-  let handedness = "Unknown";
+  let handedness: string = "Unknown";
+
+  const detectedSides: string[] = [];
 
   for (let index = 0; index < landmarks.length; index += 1) {
     const side = handednesses[index]?.[0]?.categoryName ?? "Unknown";
@@ -44,7 +46,18 @@ export function buildModelFeatures(
       leftHand = keypoints;
     }
 
-    handedness = side;
+    detectedSides.push(side);
+  }
+
+  // Determine the correct handedness string matching notebook format
+  const hasRight = detectedSides.includes("Right");
+  const hasLeft = detectedSides.includes("Left");
+  if (hasRight && hasLeft) {
+    handedness = "both";
+  } else if (hasRight) {
+    handedness = "Right";
+  } else if (hasLeft) {
+    handedness = "Left";
   }
 
   return {

@@ -512,7 +512,7 @@ export default function MainHeader() {
                       sx={{
                         position: "absolute",
                         top: "100%",
-                        right: 0,
+                        left: 0,
                         pt: "6px",
                         minWidth: 148,
                         width: "max-content",

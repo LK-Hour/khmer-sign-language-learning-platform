@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Grid,
+  LinearProgress,
   Paper,
   Stack,
   Typography,
@@ -18,13 +19,14 @@ import {
   KslRadii,
   KslShadows,
 } from "@/theme/theme";
+import type { StabilityState } from "@/features/finger-spelling/ml/useHandLandmarker";
 import LessonWebcamPanel from "./LessonWebcamPanel";
 import SignImageCard from "./SignImageCard";
 
 const VISUAL_FRAME_SX = {
   position: "relative" as const,
   width: "100%",
-  height: { xs: 240, sm: 280, md: 320 },
+  height: { xs: 240, sm: 360, md: 460 },
   flexShrink: 0,
 };
 
@@ -40,6 +42,9 @@ type LessonPracticeStepProps = {
   isLandmarkerReady?: boolean;
   recError?: string | null;
   videoRef?: RefObject<HTMLVideoElement | null>;
+  stabilityState: StabilityState;
+  stabilityProgress: number;
+  countdown: number | null;
   onRetry: () => void;
   onRec: () => void;
   onContinue: () => void;
@@ -61,7 +66,7 @@ function TipCard({ label, text }: { label: string; text: string }) {
         sx={{
           color: KslColors.muted,
           fontSize: 13,
-          fontWeight: 700,
+          fontWeight: 600,
           mb: 0.75,
         }}
       >
@@ -70,7 +75,7 @@ function TipCard({ label, text }: { label: string; text: string }) {
       <Typography
         sx={{
           color: KslColors.textPrimary,
-          fontSize: 14,
+          fontSize: "14px",
           lineHeight: 1.55,
         }}
       >
@@ -80,15 +85,23 @@ function TipCard({ label, text }: { label: string; text: string }) {
   );
 }
 
-function animateScore(setter: (v: number) => void, target: number, duration = 420) {
+function animateScore(
+  setter: (v: number) => void,
+  target: number,
+  duration = 420
+): () => void {
   const startedAt = performance.now();
+  let frame = 0;
+
   function tick(now: number) {
     const progress = Math.min(1, (now - startedAt) / duration);
     const eased = 1 - Math.pow(1 - progress, 3);
     setter(Math.round(target * eased));
-    if (progress < 1) requestAnimationFrame(tick);
+    if (progress < 1) frame = requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
+
+  frame = requestAnimationFrame(tick);
+  return () => cancelAnimationFrame(frame);
 }
 
 function MetricCard({
@@ -120,7 +133,7 @@ function MetricCard({
           color: KslColors.primaryDark,
           fontFamily: khmerValue ? fontFamilies.khmer : fontFamilies.english,
           fontSize: khmerValue ? { xs: 36, md: 42 } : 30,
-          fontWeight: 800,
+          fontWeight: 700,
           lineHeight: 1.1,
         }}
       >
@@ -131,7 +144,7 @@ function MetricCard({
           mt: 0.75,
           color: KslColors.muted,
           fontSize: 13,
-          fontWeight: 700,
+          fontWeight: 600,
         }}
       >
         {label}
@@ -152,37 +165,31 @@ export default function LessonPracticeStep({
   isLandmarkerReady = false,
   recError = null,
   videoRef,
+  stabilityState,
+  stabilityProgress,
+  // countdown,
   onRetry,
   onRec,
   onContinue,
 }: LessonPracticeStepProps) {
   const { t } = useTranslation();
   const [displayConfidence, setDisplayConfidence] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
 
   const passed = accuracy != null && accuracy >= passThreshold;
 
   useEffect(() => {
-    if (accuracy == null) {
-      setDisplayConfidence(0);
-      setHasAnimated(false);
-      return;
-    }
-    if (hasAnimated) return;
-    setHasAnimated(true);
-    animateScore(setDisplayConfidence, accuracy);
-  }, [accuracy, hasAnimated]);
+    if (accuracy == null) return;
+    return animateScore(setDisplayConfidence, accuracy);
+  }, [accuracy]);
 
   const correctionText = passed
     ? "Correct. Your thumb placement is strong. Raise the index finger slightly for a cleaner shape."
     : accuracy != null
       ? "Almost there. Adjust your hand angle and keep the palm closer to the sample."
       : t("fsPressRecToPractice");
-
   const tipText =
     tip?.trim() ||
-    "Match your hand shape to the sample. Keep fingers visible and hold steady before pressing REC.";
-
+    "Use Right hand for better Accuaracy. Match your hand shape to the sample. Keep fingers visible and compare it with the camera preview.";
   return (
     <Stack
       component={motion.div}
@@ -200,7 +207,7 @@ export default function LessonPracticeStep({
       ) : null}
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
               <SignImageCard src={imageUrl} alt={`Sign for ${letter}`} />
@@ -208,7 +215,7 @@ export default function LessonPracticeStep({
             <Typography
               sx={{
                 color: KslColors.muted,
-                fontSize: 14,
+                fontSize: KslFontSizes.sm,
                 lineHeight: 1.55,
               }}
             >
@@ -217,37 +224,81 @@ export default function LessonPracticeStep({
           </Stack>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
-              <LessonWebcamPanel resetKey={cameraResetKey} videoRef={videoRef} />
+              <LessonWebcamPanel
+                resetKey={cameraResetKey}
+                videoRef={videoRef}
+              />
+              {/* Countdown overlay
+              {countdown != null && (
+                <Stack
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: "rgba(132, 130, 130, 0.2)",
+                    borderRadius: `${KslRadii.signImage}px`,
+                    zIndex: 2,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: { xs: 48, md: 64 },
+                      fontWeight: 700,
+                      color: "#fff",
+                      textShadow: "0 2px 12px rgba(141, 141, 141, 0.1)",
+                    }}
+                  >
+                    {countdown}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 14,
+                      color: "rgba(255,255,255,0.8)",
+                      fontWeight: 600,
+                      mt: -1,
+                    }}
+                  >
+                    {t("fsGetReady")}
+                  </Typography>
+                </Stack>
+              )} */}
             </Stack>
-            <Stack direction="row" sx={{ justifyContent: "center" }}>
-              <Stack
-                component="button"
-                type="button"
-                onClick={accuracy == null ? onRec : onRetry}
-                disabled={isSubmitting || !isLandmarkerReady}
-                sx={{
-                  display: "flex",
-                  width: 58,
-                  height: 32,
-                  border: 0,
-                  borderRadius: 999,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: KslColors.fail,
-                  bgcolor: "white",
-                  boxShadow: KslShadows.card,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  cursor: isSubmitting ? "default" : "pointer",
-                  opacity: isSubmitting ? 0.7 : 1,
-                }}
-              >
-                {t("fsRec")}
+
+            {/* Stability indicator */}
+            {/* {accuracy == null && !isSubmitting && (
+              <Stack spacing={0.5}>
+                <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
+                  <Typography sx={{ fontSize: 14, color: KslColors.muted, fontWeight: 600 }}>
+                    {stabilityState === "waiting" && t("fsHoldStill")}
+                    {stabilityState === "stable" && t("fsStableHold")}
+                    {stabilityState === "timeout" && t("fsStabilityTimeout")}
+                  </Typography>
+                  {stabilityState === "waiting" && (
+                    <Typography sx={{ fontSize: 14, color: KslColors.muted }}>
+                      {stabilityProgress}%
+                    </Typography>
+                  )}
+                </Stack>
+                <LinearProgress
+                  variant="determinate"
+                  value={stabilityProgress}
+                  sx={{
+                    height: 6,
+                    borderRadius: 3,
+                    bgcolor: "rgba(196, 196, 196, 0.05)",
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: stabilityState === "stable" ? KslColors.primary : KslColors.muted,
+                      borderRadius: 3,
+                    },
+                  }}
+                />
               </Stack>
-            </Stack>
+            )} */}
+
             <Typography
               sx={{
                 color: KslColors.muted,
@@ -262,17 +313,17 @@ export default function LessonPracticeStep({
       </Grid>
 
       <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <TipCard label={t("fsTip")} text={tipText} />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
             label={t("fsMatchConfidence")}
             value={accuracy != null ? `${displayConfidence}%` : "—"}
             highlight={passed}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
             label={t("fsPredictResult")}
             value={predictedLetter ?? "—"}
@@ -300,7 +351,7 @@ export default function LessonPracticeStep({
             sx={{
               m: 0,
               fontSize: KslFontSizes.lg,
-              fontWeight: 700,
+              fontWeight: 600,
               color: KslColors.textPrimary,
             }}
           >
@@ -316,25 +367,41 @@ export default function LessonPracticeStep({
             {correctionText}
           </Typography>
         </Stack>
-        <Button
-          variant="contained"
-          onClick={onContinue}
-          disabled={!passed}
-          sx={{
-            minWidth: 150,
-            minHeight: 46,
-            borderRadius: `${KslRadii.button}px`,
-            fontSize: KslFontSizes.md,
-            fontWeight: 800,
-            boxShadow: passed ? KslShadows.card : "none",
-            bgcolor: passed ? KslColors.primary : KslColors.disabled,
-            "&:hover": {
-              bgcolor: passed ? KslColors.primaryDark : KslColors.disabled,
-            },
-          }}
-        >
-          {t("fsContinueLesson")}
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+          <Button
+            variant="outlined"
+            onClick={onRetry}
+            disabled={isSubmitting}
+            sx={{
+              minWidth: 110,
+              minHeight: 46,
+              borderRadius: `${KslRadii.button}px`,
+              fontSize: KslFontSizes.md,
+              fontWeight: 700,
+            }}
+          >
+            {t("fsRetry")}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={onContinue}
+            disabled={!passed}
+            sx={{
+              minWidth: 150,
+              minHeight: 46,
+              borderRadius: `${KslRadii.button}px`,
+              fontSize: KslFontSizes.md,
+              fontWeight: 700,
+              boxShadow: passed ? KslShadows.card : "none",
+              bgcolor: passed ? KslColors.primary : KslColors.disabled,
+              "&:hover": {
+                bgcolor: passed ? KslColors.primaryDark : KslColors.disabled,
+              },
+            }}
+          >
+            {t("fsContinueLesson")}
+          </Button>
+        </Stack>
       </Paper>
     </Stack>
   );

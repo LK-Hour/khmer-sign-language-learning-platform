@@ -1,2 +1,6 @@
 # Browser-side MediaPipe extracts keypoints; backend only runs NumPy MLP inference.
-#   pip install -r requirements.txt
+#   pip install -r requirements.txt -r requirements-ml.txt
+
+h5py>=3.10
+mediapipe>=0.10
+Pillow>=10.0
