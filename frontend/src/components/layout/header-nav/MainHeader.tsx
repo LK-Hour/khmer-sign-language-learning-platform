@@ -41,7 +41,7 @@ import {
 import { useLocaleStore } from "@/i18n/localeStore";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
-import { KslColors } from "@/theme/theme";
+import { KslColors, KslFontSizes } from "@/theme/theme";
 
 
 
@@ -138,87 +138,67 @@ function ProfileLogoutBlock({
   picture,
   logoutLabel,
   onLogoutClick,
-  avatarSize = 24,
-  nameFontSize = 13,
+  avatarSize = 32,
+  nameFontSize = 14,
   logoutFontSize = 14,
 }: ProfileLogoutBlockProps) {
   return (
-    <Stack
-      spacing={0.65}
-      sx={{
-        minWidth: 0,
-        border: `1.5px solid ${KslColors.border}`,
-        borderRadius: "10px",
-        px: 1.5,
-        py: 0.5,
-      }}
-    >
-      {/* Row 1: avatar + display name */}
-      <Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
-        <Avatar
-          src={picture ?? undefined}
-          alt={displayName}
-          sx={{
-            width: avatarSize,
-            height: avatarSize,
-            fontSize: avatarSize * 0.25,
-            bgcolor: KslColors.primary,
-            flexShrink: 0,
-          }}
-        >
-          {picture ? initials : <Iconify icon="eva:person-fill" />}
-        </Avatar>
-        <Typography
-          sx={{
-            fontSize: nameFontSize,
-            fontWeight: 600,
-            color: KslColors.text,
-            lineHeight: 1.25,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {displayName}
-        </Typography>
-      </Stack>
+     <>
+     <Tooltip title={logoutLabel} arrow placement="bottom">
+      <Stack onClick={onLogoutClick} sx={{ border: `1.5px solid ${KslColors.border}`, borderRadius: "10px", px: 2, py: 0.5, my: 2, cursor: "pointer" }}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
+          <Avatar
+                src={picture ?? ""}
+                alt={displayName}
+                sx={{
+                  width: avatarSize,
+                  height: avatarSize,
+                }}
+              >
+                {picture ? initials : <Iconify icon="solar:user-bold" />}
+            </Avatar>
 
-      {/* Row 2: logout — full width, text then icon */}
-      <Tooltip title={logoutLabel} arrow placement="bottom">
-        <Stack
-          component="button"
-          type="button"
-          direction="row"
-          onClick={onLogoutClick}
-          aria-label={logoutLabel}
-          sx={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            p: 0,
-            fontFamily: "niradei",
-            transition: "opacity 0.1s",
-            "&:hover": { opacity: 0.7 },
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: logoutFontSize,
-              fontWeight: 500,
-              color: KslColors.error,
-              lineHeight: 1.25,
-              pr: 0.5,
-            }}
-          >
-            {logoutLabel}
-          </Typography>
-          <Iconify icon="eva:log-out-fill" sx={{ width: 18, height: 18, color: KslColors.error }} />
-        </Stack>
-      </Tooltip>
-    </Stack>
+              <Stack>
+                <Typography
+                sx={{
+                  fontSize: nameFontSize,
+                  fontWeight: 600,
+                  color: KslColors.text,
+                  overflow: "hidden",
+                }}
+              >
+                {displayName.length > 10
+                  ? `${displayName.slice(0, 8)}...`
+                  : displayName}
+              </Typography>
+              <Stack
+                direction="row"
+                aria-label={logoutLabel}
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  fontFamily: "niradei",
+                  transition: "opacity 0.1s",
+                  "&:hover": { opacity: 0.7 },
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: KslFontSizes.sm,
+                    fontWeight: 500,
+                    color: KslColors.error,
+                  }}
+                >
+                  {logoutLabel}
+                </Typography>
+                <Iconify icon="material-symbols:logout" sx={{ width: 20, height: 20, color: KslColors.error }} />
+              </Stack>
+            </Stack>
+          </Stack>
+      </Stack>
+     </Tooltip>
+     </>
   );
 }
 

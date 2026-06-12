@@ -42,7 +42,7 @@ export default function LandingPage() {
               <Typography
                 component="span"
                 sx={{
-                  fontSize: KslFontSizes.sm, 
+                  fontSize: KslFontSizes.lg, 
                   fontWeight: 700,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
