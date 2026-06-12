@@ -3,17 +3,20 @@
 import { DrawingUtils, HandLandmarker } from "@mediapipe/tasks-vision";
 import { Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import {
-  useHandLandmarker,
-  type RawHandDetection,
-} from "@/features/finger-spelling/ml/useHandLandmarker";
+import type { RawHandDetection } from "@/features/finger-spelling/ml/useHandLandmarker";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslFontSizes, KslRadii } from "@/theme/theme";
 
 type LessonWebcamPanelProps = {
   resetKey?: number;
   videoRef?: RefObject<HTMLVideoElement | null>;
+  detectLandmarks: (video: HTMLVideoElement) => RawHandDetection;
+  isLandmarkerReady: boolean;
+  onDetection?: (detection: RawHandDetection) => void;
 };
+
+const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
+const OVERLAY_DETECTION_INTERVAL_MS = 80;
 
 function stopStream(stream: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop());
@@ -22,6 +25,9 @@ function stopStream(stream: MediaStream | null) {
 export default function LessonWebcamPanel({
   resetKey = 0,
   videoRef,
+  detectLandmarks,
+  isLandmarkerReady,
+  onDetection,
 }: LessonWebcamPanelProps) {
   const { t } = useTranslation();
   const internalVideoRef = useRef<HTMLVideoElement>(null);
@@ -29,7 +35,6 @@ export default function LessonWebcamPanel({
   const lastDetectionRef = useRef<RawHandDetection>({ landmarks: [], handednesses: [] });
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const { detectLandmarks, isReady: isLandmarkerReady } = useHandLandmarker();
 
   const setVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
@@ -89,7 +94,6 @@ export default function LessonWebcamPanel({
     let animationFrame = 0;
     let lastDetectionAt = 0;
     let lastDrawnLandmarks = "";
-    const targetIntervalMs = 100;
     const canvas = overlayCanvasRef.current;
     if (!canvas) return;
 
@@ -112,10 +116,12 @@ export default function LessonWebcamPanel({
         canvas.height = video.videoHeight;
       }
 
-      // Run detection at throttled interval
-      if (now - lastDetectionAt >= targetIntervalMs) {
+      // Run MediaPipe at a stable cadence. The video still renders at full
+      // browser speed, while detection stays light enough for smooth tracking.
+      if (now - lastDetectionAt >= OVERLAY_DETECTION_INTERVAL_MS) {
         lastDetectionAt = now;
         lastDetectionRef.current = detectLandmarks(video);
+        onDetection?.(lastDetectionRef.current);
       }
 
       // Only redraw if landmarks changed (avoids flicker)
@@ -128,7 +134,7 @@ export default function LessonWebcamPanel({
         for (const landmarks of lm) {
           drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, {
             color: "#21d07a",
-            lineWidth: 4,
+            lineWidth: 3,
           });
           drawingUtils.drawLandmarks(landmarks, {
             color: "#ffffff",
@@ -147,10 +153,11 @@ export default function LessonWebcamPanel({
     return () => {
       window.cancelAnimationFrame(animationFrame);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      lastDetectionRef.current = { landmarks: [], handednesses: [] };
+      lastDetectionRef.current = EMPTY_DETECTION;
+      onDetection?.(EMPTY_DETECTION);
       lastDrawnLandmarks = "";
     };
-  }, [cameraError, detectLandmarks, isLandmarkerReady]);
+  }, [cameraError, detectLandmarks, isLandmarkerReady, onDetection]);
 
   return (
     <Stack

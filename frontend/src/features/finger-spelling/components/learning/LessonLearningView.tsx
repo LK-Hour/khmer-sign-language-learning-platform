@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ROUTES } from "@/constants/routes";
 import {
+  type RawHandDetection,
   useHandLandmarker,
   useStabilityDetector,
 } from "@/features/finger-spelling/ml/useHandLandmarker";
@@ -20,7 +21,7 @@ import { KslColors } from "@/theme/theme";
 import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
 import LessonPracticeStep from "./LessonPracticeStep";
 
-const COUNTDOWN_SECONDS = 3;
+const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
 
 type LessonLearningViewProps = {
   lesson: FsLessonDetail;
@@ -38,9 +39,8 @@ export default function LessonLearningView({
   const router = useRouter();
   const { locale, t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const latestDetectionRef = useRef<RawHandDetection>(EMPTY_DETECTION);
   const [recError, setRecError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const {
     extractFromVideo,
     detectLandmarks,
@@ -75,14 +75,12 @@ export default function LessonLearningView({
 
   // ─── Auto-capture flow ────────────────────────────────────────────
   // 1. Stability detector monitors hand movement
-  // 2. When stable → start countdown (3-2-1)
-  // 3. Countdown reaches 0 → auto-extract keypoints + send to backend
-  // 4. Show result → wait for user to click Retry
+  // 2. When stable for 3s → auto-extract keypoints + send to backend
+  // 3. Show result → wait for user to click Retry
 
   const doCapture = useCallback(async () => {
     const video = videoRef.current;
     setRecError(null);
-    setCountdown(null);
 
     if (landmarkerError) {
       setRecError(landmarkerError);
@@ -112,28 +110,14 @@ export default function LessonLearningView({
   }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t]);
 
   const handleStable = useCallback(() => {
-    setCountdown(COUNTDOWN_SECONDS);
-    let remaining = COUNTDOWN_SECONDS;
-    const tick = () => {
-      remaining -= 1;
-      if (remaining <= 0) {
-        setCountdown(null);
-        void doCapture();
-      } else {
-        setCountdown(remaining);
-        countdownTimerRef.current = setTimeout(tick, 1000);
-      }
-    };
-    countdownTimerRef.current = setTimeout(tick, 1000);
+    void doCapture();
   }, [doCapture]);
+
+  const getLatestDetection = useCallback(() => latestDetectionRef.current, []);
 
   const { state: stabilityState, progress: stabilityProgress, startMonitoring, stopMonitoring } =
     useStabilityDetector(
-      () => {
-        const video = videoRef.current;
-        if (!video) return { landmarks: [], handednesses: [] };
-        return detectLandmarks(video);
-      },
+      getLatestDetection,
       handleStable,
     );
 
@@ -145,9 +129,6 @@ export default function LessonLearningView({
 
   useEffect(() => {
     return () => {
-      if (countdownTimerRef.current) {
-        clearTimeout(countdownTimerRef.current);
-      }
       stopMonitoring();
     };
   }, [stopMonitoring]);
@@ -172,15 +153,16 @@ export default function LessonLearningView({
   }, [chapter, clearPracticeContext, initializePracticeSession, lesson, nextLessonId, setPracticeContext, unit]);
 
   const handleRetry = useCallback(() => {
-    if (countdownTimerRef.current) {
-      clearTimeout(countdownTimerRef.current);
-    }
-    setCountdown(null);
     setRecError(null);
+    latestDetectionRef.current = EMPTY_DETECTION;
     resetPracticeSession();
     incrementCameraResetKey();
     startMonitoring();
   }, [incrementCameraResetKey, resetPracticeSession, startMonitoring]);
+
+  const handleDetection = useCallback((detection: RawHandDetection) => {
+    latestDetectionRef.current = detection;
+  }, []);
 
   const handleContinue = async () => {
     await completePractice();
@@ -231,11 +213,11 @@ export default function LessonLearningView({
         isLandmarkerReady={isLandmarkerReady}
         recError={recError}
         videoRef={videoRef}
+        detectLandmarks={detectLandmarks}
+        onDetection={handleDetection}
         stabilityState={stabilityState}
         stabilityProgress={stabilityProgress}
-        countdown={countdown}
         onRetry={handleRetry}
-        onRec={doCapture}
         onContinue={handleContinue}
       />
     </Stack>

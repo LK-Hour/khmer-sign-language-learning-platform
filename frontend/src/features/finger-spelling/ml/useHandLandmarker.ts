@@ -127,7 +127,7 @@ export function useHandLandmarker() {
   useEffect(() => {
     let cancelled = false;
 
-    // Dedicated canvas for prediction extraction (REC button)
+    // Dedicated canvas for prediction extraction.
     const extractionCanvas = createOffscreenCanvas();
     document.body.appendChild(extractionCanvas);
     extractionCanvasRef.current = extractionCanvas;
@@ -165,7 +165,7 @@ export function useHandLandmarker() {
     };
   }, []);
 
-  /** Extract features for model prediction (REC button). Uses its own canvas. */
+  /** Extract features for model prediction. Uses its own canvas. */
   const extractFromVideo = useCallback((video: HTMLVideoElement) => {
     const landmarker = landmarkerRef.current;
     const canvas = extractionCanvasRef.current;
@@ -358,6 +358,7 @@ export function useStabilityDetector(
       }
 
       const elapsed = now - startRef.current;
+      setState("waiting");
 
       if (isCurrentlyStable()) {
         stableSinceRef.current ??= now;
@@ -379,6 +380,11 @@ export function useStabilityDetector(
       // Timeout check
       if (elapsed >= STABILITY_TIMEOUT_MS) {
         setState("timeout");
+        samplesRef.current = [];
+        stableSinceRef.current = null;
+        startRef.current = now;
+        setProgress(0);
+        rafRef.current = requestAnimationFrame(tick);
         return;
       }
 

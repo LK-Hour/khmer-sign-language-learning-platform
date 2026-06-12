@@ -19,7 +19,10 @@ import {
   KslRadii,
   KslShadows,
 } from "@/theme/theme";
-import type { StabilityState } from "@/features/finger-spelling/ml/useHandLandmarker";
+import type {
+  RawHandDetection,
+  StabilityState,
+} from "@/features/finger-spelling/ml/useHandLandmarker";
 import LessonWebcamPanel from "./LessonWebcamPanel";
 import SignImageCard from "./SignImageCard";
 
@@ -42,11 +45,11 @@ type LessonPracticeStepProps = {
   isLandmarkerReady?: boolean;
   recError?: string | null;
   videoRef?: RefObject<HTMLVideoElement | null>;
+  detectLandmarks: (video: HTMLVideoElement) => RawHandDetection;
+  onDetection?: (detection: RawHandDetection) => void;
   stabilityState: StabilityState;
   stabilityProgress: number;
-  countdown: number | null;
   onRetry: () => void;
-  onRec: () => void;
   onContinue: () => void;
 };
 
@@ -143,7 +146,7 @@ function MetricCard({
         sx={{
           mt: 0.75,
           color: KslColors.muted,
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: 600,
         }}
       >
@@ -165,11 +168,11 @@ export default function LessonPracticeStep({
   isLandmarkerReady = false,
   recError = null,
   videoRef,
+  detectLandmarks,
+  onDetection,
   stabilityState,
   stabilityProgress,
-  // countdown,
   onRetry,
-  onRec,
   onContinue,
 }: LessonPracticeStepProps) {
   const { t } = useTranslation();
@@ -186,10 +189,22 @@ export default function LessonPracticeStep({
     ? "Correct. Your thumb placement is strong. Raise the index finger slightly for a cleaner shape."
     : accuracy != null
       ? "Almost there. Adjust your hand angle and keep the palm closer to the sample."
-      : t("fsPressRecToPractice");
+      : t("fsHoldStill");
   const tipText =
     tip?.trim() ||
     "Use Right hand for better Accuaracy. Match your hand shape to the sample. Keep fingers visible and compare it with the camera preview.";
+  const stabilityLabel = !isLandmarkerReady
+    ? t("fsLandmarkerLoading")
+    : isSubmitting
+      ? "Evaluating..."
+      : stabilityState === "stable"
+        ? t("fsStableHold")
+        : stabilityState === "timeout"
+          ? t("fsStabilityTimeout")
+          : t("fsHoldStill");
+  const showStabilityProgress =
+    accuracy == null && !isSubmitting;
+
   return (
     <Stack
       component={motion.div}
@@ -230,46 +245,59 @@ export default function LessonPracticeStep({
               <LessonWebcamPanel
                 resetKey={cameraResetKey}
                 videoRef={videoRef}
+                detectLandmarks={detectLandmarks}
+                isLandmarkerReady={isLandmarkerReady}
+                onDetection={onDetection}
               />
-              {/* Countdown overlay
-              {countdown != null && (
-                <Stack
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  right: 12,
+                  zIndex: 3,
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  pointerEvents: "none",
+                }}
+              >
+                <Typography
                   sx={{
-                    position: "absolute",
-                    inset: 0,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    bgcolor: "rgba(132, 130, 130, 0.2)",
-                    borderRadius: `${KslRadii.signImage}px`,
-                    zIndex: 2,
+                    px: 1.25,
+                    py: 0.65,
+                    borderRadius: 999,
+                    bgcolor: "rgba(0,0,0,0.58)",
+                    color: "#fff",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    backdropFilter: "blur(6px)",
                   }}
                 >
+                  {stabilityLabel}
+                </Typography>
+                {showStabilityProgress ? (
                   <Typography
                     sx={{
-                      fontSize: { xs: 48, md: 64 },
-                      fontWeight: 700,
-                      color: "#fff",
-                      textShadow: "0 2px 12px rgba(141, 141, 141, 0.1)",
+                      px: 1,
+                      py: 0.55,
+                      borderRadius: 999,
+                      bgcolor: "rgba(255,255,255,0.82)",
+                      color: KslColors.primaryDark,
+                      fontSize: 13,
+                      fontWeight: 800,
+                      lineHeight: 1.2,
                     }}
                   >
-                    {countdown}
+                    {stabilityProgress}%
                   </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 14,
-                      color: "rgba(255,255,255,0.8)",
-                      fontWeight: 600,
-                      mt: -1,
-                    }}
-                  >
-                    {t("fsGetReady")}
-                  </Typography>
-                </Stack>
-              )} */}
+                ) : null}
+              </Stack>
             </Stack>
 
-            {/* Stability indicator */}
-            {/* {accuracy == null && !isSubmitting && (
+            {showStabilityProgress && (
               <Stack spacing={0.5}>
                 <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
                   <Typography sx={{ fontSize: 14, color: KslColors.muted, fontWeight: 600 }}>
@@ -297,7 +325,7 @@ export default function LessonPracticeStep({
                   }}
                 />
               </Stack>
-            )} */}
+            )}
 
             <Typography
               sx={{
