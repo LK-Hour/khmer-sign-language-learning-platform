@@ -9,8 +9,9 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
-_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "best_mlp_khmer_model.h5"
+_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "mlp_khmer_model_v3.h5"
 _DEFAULT_LANDMARKER = _BACKEND_ROOT / "ml" / "models" / "hand_landmarker.task"
+_DEFAULT_LABEL_ENCODER = _BACKEND_ROOT / "ml" / "models" / "khmer_label_encoder.pkl"
 
 
 class Settings(BaseSettings):
@@ -41,6 +42,10 @@ class Settings(BaseSettings):
         default=_DEFAULT_LANDMARKER,
         validation_alias="ML_LANDMARKER_PATH",
     )
+    ml_label_encoder_path: Path = Field(
+        default=_DEFAULT_LABEL_ENCODER,
+        validation_alias="ML_LABEL_ENCODER_PATH",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -56,7 +61,12 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
-    @field_validator("ml_model_path", "ml_landmarker_path", mode="before")
+    @field_validator(
+        "ml_model_path",
+        "ml_landmarker_path",
+        "ml_label_encoder_path",
+        mode="before",
+    )
     @classmethod
     def resolve_ml_paths(cls, value: object) -> Path:
         path = Path(str(value)) if value is not None else Path()

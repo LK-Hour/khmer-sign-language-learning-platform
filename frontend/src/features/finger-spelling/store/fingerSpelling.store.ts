@@ -242,7 +242,8 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
         try {
           const prediction = await predictHandFromFeatures(features, handedness);
           const score = Math.round(prediction.match_confidence);
-          const predicted = String(prediction.predicted_class_index);
+          const predicted =
+            prediction.predicted_label ?? String(prediction.predicted_class_index);
 
           const sessionId = get().sessionId;
           if (sessionId != null) {

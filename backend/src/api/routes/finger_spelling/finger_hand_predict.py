@@ -24,9 +24,18 @@ def hand_predict_status(
 ) -> HandPredictStatusResponse:
     service = get_hand_prediction_service()
     model_ready = service.is_available
+    metadata = service.get_metadata() if model_ready else {}
+    label_count = int(metadata.get("label_count") or 0)
+    output_class_count = metadata.get("output_class_count")
     return HandPredictStatusResponse(
         available=model_ready,
         model_loaded=model_ready,
+        label_encoder_loaded=bool(label_count),
+        label_count=label_count,
+        output_class_count=output_class_count,
+        label_encoder_matches_model=bool(
+            label_count and output_class_count == label_count
+        ),
     )
 
 
@@ -66,5 +75,6 @@ def predict_from_features(
     return HandPredictResponse(
         match_confidence=result.match_confidence,
         predicted_class_index=result.prediction.predicted_class_index,
+        predicted_label=result.prediction.predicted_label,
         handedness=result.features.handedness,
     )

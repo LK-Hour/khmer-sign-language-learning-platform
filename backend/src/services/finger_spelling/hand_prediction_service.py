@@ -41,6 +41,13 @@ class HandPredictionService:
             match_confidence=prediction.confidence,
         )
 
+    def get_metadata(self) -> dict[str, int | None]:
+        predictor = get_predictor()
+        return {
+            "output_class_count": predictor.output_dim,
+            "label_count": predictor.label_count,
+        }
+
 
 @lru_cache
 def get_hand_prediction_service() -> HandPredictionService:

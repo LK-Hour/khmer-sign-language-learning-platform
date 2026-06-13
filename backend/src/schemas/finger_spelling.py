@@ -240,12 +240,17 @@ class HandPredictFeaturesRequest(BaseModel):
 class HandPredictResponse(BaseModel):
     match_confidence: float
     predicted_class_index: int
+    predicted_label: str | None = None
     handedness: str
 
 
 class HandPredictStatusResponse(BaseModel):
     available: bool
     model_loaded: bool = False
+    label_encoder_loaded: bool = False
+    label_count: int = 0
+    output_class_count: int | None = None
+    label_encoder_matches_model: bool = False
 
 
 class FsLessonProgressResponse(BaseModel):

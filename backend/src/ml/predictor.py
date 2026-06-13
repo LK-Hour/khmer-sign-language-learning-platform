@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 import h5py
 import numpy as np
@@ -15,6 +16,7 @@ from src.core.config import settings
 @dataclass(frozen=True)
 class PredictionResult:
     predicted_class_index: int
+    predicted_label: str | None
     confidence: float
     probabilities: list[float]
 
@@ -64,34 +66,118 @@ def _load_output_layer(file: h5py.File) -> tuple[np.ndarray, np.ndarray]:
     return np.array(file[f"{prefix}/kernel"]), np.array(file[f"{prefix}/bias"])
 
 
+class KhmerLabelDecoder:
+    """Decode model class indices with the exported Khmer ``LabelEncoder`` classes."""
+
+    _ITEM_SIZE = 36  # joblib stored dtype '<U9' => 9 unicode codepoints * 4 bytes
+
+    def __init__(self, encoder_path: Path) -> None:
+        self._encoder_path = encoder_path
+        self._classes: list[str] | None = None
+
+    @property
+    def classes(self) -> list[str]:
+        self._ensure_loaded()
+        return self._classes or []
+
+    @property
+    def class_count(self) -> int:
+        return len(self.classes)
+
+    def decode(self, class_index: int, *, expected_count: int | None = None) -> str | None:
+        classes = self.classes
+        if expected_count is not None and len(classes) != expected_count:
+            return None
+        if 0 <= class_index < len(classes):
+            return self._sign(classes[class_index])
+        return None
+
+    @staticmethod
+    def _sign(label: str) -> str:
+        return label.split(",", 1)[0].strip()
+
+    def _ensure_loaded(self) -> None:
+        if self._classes is not None:
+            return
+        if not self._encoder_path.is_file():
+            self._classes = []
+            return
+
+        self._classes = self._load_with_joblib() or self._load_embedded_unicode_array()
+
+    def _load_with_joblib(self) -> list[str] | None:
+        try:
+            import joblib  # type: ignore[import-not-found]
+        except ModuleNotFoundError:
+            return None
+
+        encoder: Any = joblib.load(self._encoder_path)
+        classes = getattr(encoder, "classes_", None)
+        if classes is None:
+            return []
+        return [str(label) for label in classes]
+
+    def _load_embedded_unicode_array(self) -> list[str]:
+        data = self._encoder_path.read_bytes()
+        start = data.find("No_Action".encode("utf-32-le"))
+        if start < 0:
+            return []
+
+        labels: list[str] = []
+        for offset in range(start, len(data) - self._ITEM_SIZE + 1, self._ITEM_SIZE):
+            raw = data[offset : offset + self._ITEM_SIZE]
+            label = raw.decode("utf-32-le", errors="ignore").rstrip("\x00")
+            if label:
+                labels.append(label)
+        return labels
+
+
 class KhmerHandPredictor:
-    """NumPy forward pass for ``best_mlp_khmer_model.h5`` (126 → 512 → 256 → 128 → N)."""
+    """NumPy forward pass for Khmer MLP ``.h5`` models."""
 
     INPUT_DIM = 126
+    CLASS_INDEX_OFFSET = 1
 
     def __init__(self, model_path: Path) -> None:
         self._model_path = model_path
-        self._dense1: _DenseBlock | None = None
-        self._dense2: _DenseBlock | None = None
-        self._dense3: _DenseBlock | None = None
+        self._label_decoder = KhmerLabelDecoder(settings.ml_label_encoder_path)
+        self._dense_blocks: list[_DenseBlock] = []
         self._output_kernel: np.ndarray | None = None
         self._output_bias: np.ndarray | None = None
 
     def _ensure_loaded(self) -> None:
-        if self._dense1 is not None:
+        if self._dense_blocks:
             return
         if not self._model_path.is_file():
             raise FileNotFoundError(f"ML model not found: {self._model_path}")
 
         with h5py.File(self._model_path, "r") as file:
-            self._dense1 = _load_block(file, "dense_1", "bn_1")
-            self._dense2 = _load_block(file, "dense_2", "bn_2")
-            self._dense3 = _load_block(file, "dense_3", "bn_3")
+            block_index = 1
+            while f"model_weights/dense_{block_index}" in file:
+                self._dense_blocks.append(
+                    _load_block(file, f"dense_{block_index}", f"bn_{block_index}")
+                )
+                block_index += 1
+
+            if not self._dense_blocks:
+                raise ValueError(f"No dense blocks found in ML model: {self._model_path}")
+
             self._output_kernel, self._output_bias = _load_output_layer(file)
 
     @property
     def input_dim(self) -> int:
         return self.INPUT_DIM
+
+    @property
+    def output_dim(self) -> int | None:
+        self._ensure_loaded()
+        if self._output_bias is None:
+            return None
+        return int(self._output_bias.shape[0])
+
+    @property
+    def label_count(self) -> int:
+        return self._label_decoder.class_count
 
     def _forward_block(self, x: np.ndarray, block: _DenseBlock) -> np.ndarray:
         x = x @ block.kernel + block.bias
@@ -102,9 +188,7 @@ class KhmerHandPredictor:
     def predict(self, features: list[float] | np.ndarray) -> PredictionResult:
         self._ensure_loaded()
         assert (
-            self._dense1
-            and self._dense2
-            and self._dense3
+            self._dense_blocks
             and self._output_kernel is not None
             and self._output_bias is not None
         )
@@ -116,16 +200,20 @@ class KhmerHandPredictor:
             )
 
         x = vector
-        x = self._forward_block(x, self._dense1)
-        x = self._forward_block(x, self._dense2)
-        x = self._forward_block(x, self._dense3)
+        for block in self._dense_blocks:
+            x = self._forward_block(x, block)
         logits = x @ self._output_kernel + self._output_bias
         probabilities = _softmax(logits)
-        predicted_index = int(np.argmax(probabilities))
-        confidence = float(probabilities[predicted_index]) * 100.0
+        raw_predicted_index = int(np.argmax(probabilities))
+        predicted_index = max(0, raw_predicted_index - self.CLASS_INDEX_OFFSET)
+        confidence = float(probabilities[raw_predicted_index]) * 100.0
 
         return PredictionResult(
             predicted_class_index=predicted_index,
+            predicted_label=self._label_decoder.decode(
+                predicted_index,
+                expected_count=int(probabilities.shape[0]),
+            ),
             confidence=confidence,
             probabilities=[float(p) for p in probabilities],
         )

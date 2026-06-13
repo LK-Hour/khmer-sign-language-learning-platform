@@ -44,5 +44,6 @@ export interface PracticeAccuracyResponse {
 export interface HandPredictResponse {
   match_confidence: number;
   predicted_class_index: number;
+  predicted_label?: string | "";
   handedness: string;
 }
