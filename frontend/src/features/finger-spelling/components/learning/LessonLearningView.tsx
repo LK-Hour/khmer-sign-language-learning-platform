@@ -8,8 +8,9 @@ import { ROUTES } from "@/constants/routes";
 import {
   type RawHandDetection,
   useHandLandmarker,
-  useStabilityDetector,
 } from "@/features/finger-spelling/ml/useHandLandmarker";
+import { useFingerSpellingPracticeActions } from "@/features/finger-spelling/hooks/useFingerSpellingPracticeActions";
+import { useStabilityDetector } from "@/features/finger-spelling/ml/useStabilityDetector";
 import { useFingerSpellingStore } from "@/features/finger-spelling/store";
 import { FS_PASS_THRESHOLD } from "@/features/finger-spelling/store/types";
 import {
@@ -41,6 +42,7 @@ export default function LessonLearningView({
   const videoRef = useRef<HTMLVideoElement>(null);
   const latestDetectionRef = useRef<RawHandDetection>(EMPTY_DETECTION);
   const [recError, setRecError] = useState<string | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
   const {
     extractFromVideo,
     detectLandmarks,
@@ -54,20 +56,17 @@ export default function LessonLearningView({
   const clearPracticeContext = useFingerSpellingStore(
     (state) => state.clearPracticeContext
   );
-  const markLessonCompleted = useFingerSpellingStore(
-    (state) => state.markLessonCompleted
-  );
   const resetPracticeSession = useFingerSpellingStore(
     (state) => state.resetPracticeSession
   );
   const incrementCameraResetKey = useFingerSpellingStore(
     (state) => state.incrementCameraResetKey
   );
-  const initializePracticeSession = useFingerSpellingStore(
-    (state) => state.initializePracticeSession
-  );
-  const runPracticeRec = useFingerSpellingStore((state) => state.runPracticeRec);
-  const completePractice = useFingerSpellingStore((state) => state.completePractice);
+  const {
+    initializePracticeSession,
+    runPracticeRec,
+    completePractice,
+  } = useFingerSpellingPracticeActions();
   const accuracy = useFingerSpellingStore((state) => state.accuracy);
   const predictedLetter = useFingerSpellingStore((state) => state.predictedLetter);
   const isSubmitting = useFingerSpellingStore((state) => state.isSubmitting);
@@ -104,7 +103,7 @@ export default function LessonLearningView({
       await runPracticeRec(lesson.id, extraction.features, extraction.handedness);
     } catch (error) {
       setRecError(
-        error instanceof Error ? error.message : "Hand prediction failed"
+        error instanceof Error ? error.message : t("fsHandPredictionFailed")
       );
     }
   }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t]);
@@ -165,8 +164,17 @@ export default function LessonLearningView({
   }, []);
 
   const handleContinue = async () => {
-    await completePractice();
-    markLessonCompleted(lesson.id);
+    if (isCompleting) return;
+
+    setIsCompleting(true);
+    const completed = await completePractice();
+    setIsCompleting(false);
+
+    if (!completed) {
+      setRecError(t("fsProgressSyncFailed"));
+      return;
+    }
+
     if (nextLessonId != null) {
       router.push(`/${locale}/finger-spelling/lessons/${nextLessonId}`);
     } else {
@@ -187,13 +195,13 @@ export default function LessonLearningView({
         >
           {t("navFingerSpelling")}
         </Link>
-        <Typography sx={{ color: KslColors.muted, fontWeight: 600 }}>
+        <Typography sx={{ color: KslColors.textSecondary, fontWeight: 600 }}>
           {t("fsUnit")} {unitStep}
         </Typography>
-        <Typography sx={{ color: KslColors.muted, fontWeight: 600 }}>
+        <Typography sx={{ color: KslColors.textSecondary, fontWeight: 600 }}>
           {t("fsChapter")} {chapterStep}
         </Typography>
-        <Typography sx={{ color: KslColors.muted, fontWeight: 600 }}>
+        <Typography sx={{ color: KslColors.textSecondary, fontWeight: 600 }}>
           {t("fsLesson")} {lessonStep}
         </Typography>
         <Typography sx={{ color: KslColors.textPrimary, fontWeight: 700 }}>
@@ -209,7 +217,7 @@ export default function LessonLearningView({
         predictedLetter={predictedLetter}
         passThreshold={FS_PASS_THRESHOLD}
         cameraResetKey={cameraResetKey}
-        isSubmitting={isSubmitting}
+        isSubmitting={isSubmitting || isCompleting}
         isLandmarkerReady={isLandmarkerReady}
         recError={recError}
         videoRef={videoRef}
