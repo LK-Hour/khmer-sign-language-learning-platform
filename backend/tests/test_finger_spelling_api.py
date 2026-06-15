@@ -190,3 +190,14 @@ class TestFingerSpellingAPI:
     def test_get_finger_spelling_progress_requires_auth(self, client):
         response = client.get("/api/finger_spelling/progress/lessons/1")
         assert response.status_code == 401
+
+    def test_get_hand_predict_status_requires_auth(self, client):
+        response = client.get("/api/finger_spelling/practice/predict/status")
+        assert response.status_code == 401
+
+    def test_predict_from_features_requires_auth(self, client):
+        response = client.post(
+            "/api/finger_spelling/practice/predict/features",
+            json={"features": [0.0] * 126},
+        )
+        assert response.status_code == 401

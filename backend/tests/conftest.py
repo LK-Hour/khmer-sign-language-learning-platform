@@ -16,6 +16,7 @@ from src.models import media as _media_models  # noqa: F401
 from src.models import finger_spelling as _finger_models  # noqa: F401
 from src.models import user_oauth_provider as _oauth_models  # noqa: F401
 from src.models import user_session as _session_models  # noqa: F401
+from src.models import refresh_token as _refresh_token_models  # noqa: F401
 
 # Use PostgreSQL for tests (models use UUID which SQLite doesn't support)
 SQLALCHEMY_DATABASE_URL = os.getenv(

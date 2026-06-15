@@ -3,6 +3,8 @@ Authentication API tests
 """
 import pytest
 from fastapi import status
+from src.models.finger_spelling import FingerChapter, FingerLesson, FingerUnit, FingerUserLessonProgress
+from src.models.refresh_token import RefreshToken
 
 class TestAuthAPI:
     """Test authentication endpoints"""
@@ -24,6 +26,76 @@ class TestAuthAPI:
         assert "access_token" in data
         assert "token_type" in data
         assert data["token_type"] == "bearer"
+        assert "refresh_token" not in data
+        assert "refresh_token=" in response.headers.get("set-cookie", "")
+
+    def test_refresh_rotates_token_and_logout_revokes(self, client, db, test_user_data):
+        client.post("/users/", json=test_user_data)
+        login_response = client.post(
+            "/api/auth/login/email",
+            json={"email": test_user_data["email"], "password": test_user_data["password"]},
+        )
+        assert login_response.status_code == 200
+
+        first_cookie = login_response.cookies.get("refresh_token")
+        assert first_cookie
+        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 1
+
+        refresh_response = client.post(
+            "/api/auth/refresh",
+            headers={"X-Requested-With": "KSL-Client"},
+        )
+        assert refresh_response.status_code == 200
+        assert "access_token" in refresh_response.json()
+        second_cookie = refresh_response.cookies.get("refresh_token")
+        assert second_cookie
+        assert second_cookie != first_cookie
+        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 1
+        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(True)).count() == 1
+
+        logout_response = client.post(
+            "/api/auth/logout",
+            headers={"X-Requested-With": "KSL-Client"},
+        )
+        assert logout_response.status_code == 200
+        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 0
+
+    def test_refresh_reuse_detection_revokes_all_tokens(self, client, db, test_user_data):
+        client.post("/users/", json=test_user_data)
+        login_response = client.post(
+            "/api/auth/login/email",
+            json={"email": test_user_data["email"], "password": test_user_data["password"]},
+        )
+        stolen_cookie = login_response.cookies.get("refresh_token")
+
+        refresh_response = client.post(
+            "/api/auth/refresh",
+            headers={"X-Requested-With": "KSL-Client"},
+        )
+        assert refresh_response.status_code == 200
+
+        client.cookies.set("refresh_token", stolen_cookie)
+        reuse_response = client.post(
+            "/api/auth/refresh",
+            headers={"X-Requested-With": "KSL-Client"},
+        )
+        assert reuse_response.status_code == 401
+        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 0
+
+    def test_admin_remember_me_uses_three_day_refresh_lifetime(self, client, db, test_admin_data):
+        client.post("/users/", json=test_admin_data)
+        response = client.post(
+            "/api/auth/login/email",
+            json={
+                "email": test_admin_data["email"],
+                "password": test_admin_data["password"],
+                "remember_me": True,
+            },
+        )
+        assert response.status_code == 200
+        assert "Max-Age=259200" in response.headers.get("set-cookie", "")
+        token = db.query(RefreshToken).one()
+        assert token.lifetime_days == 3
     
     def test_login_invalid_credentials(self, client, test_user_data):
         """Test login with invalid credentials"""
@@ -99,3 +171,52 @@ class TestAuthAPI:
         
         # Note: Actual token expiry testing would require mocking JWT expiry
         # This test just verifies the token works initially
+
+    def test_import_guest_progress_merges_and_validates_lessons(self, client, db, test_user_data):
+        client.post("/users/", json=test_user_data)
+        login_response = client.post(
+            "/api/auth/login/email",
+            json={"email": test_user_data["email"], "password": test_user_data["password"]},
+        )
+        token = login_response.json()["access_token"]
+
+        unit = FingerUnit(id=9001, name_en="Unit", name_kh="Unit", order_index=9001)
+        chapter = FingerChapter(id=9001, unit_id=9001, name_en="Chapter", name_kh="Chapter", order_index=1)
+        lesson = FingerLesson(id=9001, chapter_id=9001, name_en="Lesson", name_kh="Lesson", order_index=1)
+        db.add_all([unit, chapter, lesson])
+        db.commit()
+
+        response = client.post(
+            "/api/auth/import-guest-progress",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "lessons": [
+                    {
+                        "lesson_id": 9001,
+                        "is_completed": True,
+                        "attempts": 2,
+                        "peak_accuracy": 88,
+                        "total_time_spent": 120,
+                    },
+                    {"lesson_id": 999999, "is_completed": True},
+                ],
+                "practice_summaries": [
+                    {
+                        "lesson_id": 9001,
+                        "attempts": 1,
+                        "best_accuracy": 91,
+                        "total_time_spent": 30,
+                    }
+                ],
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"imported_lessons": 2, "skipped_lessons": 1}
+        progress = db.query(FingerUserLessonProgress).filter(
+            FingerUserLessonProgress.finger_lesson_id == 9001
+        ).one()
+        assert progress.is_completed is True
+        assert progress.attempts == 3
+        assert int(progress.total_time_spent) == 150
+        assert float(progress.peak_accuracy) == 91.0
