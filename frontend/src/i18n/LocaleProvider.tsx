@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { ReactNode, useEffect } from 'react';
-import { isValidLocale } from './config';
-import { useLocaleStore } from './localeStore';
+import { ReactNode, useEffect, useMemo } from "react";
+import { isValidLocale, type Locale } from "./config";
+import { useLocaleStore } from "@/store/locale.store";
 
 interface LocaleProviderProps {
   children: ReactNode;
@@ -12,16 +12,25 @@ interface LocaleProviderProps {
 export function LocaleProvider({ children, initialLocale }: LocaleProviderProps) {
   const locale = useLocaleStore((state) => state.locale);
   const setLocale = useLocaleStore((state) => state.setLocale);
+  const routeLocale = useMemo<Locale | null>(
+    () => (isValidLocale(initialLocale) ? initialLocale : null),
+    [initialLocale]
+  );
+  const effectiveLocale = routeLocale ?? locale;
 
   useEffect(() => {
-    if (initialLocale && isValidLocale(initialLocale)) {
-      setLocale(initialLocale);
+    if (routeLocale && locale !== routeLocale) {
+      setLocale(routeLocale);
     }
-  }, [initialLocale, setLocale]);
+  }, [locale, routeLocale, setLocale]);
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-  }, [locale]);
+    document.documentElement.lang = effectiveLocale;
+  }, [effectiveLocale]);
+
+  if (routeLocale && locale !== routeLocale) {
+    return null;
+  }
 
   return children;
 }

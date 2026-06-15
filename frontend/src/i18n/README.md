@@ -77,7 +77,7 @@ export function Navbar() {
 ```tsx
 'use client';
 
-import { useLocaleStore } from '@/i18n/localeStore';
+import { useLocaleStore } from '@/i18n';
 
 export function SettingsComponent() {
   const { locale, setLocale, toggleLocale } = useLocaleStore();
