@@ -75,9 +75,6 @@ Thumbs.db
 .dmypy.json
 dmypy.json
 
-# Alembic
-alembic/versions/
-
 # Project Specific
 instance/
 .webassets-cache
