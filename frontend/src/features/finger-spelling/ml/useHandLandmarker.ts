@@ -38,8 +38,10 @@ async function loadHandLandmarker(): Promise<HandLandmarker> {
 
 /**
  * Draw a single video frame onto a canvas, flipped horizontally.
- * This corrects the mirror-reversed handedness that MediaPipe reports
- * when using a front-facing (selfie) camera.
+ * Used by the overlay path where visual mirroring is needed.
+ * WARNING: Do NOT use for prediction extraction — mirroring swaps
+ * MediaPipe's handedness labels (Left↔Right), corrupting the model input.
+ * Use copyFrameToCanvas() instead for prediction frames.
  */
 function mirrorFrameToCanvas(
   video: HTMLVideoElement,
@@ -183,15 +185,15 @@ export function useHandLandmarker() {
       } satisfies HandKeypointExtraction;
     }
 
-    mirrorFrameToCanvas(video, canvas, ctx);
+    copyFrameToCanvas(video, canvas, ctx);
     const imageData = getCanvasImageData(canvas, ctx);
 
     try {
-      let result = landmarker.detect(imageData);
+      let result = landmarker?.detect(imageData);
 
       if (!result.landmarks || result.landmarks.length === 0) {
         enhanceContrast(imageData);
-        result = landmarker.detect(imageData);
+        result = landmarker?.detect(imageData);
       }
 
       return buildModelFeatures(result.landmarks, result.handednesses);
@@ -235,12 +237,12 @@ export function useHandLandmarker() {
       const imageData = getCanvasImageData(canvas, ctx);
 
       try {
-        let result = landmarker.detect(imageData);
+        let result = landmarker?.detect(imageData);
 
         if (!result.landmarks || result.landmarks.length === 0) {
           // Fallback: contrast enhance and retry on the same natural frame.
           enhanceContrast(imageData);
-          result = landmarker.detect(imageData);
+          result = landmarker?.detect(imageData);
         }
 
         return {
@@ -261,158 +263,5 @@ export function useHandLandmarker() {
     error,
     extractFromVideo,
     detectLandmarks,
-  };
-}
-
-// ─── Stability Detection ────────────────────────────────────────────────
-
-export type StabilityState = "idle" | "waiting" | "stable" | "timeout";
-
-const STABILITY_SAMPLE_MS = 100; // sample every 100ms
-const STABILITY_WINDOW = 6;       // number of recent samples to check
-const STABILITY_THRESHOLD = 0.03; // avg delta per coordinate (normalized 0-1)
-const STABLE_DURATION_MS = 3000;  // must be stable for 3s
-const STABILITY_TIMEOUT_MS = 5000; // timeout after 5s of waiting
-
-/**
- * Hook that monitors hand movement and reports when the user holds
- * their hand still for long enough to capture a clean prediction.
- */
-export function useStabilityDetector(
-  detect: () => RawHandDetection,
-  onStable?: () => void,
-) {
-  const [state, setState] = useState<StabilityState>("idle");
-  const [progress, setProgress] = useState(0); // 0-100 for UI indicator
-  const samplesRef = useRef<number[][]>([]);
-  const startRef = useRef<number>(0);
-  const stableSinceRef = useRef<number | null>(null);
-  const rafRef = useRef<number>(0);
-  const lastFrameRef = useRef<number>(0);
-  const onStableRef = useRef(onStable);
-
-  useEffect(() => {
-    onStableRef.current = onStable;
-  }, [onStable]);
-
-  const computeDelta = useCallback((prev: number[], curr: number[]): number => {
-    if (prev.length === 0 || curr.length === 0) return Infinity;
-    const len = Math.min(prev.length, curr.length);
-    let sum = 0;
-    for (let i = 0; i < len; i++) {
-      sum += Math.abs(curr[i] - prev[i]);
-    }
-    return sum / len;
-  }, []);
-
-  const flattenLandmarks = (detection: RawHandDetection): number[] => {
-    const flat: number[] = [];
-    for (const hand of detection.landmarks) {
-      for (const lm of hand) {
-        flat.push(lm.x, lm.y, lm.z);
-      }
-    }
-    return flat;
-  };
-
-  const isCurrentlyStable = useCallback((): boolean => {
-    const samples = samplesRef.current;
-    if (samples.length < STABILITY_WINDOW) return false;
-    const recent = samples.slice(-STABILITY_WINDOW);
-    for (let i = 1; i < recent.length; i++) {
-      if (computeDelta(recent[i - 1], recent[i]) > STABILITY_THRESHOLD) {
-        return false;
-      }
-    }
-    return true;
-  }, [computeDelta]);
-
-  const startMonitoring = useCallback(() => {
-    samplesRef.current = [];
-    startRef.current = performance.now();
-    stableSinceRef.current = null;
-    setState("waiting");
-    setProgress(0);
-
-    const tick = (now: number) => {
-      // Throttle to ~100ms
-      if (now - lastFrameRef.current < STABILITY_SAMPLE_MS) {
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-      lastFrameRef.current = now;
-
-      const detection = detect();
-      if (detection.landmarks.length === 0) {
-        samplesRef.current = [];
-        stableSinceRef.current = null;
-        setProgress(0);
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      samplesRef.current.push(flattenLandmarks(detection));
-      // Keep only last STABILITY_WINDOW * 2 samples
-      if (samplesRef.current.length > STABILITY_WINDOW * 2) {
-        samplesRef.current = samplesRef.current.slice(-STABILITY_WINDOW * 2);
-      }
-
-      const elapsed = now - startRef.current;
-      setState("waiting");
-
-      if (isCurrentlyStable()) {
-        stableSinceRef.current ??= now;
-        const stableTime = now - stableSinceRef.current;
-        const pct = Math.min(100, Math.round((stableTime / STABLE_DURATION_MS) * 100));
-        setProgress(pct);
-
-        if (stableTime >= STABLE_DURATION_MS) {
-          stableSinceRef.current = null;
-          setState("stable");
-          onStableRef.current?.();
-          return; // stop monitoring
-        }
-      } else {
-        stableSinceRef.current = null;
-        setProgress(0);
-      }
-
-      // Timeout check
-      if (elapsed >= STABILITY_TIMEOUT_MS) {
-        setState("timeout");
-        samplesRef.current = [];
-        stableSinceRef.current = null;
-        startRef.current = now;
-        setProgress(0);
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-  }, [detect, isCurrentlyStable]);
-
-  const stopMonitoring = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    samplesRef.current = [];
-    stableSinceRef.current = null;
-    setState("idle");
-    setProgress(0);
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  return {
-    state,
-    progress,
-    startMonitoring,
-    stopMonitoring,
   };
 }
