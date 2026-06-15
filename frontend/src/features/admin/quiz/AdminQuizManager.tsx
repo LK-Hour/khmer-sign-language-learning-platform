@@ -40,23 +40,80 @@ import {
   Typography,
 } from "@mui/material";
 import { useMemo, useState } from "react";
+import { useTranslation } from "@/i18n/useTranslation";
+import type { TranslationKey } from "@/i18n/translations";
 import { INITIAL_QUESTIONS, MOCK_CONTEXT } from "./mockData";
 import type { AdminQuizQuestion, AdminQuizQuestionType } from "./types";
 
-function typeLabel(type: AdminQuizQuestionType): string {
-  if (type === "MULTIPLE_CHOICE") return "Multiple Choice";
-  if (type === "IMAGE_CHOICE") return "Image Selection";
-  return "Text Input";
+const AdminQuizColors = {
+  page: "#f8fafc",
+  sidebar: "#0f172a",
+  sidebarStrong: "#020617",
+  sidebarBorder: "#1e293b",
+  sidebarText: "#cbd5e1",
+  sidebarMuted: "#94a3b8",
+  muted: "#64748b",
+  heading: "#1e293b",
+  border: "#e2e8f0",
+  softBorder: "#f1f5f9",
+  primary: "#2563eb",
+  primaryText: "#60a5fa",
+  primaryTint: "rgba(37,99,235,0.1)",
+  primaryTintBorder: "rgba(37,99,235,0.2)",
+  primaryTintHover: "rgba(37,99,235,0.16)",
+  multipleChoiceBg: "#eef2ff",
+  multipleChoiceText: "#4f46e5",
+  imageChoiceBg: "#fff7ed",
+  imageChoiceText: "#d97706",
+  textInputBg: "#ecfdf5",
+  textInputText: "#059669",
+  textInputBorder: "#a7f3d0",
+  selectedBg: "#f3f9ff",
+} as const;
+
+const AdminQuizFontSizes = {
+  eyebrow: 10,
+  caption: 11,
+  small: 12,
+  body: 14,
+} as const;
+
+const sectionLabelSx = {
+  fontSize: AdminQuizFontSizes.small,
+  fontWeight: 700,
+  textTransform: "uppercase",
+} as const;
+
+const tableHeaderSx = {
+  fontSize: AdminQuizFontSizes.eyebrow,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  color: AdminQuizColors.muted,
+} as const;
+
+function typeLabelKey(type: AdminQuizQuestionType): TranslationKey {
+  if (type === "MULTIPLE_CHOICE") return "adminMultipleChoice";
+  if (type === "IMAGE_CHOICE") return "adminImageChoice";
+  return "adminTextInput";
 }
 
 function typeChipStyles(type: AdminQuizQuestionType) {
   if (type === "MULTIPLE_CHOICE") {
-    return { bgcolor: "#eef2ff", color: "#4f46e5" };
+    return {
+      bgcolor: AdminQuizColors.multipleChoiceBg,
+      color: AdminQuizColors.multipleChoiceText,
+    };
   }
   if (type === "IMAGE_CHOICE") {
-    return { bgcolor: "#fff7ed", color: "#d97706" };
+    return {
+      bgcolor: AdminQuizColors.imageChoiceBg,
+      color: AdminQuizColors.imageChoiceText,
+    };
   }
-  return { bgcolor: "#ecfdf5", color: "#059669" };
+  return {
+    bgcolor: AdminQuizColors.textInputBg,
+    color: AdminQuizColors.textInputText,
+  };
 }
 
 const TYPE_OPTIONS: AdminQuizQuestionType[] = [
@@ -80,6 +137,7 @@ const emptyQuestion = (orderIndex: number): AdminQuizQuestion => ({
 });
 
 export default function AdminQuizManager() {
+  const { t } = useTranslation();
   const [questions, setQuestions] = useState<AdminQuizQuestion[]>(
     () => INITIAL_QUESTIONS
   );
@@ -147,11 +205,11 @@ export default function AdminQuizManager() {
         !formData.correct_answer ||
         !formData.options.includes(formData.correct_answer)
       ) {
-        window.alert("Please select or define a valid correct answer.");
+        window.alert(t("adminInvalidCorrectAnswer"));
         return;
       }
     } else if (!formData.correct_answer.trim()) {
-      window.alert("Please enter the correct answer text.");
+      window.alert(t("adminMissingTextAnswer"));
       return;
     }
 
@@ -171,15 +229,15 @@ export default function AdminQuizManager() {
   };
 
   return (
-    <Stack direction="row" sx={{ minHeight: "100vh", bgcolor: "#f8fafc" }}>
+    <Stack direction="row" sx={{ minHeight: "100vh", bgcolor: AdminQuizColors.page }}>
       <Stack
         component="aside"
         sx={{
           display: { xs: "none", md: "flex" },
           width: 256,
           flexShrink: 0,
-          bgcolor: "#0f172a",
-          color: "#cbd5e1",
+          bgcolor: AdminQuizColors.sidebar,
+          color: AdminQuizColors.sidebarText,
         }}
       >
         <Stack
@@ -188,8 +246,8 @@ export default function AdminQuizManager() {
           sx={{
             alignItems: "center",
             p: 2,
-            borderBottom: "1px solid #1e293b",
-            bgcolor: "#020617",
+            borderBottom: `1px solid ${AdminQuizColors.sidebarBorder}`,
+            bgcolor: AdminQuizColors.sidebarStrong,
           }}
         >
           <Box
@@ -199,7 +257,7 @@ export default function AdminQuizManager() {
               borderRadius: 1,
               display: "grid",
               placeItems: "center",
-              bgcolor: "#2563eb",
+              bgcolor: AdminQuizColors.primary,
               color: "common.white",
               fontWeight: 700,
             }}
@@ -207,53 +265,53 @@ export default function AdminQuizManager() {
             K
           </Box>
           <Stack>
-            <Typography sx={{ fontSize: 14, fontWeight: 700, color: "common.white", lineHeight: 1 }}>
+            <Typography sx={{ fontSize: AdminQuizFontSizes.body, fontWeight: 700, color: "common.white", lineHeight: 1 }}>
               KSL Admin
             </Typography>
-            <Typography sx={{ mt: 0.5, fontSize: 10, textTransform: "uppercase", color: "#64748b" }}>
-              Management
+            <Typography sx={{ mt: 0.5, fontSize: AdminQuizFontSizes.eyebrow, textTransform: "uppercase", color: AdminQuizColors.muted }}>
+              {t("adminManagement")}
             </Typography>
           </Stack>
         </Stack>
 
         <Stack component="nav" spacing={1} sx={{ flex: 1, p: 2 }}>
-          <Typography sx={{ px: 1, mb: 1, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "#64748b" }}>
-            Navigation
+          <Typography sx={{ px: 1, mb: 1, fontSize: AdminQuizFontSizes.eyebrow, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: AdminQuizColors.muted }}>
+            {t("adminNavigation")}
           </Typography>
           <Button
             startIcon={<Layers sx={{ fontSize: 18 }} />}
             sx={{
               justifyContent: "flex-start",
-              color: "#60a5fa",
-              bgcolor: "rgba(37,99,235,0.1)",
-              border: "1px solid rgba(37,99,235,0.2)",
-              "&:hover": { bgcolor: "rgba(37,99,235,0.16)" },
+              color: AdminQuizColors.primaryText,
+              bgcolor: AdminQuizColors.primaryTint,
+              border: `1px solid ${AdminQuizColors.primaryTintBorder}`,
+              "&:hover": { bgcolor: AdminQuizColors.primaryTintHover },
             }}
           >
-            Curriculum
+            {t("adminCurriculum")}
           </Button>
           <Button
             startIcon={<MenuBook sx={{ fontSize: 18 }} />}
             sx={{
               justifyContent: "flex-start",
-              color: "#94a3b8",
-              "&:hover": { bgcolor: "#1e293b", color: "common.white" },
+              color: AdminQuizColors.sidebarMuted,
+              "&:hover": { bgcolor: AdminQuizColors.sidebarBorder, color: "common.white" },
             }}
           >
-            Exercises
+            {t("adminExercises")}
           </Button>
         </Stack>
       </Stack>
 
       <Stack component="main" sx={{ flex: 1, minWidth: 0 }}>
-        <Paper square elevation={0} sx={{ zIndex: 1, p: 2, borderBottom: "1px solid #e2e8f0" }}>
+        <Paper square elevation={0} sx={{ zIndex: 1, p: 2, borderBottom: `1px solid ${AdminQuizColors.border}` }}>
           <Stack spacing={1.5}>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
               {[MOCK_CONTEXT.track, MOCK_CONTEXT.unit.title, MOCK_CONTEXT.chapter.title].map(
                 (item, index) => (
                   <Stack key={item} direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                    {index > 0 && <Typography sx={{ color: "#cbd5e1" }}>/</Typography>}
-                    <Typography sx={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, color: "#94a3b8" }}>
+                    {index > 0 && <Typography sx={{ color: AdminQuizColors.sidebarText }}>/</Typography>}
+                    <Typography sx={{ fontSize: AdminQuizFontSizes.small, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, color: AdminQuizColors.sidebarMuted }}>
                       {item}
                     </Typography>
                   </Stack>
@@ -262,13 +320,13 @@ export default function AdminQuizManager() {
             </Stack>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ justifyContent: "space-between", alignItems: { xs: "stretch", sm: "center" } }}>
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                <FormatListNumbered sx={{ fontSize: 24, color: "#2563eb" }} />
-                <Typography variant="h5" component="h1" sx={{ fontWeight: 700, color: "#1e293b" }}>
-                  Quiz Management
+                <FormatListNumbered sx={{ fontSize: 24, color: AdminQuizColors.primary }} />
+                <Typography variant="h5" component="h1" sx={{ fontWeight: 700, color: AdminQuizColors.heading }}>
+                  {t("adminQuizManagement")}
                 </Typography>
               </Stack>
               <Button variant="contained" startIcon={<Add />} onClick={openCreateModal}>
-                Add Question
+                {t("adminAddQuestion")}
               </Button>
             </Stack>
           </Stack>
@@ -278,61 +336,65 @@ export default function AdminQuizManager() {
           <TableContainer component={Paper} variant="outlined">
             <Table>
               <TableHead>
-                <TableRow sx={{ bgcolor: "#f8fafc" }}>
-                  <TableCell align="center" sx={{ width: 64, fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
-                    Ord
+                <TableRow sx={{ bgcolor: AdminQuizColors.page }}>
+                  <TableCell align="center" sx={{ width: 64, ...tableHeaderSx }}>
+                    {t("adminOrder")}
                   </TableCell>
-                  <TableCell sx={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
-                    Content Preview
+                  <TableCell sx={tableHeaderSx}>
+                    {t("adminContentPreview")}
                   </TableCell>
-                  <TableCell sx={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
-                    Type
+                  <TableCell sx={tableHeaderSx}>
+                    {t("adminType")}
                   </TableCell>
-                  <TableCell sx={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
-                    Status
+                  <TableCell sx={tableHeaderSx}>
+                    {t("adminStatus")}
                   </TableCell>
-                  <TableCell align="right" sx={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
-                    Actions
+                  <TableCell align="right" sx={tableHeaderSx}>
+                    {t("adminActions")}
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {sortedQuestions.map((q) => (
                   <TableRow key={q.id} hover sx={{ opacity: q.is_active ? 1 : 0.55 }}>
-                    <TableCell align="center" sx={{ fontFamily: "var(--font-app-mono)", fontSize: 12, color: "#94a3b8" }}>
+                    <TableCell align="center" sx={{ fontFamily: "var(--font-app-mono)", fontSize: AdminQuizFontSizes.small, color: AdminQuizColors.sidebarMuted }}>
                       {q.order_index}
                     </TableCell>
                     <TableCell>
-                      <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>
+                      <Typography sx={{ fontSize: AdminQuizFontSizes.body, fontWeight: 700, color: AdminQuizColors.heading }}>
                         {q.prompt}
                       </Typography>
-                      <Typography sx={{ mt: 0.5, fontSize: 12, fontStyle: "italic", color: "#64748b" }}>
+                      <Typography sx={{ mt: 0.5, fontSize: AdminQuizFontSizes.small, fontStyle: "italic", color: AdminQuizColors.muted }}>
                         {q.correct_answer && q.type === "TEXT_INPUT"
-                          ? `Answer: ${q.correct_answer}`
+                          ? t("adminAnswer", { answer: q.correct_answer })
                           : q.prompt_kh}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={typeLabel(q.type)}
+                        label={t(typeLabelKey(q.type))}
                         size="small"
-                        sx={{ ...typeChipStyles(q.type), height: 22, fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}
+                        sx={{ ...typeChipStyles(q.type), height: 22, fontSize: AdminQuizFontSizes.eyebrow, fontWeight: 700, textTransform: "uppercase" }}
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={q.is_active ? "Active" : "Inactive"}
+                        label={q.is_active ? t("adminActive") : t("adminInactive")}
                         size="small"
                         color={q.is_active ? "success" : "default"}
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton aria-label="Edit question" onClick={() => openEditModal(q)} size="small">
+                      <IconButton aria-label={t("adminEditQuestionAria")} onClick={() => openEditModal(q)} size="small">
                         <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
-                        aria-label={q.is_active ? "Deactivate question" : "Activate question"}
+                        aria-label={
+                          q.is_active
+                            ? t("adminDeactivateQuestion")
+                            : t("adminActivateQuestion")
+                        }
                         onClick={() => handleToggleActive(q.id, q.is_active)}
                         size="small"
                         color={q.is_active ? "error" : "success"}
@@ -352,21 +414,21 @@ export default function AdminQuizManager() {
         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
           <Stack>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {editingId ? "Edit Question" : "Add New Question"}
+              {editingId ? t("adminEditQuestion") : t("adminAddNewQuestion")}
             </Typography>
-            <Typography sx={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
-              {formData.type} Interaction Mode
+            <Typography sx={{ ...sectionLabelSx, color: "text.secondary" }}>
+              {t("adminInteractionMode", { type: t(typeLabelKey(formData.type)) })}
             </Typography>
           </Stack>
-          <IconButton aria-label="Close dialog" onClick={() => setIsModalOpen(false)}>
+          <IconButton aria-label={t("adminCloseDialog")} onClick={() => setIsModalOpen(false)}>
             <Close />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ bgcolor: "#f8fafc" }}>
+        <DialogContent dividers sx={{ bgcolor: AdminQuizColors.page }}>
           <Stack id="quizForm" component="form" onSubmit={handleSave} spacing={3}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography sx={{ mb: 1.5, textAlign: "center", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
-                Select Quiz Interaction Type
+              <Typography sx={{ mb: 1.5, textAlign: "center", fontSize: AdminQuizFontSizes.caption, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
+                {t("adminSelectQuizType")}
               </Typography>
               <ToggleButtonGroup
                 exclusive
@@ -375,8 +437,8 @@ export default function AdminQuizManager() {
                 onChange={(_, value) => handleTypeChange(value)}
               >
                 {TYPE_OPTIONS.map((type) => (
-                  <ToggleButton key={type} value={type} sx={{ fontSize: 12, fontWeight: 700 }}>
-                    {typeLabel(type)}
+                  <ToggleButton key={type} value={type} sx={{ fontSize: AdminQuizFontSizes.small, fontWeight: 700 }}>
+                    {t(typeLabelKey(type))}
                   </ToggleButton>
                 ))}
               </ToggleButtonGroup>
@@ -386,24 +448,24 @@ export default function AdminQuizManager() {
               <Stack spacing={2}>
                 <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "text.secondary" }}>
                   <TextFields sx={{ fontSize: 16 }} />
-                  <Typography sx={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-                    Question Title / Prompt
+                  <Typography sx={sectionLabelSx}>
+                    {t("adminQuestionPrompt")}
                   </Typography>
                 </Stack>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                   <TextField
                     required
                     fullWidth
-                    label="Title (EN)"
+                    label={t("adminTitleEn")}
                     value={formData.prompt}
                     onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
                   />
                   <TextField
                     fullWidth
-                    label="Title (KH)"
+                    label={t("adminTitleKh")}
                     value={formData.prompt_kh}
                     onChange={(e) => setFormData({ ...formData, prompt_kh: e.target.value })}
-                    placeholder="បញ្ចូលចំណងជើងជាភាសាខ្មែរ"
+                    placeholder={t("adminTitleKhPlaceholder")}
                   />
                 </Stack>
               </Stack>
@@ -414,8 +476,8 @@ export default function AdminQuizManager() {
                 <Stack spacing={2}>
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "text.secondary" }}>
                     <ImageIcon sx={{ fontSize: 16 }} />
-                    <Typography sx={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-                      Question Visual Content
+                    <Typography sx={sectionLabelSx}>
+                      {t("adminQuestionVisual")}
                     </Typography>
                   </Stack>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
@@ -423,10 +485,10 @@ export default function AdminQuizManager() {
                       required
                       fullWidth
                       type="url"
-                      label="Question Image URL"
+                      label={t("adminQuestionImageUrl")}
                       value={formData.image_url}
                       onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      placeholder="https://example.com/image.png"
+                      placeholder={t("adminImageUrlPlaceholder")}
                     />
                     {formData.image_url && (
                       <Box
@@ -438,8 +500,8 @@ export default function AdminQuizManager() {
                           height: 56,
                           objectFit: "cover",
                           borderRadius: 1,
-                          border: "1px solid #e2e8f0",
-                          bgcolor: "#f1f5f9",
+                          border: `1px solid ${AdminQuizColors.border}`,
+                          bgcolor: AdminQuizColors.softBorder,
                         }}
                       />
                     )}
@@ -457,17 +519,17 @@ export default function AdminQuizManager() {
                     alignItems: { xs: "flex-start", sm: "center" },
                     justifyContent: "space-between",
                     pb: 1,
-                    borderBottom: "1px solid #f1f5f9",
+                    borderBottom: `1px solid ${AdminQuizColors.softBorder}`,
                   }}
                 >
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "primary.main" }}>
                     <Check sx={{ fontSize: 18 }} />
-                    <Typography sx={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-                      Answer Configuration
+                    <Typography sx={sectionLabelSx}>
+                      {t("adminAnswerConfig")}
                     </Typography>
                   </Stack>
                   {formData.type !== "TEXT_INPUT" && (
-                    <Chip label="Choose correct option" size="small" />
+                    <Chip label={t("adminChooseCorrectOption")} size="small" />
                   )}
                 </Stack>
 
@@ -484,8 +546,8 @@ export default function AdminQuizManager() {
                               display: "flex",
                               alignItems: "center",
                               gap: 1.5,
-                              borderColor: selected ? "primary.light" : "#f1f5f9",
-                              bgcolor: selected ? "#f3f9ff" : "#f8fafc",
+                              borderColor: selected ? "primary.light" : AdminQuizColors.softBorder,
+                              bgcolor: selected ? AdminQuizColors.selectedBg : AdminQuizColors.page,
                             }}
                           >
                             <Radio
@@ -498,7 +560,7 @@ export default function AdminQuizManager() {
                               required
                               fullWidth
                               variant="standard"
-                              placeholder={`Choice ${idx + 1}`}
+                              placeholder={t("adminChoice", { index: idx + 1 })}
                               value={opt}
                               onChange={(e) => handleOptionChange(idx, e.target.value)}
                             />
@@ -519,14 +581,14 @@ export default function AdminQuizManager() {
                           variant="outlined"
                           sx={{
                             p: 2,
-                            borderColor: selected ? "primary.light" : "#f1f5f9",
-                            bgcolor: selected ? "#f3f9ff" : "#f8fafc",
+                            borderColor: selected ? "primary.light" : AdminQuizColors.softBorder,
+                            bgcolor: selected ? AdminQuizColors.selectedBg : AdminQuizColors.page,
                           }}
                         >
                           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
                             <Stack sx={{ alignItems: "center" }}>
-                              <Typography sx={{ mb: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
-                                Correct?
+                              <Typography sx={{ mb: 0.5, fontSize: AdminQuizFontSizes.eyebrow, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
+                                {t("adminCorrectQuestion")}
                               </Typography>
                               <Radio
                                 name="correct_answer"
@@ -539,8 +601,8 @@ export default function AdminQuizManager() {
                               required
                               fullWidth
                               type="url"
-                              label={`Option Image URL ${idx + 1}`}
-                              placeholder="Enter image URL..."
+                              label={t("adminOptionImageUrl", { index: idx + 1 })}
+                              placeholder={t("adminEnterImageUrl")}
                               value={opt}
                               onChange={(e) => handleOptionChange(idx, e.target.value)}
                             />
@@ -549,7 +611,7 @@ export default function AdminQuizManager() {
                                 component="img"
                                 src={opt}
                                 alt=""
-                                sx={{ width: 96, height: 56, objectFit: "cover", borderRadius: 1, border: "1px solid #e2e8f0" }}
+                                sx={{ width: 96, height: 56, objectFit: "cover", borderRadius: 1, border: `1px solid ${AdminQuizColors.border}` }}
                               />
                             ) : (
                               <Box
@@ -559,9 +621,9 @@ export default function AdminQuizManager() {
                                   display: "grid",
                                   placeItems: "center",
                                   borderRadius: 1,
-                                  border: "1px solid #e2e8f0",
+                                  border: `1px solid ${AdminQuizColors.border}`,
                                   bgcolor: "background.paper",
-                                  color: "#cbd5e1",
+                                  color: AdminQuizColors.sidebarText,
                                 }}
                               >
                                 <ImageIcon sx={{ fontSize: 18 }} />
@@ -575,24 +637,24 @@ export default function AdminQuizManager() {
                 )}
 
                 {formData.type === "TEXT_INPUT" && (
-                  <Paper variant="outlined" sx={{ p: 2, borderColor: "#a7f3d0", bgcolor: "#ecfdf5" }}>
+                  <Paper variant="outlined" sx={{ p: 2, borderColor: AdminQuizColors.textInputBorder, bgcolor: AdminQuizColors.textInputBg }}>
                     <TextField
                       required
                       fullWidth
-                      label="Target Correct Answer Text"
+                      label={t("adminTargetAnswer")}
                       value={formData.correct_answer}
                       onChange={(e) => setFormData({ ...formData, correct_answer: e.target.value })}
-                      placeholder="What is the exact text the user should type?"
+                      placeholder={t("adminTargetAnswerPlaceholder")}
                     />
-                    <Typography sx={{ mt: 1, fontSize: 11, fontStyle: "italic", color: "#059669" }}>
-                      Note: System will compare user input with this value for scoring.
+                    <Typography sx={{ mt: 1, fontSize: AdminQuizFontSizes.caption, fontStyle: "italic", color: AdminQuizColors.textInputText }}>
+                      {t("adminTextAnswerNote")}
                     </Typography>
                   </Paper>
                 )}
 
                 {!formData.correct_answer && (
                   <Alert icon={<ErrorOutline fontSize="inherit" />} severity="warning">
-                    Validation: A correct answer must be specified to save this question.
+                    {t("adminValidationCorrectAnswer")}
                   </Alert>
                 )}
               </Stack>
@@ -607,11 +669,11 @@ export default function AdminQuizManager() {
                       onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     />
                   }
-                  label="Published & Active"
+                  label={t("adminPublishedActive")}
                 />
                 <TextField
                   type="number"
-                  label="Sort Order"
+                  label={t("adminSortOrder")}
                   value={formData.order_index}
                   onChange={(e) =>
                     setFormData({
@@ -626,9 +688,9 @@ export default function AdminQuizManager() {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
+          <Button onClick={() => setIsModalOpen(false)}>{t("cancel")}</Button>
           <Button type="submit" form="quizForm" variant="contained" startIcon={<Check />}>
-            {editingId ? "Update Question" : "Add Question"}
+            {editingId ? t("adminUpdateQuestion") : t("adminAddQuestion")}
           </Button>
         </DialogActions>
       </Dialog>
