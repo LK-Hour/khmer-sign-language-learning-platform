@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { fetchDictionaryWord } from "@/features/dictionary/api/dictionary";
 import { DictionaryWordDetail } from "@/features/dictionary/components";
-import { FingerSpellingDictionaryShell } from "@/features/finger-spelling/components";
+import { FingerSpellingDictionaryLayout } from "@/features/finger-spelling/components";
 
 type PageProps = {
   params: Promise<{ wordId: string }>;
@@ -16,8 +16,8 @@ export default async function DictionaryWordPage({ params }: PageProps) {
   if (!word) notFound();
 
   return (
-    <FingerSpellingDictionaryShell>
+    <FingerSpellingDictionaryLayout>
       <DictionaryWordDetail word={word} />
-    </FingerSpellingDictionaryShell>
+    </FingerSpellingDictionaryLayout>
   );
 }

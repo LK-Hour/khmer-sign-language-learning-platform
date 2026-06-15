@@ -1,10 +1,10 @@
+import { apiFetch } from "@/utils/api/client";
 import {
   getMockDictionaryWord,
   searchMockDictionaryWords,
 } from "../data/mockDictionary";
 import type { DictionarySearchResult, DictionaryWord } from "../types";
 import { DICT_USE_MOCK, resolveApiAssetUrl } from "./config";
-import { dictFetch } from "./client";
 
 type BackendDictionaryWord = {
   id: number;
@@ -44,7 +44,7 @@ export async function fetchDictionaryWords(
   const query = params.toString();
   const path = query ? `/api/dictionary?${query}` : "/api/dictionary";
 
-  const raw = await dictFetch<BackendDictionaryListResponse>(path);
+  const raw = await apiFetch<BackendDictionaryListResponse>(path);
   const items = raw.items.map(normalizeWord);
   return { items, total: raw.total ?? items.length };
 }
@@ -57,7 +57,7 @@ export async function fetchDictionaryWord(
   }
 
   try {
-    const raw = await dictFetch<BackendDictionaryWord>(
+    const raw = await apiFetch<BackendDictionaryWord>(
       `/api/dictionary/${wordId}`
     );
     return normalizeWord(raw);
