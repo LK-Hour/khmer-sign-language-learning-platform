@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Stack } from "@mui/material";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
-import { KslRadii, KslShadows } from "@/theme/theme";
+import { KslColors, KslRadii, KslShadows } from "@/theme/theme";
 
 type SignImageCardProps = {
   src: string;
@@ -18,7 +18,7 @@ export default function SignImageCard({ src, alt }: SignImageCardProps) {
         borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
         boxShadow: KslShadows.drop,
-        bgcolor: "#dce9e3",
+        bgcolor: KslColors.primaryLight,
       }}
     >
       <Image
