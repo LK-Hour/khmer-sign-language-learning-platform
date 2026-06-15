@@ -1,7 +1,7 @@
 "use client";
 
 import SnackbarProvider from "@/components/snackbar/snackbar-provider";
-import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import { AuthProvider } from "@/features/auth/components";
 import ThemeStylesProvider from "@/providers/ThemeStylesProvider";
 
 type AppProvidersProps = {
@@ -11,9 +11,9 @@ type AppProvidersProps = {
 export default function AppProviders({ children }: AppProvidersProps) {
   return (
     <ThemeStylesProvider>
-      <ReactQueryProvider>
-        <SnackbarProvider>{children}</SnackbarProvider>
-      </ReactQueryProvider>
+      <SnackbarProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </SnackbarProvider>
     </ThemeStylesProvider>
   );
 }

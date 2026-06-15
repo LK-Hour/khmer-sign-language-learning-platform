@@ -27,7 +27,7 @@ export const KslPalette = {
     muted: "#65746e",
     disabled: "#65746e",
     card: "#ffffff",
-    background: "#f6faf8",
+    background: "#ffffff",
     border: "#d8e3df",
   },
 } as const;
@@ -43,13 +43,9 @@ export const KslColors = {
   secondaryLighter: KslPalette.secondary.lighter,
   secondaryDark: KslPalette.secondary.dark,
   surface: KslPalette.neutral.card,
-  card: KslPalette.neutral.card,
   background: KslPalette.neutral.background,
-  text: KslPalette.neutral.text,
-  typography: KslPalette.neutral.text,
   textPrimary: KslPalette.neutral.text,
   textSecondary: KslPalette.neutral.muted,
-  muted: KslPalette.neutral.muted,
   disabled: KslPalette.neutral.disabled,
   border: KslPalette.neutral.border,
   success: KslPalette.status.success,
@@ -59,6 +55,11 @@ export const KslColors = {
   warning: KslPalette.status.warning,
   inProgress: KslPalette.status.inProgress,
   locked: KslPalette.neutral.disabled,
+  // Backward-compatible aliases. Prefer surface/textPrimary/textSecondary in new code.
+  card: KslPalette.neutral.card,
+  text: KslPalette.neutral.text,
+  typography: KslPalette.neutral.text,
+  muted: KslPalette.neutral.muted,
 } as const;
 
 export const KslShadows = {
@@ -78,17 +79,22 @@ export const KslRadii = {
   button: 16,
 } as const;
 
-/** Core text scale — use sm / md / lg only for body UI copy */
+/** Core text scale. Prefer these tokens over raw pixel values in sx props. */
 export const KslFontSizes = {
+  xs: 12,
   sm: 14,
   md: 16,
   lg: 20,
+  xl: 24,
+  "2xl": 30,
+  "3xl": 36,
+  "4xl": 42,
 } as const;
 
 export const KslLineHeights = {
-  sm: "20px",
-  md: "24px",
-  lg: "30px",
+  sm: 20 / 14,
+  md: 24 / 16,
+  lg: 30 / 20,
 } as const;
 
 const KslTheme = createTheme({
@@ -105,7 +111,7 @@ const KslTheme = createTheme({
       dark: KslPalette.secondary.dark,
     },
     background: {
-      default: "#ffffff",
+      default: KslPalette.neutral.background,
       paper: KslPalette.neutral.card,
     },
     text: {

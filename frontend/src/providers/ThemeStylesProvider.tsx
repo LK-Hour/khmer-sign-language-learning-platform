@@ -4,7 +4,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { ThemeProvider } from "@mui/material/styles";
-import KslTheme, { KslColors } from "@/theme/theme";
+import KslTheme from "@/theme/theme";
 
 type ThemeStylesProviderProps = {
   children: React.ReactNode;
@@ -18,14 +18,14 @@ export default function ThemeStylesProvider({
       <ThemeProvider theme={KslTheme}>
         <CssBaseline />
         <GlobalStyles
-          styles={{
+          styles={(theme) => ({
             ":root": {
               colorScheme: "light",
-              backgroundColor: KslColors.background,
+              backgroundColor: theme.palette.background.default,
             },
             "html, body": {
               minHeight: "100%",
-              backgroundColor: KslColors.background,
+              backgroundColor: theme.palette.background.default,
             },
             body: {
               overflowX: "hidden",
@@ -43,7 +43,7 @@ export default function ThemeStylesProvider({
             img: {
               maxWidth: "100%",
             },
-          }}
+          })}
         />
         {children}
       </ThemeProvider>
