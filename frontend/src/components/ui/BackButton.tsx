@@ -14,8 +14,11 @@ type BackButtonProps = {
 export default function BackButton({
   href,
   onClick,
-  "aria-label": ariaLabel = "Go back",
+  "aria-label": ariaLabel,
 }: BackButtonProps) {
+  if (!ariaLabel) {
+    ariaLabel = "Go back";
+  }
   const router = useRouter();
 
   const handleClick = () => {

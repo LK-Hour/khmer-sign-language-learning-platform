@@ -33,12 +33,13 @@ import {
 import Iconify from "@/components/iconify";
 import LocaleFlag from "@/components/ui/LocaleFlag";
 import { ROUTES } from "@/constants/routes";
+import { logout } from "@/features/auth/api/auth";
 import {
   LOCALE_FULL_NAMES,
   SUPPORTED_LOCALES,
   type Locale,
 } from "@/i18n/config";
-import { useLocaleStore } from "@/i18n/localeStore";
+import { useLocaleStore } from "@/i18n";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
 import { KslColors, KslFontSizes } from "@/theme/theme";
@@ -71,7 +72,7 @@ const navItemSx = (active: boolean) => ({
   ...navItemBase,
   fontWeight: active ? 600 : 500,
   bgcolor: active ? KslColors.primaryLight : "transparent",
-  color: active ? KslColors.primary : KslColors.text,
+  color: active ? KslColors.primary : KslColors.textPrimary,
   "&:hover": {
     bgcolor: active ? KslColors.primaryLight : "action.hover",
     color: KslColors.primary,
@@ -79,7 +80,7 @@ const navItemSx = (active: boolean) => ({
 });
 
 
-const DROPDOWN_BG = "#ffffff";
+const DROPDOWN_BG = "background.paper";
 
 const dropdownPaperSx = {
   borderRadius: "8px",
@@ -98,8 +99,8 @@ const dropdownItemSx = (active: boolean) => ({
   px: 2,
   py: 1.25,
   fontWeight: active ? 600 : 500,
-  fontSize: 13.5,
-  color: active ? KslColors.primary : KslColors.text,
+  fontSize: KslFontSizes.sm,
+  color: active ? KslColors.primary : KslColors.textPrimary,
   bgcolor: active ? KslColors.primaryLighter : DROPDOWN_BG,
   border: "none",
   cursor: "pointer",
@@ -129,7 +130,6 @@ type ProfileLogoutBlockProps = {
   onLogoutClick: () => void;
   avatarSize?: number;
   nameFontSize?: number;
-  logoutFontSize?: number;
 };
 
 function ProfileLogoutBlock({
@@ -140,12 +140,11 @@ function ProfileLogoutBlock({
   onLogoutClick,
   avatarSize = 32,
   nameFontSize = 14,
-  logoutFontSize = 14,
 }: ProfileLogoutBlockProps) {
   return (
      <>
      <Tooltip title={logoutLabel} arrow placement="bottom">
-      <Stack onClick={onLogoutClick} sx={{ border: `1.5px solid ${KslColors.border}`, borderRadius: "10px", px: 2, py: 0.5, my: 2, cursor: "pointer" }}>
+      <Stack  onClick={onLogoutClick} sx={{ border: `1.5px solid ${KslColors.border}`, borderRadius: "10px", px: 2, py: 0.5, my: 2, cursor: "pointer" }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
           <Avatar
                 src={picture ?? ""}
@@ -163,7 +162,7 @@ function ProfileLogoutBlock({
                 sx={{
                   fontSize: nameFontSize,
                   fontWeight: 600,
-                  color: KslColors.text,
+                  color: KslColors.textPrimary,
                   overflow: "hidden",
                 }}
               >
@@ -172,6 +171,7 @@ function ProfileLogoutBlock({
                   : displayName}
               </Typography>
               <Stack
+                spacing={1}
                 direction="row"
                 aria-label={logoutLabel}
                 sx={{
@@ -203,6 +203,7 @@ function ProfileLogoutBlock({
 }
 
 function BrandLogo({ locale }: { locale: Locale }) {
+  const { t } = useTranslation();
   return (
     <Stack
       component={Link}
@@ -213,7 +214,7 @@ function BrandLogo({ locale }: { locale: Locale }) {
     >
       <Image
         src={LOGO_SRC}
-        alt="Smart Khmer logo"
+        alt={t("brandLogoAlt")}
         width={44}
         height={44}
         style={{ borderRadius: 6, objectFit: "cover" }}
@@ -221,7 +222,7 @@ function BrandLogo({ locale }: { locale: Locale }) {
       <Stack spacing={0} sx={{ justifyContent: "center" }}>
         <Typography
           sx={{
-            fontSize: 12,
+            fontSize: KslFontSizes.xs,
             fontWeight: 700,
             letterSpacing: "0.06em",
             textTransform: "uppercase",
@@ -235,7 +236,7 @@ function BrandLogo({ locale }: { locale: Locale }) {
           sx={{
             fontSize: { xs: "14px", md: "16px" },
             fontWeight: 700,
-            color: KslColors.text,
+            color: KslColors.textPrimary,
             lineHeight: 1.2,
             whiteSpace: "nowrap",
           }}
@@ -320,7 +321,14 @@ export default function MainHeader() {
     { label: t("navWordDetection"), href: ROUTES.words.root },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (!user?.is_guest) {
+      try {
+        await logout();
+      } catch {
+        // Local logout should still complete when the network is unavailable.
+      }
+    }
     clearAuth();
     window.location.href = `/${locale}/login`;
   };
@@ -331,7 +339,7 @@ export default function MainHeader() {
 
   const confirmLogout = () => {
     setLogoutConfirmOpen(false);
-    handleLogout();
+    void handleLogout();
   };
 
   const handleLocaleChange = (newLocale: Locale) => {
@@ -533,8 +541,8 @@ export default function MainHeader() {
                       component={Link}
                       href={`/${locale}/login`}
                       sx={{
-                        color: KslColors.text,
-                        fontSize: 14,
+                        color: KslColors.textPrimary,
+                        fontSize: KslFontSizes.sm,
                         fontWeight: 600,
                         textTransform: "none",
                         px: 2,
@@ -543,7 +551,7 @@ export default function MainHeader() {
                         "&:hover": { bgcolor: "rgba(0,0,0,0.04)" },
                       }}
                     >
-                      {t("Login") ?? "Login"}
+                      {t("login")}
                     </Button>
                   )}
                 </Box>
@@ -559,7 +567,7 @@ export default function MainHeader() {
               <IconButton
                 aria-label="Open menu"
                 onClick={() => setDrawerOpen(true)}
-                sx={{ color: KslColors.text }}
+                sx={{ color: KslColors.textPrimary }}
               >
                 <Iconify icon="eva:menu-2-fill" sx={{ width: 22, height: 22 }} />
               </IconButton>
@@ -574,7 +582,7 @@ export default function MainHeader() {
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        slotProps={{ paper: { sx: { width: 280, display: "flex", flexDirection: "column", bgcolor: "#fff" } } }}
+        slotProps={{ paper: { sx: { width: 280, display: "flex", flexDirection: "column", bgcolor: "background.paper" } } }}
       >
         {/* Header */}
         <Stack
@@ -584,7 +592,7 @@ export default function MainHeader() {
           <Stack spacing={0.25}>
             <Typography
               sx={{
-                fontSize: 10,
+                fontSize: KslFontSizes.xs,
                 fontWeight: 700,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -596,9 +604,9 @@ export default function MainHeader() {
             </Typography>
             <Typography
               sx={{
-                fontSize: 13.5,
+                fontSize: KslFontSizes.sm,
                 fontWeight: 700,
-                color: KslColors.text,
+                color: KslColors.textPrimary,
                 lineHeight: 1.2,
               }}
             >
@@ -609,7 +617,7 @@ export default function MainHeader() {
             size="small"
             onClick={() => setDrawerOpen(false)}
             aria-label="Close menu"
-            sx={{ color: KslColors.text, borderRadius: "8px" }}
+            sx={{ color: KslColors.textPrimary, borderRadius: "8px" }}
           >
             <Iconify icon="eva:close-fill" sx={{ width: 20, height: 20 }} />
           </IconButton>
@@ -645,8 +653,8 @@ export default function MainHeader() {
                   primary: {
                     sx: {
                       fontWeight: active ? 600 : 500,
-                      fontSize: 14,
-                      color: active ? KslColors.primary : KslColors.text,
+                      fontSize: KslFontSizes.sm,
+                      color: active ? KslColors.primary : KslColors.textPrimary,
                     },
                   },
                 }}
@@ -678,8 +686,8 @@ export default function MainHeader() {
                     primary: {
                       sx: {
                         fontWeight: active ? 600 : 500,
-                        fontSize: 14,
-                        color: active ? KslColors.primary : KslColors.text,
+                        fontSize: KslFontSizes.sm,
+                        color: active ? KslColors.primary : KslColors.textPrimary,
                       },
                     },
                   }}
@@ -710,8 +718,8 @@ export default function MainHeader() {
                 primary: {
                   sx: {
                     fontWeight: isDictionaryActive ? 600 : 500,
-                    fontSize: 14,
-                    color: isDictionaryActive ? KslColors.primary : KslColors.text,
+                    fontSize: KslFontSizes.sm,
+                    color: isDictionaryActive ? KslColors.primary : KslColors.textPrimary,
                   },
                 },
               }}
@@ -725,7 +733,7 @@ export default function MainHeader() {
         <Stack sx={{ px: 2.5, py: 1.5 }}>
           <Typography
             sx={{
-              fontSize: 10.5,
+              fontSize: KslFontSizes.xs,
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -752,16 +760,16 @@ export default function MainHeader() {
                   border: "1px solid",
                   borderColor: loc === locale ? KslColors.primary : KslColors.border,
                   bgcolor: loc === locale ? KslColors.primaryLight : "transparent",
-                  color: loc === locale ? KslColors.primary : KslColors.text,
+                  color: loc === locale ? KslColors.primary : KslColors.textPrimary,
                   fontWeight: loc === locale ? 600 : 500,
-                  fontSize: 13,
+                  fontSize: KslFontSizes.xs,
                   cursor: "pointer",
                   fontFamily: "inherit",
                   transition: "all 0.15s",
                 }}
               >
                 <LocaleFlag locale={loc} size={16} />
-                <Typography sx={{ fontSize: 13, fontWeight: "inherit", color: "inherit" }}>
+                <Typography sx={{ fontSize: KslFontSizes.xs, fontWeight: "inherit", color: "inherit" }}>
                   {LOCALE_FULL_NAMES[loc]}
                 </Typography>
               </Stack>
@@ -808,7 +816,7 @@ export default function MainHeader() {
           {t("logoutConfirmTitle")}
         </DialogTitle>
         <DialogContent id="logout-confirm-description">
-          <Typography sx={{ fontSize: 14, color: "text.secondary" }}>
+          <Typography sx={{ fontSize: KslFontSizes.sm, color: "text.secondary" }}>
             {t("logoutConfirmMessage")}
           </Typography>
         </DialogContent>

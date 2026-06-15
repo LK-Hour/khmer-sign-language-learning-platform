@@ -1,4 +1,4 @@
-  import type { Locale } from "@/i18n/config";
+import type { Locale } from "@/i18n/config";
 
 import Iconify from "@/components/iconify";
 
@@ -17,7 +17,7 @@ export default function LocaleFlag({ locale, size = 22 }: LocaleFlagProps) {
     <Iconify
       icon={LOCALE_FLAG_ICONS[locale]}
       aria-hidden
-      sx={{ width: 28, height: 28, flexShrink: 0 }}
+      sx={{ width: size, height: size, flexShrink: 0 }}
     />
   );
 }

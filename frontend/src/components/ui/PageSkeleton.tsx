@@ -1,7 +1,7 @@
 import { Container, Grid, Paper, Skeleton, Stack } from "@mui/material";
 import { KslColors, KslRadii } from "@/theme/theme";
 
-type PageSkeletonVariant =
+export type PageSkeletonVariant =
   | "list"
   | "dictionary"
   | "detail"
@@ -225,4 +225,24 @@ export default function PageSkeleton({
       </Container>
     </Stack>
   );
+}
+
+export function ListPageSkeleton() {
+  return <PageSkeleton variant="list" />;
+}
+
+export function DictionaryPageSkeleton() {
+  return <PageSkeleton variant="dictionary" />;
+}
+
+export function DetailPageSkeleton() {
+  return <PageSkeleton variant="detail" />;
+}
+
+export function LessonPageSkeleton() {
+  return <PageSkeleton variant="lesson" fullWidth />;
+}
+
+export function ProfilePageSkeleton() {
+  return <PageSkeleton variant="profile" />;
 }
