@@ -11,18 +11,29 @@ from src.schemas.finger_spelling import (
     HandPredictResponse,
     HandPredictStatusResponse,
 )
-from src.services.finger_spelling.hand_prediction_service import (
-    get_hand_prediction_service,
-)
 
 router = APIRouter()
+
+
+def _get_hand_prediction_service():
+    try:
+        from src.services.finger_spelling.hand_prediction_service import (
+            get_hand_prediction_service,
+        )
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Hand prediction service is unavailable: {exc}",
+        ) from exc
+
+    return get_hand_prediction_service()
 
 
 @router.get("/predict/status", response_model=HandPredictStatusResponse)
 def hand_predict_status(
     _user: User = Depends(get_current_user),
 ) -> HandPredictStatusResponse:
-    service = get_hand_prediction_service()
+    service = _get_hand_prediction_service()
     model_ready = service.is_available
     metadata = service.get_metadata() if model_ready else {}
     label_count = int(metadata.get("label_count") or 0)
@@ -44,7 +55,7 @@ def predict_from_features(
     body: HandPredictFeaturesRequest,
     _user: User = Depends(get_current_user),
 ) -> HandPredictResponse:
-    service = get_hand_prediction_service()
+    service = _get_hand_prediction_service()
     if not service.is_available:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

@@ -7,16 +7,11 @@ from fastapi import APIRouter
 
 from .finger_curriculum import router as curriculum_router
 from .finger_exercise import router as exercise_router
+from .finger_hand_predict import router as hand_predict_router
 from .finger_practice import router as practice_router
 from .finger_progress import router as progress_router
 
-try:
-    from .finger_hand_predict import router as hand_predict_router
-
-    practice_router.include_router(hand_predict_router)
-except ImportError:
-    # Optional: MLP inference only (keypoints extracted in the browser).
-    pass
+practice_router.include_router(hand_predict_router)
 
 router = APIRouter(tags=["finger-spelling"])
 router.include_router(curriculum_router)
