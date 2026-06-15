@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -16,7 +17,6 @@
     "@mui/icons-material": "^9.0.1",
     "@mui/material": "^9.0.1",
     "@mui/material-nextjs": "^9.0.1",
-    "@tanstack/react-query": "^5.100.14",
     "framer-motion": "^12.40.0",
     "next": "16.2.6",
     "notistack": "^3.0.2",
