@@ -7,7 +7,7 @@ import json
 import uuid
 from urllib.parse import urlencode, urlparse
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -21,8 +21,10 @@ from src.services.facebook_oauth_service import facebook_oauth_service
 from src.services.telegram_oauth_service import telegram_oauth_service
 from src.services.oauth_user_service import find_or_create_oauth_user, migrate_guest_progress_to_user
 from src.models.user import User
+from src.utils.cookies import set_refresh_cookie
 from src.utils.jwt_utils import create_access_token, verify_token
 from src.utils.password import verify_password
+from src.utils.refresh_tokens import create_refresh_token
 
 router = APIRouter(prefix="/api/auth/login", tags=["auth"])
 FRONTEND_URL = settings.frontend_url
@@ -88,6 +90,34 @@ def _redirect_with_params(url: str, params: dict[str, str]) -> RedirectResponse:
     return RedirectResponse(url=f"{url}{separator}{urlencode(params)}", status_code=302)
 
 
+def _client_ip(request: Request) -> str | None:
+    if request.client is None:
+        return None
+    return request.client.host
+
+
+def _auth_response_for_user(
+    *,
+    db: Session,
+    user: User,
+    provider: str,
+    response: Response,
+    request: Request,
+    refresh_days: int | None = None,
+) -> AuthTokenResponse:
+    access_token = create_access_token(data={"sub": str(user.id), "provider": provider})
+    refresh_token = create_refresh_token(
+        db,
+        user_id=user.id,
+        expires_in_days=refresh_days,
+        user_agent=request.headers.get("user-agent"),
+        last_ip=_client_ip(request),
+    )
+    set_refresh_cookie(response, refresh_token, settings, max_age_days=refresh_days)
+    db.commit()
+    return AuthTokenResponse(access_token=access_token, token_type="bearer", user=_user_response(user))
+
+
 @router.get("/telegram")
 def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
     """
@@ -116,16 +146,23 @@ def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
             picture=user_info["picture"],
         )
 
-        access_token = create_access_token(
-            data={"sub": str(user.id), "provider": "telegram"}
+        access_token = create_access_token(data={"sub": str(user.id), "provider": "telegram"})
+        refresh_token = create_refresh_token(
+            db,
+            user_id=user.id,
+            user_agent=request.headers.get("user-agent"),
+            last_ip=_client_ip(request),
         )
+        db.commit()
 
         redirect_params = {
             "token": access_token,
             "provider": "telegram",
             "user": json.dumps(_user_response(user)),
         }
-        return _redirect_with_params(redirect_url, redirect_params)
+        response = _redirect_with_params(redirect_url, redirect_params)
+        set_refresh_cookie(response, refresh_token, settings)
+        return response
     except ValueError as e:
         return _redirect_with_params(redirect_url, {"error": str(e)})
     except Exception as e:
@@ -133,10 +170,15 @@ def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/google", response_model=AuthTokenResponse)
-def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
+def google_login(
+    body: OAuthLoginRequest,
+    response: Response,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Google OAuth login — verifies ID token, creates/finds user, returns JWT."""
     try:
-        token_info = google_oauth_service.verify_token(request.code)
+        token_info = google_oauth_service.verify_token(body.code)
         user_info = google_oauth_service.extract_user_info(token_info)
 
         user = find_or_create_oauth_user(
@@ -148,7 +190,7 @@ def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
             last_name=user_info["last_name"],
             picture=user_info["picture"],
         )
-        guest_user_id = _extract_guest_user_id_from_token(request.guest_token)
+        guest_user_id = _extract_guest_user_id_from_token(body.guest_token)
         if guest_user_id is not None:
             migrate_guest_progress_to_user(
                 db,
@@ -156,10 +198,13 @@ def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
                 target_user_id=user.id,
             )
 
-        access_token = create_access_token(
-            data={"sub": str(user.id), "provider": "google"}
+        return _auth_response_for_user(
+            db=db,
+            user=user,
+            provider="google",
+            response=response,
+            request=request,
         )
-        return AuthTokenResponse(access_token=access_token, token_type="bearer", user=_user_response(user))
     except HTTPException:
         raise
     except Exception as e:
@@ -167,10 +212,15 @@ def google_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/facebook", response_model=AuthTokenResponse)
-def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
+def facebook_login(
+    body: OAuthLoginRequest,
+    response: Response,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Facebook OAuth login — verifies access token, creates/finds user, returns JWT."""
     try:
-        user_data = facebook_oauth_service.verify_token(request.code)
+        user_data = facebook_oauth_service.verify_token(body.code)
         user_info = facebook_oauth_service.extract_user_info(user_data)
 
         user = find_or_create_oauth_user(
@@ -182,7 +232,7 @@ def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
             last_name=user_info["last_name"],
             picture=user_info["picture"],
         )
-        guest_user_id = _extract_guest_user_id_from_token(request.guest_token)
+        guest_user_id = _extract_guest_user_id_from_token(body.guest_token)
         if guest_user_id is not None:
             migrate_guest_progress_to_user(
                 db,
@@ -190,10 +240,13 @@ def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
                 target_user_id=user.id,
             )
 
-        access_token = create_access_token(
-            data={"sub": str(user.id), "provider": "facebook"}
+        return _auth_response_for_user(
+            db=db,
+            user=user,
+            provider="facebook",
+            response=response,
+            request=request,
         )
-        return AuthTokenResponse(access_token=access_token, token_type="bearer", user=_user_response(user))
     except HTTPException:
         raise
     except Exception as e:
@@ -201,14 +254,19 @@ def facebook_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/telegram", response_model=AuthTokenResponse)
-def telegram_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
+def telegram_login(
+    body: OAuthLoginRequest,
+    response: Response,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """
     Telegram OIDC login.
     Accepts the id_token JWT from Telegram's login library, validates it
     per https://core.telegram.org/bots/telegram-login#validating-id-tokens
     """
     try:
-        claims = telegram_oauth_service.verify_id_token(request.code)
+        claims = telegram_oauth_service.verify_id_token(body.code)
         user_info = telegram_oauth_service.extract_user_info(claims)
 
         user = find_or_create_oauth_user(
@@ -220,7 +278,7 @@ def telegram_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
             last_name=user_info["last_name"],
             picture=user_info["picture"],
         )
-        guest_user_id = _extract_guest_user_id_from_token(request.guest_token)
+        guest_user_id = _extract_guest_user_id_from_token(body.guest_token)
         if guest_user_id is not None:
             migrate_guest_progress_to_user(
                 db,
@@ -228,10 +286,13 @@ def telegram_login(request: OAuthLoginRequest, db: Session = Depends(get_db)):
                 target_user_id=user.id,
             )
 
-        access_token = create_access_token(
-            data={"sub": str(user.id), "provider": "telegram"}
+        return _auth_response_for_user(
+            db=db,
+            user=user,
+            provider="telegram",
+            response=response,
+            request=request,
         )
-        return AuthTokenResponse(access_token=access_token, token_type="bearer", user=_user_response(user))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     except HTTPException:
@@ -262,23 +323,33 @@ def guest_login(db: Session = Depends(get_db)):
 
 
 @router.post("/email", response_model=AuthTokenResponse)
-def email_login(request: EmailLoginRequest, db: Session = Depends(get_db)):
+def email_login(
+    body: EmailLoginRequest,
+    response: Response,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Email/password login. Body: {"email": "...", "password": "..."}"""
     user = (
         db.query(User)
-        .filter(User.email == request.email, User.is_active.is_(True))
+        .filter(User.email == body.email, User.is_active.is_(True))
         .first()
     )
     if not user or not user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not verify_password(request.password, user.password_hash):
+    if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_access_token(
-        data={"sub": str(user.id), "provider": "email", "account_type": user.account_type}
+    refresh_days = 3 if user.account_type == "admin" and body.remember_me else None
+    return _auth_response_for_user(
+        db=db,
+        user=user,
+        provider="email",
+        response=response,
+        request=request,
+        refresh_days=refresh_days,
     )
-    return AuthTokenResponse(access_token=access_token, token_type="bearer", user=_user_response(user))
 
 
 @router.get("/me", response_model=UserResponse)

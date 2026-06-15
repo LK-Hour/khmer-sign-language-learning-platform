@@ -5,15 +5,24 @@ Finds or creates users from OAuth provider data in the database
 
 import uuid
 from typing import Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from ..models.user import User
 from ..models.user_oauth_provider import UserOAuthProvider
 from ..models.finger_spelling import (
+    FingerLesson,
     FingerPracticeSession,
     FingerUserExerciseResult,
     FingerUserLessonProgress,
 )
+from ..schemas.oauth import GuestProgressImportRequest
+
+
+def _naive_datetime(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    return value.replace(tzinfo=None)
 
 
 def find_or_create_oauth_user(
@@ -181,3 +190,102 @@ def migrate_guest_progress_to_user(
 
     db.commit()
     return True
+
+
+def import_local_guest_progress(
+    db: Session,
+    *,
+    target_user_id: uuid.UUID,
+    payload: GuestProgressImportRequest,
+) -> tuple[int, int]:
+    """Merge browser-local guest progress into a signed-in user."""
+    lesson_ids = {
+        item.lesson_id for item in payload.lessons
+    } | {
+        item.lesson_id for item in payload.practice_summaries
+    }
+    if payload.last_accessed_lesson_id is not None:
+        lesson_ids.add(payload.last_accessed_lesson_id)
+
+    valid_lesson_ids = {
+        row[0]
+        for row in db.query(FingerLesson.id)
+        .filter(FingerLesson.id.in_(lesson_ids))
+        .all()
+    } if lesson_ids else set()
+
+    target_progress_map = {
+        row.finger_lesson_id: row
+        for row in db.query(FingerUserLessonProgress)
+        .filter(
+            FingerUserLessonProgress.user_id == target_user_id,
+            FingerUserLessonProgress.finger_lesson_id.in_(valid_lesson_ids),
+        )
+        .all()
+    }
+
+    imported = 0
+    skipped = len(lesson_ids - valid_lesson_ids)
+
+    def get_progress(lesson_id: int) -> FingerUserLessonProgress:
+        progress = target_progress_map.get(lesson_id)
+        if progress is not None:
+            return progress
+        progress = FingerUserLessonProgress(
+            user_id=target_user_id,
+            finger_lesson_id=lesson_id,
+        )
+        db.add(progress)
+        db.flush()
+        target_progress_map[lesson_id] = progress
+        return progress
+
+    for item in payload.lessons:
+        if item.lesson_id not in valid_lesson_ids:
+            continue
+        progress = get_progress(item.lesson_id)
+        progress.is_completed = bool(progress.is_completed or item.is_completed)
+        progress.attempts = (progress.attempts or 0) + max(item.attempts, 0)
+        progress.total_time_spent = (progress.total_time_spent or 0) + max(item.total_time_spent, 0)
+        if item.peak_accuracy is not None:
+            current_peak = float(progress.peak_accuracy) if progress.peak_accuracy is not None else 0.0
+            progress.peak_accuracy = max(current_peak, item.peak_accuracy)
+        started_at = _naive_datetime(item.started_at)
+        completed_at = _naive_datetime(item.completed_at)
+        last_accessed_at = _naive_datetime(item.last_accessed_at)
+        if started_at and (progress.started_at is None or started_at < progress.started_at):
+            progress.started_at = started_at
+        if completed_at and (
+            progress.completed_at is None or completed_at < progress.completed_at
+        ):
+            progress.completed_at = completed_at
+        if last_accessed_at and (
+            progress.last_accessed_at is None or last_accessed_at > progress.last_accessed_at
+        ):
+            progress.last_accessed_at = last_accessed_at
+        imported += 1
+
+    for summary in payload.practice_summaries:
+        if summary.lesson_id not in valid_lesson_ids:
+            continue
+        progress = get_progress(summary.lesson_id)
+        progress.attempts = (progress.attempts or 0) + max(summary.attempts, 0)
+        progress.total_time_spent = (progress.total_time_spent or 0) + max(summary.total_time_spent, 0)
+        if summary.best_accuracy is not None:
+            current_peak = float(progress.peak_accuracy) if progress.peak_accuracy is not None else 0.0
+            progress.peak_accuracy = max(current_peak, summary.best_accuracy)
+        completed_at = _naive_datetime(summary.completed_at)
+        if completed_at and (
+            progress.last_accessed_at is None or completed_at > progress.last_accessed_at
+        ):
+            progress.last_accessed_at = completed_at
+        imported += 1
+
+    if (
+        payload.last_accessed_lesson_id is not None
+        and payload.last_accessed_lesson_id in valid_lesson_ids
+    ):
+        get_progress(payload.last_accessed_lesson_id)
+
+    db.commit()
+    return imported, skipped

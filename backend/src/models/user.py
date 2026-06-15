@@ -27,6 +27,7 @@ class User(Base):
     # Relationships
     oauth_providers = relationship("UserOAuthProvider", back_populates="user", cascade="all, delete-orphan")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     
     # Finger spelling progress tracking
     lesson_progress = relationship("FingerUserLessonProgress", back_populates="user", cascade="all, delete-orphan")

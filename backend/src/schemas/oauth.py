@@ -4,6 +4,7 @@ OAuth Request/Response Schemas
 
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import datetime
 
 
 class OAuthLoginRequest(BaseModel):
@@ -16,6 +17,7 @@ class OAuthLoginRequest(BaseModel):
 class EmailLoginRequest(BaseModel):
     email: EmailStr
     password: str
+    remember_me: bool = False
 
 
 class OAuthUserResponse(BaseModel):
@@ -33,3 +35,38 @@ class AuthTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: OAuthUserResponse
+
+
+class AccessTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class GuestLessonProgressImport(BaseModel):
+    lesson_id: int
+    is_completed: bool = False
+    attempts: int = 0
+    peak_accuracy: float | None = None
+    total_time_spent: int = 0
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    last_accessed_at: datetime | None = None
+
+
+class GuestPracticeSummaryImport(BaseModel):
+    lesson_id: int
+    attempts: int = 0
+    best_accuracy: float | None = None
+    total_time_spent: int = 0
+    completed_at: datetime | None = None
+
+
+class GuestProgressImportRequest(BaseModel):
+    lessons: list[GuestLessonProgressImport] = []
+    practice_summaries: list[GuestPracticeSummaryImport] = []
+    last_accessed_lesson_id: int | None = None
+
+
+class GuestProgressImportResponse(BaseModel):
+    imported_lessons: int
+    skipped_lessons: int

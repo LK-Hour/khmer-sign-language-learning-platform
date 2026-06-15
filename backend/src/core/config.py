@@ -9,7 +9,7 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
-_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "mlp_khmer_model_v3.h5"
+_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "mlp_khmer_model_v1.h5"
 _DEFAULT_LANDMARKER = _BACKEND_ROOT / "ml" / "models" / "hand_landmarker.task"
 _DEFAULT_LABEL_ENCODER = _BACKEND_ROOT / "ml" / "models" / "khmer_label_encoder.pkl"
 
@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "dev-only-insecure-change-me"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = Field(default=7, validation_alias="REFRESH_TOKEN_EXPIRE_DAYS")
+    cookie_domain: str | None = Field(default=None, validation_alias="COOKIE_DOMAIN")
+    cookie_secure: bool = Field(default=False, validation_alias="COOKIE_SECURE")
+    cookie_samesite: str = Field(default="lax", validation_alias="COOKIE_SAMESITE")
+    csrf_header_value: str = Field(default="KSL-Client", validation_alias="CSRF_HEADER_VALUE")
 
     ml_enabled: bool = Field(default=True, validation_alias="ML_ENABLED")
     ml_model_path: Path = Field(
