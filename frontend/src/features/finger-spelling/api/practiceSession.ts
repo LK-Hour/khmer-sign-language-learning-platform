@@ -1,3 +1,4 @@
+import { apiFetch } from "@/utils/api/client";
 import type {
   PracticeAccuracyResponse,
   PracticeEndResponse,
@@ -6,13 +7,12 @@ import type {
   PracticeSessionResponse,
   PracticeSessionStartRequest,
 } from "../types";
-import { fsFetch } from "./client";
 
 export async function startPracticeSession(
   lessonId: number,
   body: PracticeSessionStartRequest = {}
 ): Promise<PracticeSessionResponse> {
-  return fsFetch<PracticeSessionResponse>(
+  return apiFetch<PracticeSessionResponse>(
     `/api/finger_spelling/practice/lessons/${lessonId}/sessions`,
     {
       method: "POST",
@@ -25,7 +25,7 @@ export async function submitPracticeLetter(
   sessionId: number,
   body: PracticeLetterSubmitRequest
 ): Promise<PracticeLetterSubmitResponse> {
-  return fsFetch<PracticeLetterSubmitResponse>(
+  return apiFetch<PracticeLetterSubmitResponse>(
     `/api/finger_spelling/practice/sessions/${sessionId}/letters`,
     {
       method: "POST",
@@ -37,7 +37,7 @@ export async function submitPracticeLetter(
 export async function endPracticeSession(
   sessionId: number
 ): Promise<PracticeEndResponse> {
-  return fsFetch<PracticeEndResponse>(
+  return apiFetch<PracticeEndResponse>(
     `/api/finger_spelling/practice/sessions/${sessionId}/end`,
     { method: "POST" }
   );
@@ -46,7 +46,7 @@ export async function endPracticeSession(
 export async function fetchPracticeAccuracy(
   sessionId: number
 ): Promise<PracticeAccuracyResponse> {
-  return fsFetch<PracticeAccuracyResponse>(
+  return apiFetch<PracticeAccuracyResponse>(
     `/api/finger_spelling/practice/sessions/${sessionId}/accuracy`
   );
 }

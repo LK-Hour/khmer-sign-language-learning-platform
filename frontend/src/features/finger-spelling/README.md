@@ -38,7 +38,6 @@ Copy `frontend/.env.example` → `frontend/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_FS_USE_MOCK=false
 ```
 
 Ensure the backend is running and curriculum is seeded (`python seed_data/seed_curriculum.py` from `backend/`).

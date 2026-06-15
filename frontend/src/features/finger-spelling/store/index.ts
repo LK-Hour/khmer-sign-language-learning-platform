@@ -1,8 +1,11 @@
 export {
   FS_PASS_THRESHOLD,
-  selectCurrentUnit,
-  selectResumeLesson,
   useFingerSpellingStore,
+} from "./fingerSpelling.store";
+export { selectCurrentUnit, selectResumeLesson } from "./selectors";
+export type {
+  FingerSpellingState,
+  CaptureState,
 } from "./fingerSpelling.store";
 export type {
   FsTrackChapter,

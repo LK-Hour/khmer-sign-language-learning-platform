@@ -15,6 +15,4 @@ export type PracticeContext = {
   nextLessonId?: number;
 };
 
-export const FS_PASS_THRESHOLD = 80;
-export const FS_MOCK_ACCURACY = 83;
-export const FS_MOCK_DELAY_MS = 2000;
+export const FS_PASS_THRESHOLD = 70;

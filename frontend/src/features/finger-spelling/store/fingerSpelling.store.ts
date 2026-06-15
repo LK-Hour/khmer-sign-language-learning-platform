@@ -1,96 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  endPracticeSession,
-  startPracticeSession,
-  submitPracticeLetter,
-} from "../api/practiceSession";
-import { predictHandFromFeatures } from "../api/handPredict";
-import { findResumeLesson } from "../utils/progress";
-import {
   FS_PASS_THRESHOLD,
   type FsTrackUnit,
   type PracticeContext,
 } from "./types";
-
-function resolveInitialUnitId(units: FsTrackUnit[]): number | null {
-  return units.find((unit) => !unit.isLocked)?.id ?? units[0]?.id ?? null;
-}
-
-function mergeUnitsProgress(
-  current: FsTrackUnit[],
-  incoming: FsTrackUnit[]
-): FsTrackUnit[] {
-  if (current.length === 0) return incoming;
-
-  const progressByLessonId = new Map<
-    number,
-    { progressStatus: FsTrackUnit["chapters"][0]["lessons"][0]["progressStatus"]; progressPercent: number }
-  >();
-
-  for (const unit of current) {
-    for (const chapter of unit.chapters) {
-      for (const lesson of chapter.lessons) {
-        progressByLessonId.set(lesson.id, {
-          progressStatus: lesson.progressStatus,
-          progressPercent: lesson.progressPercent ?? 0,
-        });
-      }
-    }
-  }
-
-  return incoming.map((unit) => ({
-    ...unit,
-    chapters: unit.chapters.map((chapter) => ({
-      ...chapter,
-      lessons: chapter.lessons.map((lesson) => {
-        const stored = progressByLessonId.get(lesson.id);
-        if (!stored) return lesson;
-
-        const storedComplete = stored.progressStatus === "COMPLETED";
-        const incomingComplete = lesson.progressStatus === "COMPLETED";
-
-        if (storedComplete && !incomingComplete) {
-          return {
-            ...lesson,
-            progressStatus: "COMPLETED" as const,
-            progressPercent: 100,
-          };
-        }
-
-        if (
-          (stored.progressPercent ?? 0) > (lesson.progressPercent ?? 0) &&
-          !incomingComplete
-        ) {
-          return {
-            ...lesson,
-            progressStatus: stored.progressStatus,
-            progressPercent: stored.progressPercent,
-          };
-        }
-
-        return lesson;
-      }),
-    })),
-  }));
-}
-
-function buildInitialChapterExpansion(
-  units: FsTrackUnit[]
-): Record<number, boolean> {
-  const expanded: Record<number, boolean> = {};
-
-  for (const unit of units) {
-    const firstChapter = [...unit.chapters].sort(
-      (a, b) => a.orderIndex - b.orderIndex
-    )[0];
-    if (firstChapter) {
-      expanded[firstChapter.id] = true;
-    }
-  }
-
-  return expanded;
-}
+import {
+  buildInitialChapterExpansion,
+  mergeUnitsProgress,
+  resolveInitialUnitId,
+} from "./trackState";
+import { useAuthStore } from "@/store/auth.store";
+import { useGuestProgressStore } from "./guestProgress.store";
 
 export type CaptureState =
   | "idle"
@@ -99,7 +20,7 @@ export type CaptureState =
   | "capturing"
   | "result";
 
-interface FingerSpellingState {
+export interface FingerSpellingState {
   units: FsTrackUnit[];
   expandedUnitId: number | null;
   expandedChapterIds: Record<number, boolean>;
@@ -122,17 +43,86 @@ interface FingerSpellingState {
   clearPracticeContext: () => void;
   resetPracticeSession: () => void;
   incrementCameraResetKey: () => void;
+  setPracticeSessionId: (sessionId: number | null) => void;
+  startPracticeSubmission: () => void;
+  finishPracticeSubmission: (result: {
+    accuracy: number;
+    predictedLetter: string;
+  }) => void;
+  failPracticeSubmission: () => void;
   setCaptureState: (state: CaptureState) => void;
   setStabilityProgress: (progress: number) => void;
 
-  initializePracticeSession: (lessonId: number) => Promise<void>;
-  runPracticeRec: (
-    lessonId: number,
-    features: number[],
-    handedness?: string
-  ) => Promise<void>;
-  completePractice: () => Promise<void>;
   markLessonCompleted: (lessonId: number) => void;
+}
+
+function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
+  const authUser = useAuthStore.getState().user;
+  if (!authUser?.is_guest) return units;
+
+  const completedLessons = new Set(
+    Object.values(useGuestProgressStore.getState().lessons)
+      .filter((lesson) => lesson.isCompleted)
+      .map((lesson) => lesson.lessonId)
+  );
+  const orderedLessonIds = units
+    .flatMap((unit) =>
+      unit.chapters.flatMap((chapter) =>
+        chapter.lessons.map((lesson) => ({
+          id: lesson.id,
+          unitOrder: unit.orderIndex,
+          chapterOrder: chapter.orderIndex,
+          lessonOrder: lesson.orderIndex,
+        }))
+      )
+    )
+    .sort((a, b) =>
+      a.unitOrder - b.unitOrder ||
+      a.chapterOrder - b.chapterOrder ||
+      a.lessonOrder - b.lessonOrder
+    );
+  const nextLesson = orderedLessonIds.find((lesson) => !completedLessons.has(lesson.id));
+  const unlockedLessons = new Set(completedLessons);
+  if (nextLesson) unlockedLessons.add(nextLesson.id);
+
+  return units.map((unit) => {
+    let unitCompleted = 0;
+    let hasUnlockedLessonInUnit = false;
+    const chapters = unit.chapters.map((chapter) => {
+      let chapterCompleted = 0;
+      let hasUnlockedLessonInChapter = false;
+      const lessons = chapter.lessons.map((lesson) => {
+        const isCompleted = completedLessons.has(lesson.id);
+        const isUnlocked = unlockedLessons.has(lesson.id);
+        if (isUnlocked) {
+          hasUnlockedLessonInChapter = true;
+          hasUnlockedLessonInUnit = true;
+        }
+        if (isCompleted) {
+          chapterCompleted += 1;
+          unitCompleted += 1;
+        }
+        return {
+          ...lesson,
+          isLocked: !isUnlocked,
+          progressStatus: isCompleted ? "COMPLETED" as const : lesson.progressStatus,
+          progressPercent: isCompleted ? 100 : lesson.progressPercent,
+        };
+      });
+      return {
+        ...chapter,
+        isLocked: !hasUnlockedLessonInChapter,
+        lessons,
+        completedLessonCount: Math.max(chapter.completedLessonCount, chapterCompleted),
+      };
+    });
+    return {
+      ...unit,
+      isLocked: !hasUnlockedLessonInUnit,
+      chapters,
+      completedLessonCount: Math.max(unit.completedLessonCount, unitCompleted),
+    };
+  });
 }
 
 export const useFingerSpellingStore = create<FingerSpellingState>()(
@@ -153,22 +143,40 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
 
       setUnits: (units) =>
         set((state) => {
-          const mergedUnits = mergeUnitsProgress(state.units, units);
+          const authUser = useAuthStore.getState().user;
+          const incomingUnits = applyGuestProgress(units);
+          const mergedUnits = authUser?.is_guest
+            ? mergeUnitsProgress(state.units, incomingUnits)
+            : incomingUnits;
           const expandedUnitId =
             state.expandedUnitId != null &&
-            mergedUnits.some((unit) => unit.id === state.expandedUnitId)
+            mergedUnits.some((unit) => unit.id === state.expandedUnitId && unit.isLocked !== true)
               ? state.expandedUnitId
               : resolveInitialUnitId(mergedUnits);
 
           const hasExpandedChapters =
             Object.keys(state.expandedChapterIds).length > 0;
+          const unlockedChapterIds = new Set(
+            mergedUnits.flatMap((unit) =>
+              unit.isLocked === true
+                ? []
+                : unit.chapters
+                    .filter((chapter) => chapter.isLocked !== true)
+                    .map((chapter) => chapter.id)
+            )
+          );
+          const expandedChapterIds = hasExpandedChapters
+            ? Object.fromEntries(
+                Object.entries(state.expandedChapterIds).filter(
+                  ([chapterId]) => unlockedChapterIds.has(Number(chapterId))
+                )
+              )
+            : buildInitialChapterExpansion(mergedUnits);
 
           return {
             units: mergedUnits,
             expandedUnitId,
-            expandedChapterIds: hasExpandedChapters
-              ? state.expandedChapterIds
-              : buildInitialChapterExpansion(mergedUnits),
+            expandedChapterIds,
           };
         }),
 
@@ -227,71 +235,30 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
       incrementCameraResetKey: () =>
         set((state) => ({ cameraResetKey: state.cameraResetKey + 1 })),
 
-      initializePracticeSession: async (lessonId) => {
-        try {
-          const session = await startPracticeSession(lessonId);
-          set({ sessionId: session.id });
-        } catch {
-          set({ sessionId: null });
-        }
-      },
+      setPracticeSessionId: (sessionId) => set({ sessionId }),
 
-      runPracticeRec: async (lessonId, features, handedness) => {
-        set({ isSubmitting: true, accuracy: null, predictedLetter: null, captureState: "capturing" });
+      startPracticeSubmission: () =>
+        set({
+          isSubmitting: true,
+          accuracy: null,
+          predictedLetter: null,
+          captureState: "capturing",
+        }),
 
-        try {
-          const prediction = await predictHandFromFeatures(features, handedness);
-          const score = Math.round(prediction.match_confidence);
-          const predicted =
-            prediction.predicted_label ?? String(prediction.predicted_class_index);
+      finishPracticeSubmission: ({ accuracy, predictedLetter }) =>
+        set({
+          accuracy,
+          predictedLetter,
+          isSubmitting: false,
+          captureState: "result",
+        }),
 
-          const sessionId = get().sessionId;
-          if (sessionId != null) {
-            try {
-              await submitPracticeLetter(sessionId, {
-                letter_id: lessonId,
-                accuracy: score,
-                attempts: 1,
-              });
-            } catch {
-              // Non-blocking: prediction result still shown in the UI.
-            }
-          }
-
-          set({
-            accuracy: score,
-            predictedLetter: predicted,
-            isSubmitting: false,
-            captureState: "result",
-          });
-        } catch {
-          set({ isSubmitting: false, captureState: "idle" });
-          throw new Error("Hand prediction failed");
-        }
-      },
-
-      completePractice: async () => {
-        const { sessionId, accuracy, practiceContext } = get();
-        const lessonId = practiceContext?.lesson.id;
-
-        if (
-          sessionId != null &&
-          accuracy != null &&
-          accuracy >= FS_PASS_THRESHOLD &&
-          lessonId != null
-        ) {
-          try {
-            await endPracticeSession(sessionId);
-            get().markLessonCompleted(lessonId);
-          } catch {
-            // Continue even if sync fails.
-          }
-        }
-      },
+      failPracticeSubmission: () =>
+        set({ isSubmitting: false, captureState: "idle" }),
 
       markLessonCompleted: (lessonId) =>
-        set((state) => ({
-          units: state.units.map((unit) => {
+        set((state) => {
+          const units = state.units.map((unit) => {
             let unitCompletedDelta = 0;
 
             const chapters = unit.chapters.map((chapter) => {
@@ -333,8 +300,9 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
               completedLessonCount:
                 unit.completedLessonCount + unitCompletedDelta,
             };
-          }),
-        })),
+          });
+          return { units: applyGuestProgress(units) };
+        }),
     }),
     {
       name: "finger-spelling-ui",
@@ -345,18 +313,5 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
     }
   )
 );
-
-export function selectResumeLesson(state: FingerSpellingState) {
-  return findResumeLesson(state.units);
-}
-
-export function selectCurrentUnit(state: FingerSpellingState) {
-  const { units, expandedUnitId } = state;
-  return (
-    units.find((unit) => unit.id === expandedUnitId) ??
-    units.find((unit) => !unit.isLocked) ??
-    units[0]
-  );
-}
 
 export { FS_PASS_THRESHOLD };
