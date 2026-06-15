@@ -16,7 +16,7 @@ import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslLineHeights, KslRadii } from "@/theme/theme";
 
-import LandingModeCard from "./LandingModeCard";
+import LearningModeCard from "./LearningModeCard";
 
 const HERO_IMAGE = "/assets/landing-hero-hand.png";
 
@@ -152,7 +152,7 @@ export default function LandingPage() {
 
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <LandingModeCard
+            <LearningModeCard
               href={fingerSpellingHref}
               modeLabel={t("landingMode01")}
               title={t("navFingerSpelling")}
@@ -162,7 +162,7 @@ export default function LandingPage() {
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <LandingModeCard
+            <LearningModeCard
               href={wordDetectionHref}
               modeLabel={t("landingMode02")}
               title={t("navWordDetection")}
