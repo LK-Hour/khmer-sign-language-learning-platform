@@ -1,5 +1,5 @@
-import PageSkeleton from "@/components/ui/PageSkeleton";
+import { LessonPageSkeleton } from "@/components/ui/PageSkeleton";
 
 export default function Loading() {
-  return <PageSkeleton variant="lesson" fullWidth />;
+  return <LessonPageSkeleton />;
 }

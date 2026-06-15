@@ -10,10 +10,10 @@
   --ksl-success: #1f9f6f;
   --ksl-fail: #FF4438;
   --ksl-error: #FF4438;
-  --ksl-alert: #f3b83f;
-  --ksl-warning: #f3b83f;
-  --ksl-in-progress: #137FEC;
-  --ksl-text: #11284C;
+  --ksl-alert: #FF4438;
+  --ksl-warning: #FF4438;
+  --ksl-in-progress: #f3b83f;
+  --ksl-text: #14284C;
   --ksl-muted: #65746e;
   --ksl-disabled: #65746e;
   --ksl-card: #ffffff;

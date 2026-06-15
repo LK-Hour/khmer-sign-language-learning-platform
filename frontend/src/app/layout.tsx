@@ -5,8 +5,8 @@ import { DEFAULT_LOCALE } from "@/i18n/config";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Khmer Sign Language",
-  description: "Learn Khmer sign language and finger spelling",
+  title: "Khmer Sign Language Platform",
+  description: "Learn Khmer sign language and finger spelling with AI-powered recognition",
 };
 
 interface RootLayoutProps {
