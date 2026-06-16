@@ -9,7 +9,7 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
-_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "mlp_khmer_model_v1.h5"
+_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "mlp_khmer_model_v3.h5"
 _DEFAULT_LANDMARKER = _BACKEND_ROOT / "ml" / "models" / "hand_landmarker.task"
 _DEFAULT_LABEL_ENCODER = _BACKEND_ROOT / "ml" / "models" / "khmer_label_encoder.pkl"
 
