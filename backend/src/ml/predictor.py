@@ -94,7 +94,22 @@ class KhmerLabelDecoder:
 
     @staticmethod
     def _sign(label: str) -> str:
-        return label.split(",", 1)[0].strip()
+        return label.split(",", 1)[0].strip().replace("_", " ")
+
+    def label_category_map(self) -> dict[str, str]:
+        """Return a mapping of display label → category from the encoder labels.
+
+        Encoder labels are stored as ``"Label,Category"``, e.g. ``"Ka,Consonant"``.
+        The display label has underscores replaced by spaces so callers can match
+        a ``predicted_label`` against this map.
+        """
+        mapping: dict[str, str] = {}
+        for raw in self.classes:
+            parts = raw.split(",", 1)
+            display = parts[0].strip().replace("_", " ")
+            category = parts[1].strip() if len(parts) > 1 else ""
+            mapping[display] = category
+        return mapping
 
     def _ensure_loaded(self) -> None:
         if self._classes is not None:
@@ -179,13 +194,29 @@ class KhmerHandPredictor:
     def label_count(self) -> int:
         return self._label_decoder.class_count
 
+    @property
+    def label_decoder(self) -> KhmerLabelDecoder:
+        return self._label_decoder
+
     def _forward_block(self, x: np.ndarray, block: _DenseBlock) -> np.ndarray:
         x = x @ block.kernel + block.bias
         x = np.maximum(x, 0.0)  # ReLU
         x = _batch_norm(x, block.bn_gamma, block.bn_beta, block.bn_mean, block.bn_var)
         return x
 
-    def predict(self, features: list[float] | np.ndarray) -> PredictionResult:
+    def predict(
+        self,
+        features: list[float] | np.ndarray,
+        *,
+        category: str | None = None,
+    ) -> PredictionResult:
+        """Run inference and optionally restrict the result to a label category.
+
+        When *category* is provided, the output probabilities are masked to only
+        include labels whose category matches (plus the ``None`` category which
+        always represents "No Action").  Remaining probabilities are re‑normalised
+        so confidence stays intuitive.
+        """
         self._ensure_loaded()
         assert (
             self._dense_blocks
@@ -208,6 +239,12 @@ class KhmerHandPredictor:
         predicted_index = max(0, raw_predicted_index - self.CLASS_INDEX_OFFSET)
         confidence = float(probabilities[raw_predicted_index]) * 100.0
 
+        if category is not None:
+            probabilities = self._mask_by_category(probabilities, category)
+            raw_predicted_index = int(np.argmax(probabilities))
+            predicted_index = max(0, raw_predicted_index - self.CLASS_INDEX_OFFSET)
+            confidence = float(probabilities[raw_predicted_index]) * 100.0
+
         return PredictionResult(
             predicted_class_index=predicted_index,
             predicted_label=self._label_decoder.decode(
@@ -217,6 +254,31 @@ class KhmerHandPredictor:
             confidence=confidence,
             probabilities=[float(p) for p in probabilities],
         )
+
+    def _mask_by_category(
+        self,
+        probabilities: np.ndarray,
+        category: str,
+    ) -> np.ndarray:
+        """Zero out probabilities for labels not in *category* and re‑normalise.
+
+        The ``None`` / ``No Action`` category is always kept so the model can
+        express "nothing detected".
+        """
+        label_category_map = self._label_decoder.label_category_map()
+        # The probabilities array has one extra slot at index 0 (CLASS_INDEX_OFFSET).
+        # We build a mask for the output nodes, then shift by the offset.
+        masked = np.zeros_like(probabilities)
+        for i, (display_label, cat) in enumerate(label_category_map.items()):
+            output_idx = i + self.CLASS_INDEX_OFFSET
+            if 0 <= output_idx < len(probabilities):
+                if cat == category or cat == "None":
+                    masked[output_idx] = probabilities[output_idx]
+
+        total = np.sum(masked)
+        if total > 0:
+            masked = masked / total
+        return masked
 
 
 @lru_cache

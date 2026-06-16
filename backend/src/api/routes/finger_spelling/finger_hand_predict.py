@@ -78,6 +78,7 @@ def predict_from_features(
         result = service.predict_from_features(
             body.features,
             handedness=body.handedness or "Unknown",
+            category=body.category,
         )
     except FileNotFoundError as exc:
         raise HTTPException(

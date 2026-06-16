@@ -235,6 +235,7 @@ class PracticeAccuracyResponse(BaseModel):
 class HandPredictFeaturesRequest(BaseModel):
     features: list[float]
     handedness: str | None = None
+    category: str | None = None
 
 
 class HandPredictResponse(BaseModel):

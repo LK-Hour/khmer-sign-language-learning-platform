@@ -27,6 +27,7 @@ class HandPredictionService:
         features: list[float],
         *,
         handedness: str = "Unknown",
+        category: str | None = None,
     ) -> HandPredictionResponse:
         keypoint_features = features_from_payload(
             features,
@@ -34,7 +35,7 @@ class HandPredictionService:
         )
         vector = parse_feature_payload(features)
         predictor = get_predictor()
-        prediction = predictor.predict(vector)
+        prediction = predictor.predict(vector, category=category)
         return HandPredictionResponse(
             features=keypoint_features,
             prediction=prediction,
