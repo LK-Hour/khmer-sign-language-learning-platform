@@ -42,6 +42,8 @@ export interface FingerSpellingState {
   setPracticeContext: (context: PracticeContext) => void;
   clearPracticeContext: () => void;
   resetPracticeSession: () => void;
+  /** Resets the practice result (accuracy, predictedLetter, isSubmitting, captureState) but keeps the sessionId alive for retry. */
+  resetPracticeResult: () => void;
   incrementCameraResetKey: () => void;
   setPracticeSessionId: (sessionId: number | null) => void;
   startPracticeSubmission: () => void;
@@ -226,6 +228,18 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           isSubmitting: false,
           captureState: "idle",
           stabilityProgress: 0,
+        }),
+
+      resetPracticeResult: () =>
+        set({
+          accuracy: null,
+          predictedLetter: null,
+          isSubmitting: false,
+          captureState: "idle",
+          stabilityProgress: 0,
+          // NOTE: sessionId is intentionally preserved so that
+          // completePractice() can still submit the result to the
+          // same backend session.
         }),
 
       setCaptureState: (state) => set({ captureState: state }),

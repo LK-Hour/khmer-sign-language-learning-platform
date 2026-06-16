@@ -41,6 +41,7 @@ export default function LessonLearningView({
   const { locale, t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const latestDetectionRef = useRef<RawHandDetection>(EMPTY_DETECTION);
+  const capturingRef = useRef(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const {
@@ -56,8 +57,8 @@ export default function LessonLearningView({
   const clearPracticeContext = useFingerSpellingStore(
     (state) => state.clearPracticeContext
   );
-  const resetPracticeSession = useFingerSpellingStore(
-    (state) => state.resetPracticeSession
+  const resetPracticeResult = useFingerSpellingStore(
+    (state) => state.resetPracticeResult
   );
   const incrementCameraResetKey = useFingerSpellingStore(
     (state) => state.incrementCameraResetKey
@@ -78,23 +79,30 @@ export default function LessonLearningView({
   // 3. Show result → wait for user to click Retry
 
   const doCapture = useCallback(async () => {
-    const video = videoRef.current;
-    setRecError(null);
-
-    if (landmarkerError) {
-      setRecError(landmarkerError);
-      return;
-    }
-    if (!isLandmarkerReady) {
-      setRecError(t("fsLandmarkerLoading"));
-      return;
-    }
-    if (!video) {
-      setRecError(t("fsCameraUnavailable"));
-      return;
-    }
+    // Guard: prevent re-entrant capture while a previous one is in flight.
+    // This can happen because the stability detector's RAF loop may fire
+    // handleStable again before the async chain of extractFromVideo +
+    // runPracticeRec completes.
+    if (capturingRef.current) return;
+    capturingRef.current = true;
 
     try {
+      const video = videoRef.current;
+      setRecError(null);
+
+      if (landmarkerError) {
+        setRecError(landmarkerError);
+        return;
+      }
+      if (!isLandmarkerReady) {
+        setRecError(t("fsLandmarkerLoading"));
+        return;
+      }
+      if (!video) {
+        setRecError(t("fsCameraUnavailable"));
+        return;
+      }
+
       const extraction = extractFromVideo(video);
       if (!extraction.handDetected) {
         setRecError(t("fsNoHandDetected"));
@@ -105,6 +113,8 @@ export default function LessonLearningView({
       setRecError(
         error instanceof Error ? error.message : t("fsHandPredictionFailed")
       );
+    } finally {
+      capturingRef.current = false;
     }
   }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t]);
 
@@ -154,10 +164,10 @@ export default function LessonLearningView({
   const handleRetry = useCallback(() => {
     setRecError(null);
     latestDetectionRef.current = EMPTY_DETECTION;
-    resetPracticeSession();
+    resetPracticeResult();
     incrementCameraResetKey();
     startMonitoring();
-  }, [incrementCameraResetKey, resetPracticeSession, startMonitoring]);
+  }, [incrementCameraResetKey, resetPracticeResult, startMonitoring]);
 
   const handleDetection = useCallback((detection: RawHandDetection) => {
     latestDetectionRef.current = detection;
