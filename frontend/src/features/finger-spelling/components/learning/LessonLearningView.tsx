@@ -108,7 +108,7 @@ export default function LessonLearningView({
         setRecError(t("fsNoHandDetected"));
         return;
       }
-      await runPracticeRec(lesson.id, extraction.features, extraction.handedness);
+      await runPracticeRec(lesson.id, extraction.features, extraction.handedness, unit.category ?? undefined);
     } catch (error) {
       setRecError(
         error instanceof Error ? error.message : t("fsHandPredictionFailed")
@@ -116,7 +116,7 @@ export default function LessonLearningView({
     } finally {
       capturingRef.current = false;
     }
-  }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t]);
+  }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t, unit.category]);
 
   const handleStable = useCallback(() => {
     void doCapture();
@@ -144,6 +144,27 @@ export default function LessonLearningView({
 
   const displayLetter = getLessonDisplayLetter(lesson);
   const trackHref = ROUTES.fingerSpelling.root;
+
+  // Map unit category to i18n key for the breadcrumb label
+  const categoryLabelKey = (() => {
+    switch (unit.category) {
+      case "Consonant":
+      case "Main_Consonant":
+        return "fsConsonant";
+      case "Sub_Consonant":
+        return "fsSubConsonant";
+      case "Dependent_Vowel":
+        return "fsVowel";
+      case "Independent_Vowel":
+        return "fsIndependentVowel";
+      case "Number":
+        return "fsNumber";
+      case "Diacritic":
+        return "fsDiacritic";
+      default:
+        return "fsCharacterLabel";
+    }
+  })();
   const tip =
     locale === "kh"
       ? lesson.descriptionKh || lesson.description
@@ -215,7 +236,7 @@ export default function LessonLearningView({
           {t("fsLesson")} {lessonStep}
         </Typography>
         <Typography sx={{ color: KslColors.textPrimary, fontWeight: 700 }}>
-          {t("fsVowel")} {displayLetter}
+          {t(categoryLabelKey)} {displayLetter}
         </Typography>
       </Breadcrumbs>
 

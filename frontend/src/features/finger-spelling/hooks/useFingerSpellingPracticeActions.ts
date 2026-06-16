@@ -47,11 +47,11 @@ export function useFingerSpellingPracticeActions() {
   );
 
   const runPracticeRec = useCallback(
-    async (lessonId: number, features: number[], handedness?: string) => {
+    async (lessonId: number, features: number[], handedness?: string, category?: string) => {
       startPracticeSubmission();
 
       try {
-        const prediction = await predictHandFromFeatures(features, handedness);
+        const prediction = await predictHandFromFeatures(features, handedness, category);
         const score = Math.round(prediction.match_confidence);
         const predicted =
           prediction.predicted_label ?? String(prediction.predicted_class_index);

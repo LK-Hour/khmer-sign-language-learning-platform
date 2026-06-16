@@ -12,7 +12,8 @@ function guestHeaders(): HeadersInit | undefined {
 
 export async function predictHandFromFeatures(
   features: number[],
-  handedness?: string
+  handedness?: string,
+  category?: string,
 ): Promise<HandPredictResponse> {
   return apiFetch<HandPredictResponse>(
     "/api/finger_spelling/practice/predict/features",
@@ -22,6 +23,7 @@ export async function predictHandFromFeatures(
       body: JSON.stringify({
         features,
         handedness,
+        category,
       }),
     }
   );
