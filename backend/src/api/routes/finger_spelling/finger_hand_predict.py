@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
-
-from src.api.deps import get_current_user
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+from src.api.deps import get_optional_user
 from src.models.user import User
 from src.schemas.finger_spelling import (
     HandPredictFeaturesRequest,
@@ -13,6 +12,15 @@ from src.schemas.finger_spelling import (
 )
 
 router = APIRouter()
+GUEST_ID_HEADER = "X-KSL-Guest-Id"
+
+
+def _require_user_or_guest(user: User | None, guest_id: str | None) -> None:
+    if user is not None:
+        return
+    if guest_id and guest_id.startswith("guest_"):
+        return
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
 
 
 def _get_hand_prediction_service():
@@ -31,8 +39,10 @@ def _get_hand_prediction_service():
 
 @router.get("/predict/status", response_model=HandPredictStatusResponse)
 def hand_predict_status(
-    _user: User = Depends(get_current_user),
+    user: User | None = Depends(get_optional_user),
+    guest_id: str | None = Header(default=None, alias=GUEST_ID_HEADER),
 ) -> HandPredictStatusResponse:
+    _require_user_or_guest(user, guest_id)
     service = _get_hand_prediction_service()
     model_ready = service.is_available
     metadata = service.get_metadata() if model_ready else {}
@@ -53,8 +63,10 @@ def hand_predict_status(
 @router.post("/predict/features", response_model=HandPredictResponse)
 def predict_from_features(
     body: HandPredictFeaturesRequest,
-    _user: User = Depends(get_current_user),
+    user: User | None = Depends(get_optional_user),
+    guest_id: str | None = Header(default=None, alias=GUEST_ID_HEADER),
 ) -> HandPredictResponse:
+    _require_user_or_guest(user, guest_id)
     service = _get_hand_prediction_service()
     if not service.is_available:
         raise HTTPException(
