@@ -2,6 +2,7 @@
 Finger spelling API tests for the current learner and admin curriculum routes.
 """
 import uuid
+from types import SimpleNamespace
 
 
 def _create_curriculum(client, admin_headers):
@@ -191,13 +192,67 @@ class TestFingerSpellingAPI:
         response = client.get("/api/finger_spelling/progress/lessons/1")
         assert response.status_code == 401
 
-    def test_get_hand_predict_status_requires_auth(self, client):
+    def test_get_hand_predict_status_requires_user_or_guest(self, client):
         response = client.get("/api/finger_spelling/practice/predict/status")
         assert response.status_code == 401
 
-    def test_predict_from_features_requires_auth(self, client):
+    def test_get_hand_predict_status_allows_guest_access(self, client, monkeypatch):
+        from src.api.routes.finger_spelling import finger_hand_predict
+
+        class FakeHandPredictionService:
+            is_available = True
+
+            def get_metadata(self):
+                return {"label_count": 2, "output_class_count": 2}
+
+        monkeypatch.setattr(
+            finger_hand_predict,
+            "_get_hand_prediction_service",
+            lambda: FakeHandPredictionService(),
+        )
+
+        response = client.get(
+            "/api/finger_spelling/practice/predict/status",
+            headers={"X-KSL-Guest-Id": "guest_test"},
+        )
+        assert response.status_code == 200
+        assert response.json()["available"] is True
+
+    def test_predict_from_features_requires_user_or_guest(self, client):
         response = client.post(
             "/api/finger_spelling/practice/predict/features",
             json={"features": [0.0] * 126},
         )
         assert response.status_code == 401
+
+    def test_predict_from_features_allows_guest_access(self, client, monkeypatch):
+        from src.api.routes.finger_spelling import finger_hand_predict
+
+        class FakeHandPredictionService:
+            is_available = True
+
+            def predict_from_features(self, features, *, handedness="Unknown"):
+                return SimpleNamespace(
+                    match_confidence=92.5,
+                    prediction=SimpleNamespace(
+                        predicted_class_index=1,
+                        predicted_label="ក",
+                    ),
+                    features=SimpleNamespace(handedness=handedness),
+                )
+
+        monkeypatch.setattr(
+            finger_hand_predict,
+            "_get_hand_prediction_service",
+            lambda: FakeHandPredictionService(),
+        )
+
+        response = client.post(
+            "/api/finger_spelling/practice/predict/features",
+            json={"features": [0.0] * 126, "handedness": "Right"},
+            headers={"X-KSL-Guest-Id": "guest_test"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["match_confidence"] == 92.5
+        assert data["predicted_label"] == "ក"

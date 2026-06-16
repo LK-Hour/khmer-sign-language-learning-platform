@@ -5,6 +5,7 @@ import pytest
 from fastapi import status
 from src.models.finger_spelling import FingerChapter, FingerLesson, FingerUnit, FingerUserLessonProgress
 from src.models.refresh_token import RefreshToken
+from src.models.user import User
 
 class TestAuthAPI:
     """Test authentication endpoints"""
@@ -39,7 +40,9 @@ class TestAuthAPI:
 
         first_cookie = login_response.cookies.get("refresh_token")
         assert first_cookie
-        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 1
+        user = db.query(User).filter(User.email == test_user_data["email"]).one()
+        user_tokens = db.query(RefreshToken).filter(RefreshToken.user_id == user.id)
+        assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 1
 
         refresh_response = client.post(
             "/api/auth/refresh",
@@ -50,15 +53,15 @@ class TestAuthAPI:
         second_cookie = refresh_response.cookies.get("refresh_token")
         assert second_cookie
         assert second_cookie != first_cookie
-        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 1
-        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(True)).count() == 1
+        assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 1
+        assert user_tokens.filter(RefreshToken.revoked.is_(True)).count() == 1
 
         logout_response = client.post(
             "/api/auth/logout",
             headers={"X-Requested-With": "KSL-Client"},
         )
         assert logout_response.status_code == 200
-        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 0
+        assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 0
 
     def test_refresh_reuse_detection_revokes_all_tokens(self, client, db, test_user_data):
         client.post("/users/", json=test_user_data)
@@ -67,6 +70,8 @@ class TestAuthAPI:
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
         )
         stolen_cookie = login_response.cookies.get("refresh_token")
+        user = db.query(User).filter(User.email == test_user_data["email"]).one()
+        user_tokens = db.query(RefreshToken).filter(RefreshToken.user_id == user.id)
 
         refresh_response = client.post(
             "/api/auth/refresh",
@@ -80,7 +85,7 @@ class TestAuthAPI:
             headers={"X-Requested-With": "KSL-Client"},
         )
         assert reuse_response.status_code == 401
-        assert db.query(RefreshToken).filter(RefreshToken.revoked.is_(False)).count() == 0
+        assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 0
 
     def test_admin_remember_me_uses_three_day_refresh_lifetime(self, client, db, test_admin_data):
         client.post("/users/", json=test_admin_data)
@@ -94,7 +99,8 @@ class TestAuthAPI:
         )
         assert response.status_code == 200
         assert "Max-Age=259200" in response.headers.get("set-cookie", "")
-        token = db.query(RefreshToken).one()
+        user = db.query(User).filter(User.email == test_admin_data["email"]).one()
+        token = db.query(RefreshToken).filter(RefreshToken.user_id == user.id).one()
         assert token.lifetime_days == 3
     
     def test_login_invalid_credentials(self, client, test_user_data):
