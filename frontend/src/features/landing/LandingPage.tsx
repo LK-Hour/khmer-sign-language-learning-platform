@@ -16,12 +16,14 @@ import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslLineHeights, KslRadii } from "@/theme/theme";
 
+import { useFingerSpellingProgressStat } from "./hooks/useFingerSpellingProgressStat";
 import LearningModeCard from "./LearningModeCard";
 
 const HERO_IMAGE = "/assets/landing-hero-hand.png";
 
 export default function LandingPage() {
   const { t, locale } = useTranslation();
+  const { stat: fingerSpellingStat } = useFingerSpellingProgressStat();
 
   const fingerSpellingHref = `/${locale}${ROUTES.fingerSpelling.root}`;
   const wordDetectionHref = `/${locale}${ROUTES.words.root}`;
@@ -157,7 +159,7 @@ export default function LandingPage() {
               modeLabel={t("landingMode01")}
               title={t("navFingerSpelling")}
               description={t("landingFingerSpellingDesc")}
-              stat={t("landingFingerSpellingStat")}
+              stat={fingerSpellingStat}
             />
           </Grid>
 
