@@ -88,7 +88,7 @@
   "fsTrackQuizTitle": "Character Quiz",
   "fsTrackQuizDescription": "Exercise and quiz to track learner progress after all chapters.",
   "fsTrackProgressSummary": "{completed} of {total} {label} completed",
-  "fsTrackCurrentUnitProgress": "Current unit / {completed} of {total} lessons completed",
+  "fsTrackCurrentUnitProgress": "{completed} of {total} lessons completed",
   "fsContinue": "Continue",
   "fsCompleted": "Completed",
   "fsRetry": "Retry",
