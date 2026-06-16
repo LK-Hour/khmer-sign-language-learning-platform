@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { fetchFsTrackUnits } from "../api/curriculum";
 import {
   useFingerSpellingStore,
   type FsTrackUnit,
 } from "../store";
 import { useAuthStore } from "@/store/auth.store";
+import { FingerSpellingTrackSkeleton } from "@/app/[locale]/finger-spelling/loading";
 import FingerSpellingTrack from "./FingerSpellingTrack";
 
 type FingerSpellingTrackContainerProps = {
@@ -21,25 +22,32 @@ export default function FingerSpellingTrackContainer({
   const storedUnits = useFingerSpellingStore((state) => state.units);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const user = useAuthStore((state) => state.user);
+  const [trackReady, setTrackReady] = useState(false);
 
   useEffect(() => {
-    if (!hasHydrated) return;
-    if (user && !user.is_guest) return;
+    if (!hasHydrated || !user) return;
 
-    setUnits(units);
-  }, [hasHydrated, units, setUnits, user]);
-
-  useEffect(() => {
-    if (!hasHydrated || !user || user.is_guest) return;
+    if (user.is_guest) {
+      setUnits(units);
+      setTrackReady(true);
+      return;
+    }
 
     let ignore = false;
+    setTrackReady(false);
 
     async function loadUserTrack() {
       try {
         const freshUnits = await fetchFsTrackUnits();
-        if (!ignore) setUnits(freshUnits);
+        if (!ignore) {
+          setUnits(freshUnits);
+          setTrackReady(true);
+        }
       } catch {
-        // Keep the server-rendered fallback if the user-specific refresh fails.
+        if (!ignore) {
+          setUnits(units);
+          setTrackReady(true);
+        }
       }
     }
 
@@ -48,7 +56,11 @@ export default function FingerSpellingTrackContainer({
     return () => {
       ignore = true;
     };
-  }, [hasHydrated, setUnits, user]);
+  }, [hasHydrated, units, setUnits, user]);
+
+  if (!trackReady) {
+    return <FingerSpellingTrackSkeleton embedded />;
+  }
 
   const displayUnits = storedUnits.length > 0 ? storedUnits : units;
 

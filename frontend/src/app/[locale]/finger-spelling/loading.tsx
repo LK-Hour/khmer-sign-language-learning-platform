@@ -116,37 +116,55 @@ function UnitCardSkeleton({ expanded = false }: { expanded?: boolean }) {
   );
 }
 
-export default function FingerSpellingTrackLoading() {
+function TrackSkeletonContent() {
+  return (
+    <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ width: "100%" }}>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={2}
+        sx={{ alignItems: { xs: "flex-start", md: "center" }, justifyContent: "space-between" }}
+      >
+        <Stack spacing={1.5}>
+          <Skeleton width={170} height={20} />
+          <Skeleton width={330} height={54} />
+        </Stack>
+        <Skeleton variant="rounded" width={164} height={46} sx={{ borderRadius: 3 }} />
+      </Stack>
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <SummaryCardSkeleton />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <SummaryCardSkeleton />
+        </Grid>
+      </Grid>
+
+      <Stack spacing={1.5}>
+        <UnitCardSkeleton expanded />
+        <UnitCardSkeleton />
+        <UnitCardSkeleton />
+      </Stack>
+    </Stack>
+  );
+}
+
+export function FingerSpellingTrackSkeleton({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
+  if (embedded) {
+    return <TrackSkeletonContent />;
+  }
+
   return (
     <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
-      <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ width: "100%" }}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          sx={{ alignItems: { xs: "flex-start", md: "center" }, justifyContent: "space-between" }}
-        >
-          <Stack spacing={1.5}>
-            <Skeleton width={170} height={20} />
-            <Skeleton width={330} height={54} />
-          </Stack>
-          <Skeleton variant="rounded" width={164} height={46} sx={{ borderRadius: 3 }} />
-        </Stack>
-
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <SummaryCardSkeleton />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <SummaryCardSkeleton />
-          </Grid>
-        </Grid>
-
-        <Stack spacing={1.5}>
-          <UnitCardSkeleton expanded />
-          <UnitCardSkeleton />
-          <UnitCardSkeleton />
-        </Stack>
-      </Stack>
+      <TrackSkeletonContent />
     </PageContainer>
   );
+}
+
+export default function FingerSpellingTrackLoading() {
+  return null;
 }
