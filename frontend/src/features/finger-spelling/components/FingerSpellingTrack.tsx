@@ -40,10 +40,45 @@ type FingerSpellingTrackProps = {
   units: FsTrackUnit[];
 };
 
-const stateIcon: Record<LessonDisplayState, string> = {
-  done: "solar:lock-unlocked-bold",
-  now: "solar:play-circle-bold",
-  lock: "solar:lock-keyhole-bold",
+const lessonStatus: Record<
+  LessonDisplayState,
+  {
+    icon: string;
+    iconBg: string;
+    iconColor: string;
+    showCompletedLabel: boolean;
+    rowBg: string;
+    rowBorder: string;
+    rowOpacity: number; 
+  }
+> = {
+  done: {
+    icon: "mdi:check-bold",
+    iconBg: KslColors.success,
+    iconColor: "#fff",
+    showCompletedLabel: true,
+    rowBg: "background.paper",
+    rowBorder: KslColors.border,
+    rowOpacity: 1,
+  },
+  now: {
+    icon: "solar:play-circle-bold",
+    iconBg: "rgba(243,184,63,0.18)",
+    iconColor: KslColors.inProgress,
+    showCompletedLabel: false,
+    rowBg: "#fffbf0",
+    rowBorder: "rgba(243,184,63,0.55)",
+    rowOpacity: 1,
+  },
+  lock: {
+    icon: "solar:lock-keyhole-bold",
+    iconBg: "rgba(101,116,110,0.14)",
+    iconColor: KslColors.locked,
+    showCompletedLabel: false,
+    rowBg: "background.paper",
+    rowBorder: KslColors.border,
+    rowOpacity: 0.65,
+  },
 };
 
 function getUnitTitle(unit: FsTrackUnit, locale: "kh" | "en"): string {
@@ -581,6 +616,7 @@ function LessonTrackRow({
   const { t } = useTranslation();
   const title = formatLessonLabel(lesson.orderIndex, locale);
   const subtitle = getLessonDisplayLetter(lesson);
+  const status = lessonStatus[state];
   const unlocked = state !== "lock" && !lesson.isLocked;
 
   const row = (
@@ -588,12 +624,12 @@ function LessonTrackRow({
       elevation={0}
       sx={{
         alignItems: "center",
-        bgcolor: state === "now" ? "#fffbf0" : "background.paper",
-        border: `1px solid ${state === "now" ? "rgba(243,184,63,0.55)" : KslColors.border}`,
+        bgcolor: status.rowBg,
+        border: `1px solid ${status.rowBorder}`,
         borderRadius: `${KslRadii.wordCard + 4}px`,
         display: "flex",
         gap: { xs: 1.25, md: 2 },
-        opacity: state === "lock" ? 0.65 : 1,
+        opacity: status.rowOpacity,
         px: { xs: 1.25, md: 2 },
         py: 1.25,
         cursor: unlocked ? "pointer" : "not-allowed",
@@ -638,13 +674,13 @@ function LessonTrackRow({
         spacing={1.25}
         sx={{ alignItems: "center", flexShrink: 0 }}
       >
-        {state === "done" ? (
-          <Stack
-            component="span"
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: "center" }}
-          >
+        <Stack
+          component="span"
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: "center" }}
+        >
+          {status.showCompletedLabel ? (
             <Typography
               sx={{
                 color: KslColors.success,
@@ -655,40 +691,22 @@ function LessonTrackRow({
             >
               {t("fsCompleted")}
             </Typography>
-            <Stack
-              component="span"
-              sx={{
-                alignItems: "center",
-                bgcolor: KslColors.success,
-                borderRadius: "50%",
-                color: "#fff",
-                height: 34,
-                justifyContent: "center",
-                width: 34,
-              }}
-            >
-              <Icon icon="mdi:check-bold" width={18} />
-            </Stack>
-          </Stack>
-        ) : (
+          ) : null}
           <Stack
             component="span"
             sx={{
               alignItems: "center",
-              bgcolor:
-                state === "now"
-                  ? "rgba(243,184,63,0.18)"
-                  : "rgba(101,116,110,0.14)",
+              bgcolor: status.iconBg,
               borderRadius: "50%",
-              color: state === "now" ? KslColors.inProgress : KslColors.locked,
+              color: status.iconColor,
               height: 34,
               justifyContent: "center",
               width: 34,
             }}
           >
-            <Icon icon={stateIcon[state]} width={18} />
+            <Icon icon={status.icon} width={18} />
           </Stack>
-        )}
+        </Stack>
       </Stack>
     </Paper>
   );
