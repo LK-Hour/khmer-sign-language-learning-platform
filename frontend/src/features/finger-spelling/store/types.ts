@@ -15,4 +15,4 @@ export type PracticeContext = {
   nextLessonId?: number;
 };
 
-export const FS_PASS_THRESHOLD = 70;
+export const FS_PASS_THRESHOLD = 50;
