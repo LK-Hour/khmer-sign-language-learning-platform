@@ -1,4 +1,5 @@
 import { apiFetch } from '@/utils/api/client';
+import { getOrCreateLocalGuestId } from '@/utils/localGuest';
 import type { AuthTokenResponse } from '@/store/auth.store';
 
 export type CurrentUserResponse = {
@@ -81,7 +82,7 @@ export function loginAsGuest(): Promise<AuthTokenResponse> {
     access_token: '',
     token_type: 'bearer',
     user: {
-      id: 'local-guest',
+      id: getOrCreateLocalGuestId(),
       email: null,
       first_name: 'Guest',
       last_name: null,

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { getOrCreateLocalGuestId } from '@/utils/localGuest';
 
 /** Matches backend `OAuthUserResponse`. */
 export interface AuthUser {
@@ -115,7 +116,7 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           tokenExpiresAt: null,
           user: {
-            id: "local-guest",
+            id: getOrCreateLocalGuestId(),
             email: null,
             first_name: "Guest",
             last_name: null,
