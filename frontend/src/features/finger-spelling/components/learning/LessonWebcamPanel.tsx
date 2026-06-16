@@ -16,7 +16,7 @@ type LessonWebcamPanelProps = {
 };
 
 const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
-const OVERLAY_DETECTION_INTERVAL_MS = 100;
+const OVERLAY_DETECTION_INTERVAL_MS = 0;
 
 function stopStream(stream: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop());
