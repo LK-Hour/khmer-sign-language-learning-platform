@@ -114,7 +114,10 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     if (res.status === 401) {
-      useAuthStore.getState().clear();
+      const store = useAuthStore.getState();
+      if (!store.user?.is_guest) {
+        store.clear();
+      }
     }
     throw new ApiError(res.status, path);
   }
