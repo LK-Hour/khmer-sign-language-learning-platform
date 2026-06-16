@@ -27,6 +27,7 @@ export function useStabilityDetector(
   const rafRef = useRef<number>(0);
   const lastFrameRef = useRef<number>(0);
   const onStableRef = useRef(onStable);
+  const lockedRef = useRef(false);
 
   useEffect(() => {
     onStableRef.current = onStable;
@@ -68,10 +69,15 @@ export function useStabilityDetector(
     samplesRef.current = [];
     startRef.current = performance.now();
     stableSinceRef.current = null;
+    lockedRef.current = false;
     setState("waiting");
     setProgress(0);
 
     const tick = (now: number) => {
+      // If locked (e.g. a capture is in-flight or the consumer explicitly
+      // released), stop the RAF loop to prevent re-triggering.
+      if (lockedRef.current) return;
+
       if (now - lastFrameRef.current < STABILITY_SAMPLE_MS) {
         rafRef.current = requestAnimationFrame(tick);
         return;
@@ -103,6 +109,9 @@ export function useStabilityDetector(
 
         if (stableTime >= STABLE_DURATION_MS) {
           stableSinceRef.current = null;
+          // Lock immediately so the RAF loop stops and cannot fire
+          // onStable again until startMonitoring is called again.
+          lockedRef.current = true;
           setState("stable");
           onStableRef.current?.();
           return;
