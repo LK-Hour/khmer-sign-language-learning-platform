@@ -76,6 +76,11 @@
   "fsUnit": "វគ្គ",
   "fsLesson": "មេរៀន",
   "fsVowel": "ស្រៈ",
+  "fsConsonant": "ព្យញ្ជនៈ",
+  "fsSubConsonant": "ជើងព្យញ្ជនៈ",
+  "fsIndependentVowel": "ស្រៈពេញតួ",
+  "fsNumber": "លេខ",
+  "fsDiacritic": "វណ្ណយុត្តិ",
   "fsCharacterLabel": "អក្សរ",
   "fsChapterLockedUntil": "ចាក់សោរហូតដល់លំហាត់ជំពូក",
   "fsChapterLessonsPractice": "មេរៀន {count} + លំហាត់",
@@ -249,5 +254,8 @@
   "brandLogoKslAlt": "KSL Logo",
   "brandCadtAlt": "CADT",
   "loginBotDomainError": "Bot domain invalid",
-  "fsCameraAuthError": "Hand landmarker failed while detecting landmarks"
+  "fsCameraAuthError": "Hand landmarker failed while detecting landmarks",
+  "fsLessonLockedTitle": "មេរៀនត្រូវបានចាក់សោ",
+  "fsLessonLockedMessage": "មេរៀននេះត្រូវបានចាក់សោ។ សូមបញ្ចប់មេរៀនមុនៗដើម្បីដោះសោ។",
+  "fsLessonLockedBack": "ត្រឡប់ទៅផ្លូវរៀន"
 }

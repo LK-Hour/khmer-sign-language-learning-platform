@@ -76,6 +76,11 @@
   "fsUnit": "Unit",
   "fsLesson": "Lesson",
   "fsVowel": "Vowel",
+  "fsConsonant": "Consonant",
+  "fsSubConsonant": "Sub-consonant",
+  "fsIndependentVowel": "Independent Vowel",
+  "fsNumber": "Number",
+  "fsDiacritic": "Diacritic",
   "fsCharacterLabel": "Character",
   "fsChapterLockedUntil": "Locked until Chapter",
   "fsChapterLessonsPractice": "{count} lessons + practice",
@@ -249,5 +254,8 @@
   "brandLogoKslAlt": "KSL Logo",
   "brandCadtAlt": "CADT",
   "loginBotDomainError": "Bot domain invalid",
-  "fsCameraAuthError": "Hand landmarker failed while detecting landmarks"
+  "fsCameraAuthError": "Hand landmarker failed while detecting landmarks",
+  "fsLessonLockedTitle": "Lesson Locked",
+  "fsLessonLockedMessage": "This lesson is locked. Complete previous lessons to unlock it.",
+  "fsLessonLockedBack": "Back to Track"
 }
