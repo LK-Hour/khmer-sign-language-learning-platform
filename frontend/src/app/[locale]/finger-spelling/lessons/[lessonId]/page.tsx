@@ -8,6 +8,7 @@ import {
 } from "@/features/finger-spelling/api/curriculum";
 import { LessonLearningView } from "@/features/finger-spelling/components";
 import { getNextLessonInChapter } from "@/features/finger-spelling/utils/progress";
+import LessonLockedView from "@/features/finger-spelling/components/learning/LessonLockedView";
 
 type PageProps = {
   params: Promise<{ lessonId: string }>;
@@ -20,6 +21,15 @@ export default async function LessonDetailPage({ params }: PageProps) {
 
   const lesson = await fetchFsLesson(id);
   if (!lesson) notFound();
+
+  // Guard: prevent users from accessing locked lessons via URL manipulation
+  if (lesson.isLocked) {
+    return (
+      <PageContainer>
+        <LessonLockedView />
+      </PageContainer>
+    );
+  }
 
   const [chapterLessons, chapter] = await Promise.all([
     fetchFsLessons(lesson.chapterId),
