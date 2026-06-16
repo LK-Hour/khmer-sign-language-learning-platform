@@ -55,9 +55,8 @@ env/
 .env.*
 !.env.example
 
-# alembic
-alembic.ini
-alembic/
+# Alembic bytecode (migration sources under backend/alembic/ are tracked)
+backend/alembic/**/__pycache__/
 
 # SSL certificates and ngrok logs
 localhost.pem
