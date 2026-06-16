@@ -667,7 +667,7 @@ function LessonTrackRow({
                 width: 34,
               }}
             >
-              <Icon icon="formkit:check" width={18} />
+              <Icon icon="mdi:check-bold" width={18} />
             </Stack>
           </Stack>
         ) : (
