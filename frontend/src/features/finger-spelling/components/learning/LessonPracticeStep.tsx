@@ -41,6 +41,7 @@ type LessonPracticeStepProps = {
   passThreshold: number;
   cameraResetKey: number;
   isSubmitting?: boolean;
+  isContinuing?: boolean;
   isLandmarkerReady?: boolean;
   recError?: string | null;
   videoRef?: RefObject<HTMLVideoElement | null>;
@@ -61,6 +62,7 @@ export default function LessonPracticeStep({
   passThreshold,
   cameraResetKey,
   isSubmitting = false,
+  isContinuing = false,
   isLandmarkerReady = false,
   recError = null,
   videoRef,
@@ -258,6 +260,7 @@ export default function LessonPracticeStep({
         continueLabel={t("fsContinueLesson")}
         passed={passed}
         isSubmitting={isSubmitting}
+        isContinuing={isContinuing}
         onRetry={onRetry}
         onContinue={onContinue}
       />

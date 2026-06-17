@@ -1,4 +1,5 @@
 import { Button, Paper, Stack, Typography } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
 import {
   KslColors,
   KslFontSizes,
@@ -13,6 +14,7 @@ type PracticeFeedbackPanelProps = {
   continueLabel: string;
   passed: boolean;
   isSubmitting: boolean;
+  isContinuing?: boolean;
   onRetry: () => void;
   onContinue: () => void | Promise<void>;
 };
@@ -24,6 +26,7 @@ export default function PracticeFeedbackPanel({
   continueLabel,
   passed,
   isSubmitting,
+  isContinuing = false,
   onRetry,
   onContinue,
 }: PracticeFeedbackPanelProps) {
@@ -78,10 +81,12 @@ export default function PracticeFeedbackPanel({
         >
           {retryLabel}
         </Button>
-        <Button
+        <LoadingButton
           variant="contained"
+          loading={isContinuing}
+          loadingPosition="center"
           onClick={onContinue}
-          disabled={!passed || isSubmitting}
+          disabled={!passed || isSubmitting || isContinuing}
           sx={{
             minWidth: 150,
             minHeight: 46,
@@ -93,10 +98,13 @@ export default function PracticeFeedbackPanel({
             "&:hover": {
               bgcolor: passed ? KslColors.primaryDark : KslColors.disabled,
             },
+            "&.MuiLoadingButton-loading": {
+              color: "transparent",
+            },
           }}
         >
-          {continueLabel}
-        </Button>
+          {isContinuing ? null : continueLabel}
+        </LoadingButton>
       </Stack>
     </Paper>
   );

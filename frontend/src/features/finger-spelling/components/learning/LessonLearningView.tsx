@@ -249,6 +249,7 @@ export default function LessonLearningView({
         passThreshold={FS_PASS_THRESHOLD}
         cameraResetKey={cameraResetKey}
         isSubmitting={isSubmitting || isCompleting}
+        isContinuing={isCompleting}
         isLandmarkerReady={isLandmarkerReady}
         recError={recError}
         videoRef={videoRef}
