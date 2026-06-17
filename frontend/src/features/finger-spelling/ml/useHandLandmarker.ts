@@ -26,7 +26,7 @@ async function loadHandLandmarker(): Promise<HandLandmarker> {
       return HandLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: MODEL_PATH,
-          delegate: "CPU",
+          delegate: "GPU",
         },
         runningMode: "IMAGE",
         numHands: 2,

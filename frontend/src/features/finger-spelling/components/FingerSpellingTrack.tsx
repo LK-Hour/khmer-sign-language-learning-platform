@@ -45,16 +45,18 @@ const lessonStatus: Record<
   {
     icon: string;
     iconBg: string;
+    iconInnerBg?: string;
     iconColor: string;
     showCompletedLabel: boolean;
     rowBg: string;
     rowBorder: string;
-    rowOpacity: number; 
+    rowOpacity: number;
   }
 > = {
   done: {
     icon: "mdi:check-bold",
-    iconBg: KslColors.success,
+    iconBg: "rgba(31,159,111,0.18)",
+    iconInnerBg: KslColors.success,
     iconColor: "#fff",
     showCompletedLabel: true,
     rowBg: "background.paper",
@@ -62,9 +64,10 @@ const lessonStatus: Record<
     rowOpacity: 1,
   },
   now: {
-    icon: "solar:play-circle-bold",
+    icon: "solar:play-bold",
     iconBg: "rgba(243,184,63,0.18)",
-    iconColor: KslColors.inProgress,
+    iconInnerBg: KslColors.inProgress,
+    iconColor: "#fff",
     showCompletedLabel: false,
     rowBg: "#fffbf0",
     rowBorder: "rgba(243,184,63,0.55)",
@@ -82,7 +85,7 @@ const lessonStatus: Record<
 };
 
 function getUnitTitle(unit: FsTrackUnit, locale: "kh" | "en"): string {
-  return locale === "kh" ? unit.titleKh || unit.title : unit.title;
+  return locale === "kh" ? unit?.titleKh || unit?.title : unit?.title;
 }
 
 export default function FingerSpellingTrack({
@@ -102,9 +105,9 @@ export default function FingerSpellingTrack({
   const currentUnitCompleted = currentUnit?.completedLessonCount ?? 0;
   const currentUnitTotal = currentUnit?.totalLessonCount ?? 0;
   const quizChaptersUnlocked =
-    currentUnit?.chapters.filter((chapter) => chapter.isExerciseUnlocked)
+    currentUnit?.chapters.filter((chapter) => chapter?.isExerciseUnlocked)
       .length ?? 0;
-  const quizChaptersTotal = currentUnit?.chapters.length ?? 0;
+  const quizChaptersTotal = currentUnit?.chapters?.length ?? 0;
 
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ width: "100%" }}>
@@ -147,7 +150,7 @@ export default function FingerSpellingTrack({
         <Button
           component={resumeLesson ? Link : "button"}
           href={
-            resumeLesson ? ROUTES.fingerSpelling.lesson(resumeLesson.id) : undefined
+            resumeLesson ? ROUTES.fingerSpelling.lesson(resumeLesson?.id) : undefined
           }
           disabled={!resumeLesson}
           variant="outlined"
@@ -189,13 +192,13 @@ export default function FingerSpellingTrack({
       </Grid>
 
       <Stack spacing={1.5}>
-        {units.map((unit) => (
+        {units?.map((unit) => (
           <UnitTrackCard
-            key={unit.id}
+            key={unit?.id}
             unit={unit}
-            expanded={unit.isLocked !== true && expandedUnitId === unit.id}
+            expanded={unit?.isLocked !== true && expandedUnitId === unit?.id}
             onToggle={() => {
-              if (unit.isLocked === true) return;
+              if (unit?.isLocked === true) return;
               toggleUnitExpanded(unit.id);
             }}
             locale={locale}
@@ -330,9 +333,9 @@ function UnitTrackCard({
   unitLabel: string;
   chapterLabel: string;
 }) {
-  const locked = unit.isLocked === true;
+  const locked = unit?.isLocked === true;
   const { t } = useTranslation();
-  const unitTitle = locale === "kh" ? unit.titleKh || unit.title : unit.title;
+  const unitTitle = locale === "kh" ? unit?.titleKh || unit?.title : unit?.title;
 
   return (
     <Paper
@@ -375,7 +378,7 @@ function UnitTrackCard({
         }}
       >
         <Stack direction="row" spacing={2} sx={{ alignItems: "center", minWidth: 0 }}>
-          <NumberBadge>{formatBadgeStep(unit.orderIndex, locale)}</NumberBadge>
+          <NumberBadge>{formatBadgeStep(unit?.orderIndex, locale)}</NumberBadge>
           <Typography
             sx={{
               color: KslColors.textPrimary,
@@ -384,7 +387,7 @@ function UnitTrackCard({
               lineHeight: 1.25,
             }}
           >
-            {formatUnitBadge(unit.orderIndex, locale, unitLabel)}: {unitTitle}
+            {formatUnitBadge(unit?.orderIndex, locale, unitLabel)}: {unitTitle}
           </Typography>
         </Stack>
 
@@ -405,8 +408,8 @@ function UnitTrackCard({
             }}
           >
             {t("fsTrackCurrentUnitProgress", {
-              completed: unit.completedLessonCount,
-              total: unit.totalLessonCount,
+              completed: unit?.completedLessonCount,
+              total: unit?.totalLessonCount,
             })}
           </Typography>
           <Stack
@@ -435,7 +438,7 @@ function UnitTrackCard({
 
       <Collapse in={expanded} unmountOnExit>
         <Stack spacing={1.5} sx={{ borderTop: `1px solid ${KslColors.border}`, p: 2 }}>
-          {unit.chapters.map((chapter) => (
+          {unit?.chapters?.map((chapter) => (
             <ChapterTrackSection
               key={chapter.id}
               chapter={chapter}
@@ -460,18 +463,18 @@ function ChapterTrackSection({
 }) {
   const locked = chapter.isLocked === true;
   const expanded = useFingerSpellingStore((state) =>
-    chapter.isLocked !== true && state.expandedChapterIds[chapter.id] === true
+    chapter?.isLocked !== true && state.expandedChapterIds[chapter?.id] === true
   );
   const toggleChapterExpanded = useFingerSpellingStore(
     (state) => state.toggleChapterExpanded
   );
   const lessonStates = useMemo(
-    () => resolveLessonStates(chapter.lessons),
+    () => resolveLessonStates(chapter?.lessons),
     [chapter.lessons]
   );
   const { t } = useTranslation();
   const chapterTitle =
-    locale === "kh" ? chapter.titleKh || chapter.title : chapter.title;
+    locale === "kh" ? chapter?.titleKh || chapter?.title : chapter?.title;
 
   return (
     <Paper
@@ -491,7 +494,7 @@ function ChapterTrackSection({
         aria-disabled={locked}
         onClick={() => {
           if (locked) return;
-          toggleChapterExpanded(chapter.id);
+          toggleChapterExpanded(chapter?.id);
         }}
         sx={{
           alignItems: "center",
@@ -532,7 +535,7 @@ function ChapterTrackSection({
                 textTransform: locale === "kh" ? "none" : "uppercase",
               }}
             >
-              {formatChapterBadge(chapter.orderIndex, locale, chapterLabel)}:
+              {formatChapterBadge(chapter?.orderIndex, locale, chapterLabel)}:
             </Typography>
             <Typography
               sx={{
@@ -562,7 +565,7 @@ function ChapterTrackSection({
               fontWeight: 600,
             }}
           >
-            {t("fsChapterLessonsPractice", { count: chapter.lessonCount })}
+            {t("fsChapterLessonsPractice", { count: chapter?.lessonCount })}
           </Typography>
           <Stack
             component="span"
@@ -590,9 +593,9 @@ function ChapterTrackSection({
 
       <Collapse in={expanded} unmountOnExit>
         <Stack spacing={0.75} sx={{ borderTop: `1px solid ${KslColors.border}`, p: 1 }}>
-          {chapter.lessons.map((lesson) => (
+          {chapter?.lessons?.map((lesson) => (
             <LessonTrackRow
-              key={lesson.id}
+              key={lesson?.id}
               lesson={lesson}
               locale={locale}
               state={lessonStates.get(lesson.id) ?? "lock"}
@@ -614,10 +617,10 @@ function LessonTrackRow({
   state: LessonDisplayState;
 }) {
   const { t } = useTranslation();
-  const title = formatLessonLabel(lesson.orderIndex, locale);
+  const title = formatLessonLabel(lesson?.orderIndex, locale);
   const subtitle = getLessonDisplayLetter(lesson);
   const status = lessonStatus[state];
-  const unlocked = state !== "lock" && !lesson.isLocked;
+  const unlocked = state !== "lock" && !lesson?.isLocked;
 
   const row = (
     <Paper
@@ -698,13 +701,38 @@ function LessonTrackRow({
               alignItems: "center",
               bgcolor: status.iconBg,
               borderRadius: "50%",
-              color: status.iconColor,
               height: 34,
               justifyContent: "center",
               width: 34,
             }}
           >
-            <Icon icon={status.icon} width={18} />
+            {status.iconInnerBg ? (
+              <Stack
+                component="span"
+                sx={{
+                  alignItems: "center",
+                  bgcolor: status.iconInnerBg,
+                  borderRadius: "50%",
+                  color: status.iconColor,
+                  height: 22,
+                  justifyContent: "center",
+                  width: 22,
+                }}
+              >
+                <Icon icon={status.icon} width={14} />
+              </Stack>
+            ) : (
+              <Stack
+                component="span"
+                sx={{
+                  alignItems: "center",
+                  color: status.iconColor,
+                  justifyContent: "center",
+                }}
+              >
+                <Icon icon={status.icon} width={18} />
+              </Stack>
+            )}
           </Stack>
         </Stack>
       </Stack>
