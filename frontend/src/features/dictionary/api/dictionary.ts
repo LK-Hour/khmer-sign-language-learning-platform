@@ -1,10 +1,6 @@
 import { apiFetch } from "@/utils/api/client";
-import {
-  getMockDictionaryWord,
-  searchMockDictionaryWords,
-} from "../data/mockDictionary";
 import type { DictionarySearchResult, DictionaryWord } from "../types";
-import { DICT_USE_MOCK, resolveApiAssetUrl } from "./config";
+import { resolveApiAssetUrl } from "./config";
 
 type BackendDictionaryWord = {
   id: number;
@@ -13,6 +9,9 @@ type BackendDictionaryWord = {
   media_url?: string | null;
   video_url?: string | null;
   category?: string | null;
+  entry_type?: "character" | "word" | null;
+  description?: string | null;
+  lesson_id?: number | null;
 };
 
 type BackendDictionaryListResponse = {
@@ -28,17 +27,15 @@ function normalizeWord(raw: BackendDictionaryWord): DictionaryWord {
     mediaUrl: resolveApiAssetUrl(raw.media_url ?? undefined) ?? null,
     videoUrl: resolveApiAssetUrl(raw.video_url ?? undefined) ?? null,
     category: raw.category ?? null,
+    entryType: raw.entry_type ?? "character",
+    description: raw.description ?? null,
+    lessonId: raw.lesson_id ?? null,
   };
 }
 
 export async function fetchDictionaryWords(
   search?: string
 ): Promise<DictionarySearchResult> {
-  if (DICT_USE_MOCK) {
-    const items = searchMockDictionaryWords(search);
-    return { items, total: items.length };
-  }
-
   const params = new URLSearchParams();
   if (search?.trim()) params.set("search", search.trim());
   const query = params.toString();
@@ -52,10 +49,6 @@ export async function fetchDictionaryWords(
 export async function fetchDictionaryWord(
   wordId: number
 ): Promise<DictionaryWord | null> {
-  if (DICT_USE_MOCK) {
-    return getMockDictionaryWord(wordId);
-  }
-
   try {
     const raw = await apiFetch<BackendDictionaryWord>(
       `/api/dictionary/${wordId}`

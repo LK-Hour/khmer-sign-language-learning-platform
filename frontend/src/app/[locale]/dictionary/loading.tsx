@@ -1,75 +1,69 @@
-import { IconButton, Paper, Skeleton, Stack } from "@mui/material";
-import { FingerSpellingDictionaryLayout } from "@/features/finger-spelling/components";
-import { KslColors, KslRadii, KslShadows } from "@/theme/theme";
+import { Grid, Paper, Skeleton, Stack } from "@mui/material";
+import { DictionaryLayout } from "@/features/dictionary/components";
+import { KslColors, KslPalette, KslRadii } from "@/theme/theme";
 
-function DictionaryRowSkeleton() {
+function DictionaryCardSkeleton() {
   return (
     <Paper
       elevation={0}
-      component={Stack}
-      direction="row"
       sx={{
-        alignItems: "center",
-        gap: { xs: 1.5, md: 2 },
-        px: { xs: 2, md: 2.5 },
-        py: { xs: 1.5, md: 2 },
-        mb: 1.5,
-        bgcolor: "background.paper",
+        p: 2.5,
+        height: 196,
         borderRadius: `${KslRadii.card}px`,
-        boxShadow: KslShadows.card,
-        border: "1px solid transparent",
+        border: `1px solid ${KslColors.border}`,
       }}
     >
-      <Skeleton width="32%" height={26} sx={{ flex: 1 }} />
-      <Skeleton width="32%" height={26} sx={{ flex: 1 }} />
-      <Skeleton variant="circular" width={40} height={40} />
+      <Stack spacing={1.5}>
+        <Skeleton width={88} height={26} sx={{ borderRadius: 999 }} />
+        <Skeleton width="72%" height={32} />
+        <Skeleton width="48%" height={24} />
+        <Skeleton width="100%" height={40} />
+      </Stack>
     </Paper>
   );
 }
 
 export default function DictionaryListLoading() {
   return (
-    <FingerSpellingDictionaryLayout>
-      <Stack sx={{ maxWidth: 1120, mx: "auto" }}>
-        <Stack direction="row" sx={{ alignItems: "center", gap: 1.5, mb: 2 }}>
-          <Paper
-            elevation={0}
-            sx={{
-              flex: 1,
-              height: 56,
-              borderRadius: `${KslRadii.card}px`,
-              boxShadow: KslShadows.card,
-              border: `1px solid ${KslColors.border}`,
-              bgcolor: "background.paper",
-              px: 2,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Skeleton width="42%" height={24} />
-          </Paper>
-          <IconButton
-            disabled
-            sx={{
-              width: 48,
-              height: 48,
-              flexShrink: 0,
-              bgcolor: "background.paper",
-              border: `1px solid ${KslColors.border}`,
-              borderRadius: `${KslRadii.card}px`,
-              boxShadow: KslShadows.card,
-            }}
-          >
-            <Skeleton variant="circular" width={22} height={22} />
-          </IconButton>
-        </Stack>
+    <DictionaryLayout>
+      <Stack spacing={3}>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Skeleton
+              variant="rounded"
+              height={88}
+              sx={{
+                borderRadius: `${KslRadii.card}px`,
+                bgcolor: KslPalette.primary.lighter,
+              }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Skeleton
+              variant="rounded"
+              height={88}
+              sx={{
+                borderRadius: `${KslRadii.card}px`,
+                bgcolor: KslPalette.secondary.lighter,
+              }}
+            />
+          </Grid>
+        </Grid>
 
-        <Stack spacing={0}>
+        <Skeleton
+          variant="rounded"
+          height={168}
+          sx={{ borderRadius: `${KslRadii.card}px` }}
+        />
+
+        <Grid container spacing={2}>
           {Array.from({ length: 6 }, (_, index) => (
-            <DictionaryRowSkeleton key={index} />
+            <Grid key={index} size={{ xs: 12, sm: 6, lg: 4 }}>
+              <DictionaryCardSkeleton />
+            </Grid>
           ))}
-        </Stack>
+        </Grid>
       </Stack>
-    </FingerSpellingDictionaryLayout>
+    </DictionaryLayout>
   );
 }

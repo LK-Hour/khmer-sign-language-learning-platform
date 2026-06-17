@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { fetchDictionaryWord } from "@/features/dictionary/api/dictionary";
-import { DictionaryWordDetail } from "@/features/dictionary/components";
-import { FingerSpellingDictionaryLayout } from "@/features/finger-spelling/components";
+import {
+  DictionaryLayout,
+  DictionaryWordDetail,
+} from "@/features/dictionary/components";
 
 type PageProps = {
   params: Promise<{ wordId: string }>;
@@ -16,8 +18,8 @@ export default async function DictionaryWordPage({ params }: PageProps) {
   if (!word) notFound();
 
   return (
-    <FingerSpellingDictionaryLayout>
+    <DictionaryLayout showHero={false}>
       <DictionaryWordDetail word={word} />
-    </FingerSpellingDictionaryLayout>
+    </DictionaryLayout>
   );
 }

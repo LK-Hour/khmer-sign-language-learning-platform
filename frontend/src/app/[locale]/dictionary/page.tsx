@@ -1,13 +1,15 @@
 import { fetchDictionaryWords } from "@/features/dictionary/api/dictionary";
-import { DictionaryPageContent } from "@/features/dictionary/components";
-import { FingerSpellingDictionaryLayout } from "@/features/finger-spelling/components";
+import {
+  DictionaryLayout,
+  DictionaryPageContent,
+} from "@/features/dictionary/components";
 
 export default async function DictionaryPage() {
   const { items } = await fetchDictionaryWords();
 
   return (
-    <FingerSpellingDictionaryLayout>
+    <DictionaryLayout>
       <DictionaryPageContent words={items} />
-    </FingerSpellingDictionaryLayout>
+    </DictionaryLayout>
   );
 }
