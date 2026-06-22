@@ -134,13 +134,13 @@ export default function LessonWebcamPanel({
         for (const landmarks of lm) {
           drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, {
             color: "#21d07a",
-            lineWidth: 3,
+            lineWidth: 1.5,
           });
           drawingUtils.drawLandmarks(landmarks, {
             color: "#ffffff",
             fillColor: "#21d07a",
-            lineWidth: 2,
-            radius: 4,
+            lineWidth: 1,
+            radius: 2,
           });
         }
       }

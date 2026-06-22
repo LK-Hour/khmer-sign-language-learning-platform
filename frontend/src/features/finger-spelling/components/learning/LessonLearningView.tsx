@@ -9,8 +9,8 @@ import {
   type RawHandDetection,
   useHandLandmarker,
 } from "@/features/finger-spelling/ml/useHandLandmarker";
+import { useRealtimePredictor } from "@/features/finger-spelling/ml/useRealtimePredictor";
 import { useFingerSpellingPracticeActions } from "@/features/finger-spelling/hooks/useFingerSpellingPracticeActions";
-import { useStabilityDetector } from "@/features/finger-spelling/ml/useStabilityDetector";
 import { useFingerSpellingStore } from "@/features/finger-spelling/store";
 import { FS_PASS_THRESHOLD } from "@/features/finger-spelling/store/types";
 import {
@@ -23,6 +23,22 @@ import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
 import LessonPracticeStep from "./LessonPracticeStep";
 
 const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
+
+// ─── Realtime prediction helpers ─────────────────────────────────────────
+
+/** How often (in ms) we sample a frame for WebSocket prediction. */
+const PREDICTION_SAMPLE_INTERVAL_MS = 100;
+
+/** How many consecutive same predictions trigger auto-capture. */
+const AUTO_CAPTURE_FRAMES = 5;
+
+/** Auto-retry delay after a prediction result (ms). */
+const AUTO_RETRY_DELAY_MS = 1000;
+
+/** How often we check for a hand while auto-retry is pending. */
+const AUTO_RETRY_POLL_INTERVAL_MS = 300;
+
+// ─────────────────────────────────────────────────────────────────────────
 
 type LessonLearningViewProps = {
   lesson: FsLessonDetail;
@@ -51,6 +67,15 @@ export default function LessonLearningView({
     error: landmarkerError,
   } = useHandLandmarker();
 
+  // ── Realtime WebSocket predictor ──────────────────────────────────────
+  const {
+    connect: connectPredictor,
+    disconnect: disconnectPredictor,
+    sendFeatures,
+    livePrediction,
+    connectionState: predictorState,
+  } = useRealtimePredictor();
+
   const setPracticeContext = useFingerSpellingStore(
     (state) => state.setPracticeContext
   );
@@ -73,74 +98,298 @@ export default function LessonLearningView({
   const isSubmitting = useFingerSpellingStore((state) => state.isSubmitting);
   const cameraResetKey = useFingerSpellingStore((state) => state.cameraResetKey);
 
-  // ─── Auto-capture flow ────────────────────────────────────────────
-  // 1. Stability detector monitors hand movement
-  // 2. When stable for 3s → auto-extract keypoints + send to backend
-  // 3. Show result → wait for user to click Retry
+  // ── Prediction-stability auto-capture ─────────────────────────────────
+  const stableLabelRef = useRef<string | null>(null);
+  const stableCountRef = useRef(0);
 
-  const doCapture = useCallback(async () => {
-    // Guard: prevent re-entrant capture while a previous one is in flight.
-    // This can happen because the stability detector's RAF loop may fire
-    // handleStable again before the async chain of extractFromVideo +
-    // runPracticeRec completes.
-    if (capturingRef.current) return;
-    capturingRef.current = true;
+  // ── Auto-retry refs ───────────────────────────────────────────────────
+  const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const retryPendingRef = useRef(false);
 
-    try {
+  // ═══════════════════════════════════════════════════════════════════════
+  //  ORIGINAL STABILITY DETECTOR — commented out for realtime path
+  // ═══════════════════════════════════════════════════════════════════════
+  //
+  // const doCapture = useCallback(async () => {
+  //   if (capturingRef.current) return;
+  //   capturingRef.current = true;
+  //
+  //   try {
+  //     const video = videoRef.current;
+  //     setRecError(null);
+  //
+  //     if (landmarkerError) {
+  //       setRecError(landmarkerError);
+  //       return;
+  //     }
+  //     if (!isLandmarkerReady) {
+  //       setRecError(t("fsLandmarkerLoading"));
+  //       return;
+  //     }
+  //     if (!video) {
+  //       setRecError(t("fsCameraUnavailable"));
+  //       return;
+  //     }
+  //
+  //     const extraction = extractFromVideo(video);
+  //     if (!extraction.handDetected) {
+  //       setRecError(t("fsNoHandDetected"));
+  //       return;
+  //     }
+  //     await runPracticeRec(lesson.id, extraction.features, extraction.handedness, unit.category ?? undefined);
+  //   } catch (error) {
+  //     setRecError(
+  //       error instanceof Error ? error.message : t("fsHandPredictionFailed")
+  //     );
+  //   } finally {
+  //     capturingRef.current = false;
+  //   }
+  // }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t, unit.category]);
+  //
+  // const handleStable = useCallback(() => {
+  //   void doCapture();
+  // }, [doCapture]);
+  //
+  // const getLatestDetection = useCallback(() => latestDetectionRef.current, []);
+  //
+  // const { state: stabilityState, progress: stabilityProgress, startMonitoring, stopMonitoring } =
+  //   useStabilityDetector(
+  //     getLatestDetection,
+  //     handleStable,
+  //   );
+  //
+  // useEffect(() => {
+  //   if (isLandmarkerReady && !isSubmitting && accuracy == null) {
+  //     startMonitoring();
+  //   }
+  // }, [isLandmarkerReady, isSubmitting, accuracy, startMonitoring]);
+  //
+  // useEffect(() => {
+  //   return () => {
+  //     stopMonitoring();
+  //   };
+  // }, [stopMonitoring]);
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  REALTIME PREDICTION LOOP
+  // ═══════════════════════════════════════════════════════════════════════
+
+  const doCaptureFromPrediction = useCallback(
+    async () => {
+      if (capturingRef.current) return;
+      capturingRef.current = true;
+
+      try {
+        setRecError(null);
+
+        const video = videoRef.current;
+
+        if (landmarkerError) {
+          setRecError(landmarkerError);
+          return;
+        }
+        if (!isLandmarkerReady) {
+          setRecError(t("fsLandmarkerLoading"));
+          return;
+        }
+        if (!video) {
+          setRecError(t("fsCameraUnavailable"));
+          return;
+        }
+
+        // Use the live prediction's features for the submission
+        const extraction = extractFromVideo(video);
+        if (!extraction.handDetected) {
+          setRecError(t("fsNoHandDetected"));
+          return;
+        }
+
+        await runPracticeRec(
+          lesson.id,
+          extraction.features,
+          extraction.handedness,
+          unit.category ?? undefined,
+        );
+      } catch (error) {
+        setRecError(
+          error instanceof Error ? error.message : t("fsHandPredictionFailed"),
+        );
+      } finally {
+        capturingRef.current = false;
+      }
+    },
+    [
+      extractFromVideo,
+      isLandmarkerReady,
+      landmarkerError,
+      lesson.id,
+      runPracticeRec,
+      t,
+      unit.category,
+    ],
+  );
+
+  // ── Auto-retry logic ──────────────────────────────────────────────────
+
+  const clearAutoRetryTimers = useCallback(() => {
+    if (autoRetryTimerRef.current) {
+      clearTimeout(autoRetryTimerRef.current);
+      autoRetryTimerRef.current = null;
+    }
+    if (autoRetryPollRef.current) {
+      clearInterval(autoRetryPollRef.current);
+      autoRetryPollRef.current = null;
+    }
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    clearAutoRetryTimers();
+    retryPendingRef.current = false;
+    setRecError(null);
+    latestDetectionRef.current = EMPTY_DETECTION;
+    resetPracticeResult();
+    // incrementCameraResetKey();
+    stableLabelRef.current = null;
+    stableCountRef.current = 0;
+  }, [clearAutoRetryTimers, incrementCameraResetKey, resetPracticeResult]);
+
+  const startAutoRetryPoll = useCallback(() => {
+    retryPendingRef.current = true;
+    if (autoRetryPollRef.current) return;
+
+    autoRetryPollRef.current = setInterval(() => {
       const video = videoRef.current;
-      setRecError(null);
+      if (!video) return;
 
-      if (landmarkerError) {
-        setRecError(landmarkerError);
-        return;
-      }
-      if (!isLandmarkerReady) {
-        setRecError(t("fsLandmarkerLoading"));
-        return;
-      }
-      if (!video) {
-        setRecError(t("fsCameraUnavailable"));
-        return;
-      }
+      try {
+        const extraction = extractFromVideo(video);
+        if (!extraction.handDetected) return;
 
+        clearAutoRetryTimers();
+        retryPendingRef.current = false;
+        handleRetry();
+      } catch {
+        retryPendingRef.current = true;
+      }
+    }, AUTO_RETRY_POLL_INTERVAL_MS);
+  }, [clearAutoRetryTimers, extractFromVideo, handleRetry]);
+
+  const doAutoRetry = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) {
+      startAutoRetryPoll();
+      return;
+    }
+    try {
       const extraction = extractFromVideo(video);
-      if (!extraction.handDetected) {
-        setRecError(t("fsNoHandDetected"));
-        return;
+      if (extraction.handDetected) {
+        // Hand is in frame — retry now
+        handleRetry();
+      } else {
+        startAutoRetryPoll();
       }
-      await runPracticeRec(lesson.id, extraction.features, extraction.handedness, unit.category ?? undefined);
-    } catch (error) {
-      setRecError(
-        error instanceof Error ? error.message : t("fsHandPredictionFailed")
-      );
-    } finally {
-      capturingRef.current = false;
+    } catch {
+      startAutoRetryPoll();
     }
-  }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t, unit.category]);
+  }, [extractFromVideo, handleRetry, startAutoRetryPoll]);
 
-  const handleStable = useCallback(() => {
-    void doCapture();
-  }, [doCapture]);
-
-  const getLatestDetection = useCallback(() => latestDetectionRef.current, []);
-
-  const { state: stabilityState, progress: stabilityProgress, startMonitoring, stopMonitoring } =
-    useStabilityDetector(
-      getLatestDetection,
-      handleStable,
-    );
-
+  // When accuracy or error is received, start 2s auto-retry timer
   useEffect(() => {
-    if (isLandmarkerReady && !isSubmitting && accuracy == null) {
-      startMonitoring();
+    const hasResult = accuracy != null || recError != null;
+    if (hasResult && !isSubmitting && !isCompleting) {
+      autoRetryTimerRef.current = setTimeout(() => {
+        doAutoRetry();
+      }, AUTO_RETRY_DELAY_MS);
     }
-  }, [isLandmarkerReady, isSubmitting, accuracy, startMonitoring]);
-
-  useEffect(() => {
     return () => {
-      stopMonitoring();
+      clearAutoRetryTimers();
     };
-  }, [stopMonitoring]);
+  }, [accuracy, recError, isSubmitting, isCompleting, doAutoRetry, clearAutoRetryTimers]);
+
+  // ── WebSocket lifecycle ───────────────────────────────────────────────
+
+  // Connect / disconnect the WebSocket when the landmarker is ready
+  useEffect(() => {
+    if (isLandmarkerReady && accuracy == null) {
+      connectPredictor();
+    }
+    return () => {
+      disconnectPredictor();
+    };
+  }, [isLandmarkerReady, accuracy, connectPredictor, disconnectPredictor]);
+
+  // Periodic sampling loop: extract features and send over WebSocket
+  const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!isLandmarkerReady || predictorState !== "ready" || accuracy != null) {
+      if (samplingLoopRef.current) {
+        clearInterval(samplingLoopRef.current);
+        samplingLoopRef.current = null;
+      }
+      return;
+    }
+
+    samplingLoopRef.current = setInterval(() => {
+      const video = videoRef.current;
+      if (!video || capturingRef.current) return;
+
+      try {
+        const extraction = extractFromVideo(video);
+
+        // Check if a retry is pending and hand just appeared
+        if (retryPendingRef.current && extraction.handDetected) {
+          retryPendingRef.current = false;
+          handleRetry();
+          return;
+        }
+
+        if (extraction.handDetected) {
+          sendFeatures(
+            extraction.features,
+            extraction.handedness,
+            unit.category ?? undefined,
+          );
+        }
+      } catch {
+        // Silently skip failed frames
+      }
+    }, PREDICTION_SAMPLE_INTERVAL_MS);
+
+    return () => {
+      if (samplingLoopRef.current) {
+        clearInterval(samplingLoopRef.current);
+        samplingLoopRef.current = null;
+      }
+    };
+  }, [isLandmarkerReady, predictorState, accuracy, extractFromVideo, sendFeatures, unit.category, handleRetry]);
+
+  // Auto-capture on prediction stability
+  useEffect(() => {
+    if (capturingRef.current || accuracy != null || isSubmitting) return;
+
+    const pred = livePrediction;
+    if (!pred.label || pred.confidence < 30 || pred.label === "No Action") {
+      stableLabelRef.current = null;
+      stableCountRef.current = 0;
+      return;
+    }
+
+    if (pred.label === stableLabelRef.current) {
+      stableCountRef.current += 1;
+      if (stableCountRef.current >= AUTO_CAPTURE_FRAMES) {
+        stableLabelRef.current = null;
+        stableCountRef.current = 0;
+        void doCaptureFromPrediction();
+      }
+    } else {
+      stableLabelRef.current = pred.label;
+      stableCountRef.current = 1;
+    }
+  }, [livePrediction, accuracy, isSubmitting, doCaptureFromPrediction]);
+
+  // ───────────────────────────────────────────────────────────────────────
 
   const displayLetter = getLessonDisplayLetter(lesson);
   const trackHref = ROUTES.fingerSpelling.root;
@@ -182,14 +431,6 @@ export default function LessonLearningView({
     };
   }, [chapter, clearPracticeContext, initializePracticeSession, lesson, nextLessonId, setPracticeContext, unit]);
 
-  const handleRetry = useCallback(() => {
-    setRecError(null);
-    latestDetectionRef.current = EMPTY_DETECTION;
-    resetPracticeResult();
-    incrementCameraResetKey();
-    startMonitoring();
-  }, [incrementCameraResetKey, resetPracticeResult, startMonitoring]);
-
   const handleDetection = useCallback((detection: RawHandDetection) => {
     latestDetectionRef.current = detection;
   }, []);
@@ -197,6 +438,8 @@ export default function LessonLearningView({
   const handleContinue = async () => {
     if (isCompleting) return;
 
+    clearAutoRetryTimers();
+    retryPendingRef.current = false;
     setIsCompleting(true);
     const completed = await completePractice();
     setIsCompleting(false);
@@ -255,8 +498,13 @@ export default function LessonLearningView({
         videoRef={videoRef}
         detectLandmarks={detectLandmarks}
         onDetection={handleDetection}
-        stabilityState={stabilityState}
-        stabilityProgress={stabilityProgress}
+        // Comment out old stability props — stability-based UI hidden
+        stabilityState="idle"
+        stabilityProgress={0}
+        // Pass live prediction for the MetricCards
+        liveLabel={livePrediction.label}
+        liveConfidence={livePrediction.confidence}
+        predictorReady={predictorState === "ready"}
         onRetry={handleRetry}
         onContinue={handleContinue}
       />

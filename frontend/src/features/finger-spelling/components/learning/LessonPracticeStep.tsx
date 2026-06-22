@@ -51,6 +51,12 @@ type LessonPracticeStepProps = {
   stabilityProgress: number;
   onRetry: () => void;
   onContinue: () => void | Promise<void>;
+  /** Live prediction label from WebSocket (shown in realtime before capture). */
+  liveLabel?: string | null;
+  /** Live prediction confidence from WebSocket (shown in realtime before capture). */
+  liveConfidence?: number;
+  /** Whether the WebSocket predictor is connected and ready. */
+  predictorReady?: boolean;
 };
 
 export default function LessonPracticeStep({
@@ -72,6 +78,9 @@ export default function LessonPracticeStep({
   stabilityProgress,
   onRetry,
   onContinue,
+  liveLabel,
+  liveConfidence = 0,
+  predictorReady = false,
 }: LessonPracticeStepProps) {
   const { t } = useTranslation();
   const displayConfidence = useAnimatedScore(accuracy);
@@ -90,13 +99,20 @@ export default function LessonPracticeStep({
     ? t("fsLandmarkerLoading")
     : isSubmitting
       ? t("fsEvaluating")
-      : stabilityState === "stable"
-        ? t("fsStableHold")
-        : stabilityState === "timeout"
-          ? t("fsStabilityTimeout")
-          : t("fsHoldStill");
+      : predictorReady && liveLabel
+        ? `${liveLabel}  ${Math.round(liveConfidence)}%`
+        : stabilityState === "stable"
+          ? t("fsStableHold")
+          : stabilityState === "timeout"
+            ? t("fsStabilityTimeout")
+            : t("fsHoldStill");
   const showStabilityProgress =
     accuracy == null && !isSubmitting;
+
+  // Determine what to show in the MetricCards
+  const showLivePrediction = !!(accuracy == null && !isSubmitting && predictorReady && liveLabel);
+  const cardConfidence = showLivePrediction ? Math.round(liveConfidence) : (displayConfidence != null ? displayConfidence : null);
+  const cardLabel = showLivePrediction ? liveLabel : (predictedLetter ?? null);
 
   return (
     <Stack
@@ -171,7 +187,7 @@ export default function LessonPracticeStep({
                 >
                   {stabilityLabel}
                 </Typography>
-                {showStabilityProgress ? (
+                {showStabilityProgress && stabilityState === "waiting" ? (
                   <Typography
                     sx={{
                       px: 1,
@@ -190,7 +206,7 @@ export default function LessonPracticeStep({
               </Stack>
             </Stack>
 
-            {showStabilityProgress && (
+            {showStabilityProgress && stabilityState !== "idle" && (
               <Stack spacing={0.5}>
                 <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
                   <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary, fontWeight: 600 }}>
@@ -240,15 +256,15 @@ export default function LessonPracticeStep({
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
             label={t("fsMatchConfidence")}
-            value={accuracy != null ? `${displayConfidence}%` : "—"}
-            highlight={passed}
+            value={cardConfidence != null ? `${cardConfidence}%` : "—"}
+            highlight={passed || (showLivePrediction && liveConfidence >= passThreshold)}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
             label={t("fsPredictResult")}
-            value={predictedLetter ?? "—"}
-            highlight={predictedLetter != null && passed}
+            value={cardLabel ?? "—"}
+            highlight={cardLabel != null && passed}
           />
         </Grid>
       </Grid>

@@ -246,6 +246,8 @@ class HandPredictResponse(BaseModel):
 
 
 class HandPredictStatusResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     available: bool
     model_loaded: bool = False
     label_encoder_loaded: bool = False

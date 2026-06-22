@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from unicodedata import category
 
 import h5py
 import numpy as np
@@ -238,6 +239,14 @@ class KhmerHandPredictor:
         raw_predicted_index = int(np.argmax(probabilities))
         predicted_index = max(0, raw_predicted_index - self.CLASS_INDEX_OFFSET)
         confidence = float(probabilities[raw_predicted_index]) * 100.0
+
+        if category is not None and category.lower() == "none":
+            return PredictionResult(
+                predicted_class_index=0,
+                predicted_label="No Action",
+                confidence=0.0,
+                probabilities=[float(p) for p in probabilities],
+            )
 
         if category is not None:
             probabilities = self._mask_by_category(probabilities, category)
