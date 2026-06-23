@@ -353,5 +353,20 @@
   "QUIZ": {
     "PLACEHOLDER_TYPE_LETTER": "Type the letter or romanization",
     "SIGN_PROMPT_ALT": "Sign prompt"
+  },
+  "FEEDBACK": {
+    "TITLE": "Quick feedback",
+    "PROMPT": "How did this lesson feel for",
+    "OPEN": "Feedback",
+    "COMMENT_LABEL": "Comment",
+    "COMMENT_PLACEHOLDER": "Tell us what worked or felt off",
+    "SUBMIT": "Send feedback",
+    "THANKS": "Thanks for the feedback.",
+    "ERROR": "Could not send feedback. Please try again.",
+    "MOOD_VERY_BAD": "Very bad",
+    "MOOD_BAD": "Bad",
+    "MOOD_OKAY": "Okay",
+    "MOOD_GOOD": "Good",
+    "MOOD_EXCELLENT": "Excellent"
   }
 }
