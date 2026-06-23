@@ -6,12 +6,48 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-from unicodedata import category
 
 import h5py
 import numpy as np
 
 from src.core.config import settings
+
+MAIN_CONSONANT_LABELS = [
+    "ក", "ខ", "គ", "ឃ", "ង", "ច", "ឆ", "ជ", "ឈ", "ញ", "ដ", "ឋ", "ឌ", "ឍ", "ណ", "ត",
+    "ថ", "ទ", "ធ", "ន", "ប", "ផ", "ព", "ភ", "ម", "យ", "រ", "ល", "វ", "ស", "ហ", "ឡ",
+    "អ",
+]
+SUB_CONSONANT_LABELS = [
+    "្ក", "្ខ", "្គ", "្ឃ", "្ង", "្ច", "្ឆ", "្ជ", "្ឈ", "្ញ", "្ដ", "្ឋ", "្ឌ", "្ឍ",
+    "្ណ", "្ត", "្ថ", "្ទ", "្ធ", "្ន", "្ប", "្ផ", "្ព", "្ភ", "្ម", "្យ", "្រ", "្ល",
+    "្វ", "្ស", "្ហ", "្អ",
+]
+DEPENDENT_VOWEL_LABELS = [
+    "ា", "ិ", "ី", "ឹ", "ឺ", "ុ", "ូ", "ួ", "ើ", "ឿ", "ៀ", "េ", "ែ", "ៃ", "ោ", "ៅ",
+    "ុំ", "ំ", "ាំ", "ះ", "ុះ", "េះ", "ោះ",
+]
+INDEPENDENT_VOWEL_LABELS = [
+    "អា", "ឥ", "ឦ", "ឧ", "ឩ", "ឪ", "ឫ", "ឬ", "ឭ", "ឮ", "ឯ", "ឰ", "ឱ", "ឳ",
+]
+DIACRITIC_LABELS = [
+    "!", "question", "៉", "៊", "៌", "៍", "៎", "៏", "័", "។", "។ល។", "៖", "ៗ", "៚",
+]
+NUMBER_LABELS = ["០", "១", "២", "៣", "៤", "៥", "៦", "៧", "៨", "៩"]
+
+LABEL_CATEGORIES: dict[str, str] = {
+    **dict.fromkeys(MAIN_CONSONANT_LABELS, "Main Consonants"),
+    **dict.fromkeys(SUB_CONSONANT_LABELS, "Sub Consonants"),
+    **dict.fromkeys(DEPENDENT_VOWEL_LABELS, "Dependent Vowels"),
+    **dict.fromkeys(INDEPENDENT_VOWEL_LABELS, "Independent Vowels"),
+    **dict.fromkeys(DIACRITIC_LABELS, "Diacritics"),
+    **dict.fromkeys(NUMBER_LABELS, "Numbers"),
+    "No_Action": "None",
+}
+
+CATEGORY_ALIASES: dict[str, set[str]] = {
+    "Consonant": {"Main Consonants", "Sub Consonants"},
+    "Vowel": {"Dependent Vowels", "Independent Vowels"},
+}
 
 
 @dataclass(frozen=True)
@@ -100,15 +136,19 @@ class KhmerLabelDecoder:
     def label_category_map(self) -> dict[str, str]:
         """Return a mapping of display label → category from the encoder labels.
 
-        Encoder labels are stored as ``"Label,Category"``, e.g. ``"Ka,Consonant"``.
-        The display label has underscores replaced by spaces so callers can match
-        a ``predicted_label`` against this map.
+        Older exported encoders only contain the raw label. Newer encoders may
+        store ``"Label,Category"``; both shapes are accepted here.
         """
         mapping: dict[str, str] = {}
         for raw in self.classes:
             parts = raw.split(",", 1)
-            display = parts[0].strip().replace("_", " ")
-            category = parts[1].strip() if len(parts) > 1 else ""
+            label = parts[0].strip()
+            display = label.replace("_", " ")
+            category = (
+                parts[1].strip()
+                if len(parts) > 1
+                else LABEL_CATEGORIES.get(label, "")
+            )
             mapping[display] = category
         return mapping
 
@@ -152,7 +192,7 @@ class KhmerHandPredictor:
     """NumPy forward pass for Khmer MLP ``.h5`` models."""
 
     INPUT_DIM = 126
-    CLASS_INDEX_OFFSET = 1
+    CLASS_INDEX_OFFSET = 0
 
     def __init__(self, model_path: Path) -> None:
         self._model_path = model_path
@@ -274,14 +314,13 @@ class KhmerHandPredictor:
         The ``None`` / ``No Action`` category is always kept so the model can
         express "nothing detected".
         """
+        allowed_categories = CATEGORY_ALIASES.get(category, {category})
         label_category_map = self._label_decoder.label_category_map()
-        # The probabilities array has one extra slot at index 0 (CLASS_INDEX_OFFSET).
-        # We build a mask for the output nodes, then shift by the offset.
         masked = np.zeros_like(probabilities)
-        for i, (display_label, cat) in enumerate(label_category_map.items()):
+        for i, (display_label, category) in enumerate(label_category_map.items()):
             output_idx = i + self.CLASS_INDEX_OFFSET
             if 0 <= output_idx < len(probabilities):
-                if cat == category or cat == "None":
+                if category in allowed_categories or category == "None" or display_label == "No Action":
                     masked[output_idx] = probabilities[output_idx]
 
         total = np.sum(masked)
