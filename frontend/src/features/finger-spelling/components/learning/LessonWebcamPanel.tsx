@@ -52,7 +52,7 @@ export default function LessonWebcamPanel({
     streamRef.current = null;
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError(t("fsCameraUnavailable"));
+      setCameraError(t("FINGER_SPELLING.LESSON.CAMERA_UNAVAILABLE"));
       return;
     }
 
@@ -73,7 +73,7 @@ export default function LessonWebcamPanel({
         await video.play();
       }
     } catch {
-      setCameraError(t("fsCameraDenied"));
+      setCameraError(t("FINGER_SPELLING.LESSON.CAMERA_DENIED"));
     }
   }, [t]);
 

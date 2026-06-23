@@ -101,7 +101,7 @@ export default function FingerSpellingTrack({
 
   const currentUnitTitle = currentUnit
     ? getUnitTitle(currentUnit, locale)
-    : t("fsTrackFallbackUnitTitle");
+    : t("FINGER_SPELLING.TRACK.FALLBACK_UNIT_TITLE");
   const currentUnitCompleted = currentUnit?.completedLessonCount ?? 0;
   const currentUnitTotal = currentUnit?.totalLessonCount ?? 0;
   const quizChaptersUnlocked =
@@ -130,7 +130,7 @@ export default function FingerSpellingTrack({
               textTransform: "uppercase",
             }}
           >
-            {t("fsTrackEyebrow")}
+            {t("FINGER_SPELLING.TRACK.EYEBROW")}
           </Typography>
           <Typography
             component="h1"
@@ -143,7 +143,7 @@ export default function FingerSpellingTrack({
               lineHeight: 1.05,
             }}
           >
-            {t("fsTrackTitle")}
+            {t("FINGER_SPELLING.TRACK.TITLE")}
           </Typography>
         </Stack>
 
@@ -163,7 +163,7 @@ export default function FingerSpellingTrack({
             py: 1.25,
           }}
         >
-          {t("continueLesson")}
+          {t("BUTTON.CONTINUE_LESSON")}
         </Button>
       </Stack>
 
@@ -172,21 +172,21 @@ export default function FingerSpellingTrack({
           <TrackSummaryCard
             step={formatBadgeStep(currentUnit?.orderIndex ?? 1, locale)}
             title={currentUnitTitle}
-            description={t("fsTrackSummaryDescription")}
+            description={t("FINGER_SPELLING.TRACK.SUMMARY_DESCRIPTION")}
             completedCount={currentUnitCompleted}
             totalCount={currentUnitTotal}
-            countLabel={t("lessons")}
+            countLabel={t("LABELS.LESSONS")}
             active
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <TrackSummaryCard
             step={formatBadgeStep(2, locale)}
-            title={t("fsTrackQuizTitle")}
-            description={t("fsTrackQuizDescription")}
+            title={t("FINGER_SPELLING.TRACK.QUIZ_TITLE")}
+            description={t("FINGER_SPELLING.TRACK.QUIZ_DESCRIPTION")}
             completedCount={quizChaptersUnlocked}
             totalCount={quizChaptersTotal}
-            countLabel={t("fsChapter")}
+            countLabel={t("FINGER_SPELLING.LABELS.CHAPTER")}
           />
         </Grid>
       </Grid>
@@ -202,8 +202,8 @@ export default function FingerSpellingTrack({
               toggleUnitExpanded(unit?.id);
             }}
             locale={locale}
-            unitLabel={t("fsUnit")}
-            chapterLabel={t("fsChapter")}
+            unitLabel={t("FINGER_SPELLING.LABELS.UNIT")}
+            chapterLabel={t("FINGER_SPELLING.LABELS.CHAPTER")}
           />
         ))}
       </Stack>
@@ -260,7 +260,7 @@ function TrackSummaryCard({
               textAlign: "right",
             }}
           >
-            {t("fsTrackProgressSummary", {
+            {t("FINGER_SPELLING.TRACK.PROGRESS_SUMMARY", {
               completed: completedCount,
               total: totalCount,
               label: countLabel,
@@ -407,7 +407,7 @@ function UnitTrackCard({
               fontWeight: 700,
             }}
           >
-            {t("fsTrackCurrentUnitProgress", {
+            {t("FINGER_SPELLING.TRACK.CURRENT_UNIT_PROGRESS", {
               completed: unit?.completedLessonCount,
               total: unit?.totalLessonCount,
             })}
@@ -565,7 +565,7 @@ function ChapterTrackSection({
               fontWeight: 600,
             }}
           >
-            {t("fsChapterLessonsPractice", { count: chapter?.lessonCount })}
+            {t("FINGER_SPELLING.TRACK.CHAPTER_LESSONS_PRACTICE", { count: chapter?.lessonCount })}
           </Typography>
           <Stack
             component="span"
@@ -692,7 +692,7 @@ function LessonTrackRow({
                 lineHeight: 1,
               }}
             >
-              {t("fsCompleted")}
+              {t("FINGER_SPELLING.TRACK.COMPLETED")}
             </Typography>
           ) : null}
           <Stack

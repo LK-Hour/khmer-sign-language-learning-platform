@@ -51,7 +51,7 @@ export default function LandingPage() {
                   color: KslColors.primary,
                 }}
               >
-                {t("landingEyebrow")}
+                {t("HOME.EYEBROW")}
               </Typography>
 
               <Typography
@@ -63,7 +63,7 @@ export default function LandingPage() {
                   color: KslColors.textPrimary,
                 }}
               >
-                {t("landingTitle")}
+                {t("HOME.TITLE")}
               </Typography>
 
               <Typography
@@ -73,7 +73,7 @@ export default function LandingPage() {
                   color: KslColors.textSecondary,
                 }}
               >
-                {t("landingSubtitle")}
+                {t("HOME.SUBTITLE")}
               </Typography>
 
               <Stack
@@ -97,7 +97,7 @@ export default function LandingPage() {
                     whiteSpace: { xs: "normal", sm: "nowrap" },
                   }}
                 >
-                  {t("landingFingerSpellingCta")}
+                  {t("HOME.FINGER_SPELLING_CTA")}
                 </Button>
 
                 <Button
@@ -122,7 +122,7 @@ export default function LandingPage() {
                     },
                   }}
                 >
-                  {t("landingWordDetectionCta")}
+                  {t("HOME.WORD_DETECTION_CTA")}
                 </Button>
               </Stack>
             </Stack>
@@ -142,7 +142,7 @@ export default function LandingPage() {
             >
               <Image
                 src={HERO_IMAGE}
-                alt={t("landingHeroAlt")}
+                alt={t("HOME.HERO_ALT")}
                 fill
                 priority
                 sizes="(max-width: 900px) 100vw, 50vw"
@@ -156,9 +156,9 @@ export default function LandingPage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <LearningModeCard
               href={fingerSpellingHref}
-              modeLabel={t("landingMode01")}
-              title={t("navFingerSpelling")}
-              description={t("landingFingerSpellingDesc")}
+              modeLabel={t("HOME.MODE_01")}
+              title={t("NAV.FINGER_SPELLING")}
+              description={t("HOME.FINGER_SPELLING_DESC")}
               stat={fingerSpellingStat}
             />
           </Grid>
@@ -166,10 +166,10 @@ export default function LandingPage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <LearningModeCard
               href={wordDetectionHref}
-              modeLabel={t("landingMode02")}
-              title={t("navWordDetection")}
-              description={t("landingWordDetectionDesc")}
-              stat={t("landingWordDetectionStat")}
+              modeLabel={t("HOME.MODE_02")}
+              title={t("NAV.WORD_DETECTION")}
+              description={t("HOME.WORD_DETECTION_DESC")}
+              stat={t("HOME.WORD_DETECTION_STAT")}
             />
           </Grid>
         </Grid>

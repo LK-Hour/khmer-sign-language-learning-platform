@@ -39,7 +39,7 @@ export default function FingerSpellingPageLayout({
 
   const contextBadge =
     contextUnitIndex != null
-      ? formatUnitBadge(contextUnitIndex, locale, t("fsUnit"))
+      ? formatUnitBadge(contextUnitIndex, locale, t("FINGER_SPELLING.LABELS.UNIT"))
       : contextBadgeProp;
 
   const header = titleKh

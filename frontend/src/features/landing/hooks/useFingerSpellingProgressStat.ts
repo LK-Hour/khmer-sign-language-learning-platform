@@ -70,7 +70,7 @@ export function useFingerSpellingProgressStat() {
 
   const stat = useMemo(() => {
     if (!hasHydrated || isLoading || progress.total === 0) {
-      return t("landingFingerSpellingStatLoading");
+      return t("HOME.FINGER_SPELLING_STAT_LOADING");
     }
 
     const { completed, total } = formatLessonProgressStat(
@@ -79,7 +79,7 @@ export function useFingerSpellingProgressStat() {
       locale
     );
 
-    return t("landingFingerSpellingStat", { completed, total });
+    return t("HOME.FINGER_SPELLING_STAT", { completed, total });
   }, [hasHydrated, isLoading, locale, progress.completed, progress.total, t]);
 
   return {

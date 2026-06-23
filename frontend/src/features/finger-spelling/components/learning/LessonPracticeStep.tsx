@@ -88,24 +88,24 @@ export default function LessonPracticeStep({
   const passed = accuracy != null && accuracy >= passThreshold;
 
   const correctionText = passed
-    ? t("fsCorrectionPassed")
+    ? t("FINGER_SPELLING.LESSON.CORRECTION_PASSED")
     : accuracy != null
-      ? t("fsCorrectionAlmost")
-      : t("fsHoldStill");
+      ? t("FINGER_SPELLING.LESSON.CORRECTION_ALMOST")
+      : t("FINGER_SPELLING.LESSON.HOLD_STILL");
   const tipText =
     tip?.trim() ||
-    t("fsDefaultPracticeTip");
+    t("FINGER_SPELLING.LESSON.DEFAULT_PRACTICE_TIP");
   const stabilityLabel = !isLandmarkerReady
-    ? t("fsLandmarkerLoading")
+    ? t("FINGER_SPELLING.LESSON.LANDMARKER_LOADING")
     : isSubmitting
-      ? t("fsEvaluating")
+      ? t("FINGER_SPELLING.LESSON.EVALUATING")
       : predictorReady && liveLabel
         ? `${liveLabel}  ${Math.round(liveConfidence)}%`
         : stabilityState === "stable"
-          ? t("fsStableHold")
+          ? t("FINGER_SPELLING.LESSON.STABLE_HOLD")
           : stabilityState === "timeout"
-            ? t("fsStabilityTimeout")
-            : t("fsHoldStill");
+            ? t("FINGER_SPELLING.LESSON.STABILITY_TIMEOUT")
+            : t("FINGER_SPELLING.LESSON.HOLD_STILL");
   const showStabilityProgress =
     accuracy == null && !isSubmitting;
 
@@ -143,7 +143,7 @@ export default function LessonPracticeStep({
                 lineHeight: 1.55,
               }}
             >
-              {t("fsSampleCaption")}
+              {t("FINGER_SPELLING.LESSON.SAMPLE_CAPTION")}
             </Typography>
           </Stack>
         </Grid>
@@ -210,9 +210,9 @@ export default function LessonPracticeStep({
               <Stack spacing={0.5}>
                 <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
                   <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary, fontWeight: 600 }}>
-                    {stabilityState === "waiting" && t("fsHoldStill")}
-                    {stabilityState === "stable" && t("fsStableHold")}
-                    {stabilityState === "timeout" && t("fsStabilityTimeout")}
+                    {stabilityState === "waiting" && t("FINGER_SPELLING.LESSON.HOLD_STILL")}
+                    {stabilityState === "stable" && t("FINGER_SPELLING.LESSON.STABLE_HOLD")}
+                    {stabilityState === "timeout" && t("FINGER_SPELLING.LESSON.STABILITY_TIMEOUT")}
                   </Typography>
                   {stabilityState === "waiting" && (
                     <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary }}>
@@ -243,7 +243,7 @@ export default function LessonPracticeStep({
                 lineHeight: 1.55,
               }}
             >
-              {t("fsCameraCaption")}
+              {t("FINGER_SPELLING.LESSON.CAMERA_CAPTION")}
             </Typography>
           </Stack>
         </Grid>
@@ -251,18 +251,18 @@ export default function LessonPracticeStep({
 
       <Grid container spacing={1.5}>
         <Grid size={{ xs: 12, md: 5 }}>
-          <TipCard label={t("fsTip")} text={tipText} />
+          <TipCard label={t("FINGER_SPELLING.LESSON.TIP")} text={tipText} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
-            label={t("fsMatchConfidence")}
+            label={t("FINGER_SPELLING.LESSON.MATCH_CONFIDENCE")}
             value={cardConfidence != null ? `${cardConfidence}%` : "—"}
             highlight={passed || (showLivePrediction && liveConfidence >= passThreshold)}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
-            label={t("fsPredictResult")}
+            label={t("FINGER_SPELLING.LESSON.PREDICT_RESULT")}
             value={cardLabel ?? "—"}
             highlight={cardLabel != null && passed}
           />
@@ -270,10 +270,10 @@ export default function LessonPracticeStep({
       </Grid>
 
       <PracticeFeedbackPanel
-        title={t("fsCorrectionResult")}
+        title={t("FINGER_SPELLING.LESSON.CORRECTION_RESULT")}
         text={correctionText}
-        retryLabel={t("fsRetry")}
-        continueLabel={t("fsContinueLesson")}
+        retryLabel={t("FINGER_SPELLING.TRACK.RETRY")}
+        continueLabel={t("FINGER_SPELLING.LESSON.CONTINUE_LESSON")}
         passed={passed}
         isSubmitting={isSubmitting}
         isContinuing={isContinuing}

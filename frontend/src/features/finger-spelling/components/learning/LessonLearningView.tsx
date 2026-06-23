@@ -124,23 +124,23 @@ export default function LessonLearningView({
   //       return;
   //     }
   //     if (!isLandmarkerReady) {
-  //       setRecError(t("fsLandmarkerLoading"));
+  //       setRecError(t("FINGER_SPELLING.LESSON.LANDMARKER_LOADING"));
   //       return;
   //     }
   //     if (!video) {
-  //       setRecError(t("fsCameraUnavailable"));
+  //       setRecError(t("FINGER_SPELLING.LESSON.CAMERA_UNAVAILABLE"));
   //       return;
   //     }
   //
   //     const extraction = extractFromVideo(video);
   //     if (!extraction.handDetected) {
-  //       setRecError(t("fsNoHandDetected"));
+  //       setRecError(t("FINGER_SPELLING.LESSON.NO_HAND_DETECTED"));
   //       return;
   //     }
   //     await runPracticeRec(lesson.id, extraction.features, extraction.handedness, unit.category ?? undefined);
   //   } catch (error) {
   //     setRecError(
-  //       error instanceof Error ? error.message : t("fsHandPredictionFailed")
+  //       error instanceof Error ? error.message : t("FINGER_SPELLING.LESSON.HAND_PREDICTION_FAILED")
   //     );
   //   } finally {
   //     capturingRef.current = false;
@@ -190,18 +190,18 @@ export default function LessonLearningView({
           return;
         }
         if (!isLandmarkerReady) {
-          setRecError(t("fsLandmarkerLoading"));
+          setRecError(t("FINGER_SPELLING.LESSON.LANDMARKER_LOADING"));
           return;
         }
         if (!video) {
-          setRecError(t("fsCameraUnavailable"));
+          setRecError(t("FINGER_SPELLING.LESSON.CAMERA_UNAVAILABLE"));
           return;
         }
 
         // Use the live prediction's features for the submission
         const extraction = extractFromVideo(video);
         if (!extraction.handDetected) {
-          setRecError(t("fsNoHandDetected"));
+          setRecError(t("FINGER_SPELLING.LESSON.NO_HAND_DETECTED"));
           return;
         }
 
@@ -213,7 +213,7 @@ export default function LessonLearningView({
         );
       } catch (error) {
         setRecError(
-          error instanceof Error ? error.message : t("fsHandPredictionFailed"),
+          error instanceof Error ? error.message : t("FINGER_SPELLING.LESSON.HAND_PREDICTION_FAILED"),
         );
       } finally {
         capturingRef.current = false;
@@ -379,7 +379,7 @@ export default function LessonLearningView({
     setIsCompleting(false);
 
     if (!completed) {
-      setRecError(t("fsProgressSyncFailed"));
+      setRecError(t("FINGER_SPELLING.LESSON.PROGRESS_SYNC_FAILED"));
       return;
     }
 
@@ -401,16 +401,16 @@ export default function LessonLearningView({
           color="inherit"
           href={`/${locale}${trackHref}`}
         >
-          {t("navFingerSpelling")}
+          {t("NAV.FINGER_SPELLING")}
         </Link>
         <Typography sx={{ color: KslColors.textSecondary, fontWeight: 600 }}>
-          {t("fsUnit")} {unitStep}
+          {t("FINGER_SPELLING.LABELS.UNIT")} {unitStep}
         </Typography>
         <Typography sx={{ color: KslColors.textSecondary, fontWeight: 600 }}>
-          {t("fsChapter")} {chapterStep}
+          {t("FINGER_SPELLING.LABELS.CHAPTER")} {chapterStep}
         </Typography>
         <Typography sx={{ color: KslColors.textSecondary, fontWeight: 600 }}>
-          {t("fsLesson")} {lessonStep}
+          {t("FINGER_SPELLING.LABELS.LESSON")} {lessonStep}
         </Typography>
         <Typography sx={{ color: KslColors.textPrimary, fontWeight: 700 }}>
           {unitLabel} {displayLetter}
