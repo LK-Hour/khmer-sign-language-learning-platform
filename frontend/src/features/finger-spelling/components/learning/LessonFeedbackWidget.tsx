@@ -14,7 +14,6 @@ type LessonFeedbackWidgetProps = {
   category: string;
   lessonId: number;
   characteristic: string;
-  lessonLabel: string;
   resultReady: boolean;
 };
 
@@ -29,7 +28,6 @@ export default function LessonFeedbackWidget({
   category,
   lessonId,
   characteristic,
-  lessonLabel,
   resultReady,
 }: LessonFeedbackWidgetProps) {
   const { t } = useTranslation();
@@ -69,27 +67,27 @@ export default function LessonFeedbackWidget({
     () => [
       {
         value: "very_bad",
-        label: t("feedbackMoodVeryBad"),
+        label: t("FEEDBACK.MOOD_VERY_BAD"),
         emoji: "😡",
       },
       {
         value: "bad",
-        label: t("feedbackMoodBad"),
+        label: t("FEEDBACK.MOOD_BAD"),
         emoji: "🙁",
       },
       {
         value: "okay",
-        label: t("feedbackMoodOkay"),
+        label: t("FEEDBACK.MOOD_OKAY"),
         emoji: "😐",
       },
       {
         value: "good",
-        label: t("feedbackMoodGood"),
+        label: t("FEEDBACK.MOOD_GOOD"),
         emoji: "🙂",
       },
       {
         value: "excellent",
-        label: t("feedbackMoodExcellent"),
+        label: t("FEEDBACK.MOOD_EXCELLENT"),
         emoji: "😍",
       },
     ],
@@ -123,7 +121,7 @@ export default function LessonFeedbackWidget({
         setCollapsed(true);
       }, 1800);
     } catch {
-      setError(t("feedbackError"));
+      setError(t("FEEDBACK.ERROR"));
     } finally {
       setSubmitting(false);
     }
@@ -140,13 +138,13 @@ export default function LessonFeedbackWidget({
       }}
     >
       {collapsed ? (
-        <Tooltip title={t("feedbackOpen")}>
+        <Tooltip title={t("FEEDBACK.OPEN")}>
           <Paper
             component="button"
             type="button"
             elevation={0}
             onClick={() => setCollapsed(false)}
-            aria-label={t("feedbackOpen")}
+            aria-label={t("FEEDBACK.OPEN")}
             sx={{
               width: 52,
               height: 52,
@@ -186,16 +184,16 @@ export default function LessonFeedbackWidget({
             >
               <Stack>
                 <Typography sx={{ fontSize: KslFontSizes.lg, fontWeight: 700, color: KslColors.textPrimary }}>
-                  {t("feedbackTitle")}
+                  {t("FEEDBACK.TITLE")}
                 </Typography>
                 <Typography sx={{ mt: 0.5, fontSize: KslFontSizes.sm, color: KslColors.textSecondary }}>
-                  {t("feedbackPrompt")} {lessonLabel}
+                  {t("FEEDBACK.PROMPT")}
                 </Typography>
               </Stack>
               <IconButton
                 size="small"
                 onClick={handleClose}
-                aria-label={t("fsAriaCloseMenu")}
+                aria-label={t("FINGER_SPELLING.ARIA.CLOSE_MENU")}
                 sx={{ color: KslColors.textSecondary }}
               >
                 <CloseRoundedIcon fontSize="small" />
@@ -203,7 +201,7 @@ export default function LessonFeedbackWidget({
             </Stack>
 
             {submitted ? (
-              <Alert severity="success">{t("feedbackThanks")}</Alert>
+              <Alert severity="success">{t("FEEDBACK.THANKS")}</Alert>
             ) : (
               <>
                 <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
@@ -249,8 +247,8 @@ export default function LessonFeedbackWidget({
                 </Stack>
 
                 <TextField
-                  label={t("feedbackCommentLabel")}
-                  placeholder={t("feedbackCommentPlaceholder")}
+                  label={t("FEEDBACK.COMMENT_LABEL")}
+                  placeholder={t("FEEDBACK.COMMENT_PLACEHOLDER")}
                   value={comment}
                   onChange={(event) => setComment(event.target.value)}
                   multiline
@@ -268,13 +266,14 @@ export default function LessonFeedbackWidget({
                   onClick={handleSubmit}
                   disabled={!selectedMood}
                   sx={{
+                    mt: "4px",
                     minHeight: 44,
                     borderRadius: `${KslRadii.button}px`,
                     bgcolor: KslColors.primary,
                     "&:hover": { bgcolor: KslColors.primaryDark },
                   }}
                 >
-                  {t("feedbackSubmit")}
+                  {t("FEEDBACK.SUBMIT")}
                 </LoadingButton>
               </>
             )}

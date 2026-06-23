@@ -67,20 +67,6 @@ export default function PracticeFeedbackPanel({
         </Typography>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-        <Button
-          variant="outlined"
-          onClick={onRetry}
-          disabled={isSubmitting}
-          sx={{
-            minWidth: 110,
-            minHeight: 46,
-            borderRadius: `${KslRadii.button}px`,
-            fontSize: KslFontSizes.md,
-            fontWeight: 700,
-          }}
-        >
-          {retryLabel}
-        </Button>
         <LoadingButton
           variant="contained"
           loading={isContinuing}

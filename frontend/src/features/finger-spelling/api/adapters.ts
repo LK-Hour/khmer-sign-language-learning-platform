@@ -10,12 +10,17 @@ import { statusToPercent } from "../utils/progress";
 
 /** Matches backend `FsUnitResponse`. */
 export function normalizeUnit(unit: FsUnit): FsUnit {
+  const name = (unit?.title || unit?.titleKh || "").toLowerCase();
+  let category: string | null = unit?.category ?? null;
+  if (!category && name) {
+    if (name.includes("consonant")) category = "Consonant";
+    else if (name.includes("vowel")) category = "Vowel";
+  }
   return {
-
     id: unit?.id,
     title: unit?.title,
     titleKh: unit?.titleKh,
-    category: unit?.category ?? null,
+    category,
     orderIndex: unit?.orderIndex,
     chapterCount: unit?.chapterCount,
     completedLessonCount: unit?.completedLessonCount,

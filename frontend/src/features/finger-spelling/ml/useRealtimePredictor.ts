@@ -206,6 +206,11 @@ export function useRealtimePredictor() {
     lastPredictionRef.current = INITIAL_LIVE_PREDICTION;
   }, []);
 
+  const resetLivePrediction = useCallback(() => {
+    lastPredictionRef.current = INITIAL_LIVE_PREDICTION;
+    setLivePrediction(INITIAL_LIVE_PREDICTION);
+  }, []);
+
   // ── Send features for prediction ─────────────────────────────────────
   const sendFeatures = useCallback(
     (features: number[], handedness?: string, category?: string) => {
@@ -245,6 +250,8 @@ export function useRealtimePredictor() {
     disconnect,
     /** Force reconnection (resets attempt counter). */
     reconnect,
+    /** Clear the cached live result before starting a fresh attempt. */
+    resetLivePrediction,
     /** Send a 126-feature vector for real-time prediction. */
     sendFeatures,
     /** The latest live prediction received from the server. */

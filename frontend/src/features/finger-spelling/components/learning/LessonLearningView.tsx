@@ -25,18 +25,22 @@ import LessonPracticeStep from "./LessonPracticeStep";
 
 const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
 
+const categoryFromUnitTitle = (title?: string | null) => {
+  return title?.trim() || undefined;
+};
+
 // ─── Realtime prediction helpers ─────────────────────────────────────────
 
 /** How often (in ms) we sample a frame for WebSocket prediction. */
-const PREDICTION_SAMPLE_INTERVAL_MS = 150;
+const PREDICTION_SAMPLE_INTERVAL_MS = 200;
 
 /** How many consecutive same predictions trigger auto-capture. */
-const AUTO_CAPTURE_FRAMES = 5;
+const AUTO_CAPTURE_FRAMES = 6;
 
 /** Auto-retry delay after a prediction result (ms). */
-const AUTO_RETRY_DELAY_MS = 3000;
+const AUTO_RETRY_DELAY_MS =  1800;
 
-/** How often we check for a hand while auto-retry is pending. */
+/** How often to check for a returning hand after the retry delay. */
 const AUTO_RETRY_POLL_INTERVAL_MS = 300;
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -61,6 +65,11 @@ export default function LessonLearningView({
   const capturingRef = useRef(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [retryWaiting, setRetryWaiting] = useState(false);
+  const [capturedPrediction, setCapturedPrediction] = useState<{
+    label: string;
+    confidence: number;
+  } | null>(null);
   const {
     extractFromVideo,
     detectLandmarks,
@@ -72,6 +81,7 @@ export default function LessonLearningView({
   const {
     connect: connectPredictor,
     disconnect: disconnectPredictor,
+    resetLivePrediction,
     sendFeatures,
     livePrediction,
     connectionState: predictorState,
@@ -85,9 +95,6 @@ export default function LessonLearningView({
   );
   const resetPracticeResult = useFingerSpellingStore(
     (state) => state.resetPracticeResult
-  );
-  const incrementCameraResetKey = useFingerSpellingStore(
-    (state) => state.incrementCameraResetKey
   );
   const {
     initializePracticeSession,
@@ -138,7 +145,7 @@ export default function LessonLearningView({
   //       setRecError(t("FINGER_SPELLING.LESSON.NO_HAND_DETECTED"));
   //       return;
   //     }
-  //     await runPracticeRec(lesson.id, extraction.features, extraction.handedness, unit.category ?? undefined);
+  //     await runPracticeRec(lesson.id, extraction.features, extraction.handedness, categoryFromUnitTitle(unit.title) ?? undefined);
   //   } catch (error) {
   //     setRecError(
   //       error instanceof Error ? error.message : t("FINGER_SPELLING.LESSON.HAND_PREDICTION_FAILED")
@@ -146,7 +153,7 @@ export default function LessonLearningView({
   //   } finally {
   //     capturingRef.current = false;
   //   }
-  // }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t, unit.category]);
+  // }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t, unit.title]);
   //
   // const handleStable = useCallback(() => {
   //   void doCapture();
@@ -210,7 +217,7 @@ export default function LessonLearningView({
           lesson.id,
           extraction.features,
           extraction.handedness,
-          unit.category ?? undefined,
+          categoryFromUnitTitle(unit.title) ?? undefined,
         );
       } catch (error) {
         setRecError(
@@ -227,7 +234,7 @@ export default function LessonLearningView({
       lesson.id,
       runPracticeRec,
       t,
-      unit.category,
+      unit.title,
     ],
   );
 
@@ -247,26 +254,64 @@ export default function LessonLearningView({
   const handleRetry = useCallback(() => {
     clearAutoRetryTimers();
     retryPendingRef.current = false;
+    setRetryWaiting(false);
     setRecError(null);
     latestDetectionRef.current = EMPTY_DETECTION;
+    setCapturedPrediction(null);
     resetPracticeResult();
-    // incrementCameraResetKey();
+    resetLivePrediction();
     stableLabelRef.current = null;
     stableCountRef.current = 0;
-  }, [clearAutoRetryTimers, incrementCameraResetKey, resetPracticeResult]);
+  }, [clearAutoRetryTimers, resetLivePrediction, resetPracticeResult]);
+
+  const hasHandInFrame = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return false;
+
+    try {
+      return extractFromVideo(video).handDetected;
+    } catch {
+      return false;
+    }
+  }, [extractFromVideo]);
+
+  const waitForHandThenRetry = useCallback(() => {
+    retryPendingRef.current = true;
+    if (autoRetryPollRef.current) return;
+
+    autoRetryPollRef.current = setInterval(() => {
+      if (hasHandInFrame()) {
+        handleRetry();
+      }
+    }, AUTO_RETRY_POLL_INTERVAL_MS);
+  }, [handleRetry, hasHandInFrame]);
+
+  const retryWhenHandIsReady = useCallback(() => {
+    if (hasHandInFrame()) {
+      handleRetry();
+      return;
+    }
+
+    waitForHandThenRetry();
+  }, [handleRetry, hasHandInFrame, waitForHandThenRetry]);
 
   // When accuracy or error is received, start 2s auto-retry timer
   useEffect(() => {
     const hasResult = accuracy != null || recError != null;
     if (hasResult && !isSubmitting && !isCompleting) {
+      if (accuracy != null) {
+        queueMicrotask(() => {
+          setRetryWaiting((current) => current || true);
+        });
+      }
       autoRetryTimerRef.current = setTimeout(() => {
-        handleRetry();
+        retryWhenHandIsReady();
       }, AUTO_RETRY_DELAY_MS);
     }
     return () => {
       clearAutoRetryTimers();
     };
-  }, [accuracy, recError, isSubmitting, isCompleting, handleRetry, clearAutoRetryTimers]);
+  }, [accuracy, recError, isSubmitting, isCompleting, retryWhenHandIsReady, clearAutoRetryTimers]);
 
   // ── WebSocket lifecycle ───────────────────────────────────────────────
 
@@ -301,9 +346,9 @@ export default function LessonLearningView({
 
         if (extraction.handDetected) {
           sendFeatures(
-            extraction.features,
-            extraction.handedness,
-            unit.category ?? undefined,
+            extraction?.features,
+            extraction?.handedness,
+            categoryFromUnitTitle(unit.title) ?? undefined,
           );
         }
       } catch {
@@ -317,7 +362,7 @@ export default function LessonLearningView({
         samplingLoopRef.current = null;
       }
     };
-  }, [isLandmarkerReady, predictorState, accuracy, extractFromVideo, sendFeatures, unit.category, handleRetry]);
+  }, [isLandmarkerReady, predictorState, accuracy, extractFromVideo, sendFeatures, unit.title]);
 
   // Auto-capture on prediction stability
   useEffect(() => {
@@ -333,6 +378,10 @@ export default function LessonLearningView({
     if (pred.label === stableLabelRef.current) {
       stableCountRef.current += 1;
       if (stableCountRef.current >= AUTO_CAPTURE_FRAMES) {
+        setCapturedPrediction({
+          label: pred.label,
+          confidence: pred.confidence,
+        });
         stableLabelRef.current = null;
         stableCountRef.current = 0;
         void doCaptureFromPrediction();
@@ -375,6 +424,8 @@ export default function LessonLearningView({
 
     clearAutoRetryTimers();
     retryPendingRef.current = false;
+    setRetryWaiting(false);
+    setCapturedPrediction(null);
     setIsCompleting(true);
     const completed = await completePractice();
     setIsCompleting(false);
@@ -428,6 +479,7 @@ export default function LessonLearningView({
         cameraResetKey={cameraResetKey}
         isSubmitting={isSubmitting || isCompleting}
         isContinuing={isCompleting}
+        retryWaiting={retryWaiting}
         isLandmarkerReady={isLandmarkerReady}
         recError={recError}
         videoRef={videoRef}
@@ -437,6 +489,8 @@ export default function LessonLearningView({
         stabilityState="idle"
         stabilityProgress={0}
         // Pass live prediction for the MetricCards
+        capturedLabel={capturedPrediction?.label ?? null}
+        capturedConfidence={capturedPrediction?.confidence ?? null}
         liveLabel={livePrediction.label}
         liveConfidence={livePrediction.confidence}
         predictorReady={predictorState === "ready"}
@@ -449,7 +503,6 @@ export default function LessonLearningView({
         category={unit?.title || unit?.titleKh || ""}
         lessonId={lesson?.id}
         characteristic={displayLetter}
-        lessonLabel={displayLetter}
         resultReady={accuracy != null}
       />
     </Stack>

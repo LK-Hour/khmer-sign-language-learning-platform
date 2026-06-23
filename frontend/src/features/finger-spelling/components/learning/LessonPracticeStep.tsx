@@ -42,6 +42,7 @@ type LessonPracticeStepProps = {
   cameraResetKey: number;
   isSubmitting?: boolean;
   isContinuing?: boolean;
+  retryWaiting?: boolean;
   isLandmarkerReady?: boolean;
   recError?: string | null;
   videoRef?: RefObject<HTMLVideoElement | null>;
@@ -51,6 +52,9 @@ type LessonPracticeStepProps = {
   stabilityProgress: number;
   onRetry: () => void;
   onContinue: () => void | Promise<void>;
+  /** Prediction snapshot that triggered auto-capture. */
+  capturedLabel?: string | null;
+  capturedConfidence?: number | null;
   /** Live prediction label from WebSocket (shown in realtime before capture). */
   liveLabel?: string | null;
   /** Live prediction confidence from WebSocket (shown in realtime before capture). */
@@ -69,6 +73,7 @@ export default function LessonPracticeStep({
   cameraResetKey,
   isSubmitting = false,
   isContinuing = false,
+  retryWaiting = false,
   isLandmarkerReady = false,
   recError = null,
   videoRef,
@@ -78,6 +83,8 @@ export default function LessonPracticeStep({
   stabilityProgress,
   onRetry,
   onContinue,
+  capturedLabel,
+  capturedConfidence = null,
   liveLabel,
   liveConfidence = 0,
   predictorReady = false,
@@ -85,7 +92,21 @@ export default function LessonPracticeStep({
   const { t } = useTranslation();
   const displayConfidence = useAnimatedScore(accuracy);
 
+  const hasCapturedPrediction = !!capturedLabel && capturedConfidence != null;
+  const hasFinalResult = accuracy != null || retryWaiting || hasCapturedPrediction;
   const passed = accuracy != null && accuracy >= passThreshold;
+  const resultLabel =
+    accuracy != null && predictedLetter
+      ? predictedLetter
+      : hasCapturedPrediction
+        ? capturedLabel
+        : null;
+  const resultConfidence =
+    accuracy != null
+      ? Math.round(accuracy)
+      : hasCapturedPrediction
+        ? Math.round(capturedConfidence)
+        : null;
 
   const correctionText = passed
     ? t("FINGER_SPELLING.LESSON.CORRECTION_PASSED")
@@ -97,8 +118,10 @@ export default function LessonPracticeStep({
     t("FINGER_SPELLING.LESSON.DEFAULT_PRACTICE_TIP");
   const stabilityLabel = !isLandmarkerReady
     ? t("FINGER_SPELLING.LESSON.LANDMARKER_LOADING")
-    : isSubmitting
-      ? t("FINGER_SPELLING.LESSON.EVALUATING")
+    : resultLabel && resultConfidence != null
+      ? `${resultLabel}  ${resultConfidence}%`
+      : isSubmitting
+        ? t("FINGER_SPELLING.LESSON.EVALUATING")
       : predictorReady && liveLabel
         ? `${liveLabel}  ${Math.round(liveConfidence)}%`
         : stabilityState === "stable"
@@ -107,12 +130,14 @@ export default function LessonPracticeStep({
             ? t("FINGER_SPELLING.LESSON.STABILITY_TIMEOUT")
             : t("FINGER_SPELLING.LESSON.HOLD_STILL");
   const showStabilityProgress =
-    accuracy == null && !isSubmitting;
+    !hasFinalResult && !isSubmitting;
 
   // Determine what to show in the MetricCards
-  const showLivePrediction = !!(accuracy == null && !isSubmitting && predictorReady && liveLabel);
-  const cardConfidence = showLivePrediction ? Math.round(liveConfidence) : (displayConfidence != null ? displayConfidence : null);
-  const cardLabel = showLivePrediction ? liveLabel : (predictedLetter ?? null);
+  const showLivePrediction = !!(!hasFinalResult && !isSubmitting && predictorReady && liveLabel);
+  const cardConfidence = showLivePrediction
+    ? Math.round(liveConfidence)
+    : resultConfidence ?? (displayConfidence != null ? displayConfidence : null);
+  const cardLabel = showLivePrediction ? liveLabel : resultLabel;
 
   return (
     <Stack
@@ -158,52 +183,6 @@ export default function LessonPracticeStep({
                 isLandmarkerReady={isLandmarkerReady}
                 onDetection={onDetection}
               />
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{
-                  position: "absolute",
-                  top: 12,
-                  left: 12,
-                  right: 12,
-                  zIndex: 3,
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  pointerEvents: "none",
-                }}
-              >
-                <Typography
-                  sx={{
-                    px: 1.25,
-                    py: 0.65,
-                    borderRadius: 999,
-                    bgcolor: "rgba(0,0,0,0.58)",
-                    color: "#fff",
-                    fontSize: KslFontSizes.xs,
-                    fontWeight: 700,
-                    lineHeight: 1.2,
-                    backdropFilter: "blur(6px)",
-                  }}
-                >
-                  {stabilityLabel}
-                </Typography>
-                {showStabilityProgress && stabilityState === "waiting" ? (
-                  <Typography
-                    sx={{
-                      px: 1,
-                      py: 0.55,
-                      borderRadius: 999,
-                      bgcolor: "rgba(255,255,255,0.82)",
-                      color: KslColors.primaryDark,
-                      fontSize: KslFontSizes.xs,
-                      fontWeight: 800,
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {stabilityProgress}%
-                  </Typography>
-                ) : null}
-              </Stack>
             </Stack>
 
             {showStabilityProgress && stabilityState !== "idle" && (
