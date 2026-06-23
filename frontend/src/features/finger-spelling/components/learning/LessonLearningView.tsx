@@ -27,13 +27,13 @@ const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
 // ─── Realtime prediction helpers ─────────────────────────────────────────
 
 /** How often (in ms) we sample a frame for WebSocket prediction. */
-const PREDICTION_SAMPLE_INTERVAL_MS = 100;
+const PREDICTION_SAMPLE_INTERVAL_MS = 150;
 
 /** How many consecutive same predictions trigger auto-capture. */
 const AUTO_CAPTURE_FRAMES = 5;
 
 /** Auto-retry delay after a prediction result (ms). */
-const AUTO_RETRY_DELAY_MS = 1000;
+const AUTO_RETRY_DELAY_MS = 3000;
 
 /** How often we check for a hand while auto-retry is pending. */
 const AUTO_RETRY_POLL_INTERVAL_MS = 300;
@@ -254,58 +254,18 @@ export default function LessonLearningView({
     stableCountRef.current = 0;
   }, [clearAutoRetryTimers, incrementCameraResetKey, resetPracticeResult]);
 
-  const startAutoRetryPoll = useCallback(() => {
-    retryPendingRef.current = true;
-    if (autoRetryPollRef.current) return;
-
-    autoRetryPollRef.current = setInterval(() => {
-      const video = videoRef.current;
-      if (!video) return;
-
-      try {
-        const extraction = extractFromVideo(video);
-        if (!extraction.handDetected) return;
-
-        clearAutoRetryTimers();
-        retryPendingRef.current = false;
-        handleRetry();
-      } catch {
-        retryPendingRef.current = true;
-      }
-    }, AUTO_RETRY_POLL_INTERVAL_MS);
-  }, [clearAutoRetryTimers, extractFromVideo, handleRetry]);
-
-  const doAutoRetry = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) {
-      startAutoRetryPoll();
-      return;
-    }
-    try {
-      const extraction = extractFromVideo(video);
-      if (extraction.handDetected) {
-        // Hand is in frame — retry now
-        handleRetry();
-      } else {
-        startAutoRetryPoll();
-      }
-    } catch {
-      startAutoRetryPoll();
-    }
-  }, [extractFromVideo, handleRetry, startAutoRetryPoll]);
-
   // When accuracy or error is received, start 2s auto-retry timer
   useEffect(() => {
     const hasResult = accuracy != null || recError != null;
     if (hasResult && !isSubmitting && !isCompleting) {
       autoRetryTimerRef.current = setTimeout(() => {
-        doAutoRetry();
+        handleRetry();
       }, AUTO_RETRY_DELAY_MS);
     }
     return () => {
       clearAutoRetryTimers();
     };
-  }, [accuracy, recError, isSubmitting, isCompleting, doAutoRetry, clearAutoRetryTimers]);
+  }, [accuracy, recError, isSubmitting, isCompleting, handleRetry, clearAutoRetryTimers]);
 
   // ── WebSocket lifecycle ───────────────────────────────────────────────
 
@@ -337,13 +297,6 @@ export default function LessonLearningView({
 
       try {
         const extraction = extractFromVideo(video);
-
-        // Check if a retry is pending and hand just appeared
-        if (retryPendingRef.current && extraction.handDetected) {
-          retryPendingRef.current = false;
-          handleRetry();
-          return;
-        }
 
         if (extraction.handDetected) {
           sendFeatures(
