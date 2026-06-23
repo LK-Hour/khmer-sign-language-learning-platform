@@ -1,4 +1,6 @@
 export { default as FingerSpellingPageLayout } from "./FingerSpellingPageLayout";
+export { default as FingerSpellingPageLoading } from "./FingerSpellingPageLoading";
+export { FingerSpellingTrackSkeleton } from "./FingerSpellingPageLoading";
 export { default as FingerSpellingTrack } from "./FingerSpellingTrack";
 export { default as FingerSpellingTrackContainer } from "./FingerSpellingTrackContainer";
 export { default as LessonLearningView } from "./learning/LessonLearningView";
