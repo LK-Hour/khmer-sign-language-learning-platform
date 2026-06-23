@@ -347,26 +347,7 @@ export default function LessonLearningView({
   const displayLetter = getLessonDisplayLetter(lesson);
   const trackHref = ROUTES.fingerSpelling.root;
 
-  // Map unit category to i18n key for the breadcrumb label
-  const categoryLabelKey = (() => {
-    switch (unit?.category) {
-      case "Consonant":
-      case "Main_Consonant":
-        return "fsConsonant";
-      case "Sub_Consonant":
-        return "fsSubConsonant";
-      case "Dependent_Vowel":
-        return "fsVowel";
-      case "Independent_Vowel":
-        return "fsIndependentVowel";
-      case "Number":
-        return "fsNumber";
-      case "Diacritic":
-        return "fsDiacritic";
-      default:
-        return "fsCharacterLabel";
-    }
-  })();
+  const unitLabel = locale === "kh" ? unit.titleKh || unit.title : unit.title || unit.titleKh;
   const tip =
     locale === "kh"
       ? lesson?.descriptionKh || lesson?.description
@@ -432,7 +413,7 @@ export default function LessonLearningView({
           {t("fsLesson")} {lessonStep}
         </Typography>
         <Typography sx={{ color: KslColors.textPrimary, fontWeight: 700 }}>
-          {t(categoryLabelKey)} {displayLetter}
+          {unitLabel} {displayLetter}
         </Typography>
       </Breadcrumbs>
 
