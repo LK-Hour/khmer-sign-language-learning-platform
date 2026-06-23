@@ -356,7 +356,7 @@
   },
   "FEEDBACK": {
     "TITLE": "Quick feedback",
-    "PROMPT": "How did this lesson feel for",
+    "PROMPT": "How did this lesson feel for you?",
     "OPEN": "Feedback",
     "COMMENT_LABEL": "Comment",
     "COMMENT_PLACEHOLDER": "Tell us what worked or felt off",
