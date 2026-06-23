@@ -229,7 +229,7 @@ function BrandLogo({ locale }: { locale: Locale }) {
     >
       <Image
         src={LOGO_SRC}
-        alt={t("brandLogoAlt")}
+        alt={t("BRAND.LOGO_ALT")}
         width={44}
         height={44}
         style={{ borderRadius: 6, objectFit: "cover" }}
@@ -326,7 +326,7 @@ export default function MainHeader() {
 
   const displayName = user
     ? `${user?.first_name}${user?.last_name ? ` ${user?.last_name}` : ""}`.trim()
-    : t("navGuest");
+    : t("NAV.GUEST");
 
   const initials = user
     ? `${user?.first_name?.[0]}${user?.last_name ? user?.last_name[0] : ""}`.toUpperCase()
@@ -344,8 +344,8 @@ export default function MainHeader() {
     : locale;
 
   const learningModes = [
-    { label: t("navFingerSpelling"), href: ROUTES.fingerSpelling.root },
-    { label: t("navWordDetection"), href: ROUTES.words.root },
+    { label: t("NAV.FINGER_SPELLING"), href: ROUTES.fingerSpelling.root },
+    { label: t("NAV.WORD_DETECTION"), href: ROUTES.words.root },
   ];
 
   const handleLogout = async () => {
@@ -430,7 +430,7 @@ export default function MainHeader() {
 
                 {/* Home */}
                 <Stack component={Link} href={`/${locale}`} sx={navItemSx(isHomeActive)}>
-                  {t("navHome")}
+                  {t("NAV.HOME")}
                 </Stack>
 
                 {/* Modes — click + hover dropdown */}
@@ -454,7 +454,7 @@ export default function MainHeader() {
                       alignItems: "center",
                     }}
                   >
-                    {t("navLearningMode")}
+                    {t("NAV.LEARNING_MODE")}
                     <Iconify
                       icon="eva:chevron-down-fill"
                       sx={{
@@ -504,7 +504,7 @@ export default function MainHeader() {
                   href={`/${locale}${ROUTES.dictionary}`}
                   sx={navItemSx(isDictionaryActive)}
                 >
-                  {t("navDictionary")}
+                  {t("NAV.DICTIONARY")}
                 </Stack>
                 <Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: "auto", height: 20 , display: { xl:"none", md:"none" }}} />
 
@@ -518,7 +518,7 @@ export default function MainHeader() {
                   <Stack
                     component="button"
                     type="button"
-                    aria-label={t("language")}
+                    aria-label={t("COMMON.LANGUAGE")}
                     aria-expanded={langOpen}
                     aria-haspopup="true"
                     onClick={toggleLang}
@@ -573,7 +573,7 @@ export default function MainHeader() {
                       initials={initials}
                       picture={user?.picture}
                       pictureIcon={<Iconify icon="eva:person-fill" />}
-                      logoutLabel={t("navLogout")}
+                      logoutLabel={t("NAV.LOGOUT")}
                       onLogoutClick={requestLogout}
                     />
                   ) : (
@@ -591,7 +591,7 @@ export default function MainHeader() {
                         "&:hover": { bgcolor: "rgba(0,0,0,0.04)" },
                       }}
                     >
-                      {t("login")}
+                      {t("BUTTON.LOGIN")}
                     </Button>
                   )}
                 </Box>
@@ -668,7 +668,7 @@ export default function MainHeader() {
         {/* Nav links */}
         <List disablePadding sx={{ px: 1.5, py: 1 }}>
           {[
-            { label: t("navHome"), href: `/${locale}`, active: isHomeActive, onClick: () => setDrawerOpen(false), isLink: true },
+            { label: t("NAV.HOME"), href: `/${locale}`, active: isHomeActive, onClick: () => setDrawerOpen(false), isLink: true },
           ].map(({ label, href, active, onClick, isLink }) => (
             <ListItemButton
               key={href}
@@ -753,7 +753,7 @@ export default function MainHeader() {
             }}
           >
             <ListItemText
-              primary={t("navDictionary")}
+              primary={t("NAV.DICTIONARY")}
               slotProps={{
                 primary: {
                   sx: {
@@ -781,7 +781,7 @@ export default function MainHeader() {
               mb: 1,
             }}
           >
-            {t("language")}
+            {t("COMMON.LANGUAGE")}
           </Typography>
           <Stack direction="row" spacing={1}>
             {SUPPORTED_LOCALES.map((loc) => (
@@ -825,7 +825,7 @@ export default function MainHeader() {
             displayName={displayName}
             initials={initials}
             picture={user?.picture}
-            logoutLabel={t("navLogout")}
+            logoutLabel={t("NAV.LOGOUT")}
             onLogoutClick={() => {
               setDrawerOpen(false);
               requestLogout();
@@ -853,11 +853,11 @@ export default function MainHeader() {
         }}
       >
         <DialogTitle id="logout-confirm-title" sx={{ pb: 1, fontWeight: 700 }}>
-          {t("logoutConfirmTitle")}
+          {t("NAV.LOGOUT_CONFIRM_TITLE")}
         </DialogTitle>
         <DialogContent id="logout-confirm-description">
           <Typography sx={{ fontSize: KslFontSizes.sm, color: "text.secondary" }}>
-            {t("logoutConfirmMessage")}
+            {t("NAV.LOGOUT_CONFIRM_MESSAGE")}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1 }}>
@@ -867,7 +867,7 @@ export default function MainHeader() {
             onClick={() => setLogoutConfirmOpen(false)}
             sx={{ borderRadius: "8px", minWidth: 88 }}
           >
-            {t("cancel")}
+            {t("BUTTON.CANCEL")}
           </Button>
           <Button
             variant="contained"
@@ -875,7 +875,7 @@ export default function MainHeader() {
             onClick={confirmLogout}
             sx={{ borderRadius: "8px", minWidth: 88 }}
           >
-            {t("navLogout")}
+            {t("NAV.LOGOUT")}
           </Button>
         </DialogActions>
       </Dialog>

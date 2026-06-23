@@ -40,7 +40,7 @@ export default function MultipleChoiceQuestion({
         >
           <Image
             src={question.promptImageUrl}
-            alt={question.promptText ?? t("quizSignPromptAlt")}
+            alt={question.promptText ?? t("QUIZ.SIGN_PROMPT_ALT")}
             fill
             style={{ objectFit: "cover" }}
           />

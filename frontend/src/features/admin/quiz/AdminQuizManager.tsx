@@ -92,9 +92,9 @@ const tableHeaderSx = {
 } as const;
 
 function typeLabelKey(type: AdminQuizQuestionType): TranslationKey {
-  if (type === "MULTIPLE_CHOICE") return "adminMultipleChoice";
-  if (type === "IMAGE_CHOICE") return "adminImageChoice";
-  return "adminTextInput";
+  if (type === "MULTIPLE_CHOICE") return "ADMIN.MULTIPLE_CHOICE";
+  if (type === "IMAGE_CHOICE") return "ADMIN.IMAGE_CHOICE";
+  return "ADMIN.TEXT_INPUT";
 }
 
 function typeChipStyles(type: AdminQuizQuestionType) {
@@ -205,11 +205,11 @@ export default function AdminQuizManager() {
         !formData.correct_answer ||
         !formData.options.includes(formData.correct_answer)
       ) {
-        window.alert(t("adminInvalidCorrectAnswer"));
+        window.alert(t("ADMIN.INVALID_CORRECT_ANSWER"));
         return;
       }
     } else if (!formData.correct_answer.trim()) {
-      window.alert(t("adminMissingTextAnswer"));
+      window.alert(t("ADMIN.MISSING_TEXT_ANSWER"));
       return;
     }
 
@@ -269,14 +269,14 @@ export default function AdminQuizManager() {
               KSL Admin
             </Typography>
             <Typography sx={{ mt: 0.5, fontSize: AdminQuizFontSizes.eyebrow, textTransform: "uppercase", color: AdminQuizColors.muted }}>
-              {t("adminManagement")}
+              {t("ADMIN.MANAGEMENT")}
             </Typography>
           </Stack>
         </Stack>
 
         <Stack component="nav" spacing={1} sx={{ flex: 1, p: 2 }}>
           <Typography sx={{ px: 1, mb: 1, fontSize: AdminQuizFontSizes.eyebrow, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: AdminQuizColors.muted }}>
-            {t("adminNavigation")}
+            {t("ADMIN.NAVIGATION")}
           </Typography>
           <Button
             startIcon={<Layers sx={{ fontSize: 18 }} />}
@@ -288,7 +288,7 @@ export default function AdminQuizManager() {
               "&:hover": { bgcolor: AdminQuizColors.primaryTintHover },
             }}
           >
-            {t("adminCurriculum")}
+            {t("ADMIN.CURRICULUM")}
           </Button>
           <Button
             startIcon={<MenuBook sx={{ fontSize: 18 }} />}
@@ -298,7 +298,7 @@ export default function AdminQuizManager() {
               "&:hover": { bgcolor: AdminQuizColors.sidebarBorder, color: "common.white" },
             }}
           >
-            {t("adminExercises")}
+            {t("ADMIN.EXERCISES")}
           </Button>
         </Stack>
       </Stack>
@@ -322,11 +322,11 @@ export default function AdminQuizManager() {
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 <FormatListNumbered sx={{ fontSize: 24, color: AdminQuizColors.primary }} />
                 <Typography variant="h5" component="h1" sx={{ fontWeight: 700, color: AdminQuizColors.heading }}>
-                  {t("adminQuizManagement")}
+                  {t("ADMIN.QUIZ_MANAGEMENT")}
                 </Typography>
               </Stack>
               <Button variant="contained" startIcon={<Add />} onClick={openCreateModal}>
-                {t("adminAddQuestion")}
+                {t("ADMIN.ADD_QUESTION")}
               </Button>
             </Stack>
           </Stack>
@@ -338,19 +338,19 @@ export default function AdminQuizManager() {
               <TableHead>
                 <TableRow sx={{ bgcolor: AdminQuizColors.page }}>
                   <TableCell align="center" sx={{ width: 64, ...tableHeaderSx }}>
-                    {t("adminOrder")}
+                    {t("ADMIN.ORDER")}
                   </TableCell>
                   <TableCell sx={tableHeaderSx}>
-                    {t("adminContentPreview")}
+                    {t("ADMIN.CONTENT_PREVIEW")}
                   </TableCell>
                   <TableCell sx={tableHeaderSx}>
-                    {t("adminType")}
+                    {t("ADMIN.TYPE")}
                   </TableCell>
                   <TableCell sx={tableHeaderSx}>
-                    {t("adminStatus")}
+                    {t("ADMIN.STATUS")}
                   </TableCell>
                   <TableCell align="right" sx={tableHeaderSx}>
-                    {t("adminActions")}
+                    {t("ADMIN.ACTIONS")}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -366,7 +366,7 @@ export default function AdminQuizManager() {
                       </Typography>
                       <Typography sx={{ mt: 0.5, fontSize: AdminQuizFontSizes.small, fontStyle: "italic", color: AdminQuizColors.muted }}>
                         {q.correct_answer && q.type === "TEXT_INPUT"
-                          ? t("adminAnswer", { answer: q.correct_answer })
+                          ? t("ADMIN.ANSWER", { answer: q.correct_answer })
                           : q.prompt_kh}
                       </Typography>
                     </TableCell>
@@ -379,21 +379,21 @@ export default function AdminQuizManager() {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={q.is_active ? t("adminActive") : t("adminInactive")}
+                        label={q.is_active ? t("ADMIN.ACTIVE") : t("ADMIN.INACTIVE")}
                         size="small"
                         color={q.is_active ? "success" : "default"}
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton aria-label={t("adminEditQuestionAria")} onClick={() => openEditModal(q)} size="small">
+                      <IconButton aria-label={t("ADMIN.EDIT_QUESTION_ARIA")} onClick={() => openEditModal(q)} size="small">
                         <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         aria-label={
                           q.is_active
-                            ? t("adminDeactivateQuestion")
-                            : t("adminActivateQuestion")
+                            ? t("ADMIN.DEACTIVATE_QUESTION")
+                            : t("ADMIN.ACTIVATE_QUESTION")
                         }
                         onClick={() => handleToggleActive(q.id, q.is_active)}
                         size="small"
@@ -414,13 +414,13 @@ export default function AdminQuizManager() {
         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
           <Stack>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {editingId ? t("adminEditQuestion") : t("adminAddNewQuestion")}
+              {editingId ? t("ADMIN.EDIT_QUESTION") : t("ADMIN.ADD_NEW_QUESTION")}
             </Typography>
             <Typography sx={{ ...sectionLabelSx, color: "text.secondary" }}>
-              {t("adminInteractionMode", { type: t(typeLabelKey(formData.type)) })}
+              {t("ADMIN.INTERACTION_MODE", { type: t(typeLabelKey(formData.type)) })}
             </Typography>
           </Stack>
-          <IconButton aria-label={t("adminCloseDialog")} onClick={() => setIsModalOpen(false)}>
+          <IconButton aria-label={t("ADMIN.CLOSE_DIALOG")} onClick={() => setIsModalOpen(false)}>
             <Close />
           </IconButton>
         </DialogTitle>
@@ -428,7 +428,7 @@ export default function AdminQuizManager() {
           <Stack id="quizForm" component="form" onSubmit={handleSave} spacing={3}>
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography sx={{ mb: 1.5, textAlign: "center", fontSize: AdminQuizFontSizes.caption, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
-                {t("adminSelectQuizType")}
+                {t("ADMIN.SELECT_QUIZ_TYPE")}
               </Typography>
               <ToggleButtonGroup
                 exclusive
@@ -449,23 +449,23 @@ export default function AdminQuizManager() {
                 <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "text.secondary" }}>
                   <TextFields sx={{ fontSize: 16 }} />
                   <Typography sx={sectionLabelSx}>
-                    {t("adminQuestionPrompt")}
+                    {t("ADMIN.QUESTION_PROMPT")}
                   </Typography>
                 </Stack>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                   <TextField
                     required
                     fullWidth
-                    label={t("adminTitleEn")}
+                    label={t("ADMIN.TITLE_EN")}
                     value={formData.prompt}
                     onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
                   />
                   <TextField
                     fullWidth
-                    label={t("adminTitleKh")}
+                    label={t("ADMIN.TITLE_KH")}
                     value={formData.prompt_kh}
                     onChange={(e) => setFormData({ ...formData, prompt_kh: e.target.value })}
-                    placeholder={t("adminTitleKhPlaceholder")}
+                    placeholder={t("ADMIN.TITLE_KH_PLACEHOLDER")}
                   />
                 </Stack>
               </Stack>
@@ -477,7 +477,7 @@ export default function AdminQuizManager() {
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "text.secondary" }}>
                     <ImageIcon sx={{ fontSize: 16 }} />
                     <Typography sx={sectionLabelSx}>
-                      {t("adminQuestionVisual")}
+                      {t("ADMIN.QUESTION_VISUAL")}
                     </Typography>
                   </Stack>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
@@ -485,10 +485,10 @@ export default function AdminQuizManager() {
                       required
                       fullWidth
                       type="url"
-                      label={t("adminQuestionImageUrl")}
+                      label={t("ADMIN.QUESTION_IMAGE_URL")}
                       value={formData.image_url}
                       onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      placeholder={t("adminImageUrlPlaceholder")}
+                      placeholder={t("ADMIN.IMAGE_URL_PLACEHOLDER")}
                     />
                     {formData.image_url && (
                       <Box
@@ -525,11 +525,11 @@ export default function AdminQuizManager() {
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "primary.main" }}>
                     <Check sx={{ fontSize: 18 }} />
                     <Typography sx={sectionLabelSx}>
-                      {t("adminAnswerConfig")}
+                      {t("ADMIN.ANSWER_CONFIG")}
                     </Typography>
                   </Stack>
                   {formData.type !== "TEXT_INPUT" && (
-                    <Chip label={t("adminChooseCorrectOption")} size="small" />
+                    <Chip label={t("ADMIN.CHOOSE_CORRECT_OPTION")} size="small" />
                   )}
                 </Stack>
 
@@ -560,7 +560,7 @@ export default function AdminQuizManager() {
                               required
                               fullWidth
                               variant="standard"
-                              placeholder={t("adminChoice", { index: idx + 1 })}
+                              placeholder={t("ADMIN.CHOICE", { index: idx + 1 })}
                               value={opt}
                               onChange={(e) => handleOptionChange(idx, e.target.value)}
                             />
@@ -588,7 +588,7 @@ export default function AdminQuizManager() {
                           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
                             <Stack sx={{ alignItems: "center" }}>
                               <Typography sx={{ mb: 0.5, fontSize: AdminQuizFontSizes.eyebrow, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
-                                {t("adminCorrectQuestion")}
+                                {t("ADMIN.CORRECT_QUESTION")}
                               </Typography>
                               <Radio
                                 name="correct_answer"
@@ -601,8 +601,8 @@ export default function AdminQuizManager() {
                               required
                               fullWidth
                               type="url"
-                              label={t("adminOptionImageUrl", { index: idx + 1 })}
-                              placeholder={t("adminEnterImageUrl")}
+                              label={t("ADMIN.OPTION_IMAGE_URL", { index: idx + 1 })}
+                              placeholder={t("ADMIN.ENTER_IMAGE_URL")}
                               value={opt}
                               onChange={(e) => handleOptionChange(idx, e.target.value)}
                             />
@@ -641,20 +641,20 @@ export default function AdminQuizManager() {
                     <TextField
                       required
                       fullWidth
-                      label={t("adminTargetAnswer")}
+                      label={t("ADMIN.TARGET_ANSWER")}
                       value={formData.correct_answer}
                       onChange={(e) => setFormData({ ...formData, correct_answer: e.target.value })}
-                      placeholder={t("adminTargetAnswerPlaceholder")}
+                      placeholder={t("ADMIN.TARGET_ANSWER_PLACEHOLDER")}
                     />
                     <Typography sx={{ mt: 1, fontSize: AdminQuizFontSizes.caption, fontStyle: "italic", color: AdminQuizColors.textInputText }}>
-                      {t("adminTextAnswerNote")}
+                      {t("ADMIN.TEXT_ANSWER_NOTE")}
                     </Typography>
                   </Paper>
                 )}
 
                 {!formData.correct_answer && (
                   <Alert icon={<ErrorOutline fontSize="inherit" />} severity="warning">
-                    {t("adminValidationCorrectAnswer")}
+                    {t("ADMIN.VALIDATION_CORRECT_ANSWER")}
                   </Alert>
                 )}
               </Stack>
@@ -669,11 +669,11 @@ export default function AdminQuizManager() {
                       onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     />
                   }
-                  label={t("adminPublishedActive")}
+                  label={t("ADMIN.PUBLISHED_ACTIVE")}
                 />
                 <TextField
                   type="number"
-                  label={t("adminSortOrder")}
+                  label={t("ADMIN.SORT_ORDER")}
                   value={formData.order_index}
                   onChange={(e) =>
                     setFormData({
@@ -688,9 +688,9 @@ export default function AdminQuizManager() {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={() => setIsModalOpen(false)}>{t("cancel")}</Button>
+          <Button onClick={() => setIsModalOpen(false)}>{t("BUTTON.CANCEL")}</Button>
           <Button type="submit" form="quizForm" variant="contained" startIcon={<Check />}>
-            {editingId ? t("adminUpdateQuestion") : t("adminAddQuestion")}
+            {editingId ? t("ADMIN.UPDATE_QUESTION") : t("ADMIN.ADD_QUESTION")}
           </Button>
         </DialogActions>
       </Dialog>

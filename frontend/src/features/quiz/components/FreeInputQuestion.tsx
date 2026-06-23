@@ -62,9 +62,9 @@ export default function FreeInputQuestion({
         fullWidth
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={t("quizPlaceholderTypeLetter")}
+        placeholder={t("QUIZ.PLACEHOLDER_TYPE_LETTER")}
         slotProps={{
-          htmlInput: { "aria-label": t("loginAriaAnswerInput") },
+          htmlInput: { "aria-label": t("LOGIN.ARIA_ANSWER_INPUT") },
         }}
         sx={{
           maxWidth: 886,

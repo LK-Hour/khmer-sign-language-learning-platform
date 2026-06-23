@@ -191,7 +191,7 @@ export function LoginView() {
 
       if (!parsedUser) {
         queueMicrotask(() => {
-          setAuthError(t('loginTelegramNoUser'));
+          setAuthError(t("LOGIN.TELEGRAM_NO_USER"));
         });
         return;
       }
@@ -203,7 +203,7 @@ export function LoginView() {
       });
     } catch {
       queueMicrotask(() => {
-        setAuthError(t('loginTelegramBadResponse'));
+        setAuthError(t("LOGIN.TELEGRAM_BAD_RESPONSE"));
       });
     }
   }, [completeLearnerLogin, searchParams, t]);
@@ -226,7 +226,7 @@ export function LoginView() {
     script.setAttribute('data-request-access', 'write');
     script.onload = () => setTelegramReady(true);
     script.onerror = () =>
-      setAuthError(t('loginTelegramLoadError'));
+      setAuthError(t("LOGIN.TELEGRAM_LOAD_ERROR"));
     container.appendChild(script);
 
     return () => {
@@ -242,7 +242,7 @@ export function LoginView() {
       const response = await loginAsGuest();
       await completeLearnerLogin(response);
     } catch {
-      setAuthError(t('loginGuestError'));
+      setAuthError(t("LOGIN.GUEST_ERROR"));
     } finally {
       setLoadingAction(null);
     }
@@ -257,7 +257,7 @@ export function LoginView() {
         const authResponse = await loginWithGoogle(response?.credential);
         await completeLearnerLogin(authResponse);
       } catch {
-        setAuthError(t('loginGoogleFailed'));
+        setAuthError(t("LOGIN.GOOGLE_FAILED"));
       } finally {
         setLoadingAction(null);
       }
@@ -267,7 +267,7 @@ export function LoginView() {
 
   const handleGoogleLogin = () => {
     if (!googleReady) {
-      setAuthError(t('loginGoogleLoading'));
+      setAuthError(t("LOGIN.GOOGLE_LOADING"));
     }
   };
 
@@ -275,7 +275,7 @@ export function LoginView() {
     setAuthError('');
 
     if (!window.FB || !facebookReady) {
-      setAuthError(t('loginFacebookLoading'));
+      setAuthError(t("LOGIN.FACEBOOK_LOADING"));
       return;
     }
 
@@ -285,14 +285,14 @@ export function LoginView() {
       (response) => {
         if (!response?.authResponse) {
           setLoadingAction(null);
-          setAuthError(t('loginFacebookCancelled'));
+          setAuthError(t("LOGIN.FACEBOOK_CANCELLED"));
           return;
         }
 
         loginWithFacebook(response?.authResponse?.accessToken)
           .then(completeLearnerLogin)
           .catch(() => {
-            setAuthError(t('loginFacebookFailed'));
+            setAuthError(t("LOGIN.FACEBOOK_FAILED"));
           })
           .finally(() => {
             setLoadingAction(null);
@@ -304,7 +304,7 @@ export function LoginView() {
 
   const handleTelegramFallback = () => {
     if (!telegramReady) {
-      setAuthError(t('loginTelegramLoading'));
+      setAuthError(t("LOGIN.TELEGRAM_LOADING"));
     }
   };
 
@@ -317,7 +317,7 @@ export function LoginView() {
       const profile = await fetchCurrentUser();
 
       if (profile?.account_type !== 'admin') {
-        setAuthError(t('loginNoAdminAccess'));
+        setAuthError(t("LOGIN.NO_ADMIN_ACCESS"));
         return;
       }
 
@@ -331,7 +331,7 @@ export function LoginView() {
       });
       router.push(safeRedirectPath(localizedPath(ROUTES.admin.quiz)));
     } catch {
-      setAuthError(t('loginInvalidCredentials'));
+      setAuthError(t("LOGIN.INVALID_CREDENTIALS"));
     } finally {
       setLoadingAction(null);
     }
@@ -375,10 +375,10 @@ export function LoginView() {
             });
             setGoogleReady(true);
           } catch {
-            setAuthError(t('loginGoogleInitError'));
+            setAuthError(t("LOGIN.GOOGLE_INIT_ERROR"));
           }
         }}
-        onError={() => setAuthError(t('loginGoogleLoadError'))}
+        onError={() => setAuthError(t("LOGIN.GOOGLE_LOAD_ERROR"))}
       />
 
       <Script
@@ -396,10 +396,10 @@ export function LoginView() {
             });
             setFacebookReady(true);
           } catch {
-            setAuthError(t('loginFacebookInitError'));
+            setAuthError(t("LOGIN.FACEBOOK_INIT_ERROR"));
           }
         }}
-        onError={() => setAuthError(t('loginFacebookLoadError'))}
+        onError={() => setAuthError(t("LOGIN.FACEBOOK_LOAD_ERROR"))}
       />
 
       <Box
@@ -482,7 +482,7 @@ export function LoginView() {
                   facebookReady={facebookReady}
                   telegramContainerRef={telegramContainerRef}
                   telegramReady={telegramReady}
-                  isTelegramDisabled={authError.includes(t('loginBotDomainError'))}
+                  isTelegramDisabled={authError.includes(t("LOGIN.BOT_DOMAIN_ERROR"))}
                   onGoogleLogin={handleGoogleLogin}
                   onFacebookLogin={handleFacebookLogin}
                   onGuestLogin={handleGuestLogin}
@@ -550,7 +550,7 @@ function WelcomePanel() {
       <Box
         component="img"
         src="/assets/logo.png"
-        alt={t("brandLogoKslAlt")}
+        alt={t("BRAND.LOGO_KSL_ALT")}
         sx={{
           width: { xs: 64, sm: 78 },
           height: { xs: 64, sm: 78 },
@@ -572,7 +572,7 @@ function WelcomePanel() {
           lineHeight: { xs: 1.15, md: 1.1 },
         }}
       >
-        {t("loginWelcomeTitle")}
+        {t("LOGIN.WELCOME_TITLE")}
       </Typography>
 
       <Typography
@@ -586,7 +586,7 @@ function WelcomePanel() {
           textTransform: 'uppercase',
         }}
       >
-        {t("loginWelcomeSubtitle")}
+        {t("LOGIN.WELCOME_SUBTITLE")}
       </Typography>
 
       <Typography
@@ -598,7 +598,7 @@ function WelcomePanel() {
           lineHeight: KslLineHeights.md,
         }}
       >
-        {t("loginWelcomeDesc")}
+        {t("LOGIN.WELCOME_DESC")}
       </Typography>
     </Stack>
   );
@@ -628,11 +628,11 @@ function WorkspaceTabs({ mode, onChange }: WorkspaceTabsProps) {
         active={mode === 'learner'}
         onClick={() => onChange('learner')}
       >
-        {t("loginLearnerTab")}
+        {t("LOGIN.LEARNER_TAB")}
       </TabButton>
 
       <TabButton active={mode === 'admin'} onClick={() => onChange('admin')} >
-        {t("loginAdminTab")}
+        {t("LOGIN.ADMIN_TAB")}
       </TabButton>
     </Stack>
   );
@@ -718,7 +718,7 @@ function LearnerLogin({
             width: { xs: '100%', sm: 'auto' },
           }}
         >
-          {t("loginLearnerTitle")}
+          {t("LOGIN.LEARNER_TITLE")}
         </Typography>
 
         <Typography
@@ -728,7 +728,7 @@ function LearnerLogin({
             lineHeight: KslLineHeights.sm,
           }}
         >
-          {t("loginLearnerSubtitle")}
+          {t("LOGIN.LEARNER_SUBTITLE")}
         </Typography>
       </Stack>
 
@@ -762,7 +762,7 @@ function LearnerLogin({
           },
         }}
       >
-        {t("loginOrDivider")}
+        {t("LOGIN.OR_DIVIDER")}
       </Divider>
 
       <SocialButton
@@ -770,7 +770,7 @@ function LearnerLogin({
         loading={isGuestLoading}
         onClick={onGuestLogin}
       >
-        {t("loginGuestBtn")}
+        {t("LOGIN.GUEST_BTN")}
       </SocialButton>
     </Stack>
   );
@@ -808,7 +808,7 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
             lineHeight: KslLineHeights.lg,
           }}
         >
-          {t("loginAdminTitle")}
+          {t("LOGIN.ADMIN_TITLE")}
         </Typography>
 
         <Typography
@@ -818,13 +818,13 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
             lineHeight: KslLineHeights.sm,
           }}
         >
-          {t("loginAdminSubtitle")}
+          {t("LOGIN.ADMIN_SUBTITLE")}
         </Typography>
       </Stack>
 
       <Stack spacing={1.6} >
         <AuthTextField
-          label={t("loginUsernameLabel")}
+          label={t("LOGIN.USERNAME_LABEL")}
           icon="solar:user-rounded-outline"
           name="email"
           autoComplete="username"
@@ -835,7 +835,7 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
         />
 
         <AuthTextField
-          label={t("loginPasswordLabel")}
+          label={t("LOGIN.PASSWORD_LABEL")}
           icon="solar:key-outline"
           type={showPassword ? 'text' : 'password'}
           name="password"
@@ -848,7 +848,7 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
               <IconButton
                 edge="end"
                 onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? t('loginHidePassword') : t('loginShowPassword')}
+                aria-label={showPassword ? t("LOGIN.HIDE_PASSWORD") : t("LOGIN.SHOW_PASSWORD")}
                 sx={{ color: colors.fieldHint }}
               >
                 <Iconify
@@ -878,7 +878,7 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
               }}
             />
           }
-          label={t("loginRememberMe")}
+          label={t("LOGIN.REMEMBER_ME")}
           sx={{
             ml: 0.5,
             height: 34,
@@ -917,7 +917,7 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
             },
           }}
         >
-          {isLoading ? t('loginLoggingIn') : t('loginLoginBtn')}
+          {isLoading ? t("LOGIN.LOGGING_IN") : t("LOGIN.LOGIN_BTN")}
         </Button>
       </Stack>
     </Stack>
@@ -1086,7 +1086,7 @@ function GoogleLoginButton({
       overlayActive={ready && !loading}
       overlayRef={googleButtonRef}
     >
-      {t("loginGoogleBtn")}
+      {t("LOGIN.GOOGLE_BTN")}
     </SocialButton>
   );
 }
@@ -1104,7 +1104,7 @@ function FacebookLoginButton({
       loading={loading}
       onClick={onClick}
     >
-      {t("loginFacebookBtn")}
+      {t("LOGIN.FACEBOOK_BTN")}
     </SocialButton>
   );
 }
@@ -1124,7 +1124,7 @@ function TelegramLoginButton({
       overlayActive={ready && !disabled}
       overlayRef={telegramContainerRef}
     >
-      {t("loginTelegramBtn")}
+      {t("LOGIN.TELEGRAM_BTN")}
     </SocialButton>
   );
 }
@@ -1205,7 +1205,7 @@ function SocialButton({
       <Box className="social-login-icon">
         <Iconify icon={icon} />
       </Box>
-      {loading ? t('loginPleaseWait') : children}
+      {loading ? t("LOGIN.PLEASE_WAIT") : children}
       {overlayRef ? (
         <Box
           ref={overlayRef}
@@ -1242,13 +1242,13 @@ function PoweredBy() {
           color: colors.white,
         }}
       >
-        {t("loginPoweredBy")}
+        {t("LOGIN.POWERED_BY")}
       </Typography>
 
       <Box
         component="img"
         src="/assets/cadt.png"
-        alt={t("brandCadtAlt")}
+        alt={t("BRAND.CADT_ALT")}
         sx={{
           height: 28,
           width: 'auto',
