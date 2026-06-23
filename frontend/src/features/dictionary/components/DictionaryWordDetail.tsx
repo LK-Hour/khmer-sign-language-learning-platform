@@ -53,7 +53,6 @@ function SidebarCard({ label, title, children }: SidebarCardProps) {
           sx={{
             fontSize: KslFontSizes.xs,
             fontWeight: 700,
-            letterSpacing: "0.1em",
             textTransform: "uppercase",
             color: KslColors.textSecondary,
           }}
@@ -206,14 +205,15 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
         </Button>
       </Stack>
 
-      <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
-        <Grid size={{ xs: 12, lg: 8 }}>
+      <Grid container spacing={2} sx={{ alignItems: "stretch" }}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper
             elevation={0}
             sx={{
               position: "relative",
-              minHeight: { xs: 320, md: 480 },
-              height: "100%",
+              width: "100%",
+              aspectRatio: { xs: "1 / 1", lg: "4 / 3" },
+              minHeight: { xs: 280, sm: 320, md: 360, lg: 480 },
               borderRadius: `${KslRadii.signImage}px`,
               overflow: "hidden",
               bgcolor: KslPalette.primary.lighter,
@@ -228,44 +228,41 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
                 style={{
                   width: "100%",
                   height: "100%",
-                  minHeight: 320,
-                  objectFit: "contain",
+                  objectFit: "cover",
                   display: "block",
                 }}
               />
             ) : (
               <Stack
                 sx={{
-                  position: "relative",
-                  width: "100%",
-                  height: "100%",
-                  minHeight: { xs: 320, md: 480 },
-                  alignItems: "center",
-                  justifyContent: "center",
-                  p: { xs: 3, md: 5 },
+                  position: "absolute",
+                  inset: 0,
                 }}
               >
-                <Image
-                  src={mediaSrc}
-                  alt={word?.textEn}
-                  width={420}
-                  height={420}
-                  sizes="(max-width: 768px) 90vw, 420px"
-                  style={{
-                    width: "auto",
-                    height: "auto",
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
+                <Stack
+                  sx={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%",
                   }}
-                  priority
-                />
+                >
+                  <Image
+                    src={mediaSrc}
+                    alt={word?.textEn}
+                    fill
+                    sizes="(max-width: 900px) 100vw, (max-width: 1200px) 66vw, 800px"
+                    style={{
+                      objectFit: "cover",
+                    }}
+                    priority
+                  />
+                </Stack>
               </Stack>
             )}
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, lg: 4 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Stack spacing={2} sx={{ height: "100%" }}>
             <SidebarCard
               label={t("dictLearningInfoLabel")}

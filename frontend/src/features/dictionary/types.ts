@@ -19,4 +19,4 @@ export type DictionarySortOrder = "default" | "az" | "za";
 
 export type DictionaryTypeFilter = "all" | DictionaryEntryType;
 
-export const DICTIONARY_PAGE_SIZE = 10;
+export const DICTIONARY_PAGE_SIZE = 12;

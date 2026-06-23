@@ -58,8 +58,6 @@ export default function DictionaryPagination({
   return (
     <Stack
       direction="row"
-      alignItems="center"
-      justifyContent="center"
       spacing={3}
       role="navigation"
       aria-label={t("dictPaginationLabel")}
@@ -75,7 +73,7 @@ export default function DictionaryPagination({
         {t("dictPaginationBack")}
       </Button>
 
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1}>
         {visiblePages.map((item, index) =>
           item === "ellipsis" ? (
             <Typography
