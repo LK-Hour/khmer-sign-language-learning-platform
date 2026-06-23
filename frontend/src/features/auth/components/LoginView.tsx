@@ -163,6 +163,23 @@ export function LoginView() {
           // Keep the local snapshot so the next real login can retry the import.
         }
       }
+
+      // Wait for the auth store to finish hydrating (localStorage persistence)
+      // before navigating away. Without this, the protected page may rehydrate
+      // from stale localStorage and incorrectly bounce the authenticated user
+      // back to the login page on the first visit.
+      const authStore = useAuthStore.getState();
+      if (!authStore.hasHydrated) {
+        await new Promise<void>((resolve) => {
+          const unsubscribe = useAuthStore.subscribe((state) => {
+            if (state.hasHydrated) {
+              unsubscribe();
+              resolve();
+            }
+          });
+        });
+      }
+
       router.push(safeRedirectPath(localizedPath(ROUTES.home)));
     },
     [localizedPath, router, safeRedirectPath, setAuth]
