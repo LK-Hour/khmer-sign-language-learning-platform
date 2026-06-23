@@ -1,68 +1,69 @@
 "use client";
 
+import { Alert } from "@mui/material";
 import { useEffect, useState } from "react";
 import { fetchFsTrackUnits } from "../api/curriculum";
-import {
-  useFingerSpellingStore,
-  type FsTrackUnit,
-} from "../store";
+import { useFingerSpellingStore } from "../store";
 import { useAuthStore } from "@/store/auth.store";
-import { FingerSpellingTrackSkeleton } from "@/app/[locale]/finger-spelling/loading";
+import FingerSpellingPageLoading from "./FingerSpellingPageLoading";
 import FingerSpellingTrack from "./FingerSpellingTrack";
 
-type FingerSpellingTrackContainerProps = {
-  units: FsTrackUnit[];
-};
+type FetchState = "idle" | "loading" | "ready" | "error";
 
-/** Hydrates curriculum from the server into Zustand, then renders the track UI. */
-export default function FingerSpellingTrackContainer({
-  units,
-}: FingerSpellingTrackContainerProps) {
+/** Loads curriculum from the API, then renders the track UI. */
+export default function FingerSpellingTrackContainer() {
   const setUnits = useFingerSpellingStore((state) => state.setUnits);
-  const storedUnits = useFingerSpellingStore((state) => state.units);
+  const units = useFingerSpellingStore((state) => state.units);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const user = useAuthStore((state) => state.user);
-  const [trackReady, setTrackReady] = useState(false);
+  const token = useAuthStore((state) => state.token);
+  const isRefreshing = useAuthStore((state) => state.isRefreshing);
+  const [fetchState, setFetchState] = useState<FetchState>("idle");
+
+  const authReady =
+    hasHydrated &&
+    Boolean(user) &&
+    !isRefreshing &&
+    (user?.is_guest === true || Boolean(token));
+  const isLoading =
+    !authReady || fetchState === "idle" || fetchState === "loading";
 
   useEffect(() => {
-    if (!hasHydrated || !user) return;
-
-    if (user?.is_guest) {
-      setUnits(units);
-      setTrackReady(true);
-      return;
-    }
+    if (!authReady) return;
 
     let ignore = false;
-    setTrackReady(false);
+    setFetchState("loading");
 
-    async function loadUserTrack() {
-      try {
-        const freshUnits = await fetchFsTrackUnits();
+    void fetchFsTrackUnits()
+      .then((freshUnits) => {
         if (!ignore) {
           setUnits(freshUnits);
-          setTrackReady(true);
+          setFetchState("ready");
         }
-      } catch {
+      })
+      .catch(() => {
         if (!ignore) {
-          setUnits(units);
-          setTrackReady(true);
+          setFetchState("error");
         }
-      }
-    }
-
-    void loadUserTrack();
+      });
 
     return () => {
       ignore = true;
     };
-  }, [hasHydrated, units, setUnits, user]);
+  }, [authReady, setUnits, user?.id]);
 
-  if (!trackReady) {
-    return <FingerSpellingTrackSkeleton embedded />;
+  if (isLoading) {
+    return <FingerSpellingPageLoading />;
   }
 
-  const displayUnits = storedUnits.length > 0 ? storedUnits : units;
+  if (fetchState === "error") {
+    return (
+      <Alert severity="error" sx={{ mx: "auto" }}>
+        Could not load finger spelling curriculum. Check{" "}
+        {process.env.NEXT_PUBLIC_API_URL}.
+      </Alert>
+    );
+  }
 
-  return <FingerSpellingTrack units={displayUnits} />;
+  return <FingerSpellingTrack units={units} />;
 }
