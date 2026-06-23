@@ -163,7 +163,7 @@ export default function DictionaryEntryCard({ word }: DictionaryEntryCardProps) 
                   fontWeight: 700,
                 }}
               >
-                {t("dictViewSign")}
+                {t("DICTIONARY.LIST.VIEW_SIGN")}
               </Typography>
               <ArrowForwardIcon sx={{ fontSize: 18 }} />
             </Stack>

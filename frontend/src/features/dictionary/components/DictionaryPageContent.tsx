@@ -55,7 +55,7 @@ export default function DictionaryPageContent() {
       } catch {
         if (!cancelled) {
           setAllWords([]);
-          setError(t("dictLoadError"));
+          setError(t("DICTIONARY.LIST.LOAD_ERROR"));
         }
       } finally {
         if (!cancelled) {
@@ -147,7 +147,7 @@ export default function DictionaryPageContent() {
                   color: KslColors.textSecondary,
                 }}
               >
-                {t("dictStatCharacters")}
+                {t("DICTIONARY.LIST.STAT_CHARACTERS")}
               </Typography>
             </Stack>
           </Paper>
@@ -198,7 +198,7 @@ export default function DictionaryPageContent() {
                   color: KslColors.textSecondary,
                 }}
               >
-                {t("dictStatWords")}
+                {t("DICTIONARY.LIST.STAT_WORDS")}
               </Typography>
             </Stack>
           </Paper>
@@ -226,7 +226,7 @@ export default function DictionaryPageContent() {
 
       {initialLoading ? (
         <Stack sx={{ alignItems: "center", py: 6 }}>
-          <CircularProgress aria-label={t("dictLoading")} />
+          <CircularProgress aria-label={t("DICTIONARY.LIST.LOADING")} />
         </Stack>
       ) : error ? (
         <Paper
@@ -275,7 +275,7 @@ export default function DictionaryPageContent() {
               color: KslColors.textPrimary,
             }}
           >
-            {t("dictNoResultsTitle")}
+            {t("DICTIONARY.LIST.NO_RESULTS_TITLE")}
           </Typography>
           <Typography
             sx={{
@@ -285,7 +285,7 @@ export default function DictionaryPageContent() {
               color: KslColors.textSecondary,
             }}
           >
-            {t("dictNoResultsHint")}
+            {t("DICTIONARY.LIST.NO_RESULTS_HINT")}
           </Typography>
         </Paper>
       ) : (

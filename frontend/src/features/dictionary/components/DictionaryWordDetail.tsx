@@ -120,11 +120,11 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
   const isVideo = Boolean(word?.videoUrl);
   const entryType = word?.entryType ?? "character";
   const typeLabel =
-    entryType === "character" ? t("dictTypeCharacter") : t("dictTypeWord");
+    entryType === "character" ? t("DICTIONARY.LIST.TYPE_CHARACTER") : t("DICTIONARY.LIST.TYPE_WORD");
   const eyebrow =
     entryType === "character"
-      ? t("dictDetailCharacterEyebrow")
-      : t("dictDetailWordEyebrow");
+      ? t("DICTIONARY.DETAIL.CHARACTER_EYEBROW")
+      : t("DICTIONARY.DETAIL.WORD_EYEBROW");
   const subtitle = word?.description ?? secondary ?? "";
   const practiceHref = word?.lessonId
     ? `/${locale}${ROUTES.fingerSpelling.lesson(word?.lessonId)}`
@@ -201,7 +201,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
             },
           }}
         >
-          {t("dictDetailBackToDictionary")}
+          {t("DICTIONARY.DETAIL.BACK_TO_DICTIONARY")}
         </Button>
       </Stack>
 
@@ -265,22 +265,22 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
         <Grid size={{ xs: 12, md: 4 }}>
           <Stack spacing={2} sx={{ height: "100%" }}>
             <SidebarCard
-              label={t("dictLearningInfoLabel")}
-              title={t("dictLearningTrackFingerSpelling")}
+              label={t("DICTIONARY.DETAIL.LEARNING_INFO_LABEL")}
+              title={t("DICTIONARY.DETAIL.LEARNING_TRACK_FINGER_SPELLING")}
             >
               <Stack spacing={0}>
-                <InfoRow label={t("dictDetailTypeLabel")} value={typeLabel} />
+                <InfoRow label={t("DICTIONARY.DETAIL.TYPE_LABEL")} value={typeLabel} />
                 <InfoRow
-                  label={t("dictDifficultyLabel")}
-                  value={t("dictDifficultyBeginner")}
+                  label={t("DICTIONARY.DETAIL.DIFFICULTY_LABEL")}
+                  value={t("DICTIONARY.DETAIL.DIFFICULTY_BEGINNER")}
                   showDivider={false}
                 />
               </Stack>
             </SidebarCard>
 
             <SidebarCard
-              label={t("dictSuggestionLabel")}
-              title={t("dictSuggestionTitle")}
+              label={t("DICTIONARY.DETAIL.SUGGESTION_LABEL")}
+              title={t("DICTIONARY.DETAIL.SUGGESTION_TITLE")}
             >
               <Typography
                 sx={{
@@ -289,7 +289,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
                   color: KslColors.textSecondary,
                 }}
               >
-                {t("dictSuggestionBody")}
+                {t("DICTIONARY.DETAIL.SUGGESTION_BODY")}
               </Typography>
             </SidebarCard>
 
@@ -314,7 +314,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
                   },
                 }}
               >
-                {t("dictPracticeSign")}
+                {t("DICTIONARY.DETAIL.PRACTICE_SIGN")}
               </Button>
             ) : null}
           </Stack>

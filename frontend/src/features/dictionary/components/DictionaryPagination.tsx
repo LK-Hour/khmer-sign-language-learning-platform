@@ -60,7 +60,7 @@ export default function DictionaryPagination({
       direction="row"
       spacing={3}
       role="navigation"
-      aria-label={t("dictPaginationLabel")}
+      aria-label={t("DICTIONARY.LIST.PAGINATION_LABEL")}
       sx={{ py: 1 }}
     >
       <Button
@@ -70,7 +70,7 @@ export default function DictionaryPagination({
         startIcon={<ChevronLeftIcon sx={{ fontSize: 20 }} />}
         sx={navButtonSx}
       >
-        {t("dictPaginationBack")}
+        {t("DICTIONARY.LIST.PAGINATION_BACK")}
       </Button>
 
       <Stack direction="row" spacing={1}>
@@ -95,7 +95,7 @@ export default function DictionaryPagination({
               key={item}
               onClick={() => onPageChange(item)}
               aria-current={item === page ? "page" : undefined}
-              aria-label={t("dictPageLabel", { page: item, pages: pageCount })}
+              aria-label={t("DICTIONARY.LIST.PAGE_LABEL", { page: item, pages: pageCount })}
               sx={{
                 minWidth: 40,
                 width: 40,
@@ -133,7 +133,7 @@ export default function DictionaryPagination({
         endIcon={<ChevronRightIcon sx={{ fontSize: 20 }} />}
         sx={navButtonSx}
       >
-        {t("dictPaginationNext")}
+        {t("DICTIONARY.LIST.PAGINATION_NEXT")}
       </Button>
     </Stack>
   );

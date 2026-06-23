@@ -80,7 +80,7 @@ export default function DictionaryLayout({
                   color: KslColors.primary,
                 }}
               >
-                {t("dictEyebrow")}
+                {t("DICTIONARY.LIST.EYEBROW")}
               </Typography>
 
               <Typography
@@ -92,7 +92,7 @@ export default function DictionaryLayout({
                   color: KslColors.textPrimary,
                 }}
               >
-                {t("dictHeadline")}
+                {t("DICTIONARY.LIST.HEADLINE")}
               </Typography>
 
               <Typography
@@ -102,7 +102,7 @@ export default function DictionaryLayout({
                   color: KslColors.textSecondary,
                 }}
               >
-                {t("dictSubheadline")}
+                {t("DICTIONARY.LIST.SUBHEADLINE")}
               </Typography>
             </Stack>
           </Stack>

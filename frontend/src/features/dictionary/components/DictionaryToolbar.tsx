@@ -69,7 +69,7 @@ export default function DictionaryToolbar({
             fullWidth
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={t("dictSearchPlaceholder")}
+            placeholder={t("DICTIONARY.LIST.SEARCH_PLACEHOLDER")}
             slotProps={{
               input: {
                 startAdornment: (
@@ -90,10 +90,10 @@ export default function DictionaryToolbar({
         </Grid>
         <Grid size={{ xs:12, md:4}}>
         <FormControl sx={{ width: "100%" }}>
-          <InputLabel id="dictionary-order-label">{t("dictOrderLabel")}</InputLabel>
+          <InputLabel id="dictionary-order-label">{t("DICTIONARY.LIST.ORDER_LABEL")}</InputLabel>
           <Select
             labelId="dictionary-order-label"
-            label={t("dictOrderLabel")}
+            label={t("DICTIONARY.LIST.ORDER_LABEL")}
             value={sortOrder}
             onChange={(event) =>
               onSortOrderChange(event.target.value as DictionarySortOrder)
@@ -103,9 +103,9 @@ export default function DictionaryToolbar({
               bgcolor: "background.paper",
             }}
           >
-            <MenuItem value="default">{t("dictOrderDefault")}</MenuItem>
-            <MenuItem value="az">{t("dictOrderAz")}</MenuItem>
-            <MenuItem value="za">{t("dictOrderZa")}</MenuItem>
+            <MenuItem value="default">{t("DICTIONARY.LIST.ORDER_DEFAULT")}</MenuItem>
+            <MenuItem value="az">{t("DICTIONARY.LIST.ORDER_AZ")}</MenuItem>
+            <MenuItem value="za">{t("DICTIONARY.LIST.ORDER_ZA")}</MenuItem>
           </Select>
         </FormControl>
         </Grid>
@@ -125,7 +125,7 @@ export default function DictionaryToolbar({
               color: KslColors.textPrimary,
             }}
           >
-            {t("dictSearchLabel")}
+            {t("DICTIONARY.LIST.SEARCH_LABEL")}
           </Typography>
           
         </Stack>
@@ -144,7 +144,7 @@ export default function DictionaryToolbar({
           onChange={(_, value: DictionaryTypeFilter | null) => {
             if (value) onTypeFilterChange(value);
           }}
-          aria-label={t("dictTypeFilterLabel")}
+          aria-label={t("DICTIONARY.LIST.TYPE_FILTER_LABEL")}
           sx={{
             flexWrap: "wrap",
             gap: 1,
@@ -173,9 +173,9 @@ export default function DictionaryToolbar({
             },
           }}
         >
-          <ToggleButton value="all">{t("dictFilterAll")}</ToggleButton>
-          <ToggleButton value="character">{t("dictFilterCharacters")}</ToggleButton>
-          <ToggleButton value="word">{t("dictFilterWords")}</ToggleButton>
+          <ToggleButton value="all">{t("DICTIONARY.LIST.FILTER_ALL")}</ToggleButton>
+          <ToggleButton value="character">{t("DICTIONARY.LIST.FILTER_CHARACTERS")}</ToggleButton>
+          <ToggleButton value="word">{t("DICTIONARY.LIST.FILTER_WORDS")}</ToggleButton>
         </ToggleButtonGroup>
 
         <Typography
@@ -185,7 +185,7 @@ export default function DictionaryToolbar({
             color: KslColors.textSecondary,
           }}
         >
-          {t("dictResultCount", { count: resultCount })}
+          {t("DICTIONARY.LIST.RESULT_COUNT", { count: resultCount })}
         </Typography>
       </Stack>
     </Paper>

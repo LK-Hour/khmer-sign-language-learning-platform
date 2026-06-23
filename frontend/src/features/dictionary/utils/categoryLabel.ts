@@ -4,12 +4,12 @@ import type { DictionaryWord } from "../types";
 
 /** Maps backend unit `category` (English name) to i18n label keys. */
 const UNIT_CATEGORY_KEYS: Record<string, TranslationKey> = {
-  Numbers: "dictCategoryNumbers",
-  "Main Consonants": "dictCategoryConsonant",
-  "Sub Consonants": "dictCategorySubConsonant",
-  "Dependent Vowels": "dictCategoryVowel",
-  "Independent Vowels": "dictCategoryIndependentVowel",
-  Diacritics: "dictCategoryDiacritics",
+  Numbers: "DICTIONARY.CATEGORY.NUMBERS",
+  "Main Consonants": "DICTIONARY.CATEGORY.CONSONANT",
+  "Sub Consonants": "DICTIONARY.CATEGORY.SUB_CONSONANT",
+  "Dependent Vowels": "DICTIONARY.CATEGORY.VOWEL",
+  "Independent Vowels": "DICTIONARY.CATEGORY.INDEPENDENT_VOWEL",
+  Diacritics: "DICTIONARY.CATEGORY.DIACRITICS",
 };
 
 export function getDictionaryCategoryKey(
@@ -24,5 +24,7 @@ export function getDictionaryChipKey(word: DictionaryWord): TranslationKey {
   if (categoryKey) return categoryKey;
 
   const entryType = word?.entryType ?? "character";
-  return entryType === "word" ? "dictTypeWord" : "dictTypeCharacter";
+  return entryType === "word"
+    ? "DICTIONARY.LIST.TYPE_WORD"
+    : "DICTIONARY.LIST.TYPE_CHARACTER";
 }
