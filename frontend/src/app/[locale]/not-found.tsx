@@ -22,9 +22,9 @@ export default function LocaleNotFound() {
 
   return (
     <NotFoundView
-      title={t(locale, "pageNotFoundTitle")}
-      message={t(locale, "pageNotFoundMessage")}
-      goHomeLabel={t(locale, "goHome")}
+      title={t(locale, "ERROR.PAGE_NOT_FOUND_TITLE")}
+      message={t(locale, "ERROR.PAGE_NOT_FOUND_MESSAGE")}
+      goHomeLabel={t(locale, "BUTTON.GO_HOME")}
       homeHref={`/${locale}`}
     />
   );
