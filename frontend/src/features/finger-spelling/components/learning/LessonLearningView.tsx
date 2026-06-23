@@ -20,6 +20,7 @@ import {
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors } from "@/theme/theme";
 import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
+import LessonFeedbackWidget from "./LessonFeedbackWidget";
 import LessonPracticeStep from "./LessonPracticeStep";
 
 const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
@@ -441,6 +442,15 @@ export default function LessonLearningView({
         predictorReady={predictorState === "ready"}
         onRetry={handleRetry}
         onContinue={handleContinue}
+      />
+      <LessonFeedbackWidget
+        key={lesson.id}
+        type="finger_spelling"
+        category={unit?.title || unit?.titleKh || ""}
+        lessonId={lesson?.id}
+        characteristic={displayLetter}
+        lessonLabel={displayLetter}
+        resultReady={accuracy != null}
       />
     </Stack>
   );
