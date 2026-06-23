@@ -16,3 +16,7 @@ class DictionaryEntryResponse(BaseModel):
 class DictionaryListResponse(BaseModel):
     items: list[DictionaryEntryResponse]
     total: int
+    page: int = 1
+    page_size: int = 10
+    character_count: int = 0
+    word_count: int = 0

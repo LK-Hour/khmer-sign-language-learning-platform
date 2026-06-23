@@ -60,7 +60,7 @@ export function useFingerSpellingProgressStat() {
 
     if (user?.is_guest) {
       const guestCompleted = Object.values(guestLessons).filter(
-        (lesson) => lesson.isCompleted
+        (lesson) => lesson?.isCompleted
       ).length;
       completed = Math.max(completed, guestCompleted);
     }

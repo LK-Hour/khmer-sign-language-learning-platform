@@ -10,7 +10,7 @@ import { apiFetch } from "@/utils/api/client";
 
 export async function fetchFsUnits(): Promise<FsUnit[]> {
   const raw = await apiFetch<FsUnit[]>("/api/finger_spelling/units");
-  return raw.map(normalizeUnit);
+  return raw?.map(normalizeUnit);
 }
 
 export async function fetchFsUnit(unitId: number): Promise<FsUnit | null> {
@@ -28,7 +28,7 @@ export async function fetchFsChapters(unitId: number): Promise<FsChapter[]> {
   const raw = await apiFetch<FsChapter[]>(
     `/api/finger_spelling/units/${unitId}/chapters`
   );
-  return raw.map(normalizeChapter);
+  return raw?.map(normalizeChapter);
 }
 
 export async function fetchFsChapter(
@@ -48,7 +48,7 @@ export async function fetchFsLessons(chapterId: number): Promise<FsLesson[]> {
   const raw = await apiFetch<FsLesson[]>(
     `/api/finger_spelling/chapters/${chapterId}/lessons`
   );
-  return raw.map(normalizeLesson);
+  return raw?.map(normalizeLesson);
 }
 
 export async function fetchFsLesson(
@@ -66,18 +66,18 @@ export async function fetchFsLesson(
 
 export async function fetchFsTrackUnits(): Promise<FsTrackUnit[]> {
   const baseUnits = (await fetchFsUnits()).sort(
-    (a, b) => a.orderIndex - b.orderIndex
+    (a, b) => a?.orderIndex - b?.orderIndex
   );
 
   return Promise.all(
     baseUnits.map(async (unit) => {
-      const chapters = (await fetchFsChapters(unit.id)).sort(
-        (a, b) => a.orderIndex - b.orderIndex
+      const chapters = (await fetchFsChapters(unit?.id)).sort(
+        (a, b) => a?.orderIndex - b?.orderIndex
       );
       const chaptersWithLessons = await Promise.all(
         chapters.map(async (chapter) => {
-          const lessons = (await fetchFsLessons(chapter.id)).sort(
-            (a, b) => a.orderIndex - b.orderIndex
+          const lessons = (await fetchFsLessons(chapter?.id)).sort(
+            (a, b) => a?.orderIndex - b?.orderIndex
           );
 
           return {

@@ -349,7 +349,7 @@ export default function LessonLearningView({
 
   // Map unit category to i18n key for the breadcrumb label
   const categoryLabelKey = (() => {
-    switch (unit.category) {
+    switch (unit?.category) {
       case "Consonant":
       case "Main_Consonant":
         return "fsConsonant";
@@ -369,16 +369,16 @@ export default function LessonLearningView({
   })();
   const tip =
     locale === "kh"
-      ? lesson.descriptionKh || lesson.description
-      : lesson.description || lesson.descriptionKh;
+      ? lesson?.descriptionKh || lesson?.description
+      : lesson?.description || lesson?.descriptionKh;
 
-  const unitStep = formatOrderIndex(unit.orderIndex, locale);
-  const chapterStep = formatOrderIndex(chapter.orderIndex, locale);
-  const lessonStep = formatOrderIndex(lesson.orderIndex, locale);
+  const unitStep = formatOrderIndex(unit?.orderIndex, locale);
+  const chapterStep = formatOrderIndex(chapter?.orderIndex, locale);
+  const lessonStep = formatOrderIndex(lesson?.orderIndex, locale);
 
   useEffect(() => {
     setPracticeContext({ lesson, unit, chapter, nextLessonId });
-    void initializePracticeSession(lesson.id);
+    void initializePracticeSession(lesson?.id);
     return () => {
       clearPracticeContext();
     };
@@ -438,7 +438,7 @@ export default function LessonLearningView({
 
       <LessonPracticeStep
         letter={displayLetter}
-        imageUrl={lesson.imageUrl}
+        imageUrl={lesson?.imageUrl}
         tip={tip}
         accuracy={accuracy}
         predictedLetter={predictedLetter}

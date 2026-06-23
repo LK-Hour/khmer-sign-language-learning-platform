@@ -117,18 +117,18 @@ function InfoRow({ label, value, showDivider = true }: InfoRowProps) {
 export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps) {
   const { t, locale } = useTranslation();
   const { primary, secondary } = useDictionaryWordLabels(word);
-  const mediaSrc = word.videoUrl ?? word.mediaUrl ?? FALLBACK_MEDIA;
-  const isVideo = Boolean(word.videoUrl);
-  const entryType = word.entryType ?? "character";
+  const mediaSrc = word?.videoUrl ?? word?.mediaUrl ?? FALLBACK_MEDIA;
+  const isVideo = Boolean(word?.videoUrl);
+  const entryType = word?.entryType ?? "character";
   const typeLabel =
     entryType === "character" ? t("dictTypeCharacter") : t("dictTypeWord");
   const eyebrow =
     entryType === "character"
       ? t("dictDetailCharacterEyebrow")
       : t("dictDetailWordEyebrow");
-  const subtitle = word.description ?? secondary ?? "";
-  const practiceHref = word.lessonId
-    ? `/${locale}${ROUTES.fingerSpelling.lesson(word.lessonId)}`
+  const subtitle = word?.description ?? secondary ?? "";
+  const practiceHref = word?.lessonId
+    ? `/${locale}${ROUTES.fingerSpelling.lesson(word?.lessonId)}`
     : null;
 
   return (
@@ -247,7 +247,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
               >
                 <Image
                   src={mediaSrc}
-                  alt={word.textEn}
+                  alt={word?.textEn}
                   width={420}
                   height={420}
                   sizes="(max-width: 768px) 90vw, 420px"

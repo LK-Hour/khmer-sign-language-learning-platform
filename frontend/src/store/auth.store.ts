@@ -74,20 +74,20 @@ function decodeJwtExpiry(token: string): number | null {
 }
 
 function resolveTokenExpiresAt(response: AuthTokenResponse): number | null {
-  if (typeof response.expires_at === 'number') {
-    return response.expires_at;
+  if (typeof response?.expires_at === 'number') {
+    return response?.expires_at;
   }
 
-  if (typeof response.expires_at === 'string') {
-    const parsed = Date.parse(response.expires_at);
+  if (typeof response?.expires_at === 'string') {
+    const parsed = Date.parse(response?.expires_at);
     return Number.isNaN(parsed) ? null : parsed;
   }
 
-  if (typeof response.expires_in === 'number') {
-    return Date.now() + response.expires_in * 1000;
+  if (typeof response?.expires_in === 'number') {
+    return Date.now() + response?.expires_in * 1000;
   }
 
-  return decodeJwtExpiry(response.access_token);
+  return decodeJwtExpiry(response?.access_token);
 }
 
 const isExpired = (tokenExpiresAt: number | null) =>
@@ -105,9 +105,9 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (response) =>
         set({
-          token: response.access_token,
+          token: response?.access_token,
           tokenExpiresAt: resolveTokenExpiresAt(response),
-          user: response.user,
+          user: response?.user,
           isAuthenticated: true,
         }),
 
@@ -132,10 +132,10 @@ export const useAuthStore = create<AuthState>()(
         set((state) => {
           if (!state.user) return state;
           return {
-            token: response.access_token,
+            token: response?.access_token,
             tokenExpiresAt: resolveTokenExpiresAt({
-              access_token: response.access_token,
-              token_type: response.token_type,
+              access_token: response?.access_token,
+              token_type: response?.token_type,
               user: state.user,
             }),
             isAuthenticated: true,

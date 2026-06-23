@@ -23,7 +23,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const token = useAuthStore((state) => state.token);
 
   useEffect(() => {
-    if (!hasHydrated || !user || user.is_guest) return;
+    if (!hasHydrated || !user || user?.is_guest) return;
     if (token && !shouldRefresh(tokenExpiresAt)) return;
 
     void refreshAuthSession();
@@ -34,7 +34,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
     const intervalId = window.setInterval(() => {
       const state = useAuthStore.getState();
-      if (!state.user || state.user.is_guest) return;
+      if (!state.user || state.user?.is_guest) return;
       if (!shouldRefresh(state.tokenExpiresAt)) return;
 
       void refreshAuthSession();

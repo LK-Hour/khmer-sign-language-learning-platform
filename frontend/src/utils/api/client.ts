@@ -30,7 +30,7 @@ export async function refreshAuthSession(): Promise<string | null> {
   refreshPromise = (async () => {
     const store = useAuthStore.getState();
     const user = store.user;
-    if (!user || user.is_guest) return null;
+    if (!user || user?.is_guest) return null;
 
     store.setRefreshing(true);
     try {
@@ -53,7 +53,7 @@ export async function refreshAuthSession(): Promise<string | null> {
         token_type: string;
       };
       store.setAccessToken(tokenResp);
-      return tokenResp.access_token;
+      return tokenResp?.access_token;
     } finally {
       store.setRefreshing(false);
       refreshPromise = null;
@@ -65,7 +65,7 @@ export async function refreshAuthSession(): Promise<string | null> {
 
 async function getFreshTokenIfNeeded(): Promise<string | null> {
   const store = useAuthStore.getState();
-  if (!store.user || store.user.is_guest) return store.token;
+  if (!store.user || store.user?.is_guest) return store.token;
   if (store.token && !store.isTokenExpired()) return store.token;
   return refreshAuthSession();
 }

@@ -1,7 +1,7 @@
 import type { FsTrackUnit } from "./types";
 
 export function resolveInitialUnitId(units: FsTrackUnit[]): number | null {
-  return units.find((unit) => !unit.isLocked)?.id ?? units[0]?.id ?? null;
+  return units.find((unit) => !unit?.isLocked)?.id ?? units[0]?.id ?? null;
 }
 
 export function mergeUnitsProgress(
@@ -19,11 +19,11 @@ export function mergeUnitsProgress(
   >();
 
   for (const unit of current) {
-    for (const chapter of unit.chapters) {
-      for (const lesson of chapter.lessons) {
-        progressByLessonId.set(lesson.id, {
-          progressStatus: lesson.progressStatus,
-          progressPercent: lesson.progressPercent ?? 0,
+    for (const chapter of unit?.chapters) {
+      for (const lesson of chapter?.lessons) {
+        progressByLessonId.set(lesson?.id, {
+          progressStatus: lesson?.progressStatus,
+          progressPercent: lesson?.progressPercent ?? 0,
         });
       }
     }
@@ -31,14 +31,14 @@ export function mergeUnitsProgress(
 
   return incoming.map((unit) => ({
     ...unit,
-    chapters: unit.chapters.map((chapter) => ({
+    chapters: unit?.chapters.map((chapter) => ({
       ...chapter,
-      lessons: chapter.lessons.map((lesson) => {
-        const stored = progressByLessonId.get(lesson.id);
+      lessons: chapter?.lessons.map((lesson) => {
+        const stored = progressByLessonId.get(lesson?.id);
         if (!stored) return lesson;
 
         const storedComplete = stored.progressStatus === "COMPLETED";
-        const incomingComplete = lesson.progressStatus === "COMPLETED";
+        const incomingComplete = lesson?.progressStatus === "COMPLETED";
 
         if (storedComplete && !incomingComplete) {
           return {
@@ -49,7 +49,7 @@ export function mergeUnitsProgress(
         }
 
         if (
-          (stored.progressPercent ?? 0) > (lesson.progressPercent ?? 0) &&
+          (stored.progressPercent ?? 0) > (lesson?.progressPercent ?? 0) &&
           !incomingComplete
         ) {
           return {
@@ -71,11 +71,11 @@ export function buildInitialChapterExpansion(
   const expanded: Record<number, boolean> = {};
 
   for (const unit of units) {
-    const firstChapter = [...unit.chapters].sort(
-      (a, b) => a.orderIndex - b.orderIndex
+    const firstChapter = [...unit?.chapters].sort(
+      (a, b) => a?.orderIndex - b?.orderIndex
     )[0];
     if (firstChapter) {
-      expanded[firstChapter.id] = true;
+      expanded[firstChapter?.id] = true;
     }
   }
 

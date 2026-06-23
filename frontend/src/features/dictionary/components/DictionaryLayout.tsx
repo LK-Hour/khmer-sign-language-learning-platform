@@ -86,7 +86,6 @@ export default function DictionaryLayout({
               <Typography
                 component="h1"
                 sx={{
-                  maxWidth: 640,
                   fontWeight: 700,
                   fontSize: { xs: 28, sm: 32, md: 36 },
                   lineHeight: 1.15,
@@ -98,7 +97,6 @@ export default function DictionaryLayout({
 
               <Typography
                 sx={{
-                  maxWidth: 560,
                   fontSize: KslFontSizes.md,
                   lineHeight: KslLineHeights.md,
                   color: KslColors.textSecondary,

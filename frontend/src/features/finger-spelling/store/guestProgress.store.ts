@@ -75,28 +75,28 @@ export const useGuestProgressStore = create<GuestProgressState>()(
               completedAt: nowIso(),
             },
           ],
-          lastAccessedLessonId: summary.lessonId,
+          lastAccessedLessonId: summary?.lessonId,
         })),
 
       toImportPayload: () => {
         const state = get();
         return {
           lessons: Object.values(state.lessons).map((lesson) => ({
-            lesson_id: lesson.lessonId,
-            is_completed: lesson.isCompleted,
-            attempts: lesson.attempts,
-            peak_accuracy: lesson.peakAccuracy,
-            total_time_spent: lesson.totalTimeSpent,
-            started_at: lesson.startedAt,
-            completed_at: lesson.completedAt,
-            last_accessed_at: lesson.lastAccessedAt,
+            lesson_id: lesson?.lessonId,
+            is_completed: lesson?.isCompleted,
+            attempts: lesson?.attempts,
+            peak_accuracy: lesson?.peakAccuracy,
+            total_time_spent: lesson?.totalTimeSpent,
+            started_at: lesson?.startedAt,
+            completed_at: lesson?.completedAt,
+            last_accessed_at: lesson?.lastAccessedAt,
           })),
           practice_summaries: state.practiceSummaries.map((summary) => ({
-            lesson_id: summary.lessonId,
-            attempts: summary.attempts,
-            best_accuracy: summary.bestAccuracy,
-            total_time_spent: summary.totalTimeSpent,
-            completed_at: summary.completedAt,
+            lesson_id: summary?.lessonId,
+            attempts: summary?.attempts,
+            best_accuracy: summary?.bestAccuracy,
+            total_time_spent: summary?.totalTimeSpent,
+            completed_at: summary?.completedAt,
           })),
           last_accessed_lesson_id: state.lastAccessedLessonId,
         };

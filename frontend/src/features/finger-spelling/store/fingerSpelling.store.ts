@@ -64,38 +64,38 @@ function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
 
   const completedLessons = new Set(
     Object.values(useGuestProgressStore.getState().lessons)
-      .filter((lesson) => lesson.isCompleted)
-      .map((lesson) => lesson.lessonId)
+      .filter((lesson) => lesson?.isCompleted)
+      .map((lesson) => lesson?.lessonId)
   );
   const orderedLessonIds = units
     .flatMap((unit) =>
-      unit.chapters.flatMap((chapter) =>
-        chapter.lessons.map((lesson) => ({
-          id: lesson.id,
-          unitOrder: unit.orderIndex,
-          chapterOrder: chapter.orderIndex,
-          lessonOrder: lesson.orderIndex,
+      unit?.chapters.flatMap((chapter) =>
+        chapter?.lessons.map((lesson) => ({
+          id: lesson?.id,
+          unitOrder: unit?.orderIndex,
+          chapterOrder: chapter?.orderIndex,
+          lessonOrder: lesson?.orderIndex,
         }))
       )
     )
     .sort((a, b) =>
-      a.unitOrder - b.unitOrder ||
-      a.chapterOrder - b.chapterOrder ||
-      a.lessonOrder - b.lessonOrder
+      a?.unitOrder - b?.unitOrder ||
+      a?.chapterOrder - b?.chapterOrder ||
+      a?.lessonOrder - b?.lessonOrder
     );
-  const nextLesson = orderedLessonIds.find((lesson) => !completedLessons.has(lesson.id));
+  const nextLesson = orderedLessonIds.find((lesson) => !completedLessons.has(lesson?.id));
   const unlockedLessons = new Set(completedLessons);
-  if (nextLesson) unlockedLessons.add(nextLesson.id);
+  if (nextLesson) unlockedLessons.add(nextLesson?.id);
 
   return units.map((unit) => {
     let unitCompleted = 0;
     let hasUnlockedLessonInUnit = false;
-    const chapters = unit.chapters.map((chapter) => {
+    const chapters = unit?.chapters.map((chapter) => {
       let chapterCompleted = 0;
       let hasUnlockedLessonInChapter = false;
-      const lessons = chapter.lessons.map((lesson) => {
-        const isCompleted = completedLessons.has(lesson.id);
-        const isUnlocked = unlockedLessons.has(lesson.id);
+      const lessons = chapter?.lessons.map((lesson) => {
+        const isCompleted = completedLessons.has(lesson?.id);
+        const isUnlocked = unlockedLessons.has(lesson?.id);
         if (isUnlocked) {
           hasUnlockedLessonInChapter = true;
           hasUnlockedLessonInUnit = true;
@@ -107,22 +107,22 @@ function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
         return {
           ...lesson,
           isLocked: !isUnlocked,
-          progressStatus: isCompleted ? "COMPLETED" as const : lesson.progressStatus,
-          progressPercent: isCompleted ? 100 : lesson.progressPercent,
+          progressStatus: isCompleted ? "COMPLETED" as const : lesson?.progressStatus,
+          progressPercent: isCompleted ? 100 : lesson?.progressPercent,
         };
       });
       return {
         ...chapter,
         isLocked: !hasUnlockedLessonInChapter,
         lessons,
-        completedLessonCount: Math.max(chapter.completedLessonCount, chapterCompleted),
+        completedLessonCount: Math.max(chapter?.completedLessonCount, chapterCompleted),
       };
     });
     return {
       ...unit,
       isLocked: !hasUnlockedLessonInUnit,
       chapters,
-      completedLessonCount: Math.max(unit.completedLessonCount, unitCompleted),
+      completedLessonCount: Math.max(unit?.completedLessonCount, unitCompleted),
     };
   });
 }
@@ -152,7 +152,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
             : incomingUnits;
           const expandedUnitId =
             state.expandedUnitId != null &&
-            mergedUnits.some((unit) => unit.id === state.expandedUnitId && unit.isLocked !== true)
+            mergedUnits.some((unit) => unit?.id === state.expandedUnitId && unit?.isLocked !== true)
               ? state.expandedUnitId
               : resolveInitialUnitId(mergedUnits);
 
@@ -160,11 +160,11 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
             Object.keys(state.expandedChapterIds).length > 0;
           const unlockedChapterIds = new Set(
             mergedUnits.flatMap((unit) =>
-              unit.isLocked === true
+              unit?.isLocked === true
                 ? []
-                : unit.chapters
-                    .filter((chapter) => chapter.isLocked !== true)
-                    .map((chapter) => chapter.id)
+                : unit?.chapters
+                    .filter((chapter) => chapter?.isLocked !== true)
+                    .map((chapter) => chapter?.id)
             )
           );
           const expandedChapterIds = hasExpandedChapters
@@ -275,12 +275,12 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           const units = state.units.map((unit) => {
             let unitCompletedDelta = 0;
 
-            const chapters = unit.chapters.map((chapter) => {
+            const chapters = unit?.chapters.map((chapter) => {
               let chapterCompletedDelta = 0;
 
-              const lessons = chapter.lessons.map((lesson) => {
-                if (lesson.id !== lessonId) return lesson;
-                if (lesson.progressStatus === "COMPLETED") return lesson;
+              const lessons = chapter?.lessons.map((lesson) => {
+                if (lesson?.id !== lessonId) return lesson;
+                if (lesson?.progressStatus === "COMPLETED") return lesson;
 
                 chapterCompletedDelta += 1;
                 unitCompletedDelta += 1;
@@ -300,7 +300,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
                 ...chapter,
                 lessons,
                 completedLessonCount:
-                  chapter.completedLessonCount + chapterCompletedDelta,
+                  chapter?.completedLessonCount + chapterCompletedDelta,
               };
             });
 
@@ -312,7 +312,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
               ...unit,
               chapters,
               completedLessonCount:
-                unit.completedLessonCount + unitCompletedDelta,
+                unit?.completedLessonCount + unitCompletedDelta,
             };
           });
           return { units: applyGuestProgress(units) };

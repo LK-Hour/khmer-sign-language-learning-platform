@@ -22,15 +22,15 @@ export default async function LessonDetailPage({ params }: PageProps) {
   if (!lesson) notFound();
 
   const [chapterLessons, chapter] = await Promise.all([
-    fetchFsLessons(lesson.chapterId),
-    fetchFsChapter(lesson.chapterId),
+    fetchFsLessons(lesson?.chapterId),
+    fetchFsChapter(lesson?.chapterId),
   ]);
   if (!chapter) notFound();
 
-  const unit = await fetchFsUnit(chapter.unitId);
+  const unit = await fetchFsUnit(chapter?.unitId);
   if (!unit) notFound();
 
-  const nextLesson = getNextLessonInChapter(chapterLessons, lesson.id);
+  const nextLesson = getNextLessonInChapter(chapterLessons, lesson?.id);
 
   return (
     <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>

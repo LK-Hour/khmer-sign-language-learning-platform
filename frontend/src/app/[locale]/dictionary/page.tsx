@@ -1,15 +1,12 @@
-import { fetchDictionaryWords } from "@/features/dictionary/api/dictionary";
 import {
   DictionaryLayout,
   DictionaryPageContent,
 } from "@/features/dictionary/components";
 
-export default async function DictionaryPage() {
-  const { items } = await fetchDictionaryWords();
-
+export default function DictionaryPage() {
   return (
     <DictionaryLayout>
-      <DictionaryPageContent words={items} />
+      <DictionaryPageContent />
     </DictionaryLayout>
   );
 }

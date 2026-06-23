@@ -37,6 +37,7 @@ import { logout } from "@/features/auth/api/auth";
 import {
   LOCALE_FULL_NAMES,
   SUPPORTED_LOCALES,
+  isValidLocale,
   type Locale,
 } from "@/i18n/config";
 import { useLocaleStore } from "@/i18n";
@@ -44,9 +45,23 @@ import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
 import { KslColors, KslFontSizes } from "@/theme/theme";
 
-
+import MainHeaderSkeleton, { MAIN_HEADER_HEIGHT } from "./MainHeaderSkeleton";
 
 const LOGO_SRC = "/assets/logo.png";
+
+const headerFadeInSx = {
+  "@keyframes headerFadeInFromTop": {
+    from: {
+      opacity: 0,
+      transform: "translateY(-10px)",
+    },
+    to: {
+      opacity: 1,
+      transform: "translateY(0)",
+    },
+  },
+  animation: "headerFadeInFromTop 0.5s ease-out both",
+};
 
 function persistLocaleCookie(locale: Locale) {
   document.cookie = `NEXT_LOCALE=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`;
@@ -256,13 +271,19 @@ export default function MainHeader() {
   const clearAuth = useAuthStore((state) => state.clear);
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
+  const [mounted, setMounted] = useState(false);
   const [modesOpen, setModesOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const modesRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!modesOpen && !langOpen) return;
@@ -303,11 +324,11 @@ export default function MainHeader() {
   };
 
   const displayName = user
-    ? `${user.first_name}${user.last_name ? ` ${user.last_name}` : ""}`.trim()
+    ? `${user?.first_name}${user?.last_name ? ` ${user?.last_name}` : ""}`.trim()
     : t("navGuest");
 
   const initials = user
-    ? `${user.first_name[0]}${user.last_name ? user.last_name[0] : ""}`.toUpperCase()
+    ? `${user?.first_name?.[0]}${user?.last_name ? user?.last_name[0] : ""}`.toUpperCase()
     : "G";
 
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/home`;
@@ -315,6 +336,11 @@ export default function MainHeader() {
   const isModesActive =
     pathname.includes(ROUTES.fingerSpelling.root) ||
     pathname.includes(ROUTES.words.root);
+
+  const routeLocaleSegment = pathname.split("/")[1];
+  const flagLocale: Locale = isValidLocale(routeLocaleSegment)
+    ? routeLocaleSegment
+    : locale;
 
   const learningModes = [
     { label: t("navFingerSpelling"), href: ROUTES.fingerSpelling.root },
@@ -360,6 +386,12 @@ export default function MainHeader() {
     router.push(`/${locale}${href}`);
   };
 
+  const isHeaderReady = mounted && hasHydrated;
+
+  if (!isHeaderReady) {
+    return <MainHeaderSkeleton />;
+  }
+
   return (
     <AppBar
       position="sticky"
@@ -370,9 +402,16 @@ export default function MainHeader() {
         borderColor: "divider",
         bgcolor: "background.paper",
         backdropFilter: "blur(6px)",
+        ...headerFadeInSx,
       }}
     >
-      <Toolbar disableGutters sx={{ minHeight: 64 }}>
+      <Toolbar
+        disableGutters
+        sx={{
+          minHeight: MAIN_HEADER_HEIGHT,
+          height: MAIN_HEADER_HEIGHT,
+        }}
+      >
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 3 } }}>
           <Grid container sx={{ width: "100%", alignItems: "center" }}>
 
@@ -492,7 +531,7 @@ export default function MainHeader() {
                       minHeight: 32,
                     }}
                   >
-                    <LocaleFlag locale={locale} size={20} />
+                    <LocaleFlag locale={flagLocale} size={20} />
                   </Stack>
 
                   {langOpen && (
@@ -531,7 +570,7 @@ export default function MainHeader() {
                     <ProfileLogoutBlock
                       displayName={displayName}
                       initials={initials}
-                      picture={user.picture}
+                      picture={user?.picture}
                       pictureIcon={<Iconify icon="eva:person-fill" />}
                       logoutLabel={t("navLogout")}
                       onLogoutClick={requestLogout}

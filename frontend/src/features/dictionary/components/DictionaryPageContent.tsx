@@ -2,14 +2,16 @@
 
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import GestureIcon from "@mui/icons-material/Gesture";
-import {
-  Grid,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { useMemo, useState } from "react";
+import { CircularProgress, Grid, Paper, Stack, Typography } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
 
+import { fetchAllDictionaryWords } from "@/features/dictionary/api/dictionary";
+import {
+  countDictionaryEntryTypes,
+  filterDictionaryWords,
+  paginateDictionaryWords,
+  sortDictionaryWords,
+} from "@/features/dictionary/utils/dictionaryList";
 import { useTranslation } from "@/i18n/useTranslation";
 import {
   KslColors,
@@ -24,60 +26,78 @@ import type {
   DictionaryTypeFilter,
   DictionaryWord,
 } from "../types";
+import { DICTIONARY_PAGE_SIZE } from "../types";
 import DictionaryEntryCard from "./DictionaryEntryCard";
+import DictionaryPagination from "./DictionaryPagination";
 import DictionaryToolbar from "./DictionaryToolbar";
 
-type DictionaryPageContentProps = {
-  words: DictionaryWord[];
-};
-
-function countByType(words: DictionaryWord[], type: DictionaryTypeFilter) {
-  if (type === "all") return words.length;
-  return words.filter((word) => (word.entryType ?? "character") === type).length;
-}
-
-export default function DictionaryPageContent({
-  words,
-}: DictionaryPageContentProps) {
+export default function DictionaryPageContent() {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<DictionarySortOrder | "">("");
+  const [searchInput, setSearchInput] = useState("");
+  const [sortOrder, setSortOrder] = useState<DictionarySortOrder>("default");
   const [typeFilter, setTypeFilter] = useState<DictionaryTypeFilter>("all");
+  const [page, setPage] = useState(1);
+  const [allWords, setAllWords] = useState<DictionaryWord[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const characterCount = useMemo(
-    () => countByType(words, "character"),
-    [words]
-  );
-  const wordCount = useMemo(() => countByType(words, "word"), [words]);
+  useEffect(() => {
+    let cancelled = false;
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    async function loadWords() {
+      setError(null);
 
-    let items = words.filter((word) => {
-      if (typeFilter !== "all" && (word.entryType ?? "character") !== typeFilter) {
-        return false;
+      try {
+        const items = await fetchAllDictionaryWords();
+        if (!cancelled) {
+          setAllWords(items);
+        }
+      } catch {
+        if (!cancelled) {
+          setAllWords([]);
+          setError(t("dictLoadError"));
+        }
+      } finally {
+        if (!cancelled) {
+          setInitialLoading(false);
+        }
       }
-
-      if (!query) return true;
-
-      return (
-        word.textEn.toLowerCase().includes(query) ||
-        word.textKh.includes(query) ||
-        word.description?.toLowerCase().includes(query)
-      );
-    });
-
-    if (sortOrder === "az" || sortOrder === "za") {
-      items = [...items].sort((a, b) => {
-        const cmp = a.textEn.localeCompare(b.textEn, undefined, {
-          sensitivity: "base",
-        });
-        return sortOrder === "az" ? cmp : -cmp;
-      });
     }
 
-    return items;
-  }, [search, sortOrder, typeFilter, words]);
+    void loadWords();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
+  const { characterCount, wordCount } = useMemo(
+    () => countDictionaryEntryTypes(allWords),
+    [allWords],
+  );
+
+  const filteredWords = useMemo(
+    () =>
+      sortDictionaryWords(
+        filterDictionaryWords(allWords, {
+          search: searchInput,
+          entryType: typeFilter,
+        }),
+        sortOrder,
+      ),
+    [allWords, searchInput, sortOrder, typeFilter],
+  );
+
+  const pageCount = Math.max(
+    1,
+    Math.ceil(filteredWords.length / DICTIONARY_PAGE_SIZE),
+  );
+  const safePage = Math.min(page, pageCount);
+
+  const visibleWords = useMemo(
+    () => paginateDictionaryWords(filteredWords, safePage),
+    [filteredWords, safePage],
+  );
 
   return (
     <Stack spacing={3}>
@@ -186,16 +206,54 @@ export default function DictionaryPageContent({
       </Grid>
 
       <DictionaryToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={searchInput}
+        onSearchChange={(value) => {
+          setSearchInput(value);
+          setPage(1);
+        }}
         sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
+        onSortOrderChange={(value) => {
+          setSortOrder(value);
+          setPage(1);
+        }}
         typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
-        resultCount={filtered.length}
+        onTypeFilterChange={(value) => {
+          setTypeFilter(value);
+          setPage(1);
+        }}
+        resultCount={filteredWords.length}
       />
 
-      {filtered.length === 0 ? (
+      {initialLoading ? (
+        <Stack sx={{ alignItems: "center", py: 6 }}>
+          <CircularProgress aria-label={t("dictLoading")} />
+        </Stack>
+      ) : error ? (
+        <Paper
+          elevation={0}
+          component={Stack}
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            py: 6,
+            px: 3,
+            textAlign: "center",
+            borderRadius: `${KslRadii.card}px`,
+            border: `1px dashed ${KslColors.border}`,
+            bgcolor: KslPalette.primary.lighter,
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: KslFontSizes.lg,
+              fontWeight: 700,
+              color: KslColors.textPrimary,
+            }}
+          >
+            {error}
+          </Typography>
+        </Paper>
+      ) : filteredWords.length === 0 ? (
         <Paper
           elevation={0}
           component={Stack}
@@ -231,13 +289,23 @@ export default function DictionaryPageContent({
           </Typography>
         </Paper>
       ) : (
-        <Grid container spacing={2}>
-          {filtered.map((word) => (
-            <Grid key={word.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-              <DictionaryEntryCard word={word} />
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={2}>
+            {visibleWords.map((word) => (
+              <Grid key={word?.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+                <DictionaryEntryCard word={word} />
+              </Grid>
+            ))}
+          </Grid>
+
+          <Stack sx={{ alignItems: "center" }}>
+            <DictionaryPagination
+              page={safePage}
+              pageCount={pageCount}
+              onPageChange={setPage}
+            />
+          </Stack>
+        </>
       )}
     </Stack>
   );

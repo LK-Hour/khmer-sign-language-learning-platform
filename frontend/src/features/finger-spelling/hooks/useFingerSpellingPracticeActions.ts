@@ -38,7 +38,7 @@ export function useFingerSpellingPracticeActions() {
       }
       try {
         const session = await startPracticeSession(lessonId);
-        setPracticeSessionId(session.id);
+        setPracticeSessionId(session?.id);
       } catch {
         setPracticeSessionId(null);
       }
@@ -52,9 +52,9 @@ export function useFingerSpellingPracticeActions() {
 
       try {
         const prediction = await predictHandFromFeatures(features, handedness, category);
-        const score = Math.round(prediction.match_confidence);
+        const score = Math.round(prediction?.match_confidence);
         const predicted =
-          prediction.predicted_label ?? String(prediction.predicted_class_index);
+          prediction?.predicted_label ?? String(prediction?.predicted_class_index);
 
         const sessionId = useFingerSpellingStore.getState().sessionId;
         if (useAuthStore.getState().user?.is_guest) {
@@ -91,7 +91,7 @@ export function useFingerSpellingPracticeActions() {
   const completePractice = useCallback(async (): Promise<boolean> => {
     const { sessionId, accuracy, practiceContext } =
       useFingerSpellingStore.getState();
-    const lessonId = practiceContext?.lesson.id;
+    const lessonId = practiceContext?.lesson?.id;
     const authUser = useAuthStore.getState().user;
 
     if (lessonId == null) return false;
@@ -102,7 +102,7 @@ export function useFingerSpellingPracticeActions() {
       return true;
     }
 
-    if (practiceContext?.lesson.progressStatus === "COMPLETED") {
+    if (practiceContext?.lesson?.progressStatus === "COMPLETED") {
       markLessonCompleted(lessonId);
       return true;
     }
@@ -114,7 +114,7 @@ export function useFingerSpellingPracticeActions() {
     ) {
       try {
         const result = await endPracticeSession(sessionId);
-        if (!result.lesson_completed) return false;
+        if (!result?.lesson_completed) return false;
 
         markLessonCompleted(lessonId);
 

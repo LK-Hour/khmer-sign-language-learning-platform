@@ -3,6 +3,7 @@
 import SearchIcon from "@mui/icons-material/Search";
 import {
   FormControl,
+  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -31,8 +32,8 @@ import type {
 type DictionaryToolbarProps = {
   search: string;
   onSearchChange: (value: string) => void;
-  sortOrder: DictionarySortOrder | "";
-  onSortOrderChange: (value: DictionarySortOrder | "") => void;
+  sortOrder: DictionarySortOrder;
+  onSortOrderChange: (value: DictionarySortOrder) => void;
   typeFilter: DictionaryTypeFilter;
   onTypeFilterChange: (value: DictionaryTypeFilter) => void;
   resultCount: number;
@@ -61,24 +62,9 @@ export default function DictionaryToolbar({
         bgcolor: "background.paper",
       }}
     >
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={2}
-        sx={{ alignItems: { md: "flex-end" } }}
-      >
-        <Stack spacing={0.75} sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            component="label"
-            htmlFor="dictionary-search"
-            sx={{
-              fontSize: KslFontSizes.sm,
-              fontWeight: 700,
-              color: KslColors.textPrimary,
-            }}
-          >
-            {t("dictSearchLabel")}
-          </Typography>
-          <TextField
+      <Grid container spacing={2}>
+        <Grid size={{ xs:12, md: 8}}>
+        <TextField
             id="dictionary-search"
             fullWidth
             value={search}
@@ -96,39 +82,55 @@ export default function DictionaryToolbar({
                 sx: {
                   fontSize: KslFontSizes.md,
                   borderRadius: `${KslRadii.button}px`,
-                  bgcolor: KslPalette.primary.lighter,
                   "& fieldset": { borderColor: KslColors.border },
                 },
               },
             }}
           />
-        </Stack>
-
-        <FormControl sx={{ minWidth: { xs: "100%", md: 160 } }}>
+        </Grid>
+        <Grid size={{ xs:12, md:4}}>
+        <FormControl sx={{ width: "100%" }}>
           <InputLabel id="dictionary-order-label">{t("dictOrderLabel")}</InputLabel>
           <Select
             labelId="dictionary-order-label"
             label={t("dictOrderLabel")}
             value={sortOrder}
-            displayEmpty
-            renderValue={(selected) => {
-              if (selected === "az") return t("dictOrderAz");
-              if (selected === "za") return t("dictOrderZa");
-              return t("dictOrderDefault");
-            }}
             onChange={(event) =>
-              onSortOrderChange(event.target.value as DictionarySortOrder | "")
+              onSortOrderChange(event.target.value as DictionarySortOrder)
             }
             sx={{
               borderRadius: `${KslRadii.button}px`,
               bgcolor: "background.paper",
             }}
           >
-            <MenuItem value="">{t("dictOrderDefault")}</MenuItem>
+            <MenuItem value="default">{t("dictOrderDefault")}</MenuItem>
             <MenuItem value="az">{t("dictOrderAz")}</MenuItem>
             <MenuItem value="za">{t("dictOrderZa")}</MenuItem>
           </Select>
         </FormControl>
+        </Grid>
+      </Grid>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={2}
+        sx={{ alignItems: { md: "flex-end" } }}
+      >
+        <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            component="label"
+            htmlFor="dictionary-search"
+            sx={{
+              fontSize: KslFontSizes.sm,
+              fontWeight: 700,
+              color: KslColors.textPrimary,
+            }}
+          >
+            {t("dictSearchLabel")}
+          </Typography>
+          
+        </Stack>
+
+        
       </Stack>
 
       <Stack
@@ -145,6 +147,15 @@ export default function DictionaryToolbar({
           aria-label={t("dictTypeFilterLabel")}
           sx={{
             flexWrap: "wrap",
+            gap: 1,
+            "& .MuiToggleButtonGroup-grouped": {
+              border: `1px solid ${KslColors.border} !important`,
+              margin: 0,
+              "&:not(:first-of-type)": {
+                marginLeft: 0,
+                borderLeft: `1px solid ${KslColors.border} !important`,
+              },
+            },
             "& .MuiToggleButton-root": {
               px: 2.5,
               py: 0.75,

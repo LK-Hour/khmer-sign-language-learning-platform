@@ -11,59 +11,62 @@ import { statusToPercent } from "../utils/progress";
 /** Matches backend `FsUnitResponse`. */
 export function normalizeUnit(unit: FsUnit): FsUnit {
   return {
-    id: unit.id,
-    title: unit.title,
-    titleKh: unit.titleKh,
-    category: unit.category ?? null,
-    orderIndex: unit.orderIndex,
-    chapterCount: unit.chapterCount,
-    completedLessonCount: unit.completedLessonCount,
-    totalLessonCount: unit.totalLessonCount,
-    isLocked: unit.isLocked ?? false,
+
+    id: unit?.id,
+    title: unit?.title,
+    titleKh: unit?.titleKh,
+    category: unit?.category ?? null,
+    orderIndex: unit?.orderIndex,
+    chapterCount: unit?.chapterCount,
+    completedLessonCount: unit?.completedLessonCount,
+    totalLessonCount: unit?.totalLessonCount,
+    isLocked: unit?.isLocked ?? false,
   };
 }
 
 /** Matches backend `FsChapterResponse`. */
 export function normalizeChapter(chapter: FsChapter): FsChapter {
   return {
-    id: chapter.id,
-    unitId: chapter.unitId,
-    title: chapter.title,
-    titleKh: chapter.titleKh,
-    description: chapter.description ?? null,
-    descriptionKh: chapter.descriptionKh ?? null,
-    orderIndex: chapter.orderIndex,
-    lessonCount: chapter.lessonCount,
-    completedLessonCount: chapter.completedLessonCount,
-    isExerciseUnlocked: chapter.isExerciseUnlocked,
-    isLocked: chapter.isLocked ?? false,
+
+    id: chapter?.id,
+    unitId: chapter?.unitId,
+    title: chapter?.title,
+    titleKh: chapter?.titleKh,
+    description: chapter?.description ?? null,
+    descriptionKh: chapter?.descriptionKh ?? null,
+    orderIndex: chapter?.orderIndex,
+    lessonCount: chapter?.lessonCount,
+    completedLessonCount: chapter?.completedLessonCount,
+    isExerciseUnlocked: chapter?.isExerciseUnlocked,
+    isLocked: chapter?.isLocked ?? false,
   };
 }
 
 /** Matches backend `FsLessonResponse` / `FsLessonDetailResponse`. */
 export function normalizeLesson(lesson: FsLesson): FsLesson {
-  const progressStatus = lesson.progressStatus as FsProgressStatus;
+  const progressStatus = lesson?.progressStatus as FsProgressStatus;
 
   return {
-    id: lesson.id,
-    chapterId: lesson.chapterId,
-    letter: lesson.letter,
-    romanization: lesson.romanization ?? null,
-    letterNameEn: lesson.letterNameEn ?? null,
-    letterNameKh: lesson.letterNameKh ?? null,
-    imageUrl: resolveApiAssetUrl(lesson.imageUrl) ?? lesson.imageUrl,
-    orderIndex: lesson.orderIndex,
-    isLocked: lesson.isLocked,
+
+    id: lesson?.id,
+    chapterId: lesson?.chapterId,
+    letter: lesson?.letter,
+    romanization: lesson?.romanization ?? null,
+    letterNameEn: lesson?.letterNameEn ?? null,
+    letterNameKh: lesson?.letterNameKh ?? null,
+    imageUrl: resolveApiAssetUrl(lesson?.imageUrl) ?? lesson?.imageUrl,
+    orderIndex: lesson?.orderIndex,
+    isLocked: lesson?.isLocked,
     progressStatus,
     progressPercent:
-      lesson.progressPercent ?? statusToPercent(progressStatus),
+      lesson?.progressPercent ?? statusToPercent(progressStatus),
   };
 }
 
 export function normalizeLessonDetail(lesson: FsLessonDetail): FsLessonDetail {
   return {
     ...normalizeLesson(lesson),
-    description: lesson.description ?? null,
-    descriptionKh: lesson.descriptionKh ?? null,
+    description: lesson?.description ?? null,
+    descriptionKh: lesson?.descriptionKh ?? null,
   };
 }

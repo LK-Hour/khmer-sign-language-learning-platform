@@ -61,18 +61,18 @@ export function getLessonDisplayLetter(lesson: {
   romanization?: string | null;
 }): string {
   const candidates = [
-    lesson.letter,
-    lesson.letterNameKh,
-    lesson.letterNameEn,
-    lesson.romanization,
+    lesson?.letter,
+    lesson?.letterNameKh,
+    lesson?.letterNameEn,
+    lesson?.romanization,
   ];
 
   return (
     candidates.find((value) => value && KHMER_SCRIPT.test(value)) ??
-    lesson.letter ??
-    lesson.letterNameKh ??
-    lesson.letterNameEn ??
-    lesson.romanization ??
+    lesson?.letter ??
+    lesson?.letterNameKh ??
+    lesson?.letterNameEn ??
+    lesson?.romanization ??
     ""
   );
 }

@@ -1,5 +1,5 @@
 import { apiFetch } from "@/utils/api/client";
-import type { DictionarySearchResult, DictionaryWord } from "../types";
+import type { DictionaryWord } from "../types";
 import { resolveApiAssetUrl } from "./config";
 
 type BackendDictionaryWord = {
@@ -17,41 +17,40 @@ type BackendDictionaryWord = {
 type BackendDictionaryListResponse = {
   items: BackendDictionaryWord[];
   total: number;
+  page: number;
+  page_size: number;
+  character_count: number;
+  word_count: number;
 };
 
 function normalizeWord(raw: BackendDictionaryWord): DictionaryWord {
   return {
-    id: raw.id,
-    textEn: raw.text_en,
-    textKh: raw.text_kh,
-    mediaUrl: resolveApiAssetUrl(raw.media_url ?? undefined) ?? null,
-    videoUrl: resolveApiAssetUrl(raw.video_url ?? undefined) ?? null,
-    category: raw.category ?? null,
-    entryType: raw.entry_type ?? "character",
-    description: raw.description ?? null,
-    lessonId: raw.lesson_id ?? null,
+    id: raw?.id,
+    textEn: raw?.text_en,
+    textKh: raw?.text_kh,
+    mediaUrl: resolveApiAssetUrl(raw?.media_url ?? undefined) ?? null,
+    videoUrl: resolveApiAssetUrl(raw?.video_url ?? undefined) ?? null,
+    category: raw?.category ?? null,
+    entryType: raw?.entry_type ?? "character",
+    description: raw?.description ?? null,
+    lessonId: raw?.lesson_id ?? null,
   };
 }
 
-export async function fetchDictionaryWords(
-  search?: string
-): Promise<DictionarySearchResult> {
-  const params = new URLSearchParams();
-  if (search?.trim()) params.set("search", search.trim());
-  const query = params.toString();
-  const path = query ? `/api/dictionary?${query}` : "/api/dictionary";
-
-  const raw = await apiFetch<BackendDictionaryListResponse>(path);
-  const items = raw.items.map(normalizeWord);
-  return { items, total: raw.total ?? items.length };
+/** Load the full dictionary in one request (dataset is small). */
+export async function fetchAllDictionaryWords(): Promise<DictionaryWord[]> {
+  const raw = await apiFetch<BackendDictionaryListResponse>(
+    "/api/dictionary?page=1&page_size=500&sort=default",
+  );
+  return raw?.items?.map(normalizeWord) ?? [];
 }
 
 export async function fetchDictionaryWord(
-  wordId: number
+  wordId: number,
 ): Promise<DictionaryWord | null> {
   try {
     const raw = await apiFetch<BackendDictionaryWord>(
-      `/api/dictionary/${wordId}`
+      `/api/dictionary/${wordId}`,
     );
     return normalizeWord(raw);
   } catch {

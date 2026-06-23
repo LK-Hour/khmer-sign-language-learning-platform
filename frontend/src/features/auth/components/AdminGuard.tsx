@@ -25,8 +25,8 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
 
-  const isAdmin = Boolean(user && isAuthenticated && user.account_type === "admin");
-  const canRefreshRealUser = Boolean(user && !user.is_guest && !token);
+  const isAdmin = Boolean(user && isAuthenticated && user?.account_type === "admin");
+  const canRefreshRealUser = Boolean(user && !user?.is_guest && !token);
   const isAnonymous = hasHydrated && !isRefreshing && !canRefreshRealUser && (!user || !isAuthenticated);
   const isForbidden = hasHydrated && !isRefreshing && !canRefreshRealUser && user && isAuthenticated && !isAdmin;
   const isLoading = !hasHydrated || isRefreshing || canRefreshRealUser;

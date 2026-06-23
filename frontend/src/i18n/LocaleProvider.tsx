@@ -14,7 +14,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
   const setLocale = useLocaleStore((state) => state.setLocale);
   const routeLocale = useMemo<Locale | null>(
     () => (isValidLocale(initialLocale) ? initialLocale : null),
-    [initialLocale]
+    [initialLocale],
   );
   const effectiveLocale = routeLocale ?? locale;
 
@@ -27,10 +27,6 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
   useEffect(() => {
     document.documentElement.lang = effectiveLocale;
   }, [effectiveLocale]);
-
-  if (routeLocale && locale !== routeLocale) {
-    return null;
-  }
 
   return children;
 }

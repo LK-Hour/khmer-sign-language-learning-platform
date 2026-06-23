@@ -8,8 +8,8 @@ export function selectResumeLesson(state: FingerSpellingState) {
 export function selectCurrentUnit(state: FingerSpellingState) {
   const { units, expandedUnitId } = state;
   return (
-    units.find((unit) => unit.id === expandedUnitId) ??
-    units.find((unit) => !unit.isLocked) ??
+    units.find((unit) => unit?.id === expandedUnitId) ??
+    units.find((unit) => !unit?.isLocked) ??
     units[0]
   );
 }

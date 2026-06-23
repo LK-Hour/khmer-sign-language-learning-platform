@@ -155,7 +155,7 @@ export function LoginView() {
   const completeLearnerLogin = useCallback(
     async (response: AuthTokenResponse) => {
       setAuth(response);
-      if (!response.user.is_guest && useGuestProgressStore.getState().hasProgress()) {
+      if (!response?.user?.is_guest && useGuestProgressStore.getState().hasProgress()) {
         try {
           await importGuestProgress(useGuestProgressStore.getState().toImportPayload());
           useGuestProgressStore.getState().clear();
@@ -254,7 +254,7 @@ export function LoginView() {
       setLoadingAction('google');
 
       try {
-        const authResponse = await loginWithGoogle(response.credential);
+        const authResponse = await loginWithGoogle(response?.credential);
         await completeLearnerLogin(authResponse);
       } catch {
         setAuthError(t('loginGoogleFailed'));
@@ -283,13 +283,13 @@ export function LoginView() {
 
     window.FB.login(
       (response) => {
-        if (!response.authResponse) {
+        if (!response?.authResponse) {
           setLoadingAction(null);
           setAuthError(t('loginFacebookCancelled'));
           return;
         }
 
-        loginWithFacebook(response.authResponse.accessToken)
+        loginWithFacebook(response?.authResponse?.accessToken)
           .then(completeLearnerLogin)
           .catch(() => {
             setAuthError(t('loginFacebookFailed'));
@@ -316,7 +316,7 @@ export function LoginView() {
       const response = await loginWithEmail(email, password, rememberMe);
       const profile = await fetchCurrentUser();
 
-      if (profile.account_type !== 'admin') {
+      if (profile?.account_type !== 'admin') {
         setAuthError(t('loginNoAdminAccess'));
         return;
       }
@@ -324,9 +324,9 @@ export function LoginView() {
       setAuth({
         ...response,
         user: {
-          ...response.user,
-          account_type: profile.account_type,
-          is_guest: profile.is_guest,
+          ...response?.user,
+          account_type: profile?.account_type,
+          is_guest: profile?.is_guest,
         },
       });
       router.push(safeRedirectPath(localizedPath(ROUTES.admin.quiz)));

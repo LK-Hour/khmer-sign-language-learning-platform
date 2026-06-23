@@ -199,7 +199,7 @@ export default function FingerSpellingTrack({
             expanded={unit?.isLocked !== true && expandedUnitId === unit?.id}
             onToggle={() => {
               if (unit?.isLocked === true) return;
-              toggleUnitExpanded(unit.id);
+              toggleUnitExpanded(unit?.id);
             }}
             locale={locale}
             unitLabel={t("fsUnit")}
@@ -440,7 +440,7 @@ function UnitTrackCard({
         <Stack spacing={1.5} sx={{ borderTop: `1px solid ${KslColors.border}`, p: 2 }}>
           {unit?.chapters?.map((chapter) => (
             <ChapterTrackSection
-              key={chapter.id}
+              key={chapter?.id}
               chapter={chapter}
               locale={locale}
               chapterLabel={chapterLabel}
@@ -461,7 +461,7 @@ function ChapterTrackSection({
   locale: "kh" | "en";
   chapterLabel: string;
 }) {
-  const locked = chapter.isLocked === true;
+  const locked = chapter?.isLocked === true;
   const expanded = useFingerSpellingStore((state) =>
     chapter?.isLocked !== true && state.expandedChapterIds[chapter?.id] === true
   );
@@ -470,7 +470,7 @@ function ChapterTrackSection({
   );
   const lessonStates = useMemo(
     () => resolveLessonStates(chapter?.lessons),
-    [chapter.lessons]
+    [chapter?.lessons]
   );
   const { t } = useTranslation();
   const chapterTitle =
@@ -598,7 +598,7 @@ function ChapterTrackSection({
               key={lesson?.id}
               lesson={lesson}
               locale={locale}
-              state={lessonStates.get(lesson.id) ?? "lock"}
+              state={lessonStates.get(lesson?.id) ?? "lock"}
             />
           ))}
         </Stack>
@@ -743,7 +743,7 @@ function LessonTrackRow({
 
   return (
     <Link
-      href={ROUTES.fingerSpelling.lesson(lesson.id)}
+      href={ROUTES.fingerSpelling.lesson(lesson?.id)}
       style={{ color: "inherit", textDecoration: "none" }}
     >
       {row}

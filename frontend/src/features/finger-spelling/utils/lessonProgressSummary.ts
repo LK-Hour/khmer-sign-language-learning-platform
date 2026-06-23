@@ -8,8 +8,8 @@ type LessonCountSource = Pick<FsUnit, "completedLessonCount" | "totalLessonCount
 export function sumLessonProgress(units: LessonCountSource[]) {
   return units.reduce(
     (acc, unit) => ({
-      completed: acc.completed + unit.completedLessonCount,
-      total: acc.total + unit.totalLessonCount,
+      completed: acc.completed + unit?.completedLessonCount,
+      total: acc.total + unit?.totalLessonCount,
     }),
     { completed: 0, total: 0 }
   );
@@ -35,7 +35,7 @@ export function formatLessonProgressStat(
 
 export function trackUnitsToCountSources(units: FsTrackUnit[]): LessonCountSource[] {
   return units.map((unit) => ({
-    completedLessonCount: unit.completedLessonCount,
-    totalLessonCount: unit.totalLessonCount,
+    completedLessonCount: unit?.completedLessonCount,
+    totalLessonCount: unit?.totalLessonCount,
   }));
 }

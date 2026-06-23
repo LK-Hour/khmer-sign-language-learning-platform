@@ -26,7 +26,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const user = useAuthStore((state) => state.user);
 
   const isAllowed = Boolean(user && isAuthenticated);
-  const canRefreshRealUser = Boolean(user && !user.is_guest && !token);
+  const canRefreshRealUser = Boolean(user && !user?.is_guest && !token);
   const isLoading = !hasHydrated || isRefreshing || canRefreshRealUser;
 
   useEffect(() => {

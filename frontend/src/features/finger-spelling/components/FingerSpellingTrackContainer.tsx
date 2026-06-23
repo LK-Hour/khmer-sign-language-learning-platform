@@ -27,7 +27,7 @@ export default function FingerSpellingTrackContainer({
   useEffect(() => {
     if (!hasHydrated || !user) return;
 
-    if (user.is_guest) {
+    if (user?.is_guest) {
       setUnits(units);
       setTrackReady(true);
       return;

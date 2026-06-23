@@ -1,10 +1,8 @@
 import type { Locale } from "@/i18n/config";
 
-import Iconify from "@/components/iconify";
-
-const LOCALE_FLAG_ICONS: Record<Locale, string> = {
-  en: "twemoji:flag-united-kingdom",
-  kh: "twemoji:flag-cambodia",
+const LOCALE_FLAG_SRC: Record<Locale, string> = {
+  kh: "/assets/flags/kh.svg",
+  en: "/assets/flags/en.svg",
 };
 
 type LocaleFlagProps = {
@@ -14,10 +12,21 @@ type LocaleFlagProps = {
 
 export default function LocaleFlag({ locale, size = 22 }: LocaleFlagProps) {
   return (
-    <Iconify
-      icon={LOCALE_FLAG_ICONS[locale]}
+    <img
+      src={LOCALE_FLAG_SRC[locale]}
+      alt=""
       aria-hidden
-      sx={{ width: size, height: size, flexShrink: 0 }}
+      width={size}
+      height={size}
+      loading="eager"
+      decoding="sync"
+      draggable={false}
+      style={{
+        flexShrink: 0,
+        display: "block",
+        borderRadius: 2,
+        objectFit: "cover",
+      }}
     />
   );
 }

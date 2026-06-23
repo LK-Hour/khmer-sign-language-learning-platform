@@ -15,11 +15,8 @@ export interface DictionaryWord {
   lessonId?: number | null;
 }
 
-export interface DictionarySearchResult {
-  items: DictionaryWord[];
-  total: number;
-}
-
-export type DictionarySortOrder = "az" | "za";
+export type DictionarySortOrder = "default" | "az" | "za";
 
 export type DictionaryTypeFilter = "all" | DictionaryEntryType;
+
+export const DICTIONARY_PAGE_SIZE = 10;
