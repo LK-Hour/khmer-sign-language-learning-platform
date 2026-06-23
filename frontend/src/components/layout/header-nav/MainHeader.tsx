@@ -40,7 +40,7 @@ import {
   isValidLocale,
   type Locale,
 } from "@/i18n/config";
-import { useLocaleStore } from "@/i18n";
+import { useLocale, useSetLocale } from "@/i18n";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
 import { KslColors, KslFontSizes } from "@/theme/theme";
@@ -267,7 +267,8 @@ export default function MainHeader() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
-  const { locale, setLocale } = useLocaleStore();
+  const locale = useLocale();
+  const setLocale = useSetLocale();
   const clearAuth = useAuthStore((state) => state.clear);
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

@@ -1,6 +1,7 @@
 // Main exports for i18n module
 export { useLocaleStore } from '@/store/locale.store';
 export { useTranslation } from './useTranslation';
+export { useLocale, useSetLocale, useToggleLocale } from './locale-context';
 export { useLocalizedPair } from './useLocalizedPair';
 export { getLocalizedPair } from './localizedText';
 export type { LocalizedPair } from './localizedText';
