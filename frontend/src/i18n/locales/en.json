@@ -247,7 +247,8 @@
       "CONTINUE": "Continue",
       "CURRENT_UNIT_PROGRESS": "{completed} of {total} lessons completed",
       "EYEBROW": "Finger Spelling Track",
-      "FALLBACK_UNIT_TITLE": "Khmer Finger Basics",
+      "FALLBACK_UNIT_TITLE": "Khmer Finger Spelling Basics",
+      "LEARN_ABOUT_TITLE": "Learn about: {title}",
       "PROGRESS_SUMMARY": "{completed} of {total} {label} completed",
       "QUIZ_DESCRIPTION": "Exercise and quiz to track learner progress after all chapters.",
       "QUIZ_TITLE": "Character Quiz",
@@ -269,7 +270,7 @@
     "MODE_01": "Mode 01",
     "MODE_02": "Mode 02",
     "SUBTITLE": "Choose Finger Spelling or Word Detection, then continue through units, chapters, lessons, practice, and quizzes in order.",
-    "TITLE": "Continue your Khmer signing journey",
+    "TITLE": "Continue your Khmer Sign Language journey",
     "WORD_DETECTION_CTA": "Learn Word Detection",
     "WORD_DETECTION_DESC": "Start from 20 word classes with video samples and live signing probability.",
     "WORD_DETECTION_STAT": "20 starter classes"

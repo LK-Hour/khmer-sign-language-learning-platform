@@ -373,13 +373,18 @@ export default function MainHeader() {
     setLocale(newLocale);
     persistLocaleCookie(newLocale);
     setLangOpen(false);
-    const segments = pathname.split("/");
+    // Use window.location.pathname (always reflects current browser URL, even after
+    // previous replaceState calls) instead of usePathname() which can be stale.
+    const segments = window.location.pathname.split("/");
     if (SUPPORTED_LOCALES.includes(segments[1] as Locale)) {
       segments[1] = newLocale;
     } else {
       segments.splice(1, 0, newLocale);
     }
-    router.push(segments.join("/") || `/${newLocale}`);
+    const newPath = segments.join("/") || `/${newLocale}`;
+    // Replace the URL silently — no Next.js navigation, no server re-render, no data refetch.
+    // The store update above immediately switches translations via LocaleProvider context.
+    window.history.replaceState(null, "", newPath);
   };
 
   const navigateToMode = (href: string) => {

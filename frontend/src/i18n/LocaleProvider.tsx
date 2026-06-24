@@ -20,20 +20,25 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     [initialLocale],
   );
 
-  // URL segment wins on first render; store catches up after hydration.
-  const locale = routeLocale ?? storeLocale;
-
+  // Sync route → store only when the URL locale segment actually changes (Next.js
+  // navigation). Intentionally excludes storeLocale from deps so that a user-initiated
+  // locale switch (which updates the store but NOT the route prop) does NOT trigger
+  // a reverse sync that would override the user's choice.
   useEffect(() => {
-    if (routeLocale && storeLocale !== routeLocale) {
+    if (routeLocale) {
       setLocale(routeLocale);
     }
-  }, [routeLocale, storeLocale, setLocale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeLocale]);
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-  }, [locale]);
+    document.documentElement.lang = storeLocale;
+  }, [storeLocale]);
 
+  // Store is the source of truth for the context value so that a locale switch via
+  // the UI button is reflected immediately without a page navigation/re-fetch.
+  // The effect above keeps the store in sync with the URL on navigation.
   return (
-    <LocaleContextProvider value={locale}>{children}</LocaleContextProvider>
+    <LocaleContextProvider value={storeLocale}>{children}</LocaleContextProvider>
   );
 }

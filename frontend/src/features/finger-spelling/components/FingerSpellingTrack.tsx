@@ -124,7 +124,7 @@ export default function FingerSpellingTrack({
             sx={{
               color: KslColors.primaryDark,
               fontFamily: fontFamilies.english,
-              fontSize: KslFontSizes.xs,
+              fontSize: KslFontSizes.md,
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -171,7 +171,9 @@ export default function FingerSpellingTrack({
         <Grid size={{ xs: 12, md: 6 }}>
           <TrackSummaryCard
             step={formatBadgeStep(currentUnit?.orderIndex ?? 1, locale)}
-            title={currentUnitTitle}
+            title={t("FINGER_SPELLING.TRACK.LEARN_ABOUT_TITLE", {
+              title: currentUnitTitle,
+            })}
             description={t("FINGER_SPELLING.TRACK.SUMMARY_DESCRIPTION")}
             completedCount={currentUnitCompleted}
             totalCount={currentUnitTotal}

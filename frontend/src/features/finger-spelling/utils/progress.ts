@@ -103,3 +103,26 @@ export function findResumeLesson(
 
   return undefined;
 }
+
+/** Unit that contains the active lesson in top-to-bottom track order. */
+export function findCurrentUnit(
+  units: UnitWithLessons[]
+): UnitWithLessons | undefined {
+  const sortedUnits = [...units].sort((a, b) => a?.orderIndex - b?.orderIndex);
+  const resumeLesson = findResumeLesson(sortedUnits);
+
+  if (resumeLesson) {
+    for (const unit of sortedUnits) {
+      for (const chapter of unit?.chapters) {
+        if (chapter?.lessons.some((lesson) => lesson?.id === resumeLesson?.id)) {
+          return unit;
+        }
+      }
+    }
+  }
+
+  const unlockedUnit = sortedUnits.find(
+    (unit) => (unit as { isLocked?: boolean }).isLocked !== true
+  );
+  return unlockedUnit ?? sortedUnits[0];
+}
