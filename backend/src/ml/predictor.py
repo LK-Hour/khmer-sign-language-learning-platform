@@ -192,7 +192,7 @@ class KhmerHandPredictor:
     """NumPy forward pass for Khmer MLP ``.h5`` models."""
 
     INPUT_DIM = 126
-    CLASS_INDEX_OFFSET = 0
+    CLASS_INDEX_OFFSET = 1
 
     def __init__(self, model_path: Path) -> None:
         self._model_path = model_path
@@ -317,10 +317,14 @@ class KhmerHandPredictor:
         allowed_categories = CATEGORY_ALIASES.get(category, {category})
         label_category_map = self._label_decoder.label_category_map()
         masked = np.zeros_like(probabilities)
-        for i, (display_label, category) in enumerate(label_category_map.items()):
+        for i, (display_label, label_category) in enumerate(label_category_map.items()):
             output_idx = i + self.CLASS_INDEX_OFFSET
             if 0 <= output_idx < len(probabilities):
-                if category in allowed_categories or category == "None" or display_label == "No Action":
+                if (
+                    label_category in allowed_categories
+                    or label_category == "None"
+                    or display_label == "No Action"
+                ):
                     masked[output_idx] = probabilities[output_idx]
 
         total = np.sum(masked)
