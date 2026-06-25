@@ -351,6 +351,41 @@
     "WORD_DETECTION": "Word Detection",
     "WORD_DETECTION_DESC": "Start from 20 word classes with video samples"
   },
+  "WORD_DETECTION": {
+    "LABELS": {
+      "CHAPTER": "Chapter",
+      "LESSON": "Lesson",
+      "UNIT": "Unit"
+    },
+    "LESSON": {
+      "CAMERA_CAPTION": "Your camera — try signing the word in frame",
+      "CAMERA_COMING_SOON": "Word detection model — coming soon",
+      "CONTINUE": "Next Lesson",
+      "DEFAULT_TIP": "Study the reference word carefully. In the future, sign it in front of your camera and the model will detect it in real time.",
+      "NAV_DESC": "Word detection analysis is under development. You can still explore each word and move through the lessons.",
+      "NAV_TITLE": "Practice this word",
+      "PAGE_TITLE": "Signing: {word}",
+      "SAMPLE_CAPTION": "Reference — Khmer Sign Language word",
+      "STATUS_COMING_SOON": "Coming soon",
+      "STATUS_LABEL": "Match confidence",
+      "TIP": "Learning tip",
+      "WORD_LABEL": "Predict result"
+    },
+    "TRACK": {
+      "CHAPTER_LESSONS_COUNT": "{count} lessons",
+      "COMPLETED": "Completed",
+      "CURRENT_UNIT_PROGRESS": "{completed} of {total} lessons completed",
+      "EYEBROW": "Word Detection Track",
+      "FALLBACK_UNIT_TITLE": "Khmer Sign Language Word Basics",
+      "LEARN_ABOUT_TITLE": "Learn about: {title}",
+      "PROGRESS_SUMMARY": "{completed} of {total} {label} completed",
+      "QUIZ_DESCRIPTION": "Word-level quizzes unlock after completing every lesson in a chapter.",
+      "QUIZ_TITLE": "Word Quiz",
+      "SUMMARY_DESCRIPTION": "Video samples, pose keypoints, and live word-level sign matching.",
+      "TITLE": "Learn Khmer words step by step",
+      "WORD_COUNT": "{count} words"
+    }
+  },
   "QUIZ": {
     "PLACEHOLDER_TYPE_LETTER": "Type the letter or romanization",
     "SIGN_PROMPT_ALT": "Sign prompt"
