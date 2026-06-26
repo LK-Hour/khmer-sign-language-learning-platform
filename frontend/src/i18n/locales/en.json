@@ -249,6 +249,7 @@
       "EYEBROW": "Finger Spelling Track",
       "FALLBACK_UNIT_TITLE": "Khmer Finger Spelling Basics",
       "LEARN_ABOUT_TITLE": "Learn about: {title}",
+      "LOAD_ERROR": "Lost connection to the database",
       "PROGRESS_SUMMARY": "{completed} of {total} {label} completed",
       "QUIZ_DESCRIPTION": "Exercise and quiz to track learner progress after all chapters.",
       "QUIZ_TITLE": "Character Quiz",
@@ -364,7 +365,7 @@
       "DEFAULT_TIP": "Study the reference word carefully. In the future, sign it in front of your camera and the model will detect it in real time.",
       "NAV_DESC": "Word detection analysis is under development. You can still explore each word and move through the lessons.",
       "NAV_TITLE": "Practice this word",
-      "PAGE_TITLE": "Signing: {word}",
+      "PAGE_TITLE": "Sign Language of word: {word}",
       "SAMPLE_CAPTION": "Reference — Khmer Sign Language word",
       "STATUS_COMING_SOON": "Coming soon",
       "STATUS_LABEL": "Match confidence",
@@ -381,7 +382,7 @@
       "PROGRESS_SUMMARY": "{completed} of {total} {label} completed",
       "QUIZ_DESCRIPTION": "Word-level quizzes unlock after completing every lesson in a chapter.",
       "QUIZ_TITLE": "Word Quiz",
-      "SUMMARY_DESCRIPTION": "Video samples, pose keypoints, and live word-level sign matching.",
+      "SUMMARY_DESCRIPTION": "Video samples, pose Key-points, and live word-level sign matching.",
       "TITLE": "Learn Khmer words step by step",
       "WORD_COUNT": "{count} words"
     }

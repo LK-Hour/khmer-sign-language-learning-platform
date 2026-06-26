@@ -8,8 +8,8 @@ import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 import { resolveWordDetectionVideoUrl } from "@/features/word-detection/data/wordDetectionVideos";
-import WdCameraPanel from "./WdCameraPanel";
-import WdWordCard from "./WdWordCard";
+import WdCameraPanel from "./WordDetectionCameraPanel";
+import WdWordCard from "./WordDetectionWordCard";
 
 const VISUAL_FRAME_SX = {
   position: "relative" as const,
@@ -18,7 +18,7 @@ const VISUAL_FRAME_SX = {
   flexShrink: 0,
 };
 
-type WdLessonPracticeStepProps = {
+type WordDetectionLessonPracticeStepProps = {
   word: string;
   wordEn: string;
   tip?: string | null;
@@ -35,7 +35,7 @@ export default function WdLessonPracticeStep({
   locale,
   nextLessonId,
   lessonStep,
-}: WdLessonPracticeStepProps) {
+}: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
   const sampleVideoUrl = resolveWordDetectionVideoUrl(word);

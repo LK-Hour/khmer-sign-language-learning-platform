@@ -7,7 +7,7 @@ import { useTranslation } from "@/i18n/useTranslation";
 import { formatOrderIndex } from "@/features/word-detection/utils/chapter";
 import type { WdChapter, WdLessonDetail, WdUnit } from "@/features/word-detection/types";
 import { KslColors } from "@/theme/theme";
-import WdLessonPracticeStep from "./WdLessonPracticeStep";
+import WdLessonPracticeStep from "./WordDetectionLessonPracticeStep";
 
 type WdLessonLearningViewProps = {
   lesson: WdLessonDetail;

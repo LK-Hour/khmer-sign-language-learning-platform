@@ -2,6 +2,7 @@
 
 import { Alert } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/i18n/useTranslation";
 import { fetchFsTrackUnits } from "../api/curriculum";
 import { useFingerSpellingStore } from "../store";
 import { useAuthStore } from "@/store/auth.store";
@@ -12,6 +13,7 @@ type FetchState = "idle" | "loading" | "ready" | "error";
 
 /** Loads curriculum from the API, then renders the track UI. */
 export default function FingerSpellingTrackContainer() {
+  const { t } = useTranslation();
   const setUnits = useFingerSpellingStore((state) => state.setUnits);
   const units = useFingerSpellingStore((state) => state.units);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
@@ -59,8 +61,7 @@ export default function FingerSpellingTrackContainer() {
   if (fetchState === "error") {
     return (
       <Alert severity="error" sx={{ mx: "auto" }}>
-        Could not load finger spelling curriculum. Check{" "}
-        {process.env.NEXT_PUBLIC_API_URL}.
+        {t("FINGER_SPELLING.TRACK.LOAD_ERROR")}
       </Alert>
     );
   }

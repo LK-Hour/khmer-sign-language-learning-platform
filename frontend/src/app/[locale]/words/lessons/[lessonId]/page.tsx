@@ -7,7 +7,7 @@ import {
   fetchWdUnit,
 } from "@/features/word-detection/api/curriculum";
 import { getNextLessonInChapter } from "@/features/word-detection/utils/progress";
-import WdLessonLearningView from "@/features/word-detection/components/learning/WdLessonLearningView";
+import WdLessonLearningView from "@/features/word-detection/components/learning/WordDetectionLessonLearningView";
 
 type PageProps = {
   params: Promise<{ locale: string; lessonId: string }>;
