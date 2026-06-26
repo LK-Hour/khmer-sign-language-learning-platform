@@ -5,7 +5,6 @@ import {
   startPracticeSession,
   submitPracticeLetter,
 } from "../api/practiceSession";
-import { fetchFsTrackUnits } from "../api/curriculum";
 import {
   FS_PASS_THRESHOLD,
   useFingerSpellingStore,
@@ -47,7 +46,13 @@ export function useFingerSpellingPracticeActions() {
   );
 
   const runPracticeRec = useCallback(
-    async (lessonId: number, features: number[], handedness?: string, category?: string) => {
+    async (
+      letterId: number | undefined,
+      lessonId: number,
+      features: number[],
+      handedness?: string,
+      category?: string
+    ) => {
       startPracticeSubmission();
 
       try {
@@ -64,16 +69,18 @@ export function useFingerSpellingPracticeActions() {
             bestAccuracy: score,
             totalTimeSpent: 0,
           });
-        } else if (sessionId != null) {
+        } else if (sessionId != null && letterId != null && letterId > 0) {
           try {
             await submitPracticeLetter(sessionId, {
-              letter_id: lessonId,
+              letter_id: letterId,
               accuracy: score,
               attempts: 1,
             });
           } catch {
             // Prediction feedback should still be shown if progress sync fails.
           }
+        } else if (sessionId != null) {
+          // Keep showing prediction feedback even when lesson payload is missing a valid letter id.
         }
 
         finishPracticeSubmission({
@@ -116,14 +123,8 @@ export function useFingerSpellingPracticeActions() {
         const result = await endPracticeSession(sessionId);
         if (!result?.lesson_completed) return false;
 
+        // Keep the UI responsive here and let normal screen loads refresh full track data.
         markLessonCompleted(lessonId);
-
-        try {
-          const freshUnits = await fetchFsTrackUnits();
-          useFingerSpellingStore.getState().setUnits(freshUnits);
-        } catch {
-          // The lesson is saved; the next track mount will refresh from the database.
-        }
         return true;
       } catch {
         return false;

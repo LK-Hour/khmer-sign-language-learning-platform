@@ -55,6 +55,7 @@ export function normalizeLesson(lesson: FsLesson): FsLesson {
 
     id: lesson?.id,
     chapterId: lesson?.chapterId,
+    letterId: lesson?.letterId,
     letter: lesson?.letter,
     romanization: lesson?.romanization ?? null,
     letterNameEn: lesson?.letterNameEn ?? null,

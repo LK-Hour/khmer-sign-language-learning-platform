@@ -22,6 +22,7 @@ def to_fs_lesson(
     *,
     lesson,
     chapter_id: int,
+    letter_id: int,
     letter_kh: str,
     letter_en: str | None,
     medias: list[Media],
@@ -32,6 +33,7 @@ def to_fs_lesson(
     return FsLessonResponse(
         id=lesson.id,
         chapterId=chapter_id,
+        letterId=letter_id,
         letter=letter_kh,
         romanization=letter_en,
         letterNameEn=letter_en,
@@ -57,6 +59,7 @@ def lesson_detail_to_response(
     base = to_fs_lesson(
         lesson=bundle.lesson,
         chapter_id=bundle.chapter.id,
+        letter_id=letter.id if letter else 0,
         letter_kh=letter_kh,
         letter_en=letter_en,
         medias=medias,

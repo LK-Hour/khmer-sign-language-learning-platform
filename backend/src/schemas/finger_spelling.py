@@ -134,6 +134,7 @@ class FsChapterResponse(BaseModel):
 class FsLessonResponse(BaseModel):
     id: int
     chapterId: int
+    letterId: int
     letter: str
     romanization: str | None = None
     letterNameEn: str | None = None

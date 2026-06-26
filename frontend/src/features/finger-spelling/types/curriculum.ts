@@ -29,6 +29,7 @@ export interface FsChapter {
 export interface FsLesson {
   id: number;
   chapterId: number;
+  letterId: number;
   letter: string;
   romanization?: string | null;
   letterNameEn?: string | null;

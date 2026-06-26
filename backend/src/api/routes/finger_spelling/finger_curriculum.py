@@ -182,6 +182,7 @@ def list_lessons(
             to_fs_lesson(
                 lesson=lesson,
                 chapter_id=chapter_id,
+                letter_id=letter.id if letter else 0,
                 letter_kh=letter.letter_kh if letter else lesson.name_kh,
                 letter_en=letter.letter_en if letter else None,
                 medias=medias,
@@ -422,4 +423,3 @@ def admin_delete_lesson(
     if result is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
     return result
-

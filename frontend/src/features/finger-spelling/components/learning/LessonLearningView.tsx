@@ -22,6 +22,7 @@ import { KslColors } from "@/theme/theme";
 import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
 import LessonFeedbackWidget from "./LessonFeedbackWidget";
 import LessonPracticeStep from "./LessonPracticeStep";
+import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
 
 const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
 
@@ -65,6 +66,7 @@ export default function LessonLearningView({
   const capturingRef = useRef(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isConsentPreviewOpen, setIsConsentPreviewOpen] = useState(true);
   const [retryWaiting, setRetryWaiting] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;
@@ -145,7 +147,7 @@ export default function LessonLearningView({
   //       setRecError(t("FINGER_SPELLING.LESSON.NO_HAND_DETECTED"));
   //       return;
   //     }
-  //     await runPracticeRec(lesson.id, extraction.features, extraction.handedness, categoryFromUnitTitle(unit.title) ?? undefined);
+  //     await runPracticeRec(lesson.letterId, lesson.id, extraction.features, extraction.handedness, categoryFromUnitTitle(unit.title) ?? undefined);
   //   } catch (error) {
   //     setRecError(
   //       error instanceof Error ? error.message : t("FINGER_SPELLING.LESSON.HAND_PREDICTION_FAILED")
@@ -214,6 +216,7 @@ export default function LessonLearningView({
         }
 
         await runPracticeRec(
+          lesson.letterId,
           lesson.id,
           extraction.features,
           extraction.handedness,
@@ -231,6 +234,7 @@ export default function LessonLearningView({
       extractFromVideo,
       isLandmarkerReady,
       landmarkerError,
+      lesson.letterId,
       lesson.id,
       runPracticeRec,
       t,
@@ -504,6 +508,15 @@ export default function LessonLearningView({
         lessonId={lesson?.id}
         characteristic={displayLetter}
         resultReady={accuracy != null}
+      />
+
+      <PermissionRequestDialog
+        open={isConsentPreviewOpen}
+        title="Help improve the model"
+        description="Allow us to use your practice data,asdfadfasdfjhaksdjfhkaljsd aksdhfkjasdh fkjasdh fkasdhfklash fklajshf lashflka shfkasdh fkashf kasdfh akfh askfh aksdhfaks hfkasdhfaksdhfaksdhf klasjhfadbfm,asdbfmasndbfmasdbfamsdhf k ahfkasd hfklasdhf lkasdhffeedback, and prediction results to improve Khmer Sign Language recognition.asdfasdfasdkfaskljdhjfasknfasknfaksjnfilasdnkas kjahklfjash klashhkfas hdkjhasdklfhaslkjfh klasdh fklajsd hkljshfkasd hfkhfkashfkjasiwyribnm,ndasb fm afkahsdkljf  ahsdk f haskjdfhaskl faksfkjasd hfk;jasfoweuropiwqe rhsdfa sdmbcasmbfiw yeia sdfhasdfyweirh abnfnmasdbfweryiuo yklasbfasdmf bkalsdhfiasdh fklashfka sdhfiosdh of pawkf asdkfask; dfh kasdhfkjasdhf [ou r omadfasdf uaefohasdkjfn ,asdnfoasid hfowehasdnfasdhfwoehr asddfasdfawey rasdfe rasdfhasdfbasdmfbbzxmcn,vbamcbvzmxcvbzxmcnvbwiehfkajsdhfkwhiw whoiw hte oasfsahdfakshdfasham i asdhfa-sdfklasdfjlkjasdoakt aopor nopw raksdflaread yunmfadnf,mnzcv,.mnzxcvnwho shnmdsfswho si tyis sare yaoudf asndflasjdfaspalktk ahdskhfaksdfhaskdjfhwhoswr=hwerwerhamsdnf,amsdnfalsdfjo;iwpeir[wirn,vmnzxc,m.vnzx,./fjha;lsdufoa[sduf]p0aeriu[awjejv,./asdnf'lasdhjfo'iaiur]qwe0puir[qwoepuiro,nmzxc.,vnzx.c,vn"
+        onClose={() => setIsConsentPreviewOpen(false)}
+        onSkip={() => setIsConsentPreviewOpen(false)}
+        onAgree={() => setIsConsentPreviewOpen(false)}
       />
     </Stack>
   );
