@@ -200,18 +200,15 @@ class TestAuthAPI:
                     {
                         "lesson_id": 9001,
                         "is_completed": True,
-                        "attempts": 2,
-                        "peak_accuracy": 88,
-                        "total_time_spent": 120,
+                        "attempt_count": 2,
                     },
                     {"lesson_id": 999999, "is_completed": True},
                 ],
                 "practice_summaries": [
                     {
                         "lesson_id": 9001,
-                        "attempts": 1,
-                        "best_accuracy": 91,
-                        "total_time_spent": 30,
+                        "attempt_count": 1,
+                        "completed_at": "2026-06-03T10:00:00",
                     }
                 ],
             },
@@ -224,5 +221,3 @@ class TestAuthAPI:
         ).one()
         assert progress.is_completed is True
         assert progress.attempts == 3
-        assert int(progress.total_time_spent) == 150
-        assert float(progress.peak_accuracy) == 91.0

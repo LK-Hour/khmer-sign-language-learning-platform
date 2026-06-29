@@ -12,7 +12,6 @@ from ..models.user import User
 from ..models.user_oauth_provider import UserOAuthProvider
 from ..models.finger_spelling import (
     FingerLesson,
-    FingerPracticeSession,
     FingerUserExerciseResult,
     FingerUserLessonProgress,
 )
@@ -147,26 +146,12 @@ def migrate_guest_progress_to_user(
             existing_target.completed_at = guest_progress.completed_at
 
         existing_target.attempts = (existing_target.attempts or 0) + (guest_progress.attempts or 0)
-        existing_target.total_time_spent = (existing_target.total_time_spent or 0) + (
-            guest_progress.total_time_spent or 0
-        )
 
-        target_peak = float(existing_target.peak_accuracy) if existing_target.peak_accuracy is not None else 0.0
-        guest_peak = float(guest_progress.peak_accuracy) if guest_progress.peak_accuracy is not None else 0.0
-        if guest_peak > target_peak:
-            existing_target.peak_accuracy = guest_progress.peak_accuracy
-
-        if existing_target.started_at is None or (
-            guest_progress.started_at is not None
-            and guest_progress.started_at < existing_target.started_at
+        if existing_target.last_practiced_at is None or (
+            guest_progress.last_practiced_at is not None
+            and guest_progress.last_practiced_at > existing_target.last_practiced_at
         ):
-            existing_target.started_at = guest_progress.started_at
-
-        if existing_target.last_accessed_at is None or (
-            guest_progress.last_accessed_at is not None
-            and guest_progress.last_accessed_at > existing_target.last_accessed_at
-        ):
-            existing_target.last_accessed_at = guest_progress.last_accessed_at
+            existing_target.last_practiced_at = guest_progress.last_practiced_at
 
         progress_id_remap[guest_progress.id] = existing_target.id
         db.delete(guest_progress)
@@ -180,13 +165,6 @@ def migrate_guest_progress_to_user(
     for result in guest_results:
         result.user_id = target_user_id
         result.progress_id = progress_id_remap.get(result.progress_id, result.progress_id)
-
-    # Move practice sessions directly.
-    (
-        db.query(FingerPracticeSession)
-        .filter(FingerPracticeSession.user_id == guest_user_id)
-        .update({"user_id": target_user_id}, synchronize_session=False)
-    )
 
     db.commit()
     return True
@@ -245,40 +223,24 @@ def import_local_guest_progress(
             continue
         progress = get_progress(item.lesson_id)
         progress.is_completed = bool(progress.is_completed or item.is_completed)
-        progress.attempts = (progress.attempts or 0) + max(item.attempts, 0)
-        progress.total_time_spent = (progress.total_time_spent or 0) + max(item.total_time_spent, 0)
-        if item.peak_accuracy is not None:
-            current_peak = float(progress.peak_accuracy) if progress.peak_accuracy is not None else 0.0
-            progress.peak_accuracy = max(current_peak, item.peak_accuracy)
-        started_at = _naive_datetime(item.started_at)
+        progress.attempts = (progress.attempts or 0) + max(item.attempt_count, 0)
         completed_at = _naive_datetime(item.completed_at)
-        last_accessed_at = _naive_datetime(item.last_accessed_at)
-        if started_at and (progress.started_at is None or started_at < progress.started_at):
-            progress.started_at = started_at
         if completed_at and (
             progress.completed_at is None or completed_at < progress.completed_at
         ):
             progress.completed_at = completed_at
-        if last_accessed_at and (
-            progress.last_accessed_at is None or last_accessed_at > progress.last_accessed_at
-        ):
-            progress.last_accessed_at = last_accessed_at
         imported += 1
 
     for summary in payload.practice_summaries:
         if summary.lesson_id not in valid_lesson_ids:
             continue
         progress = get_progress(summary.lesson_id)
-        progress.attempts = (progress.attempts or 0) + max(summary.attempts, 0)
-        progress.total_time_spent = (progress.total_time_spent or 0) + max(summary.total_time_spent, 0)
-        if summary.best_accuracy is not None:
-            current_peak = float(progress.peak_accuracy) if progress.peak_accuracy is not None else 0.0
-            progress.peak_accuracy = max(current_peak, summary.best_accuracy)
+        progress.attempts = (progress.attempts or 0) + max(summary.attempt_count, 0)
         completed_at = _naive_datetime(summary.completed_at)
         if completed_at and (
-            progress.last_accessed_at is None or completed_at > progress.last_accessed_at
+            progress.last_practiced_at is None or completed_at > progress.last_practiced_at
         ):
-            progress.last_accessed_at = completed_at
+            progress.last_practiced_at = completed_at
         imported += 1
 
     if (

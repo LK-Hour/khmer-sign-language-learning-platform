@@ -34,15 +34,11 @@ from src.repositories.finger_spelling.finger_curriculum_repository import (  # n
 from src.repositories.finger_spelling.finger_exercise_repository import (  # noqa: E402
     FingerExerciseRepository,
 )
-from src.repositories.finger_spelling.finger_practice_repository import (  # noqa: E402
-    FingerPracticeRepository,
-)
 from src.repositories.finger_spelling.finger_progress_repository import (  # noqa: E402
     FingerProgressRepository,
 )
 from src.services.finger_spelling.finger_curriculum_service import FingerCurriculumService  # noqa: E402
 from src.services.finger_spelling.finger_exercise_service import FingerExerciseService  # noqa: E402
-from src.services.finger_spelling.finger_practice_service import FingerPracticeService  # noqa: E402
 from src.services.finger_spelling.finger_progress_service import FingerProgressService  # noqa: E402
 from src.utils.jwt_utils import create_access_token  # noqa: E402
 
@@ -138,84 +134,6 @@ def _case_letter_belongs_to_lesson() -> bool:
         print("PASS")
         return True
     except Exception as exc:
-        print(f"FAIL: {exc}")
-        return False
-    finally:
-        db.close()
-
-
-def _case_practice_upsert_and_foreign_letter() -> bool:
-    print("\nTest: practice upsert + reject foreign letter")
-    print("-" * 50)
-    db = SessionLocal()
-    try:
-        user = _get_test_user(db)
-        if user is None:
-            print("SKIP: no users in database (seed users first)")
-            return True
-
-        curriculum = FingerCurriculumRepository(db)
-        letter = curriculum.get_letter_by_kh("ក")
-        if letter is None:
-            print("FAIL: letter ក not found")
-            return False
-
-        paths = curriculum.list_lesson_paths_for_letter(letter.id)
-        lesson = paths[0][0]
-        practice_svc = FingerPracticeService(db)
-        session = practice_svc.start_session(user_id=user.id, lesson_id=lesson.id)
-        if session is None:
-            print("FAIL: could not start practice session")
-            return False
-
-        ok = practice_svc.submit_letter(
-            user_id=user.id,
-            session_id=session.id,
-            letter_id=letter.id,
-            accuracy=85.0,
-        )
-        if ok is None:
-            print("FAIL: valid letter submit rejected")
-            return False
-
-        again = practice_svc.submit_letter(
-            user_id=user.id,
-            session_id=session.id,
-            letter_id=letter.id,
-            accuracy=90.0,
-        )
-        if again is None:
-            print("FAIL: upsert submit failed")
-            return False
-
-        practice_repo = FingerPracticeRepository(db)
-        row = practice_repo.get_session_letter(session.id, letter.id)
-        if row is None:
-            print("FAIL: session letter row missing after upsert")
-            return False
-        if float(row.accuracy) != 90.0:
-            print(f"FAIL: expected accuracy 90.0 after upsert, got {row.accuracy}")
-            return False
-
-        foreign = db.scalars(
-            select(FingerLetter).where(FingerLetter.id != letter.id).limit(1)
-        ).first()
-        if foreign:
-            rejected = practice_svc.submit_letter(
-                user_id=user.id,
-                session_id=session.id,
-                letter_id=foreign.id,
-                accuracy=99.0,
-            )
-            if rejected is not None:
-                print("FAIL: foreign letter should be rejected")
-                return False
-
-        practice_svc.end_session(user_id=user.id, session_id=session.id)
-        print("PASS")
-        return True
-    except Exception as exc:
-        db.rollback()
         print(f"FAIL: {exc}")
         return False
     finally:
@@ -425,8 +343,8 @@ def _case_exercise_repository_and_service() -> bool:
         db.close()
 
 
-def _case_practice_end_sets_is_completed() -> bool:
-    print("\nTest: end_session sets is_completed (ERD column)")
+def _case_single_attempt_submission() -> bool:
+    print("\nTest: single-attempt practice submission")
     print("-" * 50)
     db = SessionLocal()
     try:
@@ -436,45 +354,43 @@ def _case_practice_end_sets_is_completed() -> bool:
             return True
 
         curriculum = FingerCurriculumRepository(db)
-        letter = curriculum.get_letter_by_kh("ក")
-        if letter is None:
-            print("FAIL: letter not found")
-            return False
-
-        lesson = curriculum.list_lesson_paths_for_letter(letter.id)[0][0]
-        svc = FingerPracticeService(db)
-        session = svc.start_session(user_id=user.id, lesson_id=lesson.id)
-        if session is None:
-            print("FAIL: could not start session")
-            return False
-
-        if session.is_completed:
-            print("FAIL: new session should not be completed")
-            return False
-
-        svc.submit_letter(
-            user_id=user.id,
-            session_id=session.id,
-            letter_id=letter.id,
-            accuracy=88.0,
+        lessons = curriculum.list_lessons_by_chapter(
+            curriculum.list_chapters_by_unit(curriculum.list_units()[0].id)[0].id
         )
-        result = svc.end_session(user_id=user.id, session_id=session.id)
-        if result is None:
-            print("FAIL: end_session failed")
+        if not lessons:
+            print("SKIP: no lessons")
+            return True
+
+        lesson = lessons[0]
+        progress_svc = FingerProgressService(db)
+
+        # First attempt — should not complete lesson yet (accuracy too low)
+        result1 = progress_svc.record_attempt(user.id, lesson.id, accuracy=50.0)
+        if result1 is None:
+            print("FAIL: first attempt returned None")
             return False
-        if not result.session.is_completed:
-            print("FAIL: is_completed should be True after end_session")
-            return False
-        if result.peak_accuracy is None or result.peak_accuracy < 80:
-            print("FAIL: expected peak_accuracy >= 80 for pass")
+        if result1.lesson_completed:
+            print("FAIL: low accuracy should not complete lesson")
             return False
 
-        progress = FingerProgressService(db).get_lesson_progress(user.id, lesson.id)
+        # Second attempt with passing accuracy
+        result2 = progress_svc.record_attempt(user.id, lesson.id, accuracy=85.0)
+        if result2 is None:
+            print("FAIL: second attempt returned None")
+            return False
+        if not result2.lesson_completed:
+            print("FAIL: high accuracy should complete lesson")
+            return False
+
+        progress = progress_svc.get_lesson_progress(user.id, lesson.id)
         if progress is None or not progress.is_completed:
-            print("FAIL: lesson progress should be completed after passing practice")
+            print("FAIL: progress should be completed after passing")
+            return False
+        if progress.attempts < 2:
+            print(f"FAIL: expected at least 2 attempts, got {progress.attempts}")
             return False
 
-        print(f"  session.is_completed={result.session.is_completed}, peak={result.peak_accuracy}")
+        print(f"  lesson_id={lesson.id}, attempts={progress.attempts}, completed={progress.is_completed}")
         print("PASS")
         return True
     except Exception as exc:
@@ -513,7 +429,7 @@ def _case_api_finger_spelling_with_auth() -> bool:
             print(f"FAIL: lesson detail {detail.status_code}")
             return False
 
-        unauth = client.post(f"/api/finger_spelling/practice/lessons/{lesson_id}/sessions", json={})
+        unauth = client.post(f"/api/finger_spelling/practice/lessons/{lesson_id}/attempt", json={})
         if unauth.status_code != 401:
             print(f"FAIL: expected 401 without token, got {unauth.status_code}")
             return False
@@ -523,12 +439,12 @@ def _case_api_finger_spelling_with_auth() -> bool:
         if user:
             token = create_access_token(data={"sub": str(user.id)})
             auth = client.post(
-                f"/api/finger_spelling/practice/lessons/{lesson_id}/sessions",
-                json={},
+                f"/api/finger_spelling/practice/lessons/{lesson_id}/attempt",
+                json={"accuracy": 85},
                 headers={"Authorization": f"Bearer {token}"},
             )
             if auth.status_code != 200:
-                print(f"FAIL: start session with token {auth.status_code} {auth.text}")
+                print(f"FAIL: attempt with token {auth.status_code} {auth.text}")
                 return False
 
         print("PASS")
@@ -590,9 +506,6 @@ def test_letter_belongs_to_lesson() -> None:
     assert _case_letter_belongs_to_lesson()
 
 
-def test_practice_upsert_and_foreign_letter() -> None:
-    _skip_if_unseeded()
-    assert _case_practice_upsert_and_foreign_letter()
 
 
 def test_lesson_locking() -> None:
@@ -613,9 +526,9 @@ def test_exercise_repository_and_service() -> None:
     assert _case_exercise_repository_and_service()
 
 
-def test_practice_end_sets_is_completed() -> None:
+def test_single_attempt_submission() -> None:
     _skip_if_unseeded()
-    assert _case_practice_end_sets_is_completed()
+    assert _case_single_attempt_submission()
 
 
 def test_api_finger_spelling_with_auth() -> None:
@@ -640,8 +553,7 @@ def run_all() -> int:
         ("Letter data service", _case_letter_data_service()),
         ("Letter belongs to lesson", _case_letter_belongs_to_lesson()),
         ("Exercise repository/service", _case_exercise_repository_and_service()),
-        ("Practice upsert + validation", _case_practice_upsert_and_foreign_letter()),
-        ("Practice end is_completed", _case_practice_end_sets_is_completed()),
+        ("Single attempt submission", _case_single_attempt_submission()),
         ("Lesson locking", _case_lesson_locking()),
         ("API curriculum letter", _case_api_curriculum_letter()),
         ("API finger_spelling + auth", _case_api_finger_spelling_with_auth()),
