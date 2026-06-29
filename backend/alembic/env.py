@@ -30,8 +30,6 @@ from src.models import (  # noqa: F401
     FingerExerciseOption,
     FingerUserLessonProgress,
     FingerUserExerciseResult,
-    FingerPracticeSession,
-    FingerPracticeSessionLetter,
 )
 
 config = context.config

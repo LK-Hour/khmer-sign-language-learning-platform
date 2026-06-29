@@ -316,43 +316,15 @@ erDiagram
 		TIMESTAMPTZ created_at ""
 	}
 
-	finger_practice_sessions {
-		BIGINT id PK ""
-		UUID user_id FK ""
-		BIGINT lesson_id FK ""
-		BIGINT media_id FK "nullable — recorded webcam practice"
-		TIMESTAMPTZ started_at ""
-		TIMESTAMPTZ ended_at "CHECK (>= started_at)"
-		INTEGER duration "seconds, CHECK (>= 0)"
-		NUMERIC(5,2) average_accuracy "CHECK (BETWEEN 0 AND 100)"
-		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
-		BOOLEAN is_completed ""
-		TIMESTAMPTZ created_at ""
-	}
-
-	finger_practice_session_letters {
-		BIGINT id PK ""
-		BIGINT session_id FK ""
-		BIGINT letter_id FK ""
-		NUMERIC(5,2) accuracy "CHECK (BETWEEN 0 AND 100)"
-		INTEGER attempts "CHECK (>= 0)"
-		INTEGER time_spent_seconds "CHECK (>= 0)"
-		BIGINT media_id FK "nullable"
-		TIMESTAMPTZ created_at ""
-	}
-
 	finger_user_lesson_progress {
 		UUID id PK ""
 		UUID user_id FK "UK(user_id, finger_lesson_id)"
 		BIGINT finger_lesson_id FK ""
 		BOOLEAN is_completed ""
 		BOOLEAN is_locked ""
-		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
 		INTEGER attempts "CHECK (>= 0)"
-		INTEGER total_time_spent "seconds"
-		TIMESTAMPTZ started_at ""
+		TIMESTAMPTZ last_practiced_at "DEFAULT NOW() — updated on every attempt"
 		TIMESTAMPTZ completed_at ""
-		TIMESTAMPTZ last_accessed_at ""
 		TIMESTAMPTZ created_at ""
 		TIMESTAMPTZ updated_at ""
 	}
@@ -379,7 +351,6 @@ erDiagram
 	users ||--o{ finger_user_exercise_results : "records finger results"
 	users ||--o{ sign_practice_contributions : "submits"
 	users ||--o{ sign_practice_sessions : "practices"
-	users ||--o{ finger_practice_sessions : "practices"
 	
 
 	sign_user_lesson_progress ||--o{ sign_user_exercise_results : "contains"
@@ -432,9 +403,3 @@ erDiagram
 	sign_lessons ||--o{ sign_practice_contributions : "referenced by"
 
 	medias ||--o{ sign_practice_sessions : "recorded as"
-	medias ||--o{ finger_practice_sessions : "recorded as"
-	
-	finger_lessons ||--o{ finger_practice_sessions : "generates"
-	finger_practice_sessions ||--o{ finger_practice_session_letters : "contains"
-	finger_letters ||--o{ finger_practice_session_letters : "practiced in"
-	medias ||--o{ finger_practice_session_letters : "recorded for letter"
