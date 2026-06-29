@@ -1,21 +1,13 @@
 import { useCallback } from "react";
 import { predictHandFromFeatures } from "../api/handPredict";
+import { submitPracticeAttempt } from "../api/practiceSession";
 import {
-  endPracticeSession,
-  startPracticeSession,
-  submitPracticeLetter,
-} from "../api/practiceSession";
-import {
-  FS_PASS_THRESHOLD,
   useFingerSpellingStore,
 } from "../store";
 import { useAuthStore } from "@/store/auth.store";
 import { useGuestProgressStore } from "../store/guestProgress.store";
 
 export function useFingerSpellingPracticeActions() {
-  const setPracticeSessionId = useFingerSpellingStore(
-    (state) => state.setPracticeSessionId
-  );
   const startPracticeSubmission = useFingerSpellingStore(
     (state) => state.startPracticeSubmission
   );
@@ -29,23 +21,11 @@ export function useFingerSpellingPracticeActions() {
     (state) => state.markLessonCompleted
   );
 
-  const initializePracticeSession = useCallback(
-    async (lessonId: number) => {
-      if (useAuthStore.getState().user?.is_guest) {
-        setPracticeSessionId(null);
-        return;
-      }
-      try {
-        const session = await startPracticeSession(lessonId);
-        setPracticeSessionId(session?.id);
-      } catch {
-        setPracticeSessionId(null);
-      }
-    },
-    [setPracticeSessionId]
-  );
-
-  const runPracticeRec = useCallback(
+  /**
+   * Runs ML prediction only — no backend submission.
+   * Stores accuracy + predicted letter in the store for display.
+   */
+  const runPracticePredict = useCallback(
     async (
       letterId: number | undefined,
       lessonId: number,
@@ -61,82 +41,69 @@ export function useFingerSpellingPracticeActions() {
         const predicted =
           prediction?.predicted_label ?? String(prediction?.predicted_class_index);
 
-        const sessionId = useFingerSpellingStore.getState().sessionId;
-        if (useAuthStore.getState().user?.is_guest) {
-          useGuestProgressStore.getState().recordPracticeSummary({
-            lessonId,
-            attempts: 1,
-            bestAccuracy: score,
-            totalTimeSpent: 0,
-          });
-        } else if (sessionId != null && letterId != null && letterId > 0) {
-          try {
-            await submitPracticeLetter(sessionId, {
-              letter_id: letterId,
-              accuracy: score,
-              attempts: 1,
-            });
-          } catch {
-            // Prediction feedback should still be shown if progress sync fails.
-          }
-        } else if (sessionId != null) {
-          // Keep showing prediction feedback even when lesson payload is missing a valid letter id.
-        }
-
         finishPracticeSubmission({
           accuracy: score,
           predictedLetter: predicted,
         });
-      } catch {
+      } catch (error) {
         failPracticeSubmission();
+        console.error("[runPracticePredict] ML prediction failed:", error);
         throw new Error("Hand prediction failed");
       }
     },
     [failPracticeSubmission, finishPracticeSubmission, startPracticeSubmission]
   );
 
+  /**
+   * Called when user clicks "Continue" after seeing their result.
+   * Submits the attempt to the backend and marks lesson completed if threshold met.
+   */
   const completePractice = useCallback(async (): Promise<boolean> => {
-    const { sessionId, accuracy, practiceContext } =
+    const { accuracy, practiceContext } =
       useFingerSpellingStore.getState();
     const lessonId = practiceContext?.lesson?.id;
     const authUser = useAuthStore.getState().user;
 
-    if (lessonId == null) return false;
+    console.log("[completePractice] lessonId:", lessonId, "accuracy:", accuracy, "isGuest:", authUser?.is_guest);
 
+    if (lessonId == null) {
+      console.error("[completePractice] lessonId is null — practiceContext missing");
+      return false;
+    }
+
+    // Guests: record locally and mark completed (even if accuracy is low)
     if (authUser?.is_guest) {
-      useGuestProgressStore.getState().recordLessonCompletion(lessonId, accuracy);
+      console.log("[completePractice] guest user — recording locally");
+      useGuestProgressStore.getState().recordLessonCompletion(lessonId, accuracy ?? undefined);
       markLessonCompleted(lessonId);
       return true;
     }
 
+    // Already completed via previous attempt
     if (practiceContext?.lesson?.progressStatus === "COMPLETED") {
+      console.log("[completePractice] lesson already completed");
       markLessonCompleted(lessonId);
       return true;
     }
 
-    if (
-      sessionId != null &&
-      accuracy != null &&
-      accuracy >= FS_PASS_THRESHOLD
-    ) {
-      try {
-        const result = await endPracticeSession(sessionId);
-        if (!result?.lesson_completed) return false;
-
-        // Keep the UI responsive here and let normal screen loads refresh full track data.
+    // Submit attempt to backend
+    try {
+      console.log("[completePractice] submitting attempt to backend...");
+      const result = await submitPracticeAttempt(lessonId, { accuracy });
+      console.log("[completePractice] backend response:", result);
+      if (result?.lesson_completed) {
         markLessonCompleted(lessonId);
-        return true;
-      } catch {
-        return false;
       }
+      // Always navigate forward — lesson stays uncompleted if accuracy < threshold
+      return true;
+    } catch (error) {
+      console.error("[completePractice] submitPracticeAttempt failed:", error);
+      return false;
     }
-
-    return false;
   }, [markLessonCompleted]);
 
   return {
-    initializePracticeSession,
-    runPracticeRec,
+    runPracticePredict,
     completePractice,
   };
 }

@@ -116,19 +116,6 @@ export default function LessonPracticeStep({
   const tipText =
     tip?.trim() ||
     t("FINGER_SPELLING.LESSON.DEFAULT_PRACTICE_TIP");
-  const stabilityLabel = !isLandmarkerReady
-    ? t("FINGER_SPELLING.LESSON.LANDMARKER_LOADING")
-    : resultLabel && resultConfidence != null
-      ? `${resultLabel}  ${resultConfidence}%`
-      : isSubmitting
-        ? t("FINGER_SPELLING.LESSON.EVALUATING")
-      : predictorReady && liveLabel
-        ? `${liveLabel}  ${Math.round(liveConfidence)}%`
-        : stabilityState === "stable"
-          ? t("FINGER_SPELLING.LESSON.STABLE_HOLD")
-          : stabilityState === "timeout"
-            ? t("FINGER_SPELLING.LESSON.STABILITY_TIMEOUT")
-            : t("FINGER_SPELLING.LESSON.HOLD_STILL");
   const showStabilityProgress =
     !hasFinalResult && !isSubmitting;
 
@@ -251,7 +238,6 @@ export default function LessonPracticeStep({
       <PracticeFeedbackPanel
         title={t("FINGER_SPELLING.LESSON.CORRECTION_RESULT")}
         text={correctionText}
-        retryLabel={t("FINGER_SPELLING.TRACK.RETRY")}
         continueLabel={t("FINGER_SPELLING.LESSON.CONTINUE_LESSON")}
         passed={passed}
         isSubmitting={isSubmitting}

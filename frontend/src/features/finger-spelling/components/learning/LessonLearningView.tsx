@@ -99,8 +99,7 @@ export default function LessonLearningView({
     (state) => state.resetPracticeResult
   );
   const {
-    initializePracticeSession,
-    runPracticeRec,
+    runPracticePredict,
     completePractice,
   } = useFingerSpellingPracticeActions();
   const accuracy = useFingerSpellingStore((state) => state.accuracy);
@@ -215,7 +214,7 @@ export default function LessonLearningView({
           return;
         }
 
-        await runPracticeRec(
+        await runPracticePredict(
           lesson.letterId,
           lesson.id,
           extraction.features,
@@ -236,7 +235,7 @@ export default function LessonLearningView({
       landmarkerError,
       lesson.letterId,
       lesson.id,
-      runPracticeRec,
+      runPracticePredict,
       t,
       unit.title,
     ],
@@ -413,11 +412,10 @@ export default function LessonLearningView({
 
   useEffect(() => {
     setPracticeContext({ lesson, unit, chapter, nextLessonId });
-    void initializePracticeSession(lesson?.id);
     return () => {
       clearPracticeContext();
     };
-  }, [chapter, clearPracticeContext, initializePracticeSession, lesson, nextLessonId, setPracticeContext, unit]);
+  }, [chapter, clearPracticeContext, lesson, nextLessonId, setPracticeContext, unit]);
 
   const handleDetection = useCallback((detection: RawHandDetection) => {
     latestDetectionRef.current = detection;

@@ -34,7 +34,6 @@ export default function FingerSpellingTrackContainer() {
     if (!authReady) return;
 
     let ignore = false;
-    setFetchState("loading");
 
     void fetchFsTrackUnits()
       .then((freshUnits) => {

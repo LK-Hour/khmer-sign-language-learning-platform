@@ -10,7 +10,6 @@ import {
 type PracticeFeedbackPanelProps = {
   title: string;
   text: string;
-  retryLabel: string;
   continueLabel: string;
   passed: boolean;
   isSubmitting: boolean;
@@ -22,7 +21,6 @@ type PracticeFeedbackPanelProps = {
 export default function PracticeFeedbackPanel({
   title,
   text,
-  retryLabel,
   continueLabel,
   passed,
   isSubmitting,
