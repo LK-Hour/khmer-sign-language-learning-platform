@@ -14,6 +14,7 @@ from src.api.routes.feedback import router as feedback_router
 from src.api.routes.finger_spelling import router as finger_spelling_router
 from src.api.routes.oauth import router as oauth_router
 from src.api.routes.users import router as users_router
+from src.api.routes.word_detection import router as word_detection_router
 
 router = APIRouter()
 router.include_router(oauth_router)
@@ -24,3 +25,4 @@ router.include_router(dictionary_router)
 router.include_router(feedback_router)
 router.include_router(finger_spelling_router)
 router.include_router(admin_exercise_router)
+router.include_router(word_detection_router)

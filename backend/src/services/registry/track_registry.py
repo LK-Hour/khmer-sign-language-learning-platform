@@ -25,6 +25,14 @@ from src.models.finger_spelling import (
     FingerLesson,
     FingerUnit,
 )
+from src.models.word_detection import (
+    WordDetectionChapter,
+    WordDetectionExercise,
+    WordDetectionExerciseOption,
+    WordDetectionExerciseType,
+    WordDetectionLesson,
+    WordDetectionUnit,
+)
 
 
 @dataclass(frozen=True)
@@ -44,10 +52,6 @@ class TrackConfig:
         return [member.value for member in self.exercise_type_enum]
 
 
-# Track registrations. Word Sign (``sign``) is intentionally not registered yet
-# because its ORM models do not exist in the codebase. Once ``SignUnit`` etc. are
-# implemented, add a ``TrackConfig`` entry here and every admin endpoint will
-# serve it automatically.
 _REGISTRY: dict[str, TrackConfig] = {
     "finger": TrackConfig(
         key="finger",
@@ -58,6 +62,16 @@ _REGISTRY: dict[str, TrackConfig] = {
         exercise_model=FingerExercise,
         option_model=FingerExerciseOption,
         exercise_type_enum=FingerExerciseType,
+    ),
+    "word_detection": TrackConfig(
+        key="word_detection",
+        label="Word Detection",
+        unit_model=WordDetectionUnit,
+        chapter_model=WordDetectionChapter,
+        lesson_model=WordDetectionLesson,
+        exercise_model=WordDetectionExercise,
+        option_model=WordDetectionExerciseOption,
+        exercise_type_enum=WordDetectionExerciseType,
     ),
 }
 

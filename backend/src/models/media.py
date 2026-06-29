@@ -22,6 +22,11 @@ if TYPE_CHECKING:
         FingerExercise,
         FingerExerciseOption,
     )
+    from .word_detection import (
+        WordDetectionWordMedia,
+        WordDetectionExercise,
+        WordDetectionExerciseOption,
+    )
 
 
 class MediaType(str, Enum):
@@ -62,7 +67,13 @@ class Media(Base):
         back_populates="media", foreign_keys="FingerExerciseOption.media_id"
     )
     
-    # Future: Add relationships for sign_language when implemented
-    # sign_word_medias: Mapped[List["SignWordMedia"]] = relationship(...)
-    # sign_exercises: Mapped[List["SignExercise"]] = relationship(...)
-    # etc.
+    # Relationships - Word Detection
+    word_detection_word_medias: Mapped[List["WordDetectionWordMedia"]] = relationship(
+        back_populates="media", cascade="all, delete-orphan"
+    )
+    word_detection_exercises: Mapped[List["WordDetectionExercise"]] = relationship(
+        back_populates="media", foreign_keys="WordDetectionExercise.media_id"
+    )
+    word_detection_exercise_options: Mapped[List["WordDetectionExerciseOption"]] = relationship(
+        back_populates="media", foreign_keys="WordDetectionExerciseOption.media_id"
+    )
