@@ -4,7 +4,7 @@ import { createContext, useContext, type ReactNode } from "react";
 
 import { useLocaleStore } from "@/store/locale.store";
 
-import { DEFAULT_LOCALE, type Locale } from "./config";
+import type { Locale } from "./config";
 
 const LocaleContext = createContext<Locale | null>(null);
 

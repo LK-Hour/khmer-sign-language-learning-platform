@@ -359,6 +359,7 @@
       "UNIT": "Unit"
     },
     "LESSON": {
+      "BACK_TO_TRACK": "Back to track",
       "CAMERA_CAPTION": "Your camera — try signing the word in frame",
       "CAMERA_COMING_SOON": "Word detection model — coming soon",
       "CONTINUE": "Next Lesson",

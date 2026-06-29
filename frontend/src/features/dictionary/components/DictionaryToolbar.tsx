@@ -20,7 +20,6 @@ import { useTranslation } from "@/i18n/useTranslation";
 import {
   KslColors,
   KslFontSizes,
-  KslPalette,
   KslRadii,
 } from "@/theme/theme";
 

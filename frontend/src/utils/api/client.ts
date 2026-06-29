@@ -27,37 +27,40 @@ let refreshPromise: Promise<string | null> | null = null;
 export async function refreshAuthSession(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
 
-  refreshPromise = (async () => {
-    const store = useAuthStore.getState();
-    const user = store.user;
-    if (!user || user?.is_guest) return null;
+    refreshPromise = (async () => {
+      const store = useAuthStore.getState();
+      const user = store.user;
+      if (!user || user?.is_guest) return null;
 
-    store.setRefreshing(true);
-    try {
-      const res = await fetch(`${baseURL}/api/auth/refresh`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Cache-Control": "no-store",
-          "X-Requested-With": CSRF_HEADER_VALUE,
-        },
-      });
+      store.setRefreshing(true);
+      try {
+        const res = await fetch(`${baseURL}/api/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-store",
+            "X-Requested-With": CSRF_HEADER_VALUE,
+          },
+        });
 
-      if (!res.ok) {
-        store.clear();
+        if (!res.ok) {
+          store.clear();
+          return null;
+        }
+
+        const tokenResp = (await res.json()) as {
+          access_token: string;
+          token_type: string;
+        };
+        store.setAccessToken(tokenResp);
+        return tokenResp?.access_token;
+      } catch {
+        // Network error (e.g., backend unreachable) — return null silently
         return null;
+      } finally {
+        store.setRefreshing(false);
+        refreshPromise = null;
       }
-
-      const tokenResp = (await res.json()) as {
-        access_token: string;
-        token_type: string;
-      };
-      store.setAccessToken(tokenResp);
-      return tokenResp?.access_token;
-    } finally {
-      store.setRefreshing(false);
-      refreshPromise = null;
-    }
   })();
 
   return refreshPromise;

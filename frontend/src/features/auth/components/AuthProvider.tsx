@@ -26,7 +26,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     if (!hasHydrated || !user || user?.is_guest) return;
     if (token && !shouldRefresh(tokenExpiresAt)) return;
 
-    void refreshAuthSession();
+    refreshAuthSession().catch(() => {});
   }, [hasHydrated, token, tokenExpiresAt, user]);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       if (!state.user || state.user?.is_guest) return;
       if (!shouldRefresh(state.tokenExpiresAt)) return;
 
-      void refreshAuthSession();
+      refreshAuthSession().catch(() => {});
     }, TOKEN_WATCH_INTERVAL_MS);
 
     return () => window.clearInterval(intervalId);

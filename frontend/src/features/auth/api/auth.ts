@@ -29,19 +29,13 @@ export function loginWithEmail(
 export type GuestLessonProgressImport = {
   lesson_id: number;
   is_completed?: boolean;
-  attempts?: number;
-  peak_accuracy?: number | null;
-  total_time_spent?: number;
-  started_at?: string | null;
+  attempt_count?: number;
   completed_at?: string | null;
-  last_accessed_at?: string | null;
 };
 
 export type GuestPracticeSummaryImport = {
   lesson_id: number;
-  attempts?: number;
-  best_accuracy?: number | null;
-  total_time_spent?: number;
+  attempt_count?: number;
   completed_at?: string | null;
 };
 

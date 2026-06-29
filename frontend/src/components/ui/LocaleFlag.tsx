@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Locale } from "@/i18n/config";
 
 const LOCALE_FLAG_SRC: Record<Locale, string> = {
@@ -12,14 +13,12 @@ type LocaleFlagProps = {
 
 export default function LocaleFlag({ locale, size = 22 }: LocaleFlagProps) {
   return (
-    <img
+    <Image
       src={LOCALE_FLAG_SRC[locale]}
       alt=""
       aria-hidden
       width={size}
       height={size}
-      loading="eager"
-      decoding="sync"
       draggable={false}
       style={{
         flexShrink: 0,
