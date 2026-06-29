@@ -24,7 +24,6 @@ export default function WdLessonLearningView({
 }: WdLessonLearningViewProps) {
   const { locale, t } = useTranslation();
 
-  const unitLabel = locale === "kh" ? unit.titleKh || unit.title : unit.title;
   const tip =
     locale === "kh"
       ? lesson.descriptionKh || lesson.description
@@ -56,35 +55,9 @@ export default function WdLessonLearningView({
           {t("WORD_DETECTION.LABELS.LESSON")} {lessonStep}
         </Typography>
         <Typography sx={{ color: KslColors.textPrimary, fontWeight: 700 }}>
-          {unitLabel} · {lesson.word}
+          {lesson.word}
         </Typography>
       </Breadcrumbs>
-
-      {/* ── Page heading ─────────────────────────────────────────────── */}
-      <Stack spacing={0.5}>
-        <Typography
-          component="h1"
-          sx={{
-            color: KslColors.textPrimary,
-            fontSize: { xs: 26, md: 34 },
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-          }}
-        >
-          {t("WORD_DETECTION.LESSON.PAGE_TITLE", { word: lesson.word })}
-        </Typography>
-        <Typography
-          sx={{
-            color: KslColors.textSecondary,
-            fontSize: { xs: 14, md: 16 },
-            lineHeight: 1.5,
-          }}
-        >
-          {lesson.wordEn}
-        </Typography>
-      </Stack>
-
       {/* ── Main practice layout ─────────────────────────────────────── */}
       <WdLessonPracticeStep
         word={lesson.word}

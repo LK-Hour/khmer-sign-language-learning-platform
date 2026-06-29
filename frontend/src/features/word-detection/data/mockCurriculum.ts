@@ -95,8 +95,8 @@ export const mockWordDetectionCurriculum: WdTrackUnit[] = [
   // ═══════════════════════════════════════════════════════════════════════
   {
     id: 2,
-    title: "Family & Home",
-    titleKh: "គ្រួសារ និងផ្ទះ",
+    title: "Home",
+    titleKh: "ផ្ទះ",
     category: "Home",
     categoryKh: "ផ្ទះ",
     orderIndex: 2,
