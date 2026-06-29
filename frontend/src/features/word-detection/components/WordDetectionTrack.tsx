@@ -46,6 +46,7 @@ const lessonStatus: Record<
     iconInnerBg?: string;
     iconColor: string;
     showCompletedLabel: boolean;
+    showContinueLabel: boolean;
     rowBg: string;
     rowBorder: string;
     rowOpacity: number;
@@ -57,6 +58,7 @@ const lessonStatus: Record<
     iconInnerBg: KslColors.success,
     iconColor: "#fff",
     showCompletedLabel: true,
+    showContinueLabel: false,
     rowBg: "background.paper",
     rowBorder: KslColors.border,
     rowOpacity: 1,
@@ -67,6 +69,7 @@ const lessonStatus: Record<
     iconInnerBg: KslColors.inProgress,
     iconColor: "#fff",
     showCompletedLabel: false,
+    showContinueLabel: true,
     rowBg: "#fffbf0",
     rowBorder: "rgba(243,184,63,0.55)",
     rowOpacity: 1,
@@ -76,6 +79,7 @@ const lessonStatus: Record<
     iconBg: "rgba(101,116,110,0.14)",
     iconColor: KslColors.locked,
     showCompletedLabel: false,
+    showContinueLabel: false,
     rowBg: "background.paper",
     rowBorder: KslColors.border,
     rowOpacity: 0.65,
@@ -661,6 +665,18 @@ function LessonTrackRow({
               }}
             >
               {t("WORD_DETECTION.TRACK.COMPLETED")}
+            </Typography>
+          ) : null}
+          {status.showContinueLabel ? (
+            <Typography
+              sx={{
+                color: KslColors.inProgress,
+                fontSize: KslFontSizes.sm,
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              {t("WORD_DETECTION.TRACK.CONTINUE")}
             </Typography>
           ) : null}
           <Stack

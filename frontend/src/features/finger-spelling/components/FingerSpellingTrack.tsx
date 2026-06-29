@@ -48,6 +48,7 @@ const lessonStatus: Record<
     iconInnerBg?: string;
     iconColor: string;
     showCompletedLabel: boolean;
+    showContinueLabel: boolean;
     rowBg: string;
     rowBorder: string;
     rowOpacity: number;
@@ -59,6 +60,7 @@ const lessonStatus: Record<
     iconInnerBg: KslColors.success,
     iconColor: "#fff",
     showCompletedLabel: true,
+    showContinueLabel: false,
     rowBg: "background.paper",
     rowBorder: KslColors.border,
     rowOpacity: 1,
@@ -69,6 +71,7 @@ const lessonStatus: Record<
     iconInnerBg: KslColors.inProgress,
     iconColor: "#fff",
     showCompletedLabel: false,
+    showContinueLabel: true,
     rowBg: "#fffbf0",
     rowBorder: "rgba(243,184,63,0.55)",
     rowOpacity: 1,
@@ -78,6 +81,7 @@ const lessonStatus: Record<
     iconBg: "rgba(101,116,110,0.14)",
     iconColor: KslColors.locked,
     showCompletedLabel: false,
+    showContinueLabel: false,
     rowBg: "background.paper",
     rowBorder: KslColors.border,
     rowOpacity: 0.65,
@@ -409,10 +413,7 @@ function UnitTrackCard({
               fontWeight: 700,
             }}
           >
-            {t("FINGER_SPELLING.TRACK.CURRENT_UNIT_PROGRESS", {
-              completed: unit?.completedLessonCount,
-              total: unit?.totalLessonCount,
-            })}
+            {t("FINGER_SPELLING.TRACK.LESSON")} {unit?.completedLessonCount} / {unit?.totalLessonCount} {t("FINGER_SPELLING.TRACK.COMPLETED")} 
           </Typography>
           <Stack
             component="span"
@@ -695,6 +696,18 @@ function LessonTrackRow({
               }}
             >
               {t("FINGER_SPELLING.TRACK.COMPLETED")}
+            </Typography>
+          ) : null}
+          {status.showContinueLabel ? (
+            <Typography
+              sx={{
+                color: KslColors.inProgress,
+                fontSize: KslFontSizes.sm,
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              {t("FINGER_SPELLING.TRACK.CONTINUE")}
             </Typography>
           ) : null}
           <Stack

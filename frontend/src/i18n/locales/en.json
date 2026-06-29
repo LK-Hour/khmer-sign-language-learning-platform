@@ -241,6 +241,7 @@
       "TITLE": "Profile"
     },
     "TRACK": {
+      "LESSON":"Lesson",
       "CHAPTER_LESSONS_PRACTICE": "{count} lessons + practice",
       "CHAPTER_LOCKED_UNTIL": "Locked until Chapter",
       "COMPLETED": "Completed",
@@ -254,7 +255,7 @@
       "QUIZ_DESCRIPTION": "Exercise and quiz to track learner progress after all chapters.",
       "QUIZ_TITLE": "Character Quiz",
       "RETRY": "Retry",
-      "SUMMARY_DESCRIPTION": "Sample image, hand keypoints, live matching, and probability correction.",
+      "SUMMARY_DESCRIPTION": "Sample image, hand Keypoints, live matching, and probability correction.",
       "TITLE": "Learn Khmer characters step by step",
       "UNIT_CHAPTER_EXERCISES": "{count} chapter exercises",
       "UNIT_LOCKED_UNTIL": "Locked until Unit"
@@ -270,7 +271,7 @@
     "LIVE_BADGE": "LIVE",
     "MODE_01": "Mode 01",
     "MODE_02": "Mode 02",
-    "SUBTITLE": "Choose Finger Spelling or Word Detection, then continue through units, chapters, lessons, practice, and quizzes in order.",
+    "SUBTITLE": "Choose Finger Spelling or Word Detection, then continue through units, chapters, lessons, practice, and quizzes in order",
     "TITLE": "Continue your Khmer Sign Language journey",
     "WORD_DETECTION_CTA": "Learn Word Detection",
     "WORD_DETECTION_DESC": "Start from 20 word classes with video samples and live signing probability.",
@@ -293,7 +294,7 @@
     "SETTINGS": "Settings"
   },
   "LOGIN": {
-    "ADMIN_SUBTITLE": "Sign in to manage courses, quizzes, and learner content.",
+    "ADMIN_SUBTITLE": "Sign in to manage courses, quizzes, and learner content",
     "ADMIN_TAB": "Management",
     "ADMIN_TITLE": "Admin Console",
     "ARIA_ANSWER_INPUT": "Answer input",
@@ -333,7 +334,7 @@
     "TELEGRAM_LOAD_ERROR": "Telegram login could not be loaded. Please try again.",
     "TELEGRAM_NO_USER": "Telegram login did not return user information.",
     "USERNAME_LABEL": "Username",
-    "WELCOME_DESC": "Learn and practice Khmer Sign Language with AI-powered recognition and real-time feedback, helping bridge the communication gap between Deaf and hearing communities.",
+    "WELCOME_DESC": "Learn and practice Khmer Sign Language with AI-powered recognition and real-time feedback, helping bridge the communication gap between Deaf and hearing communities",
     "WELCOME_SUBTITLE": "Learning & Recognition Platform",
     "WELCOME_TITLE": "Welcome to KSL"
   },
@@ -376,6 +377,7 @@
     "TRACK": {
       "CHAPTER_LESSONS_COUNT": "{count} lessons",
       "COMPLETED": "Completed",
+      "CONTINUE": "Continue",
       "CURRENT_UNIT_PROGRESS": "{completed} of {total} lessons completed",
       "EYEBROW": "Word Detection Track",
       "FALLBACK_UNIT_TITLE": "Khmer Sign Language Word Basics",

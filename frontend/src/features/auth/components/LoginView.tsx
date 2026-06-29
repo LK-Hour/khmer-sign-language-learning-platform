@@ -581,12 +581,12 @@ function WelcomePanel() {
         sx={{
           color: colors.navy,
           fontSize: {
-            xs: 24,
-            sm: 28,
-            md: 32,
+            xs: 20,
+            md: 24,
+            xl: 32,
           },
           fontWeight: 700,
-          lineHeight: { xs: 1.15, md: 1.1 },
+          lineHeight: { xs: 1.15, md: 1.5 },
         }}
       >
         {t("LOGIN.WELCOME_TITLE")}
@@ -743,6 +743,7 @@ function LearnerLogin({
             color: colors.muted,
             fontSize: KslFontSizes.sm,
             lineHeight: KslLineHeights.sm,
+            textAlign:'center',
           }}
         >
           {t("LOGIN.LEARNER_SUBTITLE")}
@@ -823,6 +824,7 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
             fontSize: KslFontSizes.lg,
             fontWeight: 700,
             lineHeight: KslLineHeights.lg,
+            textAlign:'center',
           }}
         >
           {t("LOGIN.ADMIN_TITLE")}
@@ -833,6 +835,8 @@ function AdminLogin({ isLoading, onLogin }: AdminLoginProps) {
             color: colors.muted,
             fontSize: KslFontSizes.sm,
             lineHeight: KslLineHeights.sm,
+            textAlign:'center',
+
           }}
         >
           {t("LOGIN.ADMIN_SUBTITLE")}
