@@ -21,25 +21,21 @@ export function useFingerSpellingProgressStat() {
   const [fetchedUnits, setFetchedUnits] = useState<
     Awaited<ReturnType<typeof fetchFsUnits>> | null
   >(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!hasHydrated) return;
 
     let ignore = false;
-    setIsLoading(true);
 
     void fetchFsUnits()
       .then((units) => {
         if (!ignore) {
           setFetchedUnits(units);
-          setIsLoading(false);
         }
       })
       .catch(() => {
         if (!ignore) {
           setFetchedUnits([]);
-          setIsLoading(false);
         }
       });
 
@@ -69,7 +65,7 @@ export function useFingerSpellingProgressStat() {
   }, [fetchedUnits, guestLessons, storeUnits, user?.is_guest]);
 
   const stat = useMemo(() => {
-    if (!hasHydrated || isLoading || progress.total === 0) {
+    if (!hasHydrated || fetchedUnits == null || progress.total === 0) {
       return t("HOME.FINGER_SPELLING_STAT_LOADING");
     }
 
@@ -80,11 +76,11 @@ export function useFingerSpellingProgressStat() {
     );
 
     return t("HOME.FINGER_SPELLING_STAT", { completed, total });
-  }, [hasHydrated, isLoading, locale, progress.completed, progress.total, t]);
+  }, [fetchedUnits, hasHydrated, locale, progress.completed, progress.total, t]);
 
   return {
     stat,
-    isLoading: !hasHydrated || isLoading,
+    isLoading: !hasHydrated || fetchedUnits == null,
     ...progress,
   };
 }

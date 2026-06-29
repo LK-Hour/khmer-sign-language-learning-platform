@@ -50,8 +50,8 @@ type UnitWithLessons = {
   }>;
 };
 
-export function findResumeLesson(
-  units: UnitWithLessons[]
+export function findResumeLesson<TUnit extends UnitWithLessons>(
+  units: TUnit[]
 ): WdLesson | undefined {
   const sortedUnits = [...units].sort((a, b) => a?.orderIndex - b?.orderIndex);
 
@@ -83,9 +83,9 @@ export function getNextLessonInChapter(
   return sorted[idx + 1];
 }
 
-export function findCurrentUnit(
-  units: UnitWithLessons[]
-): UnitWithLessons | undefined {
+export function findCurrentUnit<TUnit extends UnitWithLessons>(
+  units: TUnit[]
+): TUnit | undefined {
   const sortedUnits = [...units].sort((a, b) => a?.orderIndex - b?.orderIndex);
   const resumeLesson = findResumeLesson(sortedUnits);
 

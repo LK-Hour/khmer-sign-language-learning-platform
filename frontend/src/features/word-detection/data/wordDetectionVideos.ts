@@ -2,7 +2,7 @@ import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
 
 /** Relative repo path to the word-detection development dataset (served at /data_set). */
 export const WORD_DETECTION_DATASET_ROOT =
-  "data_set/Word_detection for development";
+  "data_set/word_detection";
 
 /** Default sample clip per word folder (e.g. `ប៊ិក/ប៊ិក_1.mp4`). */
 export const WORD_DETECTION_DEFAULT_SAMPLE_INDEX = 1;

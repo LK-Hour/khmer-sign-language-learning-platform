@@ -1,6 +1,5 @@
 "use client";
 
-import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { Button, Grid, Paper, Stack, Typography } from "@mui/material";
 import { ROUTES } from "@/constants/routes";
@@ -34,7 +33,6 @@ export default function WdLessonPracticeStep({
   tip,
   locale,
   nextLessonId,
-  lessonStep,
 }: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
