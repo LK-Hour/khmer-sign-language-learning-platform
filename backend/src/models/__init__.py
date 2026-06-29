@@ -21,9 +21,6 @@ from .finger_spelling import (
     # Progress
     FingerUserLessonProgress,
     FingerUserExerciseResult,
-    # Practice
-    FingerPracticeSession,
-    FingerPracticeSessionLetter,
 )
 
 __all__ = [
@@ -47,6 +44,4 @@ __all__ = [
     "FingerExerciseOption",
     "FingerUserLessonProgress",
     "FingerUserExerciseResult",
-    "FingerPracticeSession",
-    "FingerPracticeSessionLetter",
 ]

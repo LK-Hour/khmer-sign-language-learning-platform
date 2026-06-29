@@ -16,7 +16,6 @@ from sqlalchemy import (
     Enum as SQLEnum,
     ForeignKey,
     Index,
-    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -116,9 +115,6 @@ class FingerLesson(Base):
     user_progress: Mapped[List["FingerUserLessonProgress"]] = relationship(
         back_populates="lesson", cascade="all, delete-orphan"
     )
-    practice_sessions: Mapped[List["FingerPracticeSession"]] = relationship(
-        back_populates="lesson", cascade="all, delete-orphan"
-    )
     exercises: Mapped[List["FingerExercise"]] = relationship(
         back_populates="lesson", cascade="all, delete-orphan"
     )
@@ -150,9 +146,6 @@ class FingerLetter(Base):
         back_populates="letter", cascade="all, delete-orphan"
     )
     letter_medias: Mapped[List["FingerLetterMedia"]] = relationship(
-        back_populates="letter", cascade="all, delete-orphan"
-    )
-    practice_session_letters: Mapped[List["FingerPracticeSessionLetter"]] = relationship(
         back_populates="letter", cascade="all, delete-orphan"
     )
 
@@ -284,7 +277,7 @@ class FingerExerciseOption(Base):
 # ==================== USER PROGRESS ====================
 
 class FingerUserLessonProgress(Base):
-    """Per-user lesson completion and accuracy tracking."""
+    """Per-user lesson completion and practice tracking."""
     __tablename__ = "finger_user_lesson_progress"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -292,12 +285,9 @@ class FingerUserLessonProgress(Base):
     finger_lesson_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_lessons.id"), nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, server_default="false")
     is_locked: Mapped[bool] = mapped_column(Boolean, server_default="true")
-    peak_accuracy: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
-    attempts: Mapped[int] = mapped_column(BigInteger, default=0)
-    total_time_spent: Mapped[int] = mapped_column(BigInteger, default=0)  # in seconds
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    attempts: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    last_practiced_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    last_accessed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -346,66 +336,4 @@ class FingerUserExerciseResult(Base):
         Index("ix_finger_user_exercise_results_user_id", "user_id"),
         Index("ix_finger_user_exercise_results_progress_id", "progress_id"),
         Index("ix_finger_user_exercise_results_exercise_id", "finger_exercise_id"),
-    )
-
-
-# ==================== PRACTICE SESSIONS ====================
-
-class FingerPracticeSession(Base):
-    """Practice session with media recording."""
-    __tablename__ = "finger_practice_sessions"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    lesson_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_lessons.id"), nullable=False)
-    media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
-    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    duration: Mapped[int] = mapped_column(BigInteger, default=0)  # in seconds
-    average_accuracy: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
-    peak_accuracy: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
-    is_completed: Mapped[bool] = mapped_column(Boolean, server_default="false")
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-    # Relationships
-    user: Mapped[User] = relationship(back_populates="practice_sessions", foreign_keys=[user_id])
-    lesson: Mapped["FingerLesson"] = relationship(back_populates="practice_sessions")
-    media: Mapped[Optional["Media"]] = relationship(
-        back_populates="finger_practice_sessions", foreign_keys=[media_id]
-    )
-    session_letters: Mapped[List["FingerPracticeSessionLetter"]] = relationship(
-        back_populates="session", cascade="all, delete-orphan"
-    )
-
-    __table_args__ = (
-        Index("ix_finger_practice_sessions_user_id", "user_id"),
-        Index("ix_finger_practice_sessions_lesson_id", "lesson_id"),
-        Index("ix_finger_practice_sessions_media_id", "media_id"),
-    )
-
-
-class FingerPracticeSessionLetter(Base):
-    """Per-letter accuracy within a practice session."""
-    __tablename__ = "finger_practice_session_letters"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    session_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_practice_sessions.id"), nullable=False)
-    letter_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_letters.id"), nullable=False)
-    accuracy: Mapped[Optional[float]] = mapped_column(Numeric(5, 2))
-    attempts: Mapped[int] = mapped_column(BigInteger, default=0)
-    time_spent_seconds: Mapped[int] = mapped_column(BigInteger, default=0)
-    media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-    # Relationships
-    session: Mapped["FingerPracticeSession"] = relationship(back_populates="session_letters")
-    letter: Mapped["FingerLetter"] = relationship(back_populates="practice_session_letters")
-    media: Mapped[Optional["Media"]] = relationship(
-        back_populates="finger_practice_session_letters", foreign_keys=[media_id]
-    )
-
-    __table_args__ = (
-        Index("ix_finger_practice_session_letters_session_id", "session_id"),
-        Index("ix_finger_practice_session_letters_letter_id", "letter_id"),
-        Index("ix_finger_practice_session_letters_media_id", "media_id"),
     )

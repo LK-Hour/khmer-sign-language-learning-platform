@@ -36,12 +36,9 @@ def get_lesson_progress(
         lessonId=lesson_id,
         progressStatus=progress.progress_status_for_lesson(user.id, lesson_id),
         isLocked=progress.is_lesson_locked_by_id(user.id, lesson_id),
-        attempts=(row.attempts if row and row.attempts is not None else 0),
-        totalTimeSpent=(row.total_time_spent if row and row.total_time_spent is not None else 0),
-        peakAccuracy=(float(row.peak_accuracy) if row and row.peak_accuracy is not None else None),
-        startedAt=(row.started_at if row else None),
+        attemptCount=(row.attempts if row and row.attempts is not None else 0),
+        lastPracticedAt=(row.last_practiced_at if row else None),
         completedAt=(row.completed_at if row else None),
-        lastAccessedAt=(row.last_accessed_at if row else None),
     )
 
 

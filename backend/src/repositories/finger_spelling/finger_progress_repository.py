@@ -3,17 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.models.finger_spelling import FingerUserExerciseResult, FingerUserLessonProgress
-
-
-def _utc_now_naive() -> datetime:
-    """Return current datetime (DB configured for Asia/Phnom_Penh timezone)."""
-    return datetime.now()
 
 
 class FingerProgressRepository:
@@ -44,12 +38,9 @@ class FingerProgressRepository:
         if progress:
             return progress
 
-        now = _utc_now_naive()
         progress = FingerUserLessonProgress(
             user_id=user_id,
             finger_lesson_id=lesson_id,
-            started_at=now,
-            last_accessed_at=now,
         )
         self.db.add(progress)
         self.db.flush()

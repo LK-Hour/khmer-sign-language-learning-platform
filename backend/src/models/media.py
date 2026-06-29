@@ -2,7 +2,7 @@
 Centralized media storage model shared across multiple modules.
 
 Used by:
-- Finger spelling (letters, exercises, options, practice sessions)
+- Finger spelling (letters, exercises, options)
 - Sign language (words, exercises, options, practice sessions)
 - User contributions
 """
@@ -21,8 +21,6 @@ if TYPE_CHECKING:
         FingerLetterMedia,
         FingerExercise,
         FingerExerciseOption,
-        FingerPracticeSession,
-        FingerPracticeSessionLetter,
     )
 
 
@@ -38,7 +36,7 @@ class Media(Base):
     Centralized media storage for all media content.
     
     Shared across:
-    - Finger spelling: letters, exercises, options, practice sessions
+    - Finger spelling: letters, exercises, options
     - Sign language: words, exercises, options, practice sessions
     - User contributions and practice recordings
     """
@@ -62,12 +60,6 @@ class Media(Base):
     )
     finger_exercise_options: Mapped[List["FingerExerciseOption"]] = relationship(
         back_populates="media", foreign_keys="FingerExerciseOption.media_id"
-    )
-    finger_practice_sessions: Mapped[List["FingerPracticeSession"]] = relationship(
-        back_populates="media", foreign_keys="FingerPracticeSession.media_id"
-    )
-    finger_practice_session_letters: Mapped[List["FingerPracticeSessionLetter"]] = relationship(
-        back_populates="media", foreign_keys="FingerPracticeSessionLetter.media_id"
     )
     
     # Future: Add relationships for sign_language when implemented

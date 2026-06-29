@@ -190,47 +190,14 @@ class ExerciseSubmitResponse(BaseModel):
     explanation_kh: str | None = None
 
 
-class PracticeSessionStartRequest(BaseModel):
-    media_id: int | None = None
-
-
-class PracticeSessionResponse(BaseModel):
-    id: int
-    lesson_id: int
-    started_at: datetime
-    is_completed: bool
-
-
-class PracticeLetterSubmitRequest(BaseModel):
-    letter_id: int
-    accuracy: float | None = None
-    attempts: int = 1
-    time_spent_seconds: int = 0
-    media_id: int | None = None
-
-
-class PracticeLetterSubmitResponse(BaseModel):
-    session_id: int
-    letter_id: int
+class PracticeAttemptRequest(BaseModel):
     accuracy: float | None = None
 
 
-class PracticeEndResponse(BaseModel):
-    session_id: int
+class PracticeAttemptResponse(BaseModel):
     lesson_id: int
-    average_accuracy: float | None = None
-    peak_accuracy: float | None = None
-    duration_seconds: int
+    accuracy: float | None = None
     lesson_completed: bool
-
-
-class PracticeAccuracyResponse(BaseModel):
-    session_id: int
-    lesson_id: int
-    average_accuracy: float | None = None
-    peak_accuracy: float | None = None
-    samples: int = 0
-    is_completed: bool
 
 
 class HandPredictFeaturesRequest(BaseModel):
@@ -261,12 +228,9 @@ class FsLessonProgressResponse(BaseModel):
     lessonId: int
     progressStatus: str
     isLocked: bool
-    attempts: int
-    totalTimeSpent: int
-    peakAccuracy: float | None = None
-    startedAt: datetime | None = None
+    attemptCount: int
+    lastPracticedAt: datetime | None = None
     completedAt: datetime | None = None
-    lastAccessedAt: datetime | None = None
 
 
 class FsChapterLessonProgressItem(BaseModel):

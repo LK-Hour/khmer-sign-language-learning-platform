@@ -18,7 +18,7 @@ def _utc_now_naive() -> datetime:
 
 
 class FingerProgressService:
-    PRACTICE_PASS_ACCURACY = 70.0
+    PRACTICE_PASS_ACCURACY = 50
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -29,35 +29,46 @@ class FingerProgressService:
     ) -> FingerUserLessonProgress | None:
         return self.progress.get_lesson_progress(user_id, lesson_id)
 
-    def touch_progress(self, progress: FingerUserLessonProgress) -> None:
-        progress.last_accessed_at = _utc_now_naive()
-        if progress.started_at is None:
-            progress.started_at = progress.last_accessed_at
+    def update_last_practice_progress(self, progress: FingerUserLessonProgress) -> None:
+        progress.last_practiced_at = _utc_now_naive()
+
+    def record_practice_attempt(
+        self,
+        user_id: uuid.UUID,
+        lesson_id: int,
+        *,
+        accuracy: float | None = None,
+        passed: bool = False,
+    ) -> FingerUserLessonProgress | None:
+        progress = self.progress.get_or_create_lesson_progress(user_id, lesson_id)
+        self.update_last_practice_progress(progress)
+
+        progress.attempts = (progress.attempts or 0) + 1
+
+        if passed:
+            progress.is_completed = True
+            if progress.completed_at is None:
+                progress.completed_at = progress.last_practiced_at
+
+        self.db.commit()
+        self.db.refresh(progress)
+        if passed:
+            FingerLockingService.clear_cache()
+        return progress
 
     def complete_lesson(
         self,
         user_id: uuid.UUID,
         lesson_id: int,
         *,
-        peak_accuracy: float | None = None,
-        time_spent: int = 0,
+        accuracy: float | None = None,
     ) -> FingerUserLessonProgress | None:
-        progress = self.progress.get_or_create_lesson_progress(user_id, lesson_id)
-        self.touch_progress(progress)
-
-        progress.is_completed = True
-        progress.completed_at = _utc_now_naive()
-        progress.attempts = (progress.attempts or 0) + 1
-        progress.total_time_spent = (progress.total_time_spent or 0) + max(time_spent, 0)
-
-        if peak_accuracy is not None:
-            current_peak = float(progress.peak_accuracy) if progress.peak_accuracy is not None else 0.0
-            progress.peak_accuracy = max(current_peak, peak_accuracy)
-
-        self.db.commit()
-        self.db.refresh(progress)
-        FingerLockingService.clear_cache()
-        return progress
+        return self.record_practice_attempt(
+            user_id,
+            lesson_id,
+            accuracy=accuracy,
+            passed=True,
+        )
 
     def is_lesson_locked_by_id(
         self,
@@ -79,6 +90,6 @@ class FingerProgressService:
             return "NOT_STARTED"
         if row.is_completed:
             return "COMPLETED"
-        if row.started_at is not None or (row.attempts or 0) > 0:
+        if row.last_practiced_at is not None or (row.attempts or 0) > 0:
             return "IN_PROGRESS"
         return "NOT_STARTED"

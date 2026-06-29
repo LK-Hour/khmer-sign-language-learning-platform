@@ -45,19 +45,13 @@ class AccessTokenResponse(BaseModel):
 class GuestLessonProgressImport(BaseModel):
     lesson_id: int
     is_completed: bool = False
-    attempts: int = 0
-    peak_accuracy: float | None = None
-    total_time_spent: int = 0
-    started_at: datetime | None = None
+    attempt_count: int = 0
     completed_at: datetime | None = None
-    last_accessed_at: datetime | None = None
 
 
 class GuestPracticeSummaryImport(BaseModel):
     lesson_id: int
-    attempts: int = 0
-    best_accuracy: float | None = None
-    total_time_spent: int = 0
+    attempt_count: int = 0
     completed_at: datetime | None = None
 
 
