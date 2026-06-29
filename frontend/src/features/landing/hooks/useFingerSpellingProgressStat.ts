@@ -75,7 +75,7 @@ export function useFingerSpellingProgressStat() {
       locale
     );
 
-    return t("HOME.FINGER_SPELLING_STAT", { completed, total });
+    return `${completed}/${total} ${t("PHRASES.LESSONS")}`;
   }, [fetchedUnits, hasHydrated, locale, progress.completed, progress.total, t]);
 
   return {

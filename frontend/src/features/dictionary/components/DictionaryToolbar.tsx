@@ -47,7 +47,7 @@ export default function DictionaryToolbar({
   onTypeFilterChange,
   resultCount,
 }: DictionaryToolbarProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <Paper
@@ -184,7 +184,9 @@ export default function DictionaryToolbar({
             color: KslColors.textSecondary,
           }}
         >
-          {t("DICTIONARY.LIST.RESULT_COUNT", { count: resultCount })}
+          {locale === "kh"
+            ? `${t("PHRASES.RESULTS")} ${resultCount}`
+            : `${resultCount} ${t("PHRASES.RESULTS")}`}
         </Typography>
       </Stack>
     </Paper>

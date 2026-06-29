@@ -175,9 +175,7 @@ export default function FingerSpellingTrack({
         <Grid size={{ xs: 12, md: 6 }}>
           <TrackSummaryCard
             step={formatBadgeStep(currentUnit?.orderIndex ?? 1, locale)}
-            title={t("FINGER_SPELLING.TRACK.LEARN_ABOUT_TITLE", {
-              title: currentUnitTitle,
-            })}
+            title={`${t("PHRASES.LEARN_ABOUT_PREFIX")} ${currentUnitTitle}`}
             description={t("FINGER_SPELLING.TRACK.SUMMARY_DESCRIPTION")}
             completedCount={currentUnitCompleted}
             totalCount={currentUnitTotal}
@@ -234,7 +232,7 @@ function TrackSummaryCard({
   countLabel: string;
   active?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <Paper
@@ -266,11 +264,9 @@ function TrackSummaryCard({
               textAlign: "right",
             }}
           >
-            {t("FINGER_SPELLING.TRACK.PROGRESS_SUMMARY", {
-              completed: completedCount,
-              total: totalCount,
-              label: countLabel,
-            })}
+            {locale === "kh"
+              ? `${t("PHRASES.COMPLETED")} ${completedCount}/${totalCount} ${countLabel}`
+              : `${completedCount} ${t("PHRASES.OF")} ${totalCount} ${countLabel} ${t("PHRASES.COMPLETED")}`}
           </Typography>
         </Stack>
 
@@ -413,7 +409,9 @@ function UnitTrackCard({
               fontWeight: 700,
             }}
           >
-            {t("FINGER_SPELLING.TRACK.LESSON")} {unit?.completedLessonCount} / {unit?.totalLessonCount} {t("FINGER_SPELLING.TRACK.COMPLETED")} 
+            {locale === "kh"
+              ? `${t("PHRASES.COMPLETED")} ${unit?.completedLessonCount ?? 0}/${unit?.totalLessonCount ?? 0} ${t("PHRASES.LESSON")}`
+              : `${t("PHRASES.LESSON")} ${unit?.completedLessonCount ?? 0} / ${unit?.totalLessonCount ?? 0} ${t("PHRASES.COMPLETED")}`}
           </Typography>
           <Stack
             component="span"
@@ -568,7 +566,9 @@ function ChapterTrackSection({
               fontWeight: 600,
             }}
           >
-            {t("FINGER_SPELLING.TRACK.CHAPTER_LESSONS_PRACTICE", { count: chapter?.lessonCount })}
+            {locale === "kh"
+              ? `${t("PHRASES.LESSONS")} ${chapter?.lessonCount ?? 0} ${t("PHRASES.PLUS")} ${t("PHRASES.PRACTICE")}`
+              : `${chapter?.lessonCount ?? 0} ${t("PHRASES.LESSONS")} ${t("PHRASES.PLUS")} ${t("PHRASES.PRACTICE")}`}
           </Typography>
           <Stack
             component="span"
@@ -695,7 +695,7 @@ function LessonTrackRow({
                 lineHeight: 1,
               }}
             >
-              {t("FINGER_SPELLING.TRACK.COMPLETED")}
+              {t("PHRASES.COMPLETED")}
             </Typography>
           ) : null}
           {status.showContinueLabel ? (

@@ -40,7 +40,7 @@ export default function RootError({ error, reset }: RootErrorProps) {
         </Typography>
         {error.digest ? (
           <Typography variant="caption" color="text.secondary">
-            {t(locale, "ERROR.ID", { id: error.digest })}
+            {`${t(locale, "PHRASES.ERROR_ID")} ${error.digest}`}
           </Typography>
         ) : null}
         <Stack

@@ -137,7 +137,7 @@ const emptyQuestion = (orderIndex: number): AdminQuizQuestion => ({
 });
 
 export default function AdminQuizManager() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [questions, setQuestions] = useState<AdminQuizQuestion[]>(
     () => INITIAL_QUESTIONS
   );
@@ -366,7 +366,7 @@ export default function AdminQuizManager() {
                       </Typography>
                       <Typography sx={{ mt: 0.5, fontSize: AdminQuizFontSizes.small, fontStyle: "italic", color: AdminQuizColors.muted }}>
                         {q.correct_answer && q.type === "TEXT_INPUT"
-                          ? t("ADMIN.ANSWER", { answer: q.correct_answer })
+                          ? `${t("PHRASES.ANSWER")} ${q.correct_answer}`
                           : q.prompt_kh}
                       </Typography>
                     </TableCell>
@@ -417,7 +417,9 @@ export default function AdminQuizManager() {
               {editingId ? t("ADMIN.EDIT_QUESTION") : t("ADMIN.ADD_NEW_QUESTION")}
             </Typography>
             <Typography sx={{ ...sectionLabelSx, color: "text.secondary" }}>
-              {t("ADMIN.INTERACTION_MODE", { type: t(typeLabelKey(formData.type)) })}
+              {locale === "kh"
+                ? `${t("PHRASES.INTERACTION_MODE")} ${t(typeLabelKey(formData.type))}`
+                : `${t(typeLabelKey(formData.type))} ${t("PHRASES.INTERACTION_MODE")}`}
             </Typography>
           </Stack>
           <IconButton aria-label={t("ADMIN.CLOSE_DIALOG")} onClick={() => setIsModalOpen(false)}>
@@ -560,7 +562,7 @@ export default function AdminQuizManager() {
                               required
                               fullWidth
                               variant="standard"
-                              placeholder={t("ADMIN.CHOICE", { index: idx + 1 })}
+                              placeholder={`${t("PHRASES.CHOICE")} ${idx + 1}`}
                               value={opt}
                               onChange={(e) => handleOptionChange(idx, e.target.value)}
                             />
@@ -601,7 +603,7 @@ export default function AdminQuizManager() {
                               required
                               fullWidth
                               type="url"
-                              label={t("ADMIN.OPTION_IMAGE_URL", { index: idx + 1 })}
+                              label={`${t("PHRASES.OPTION_IMAGE_URL")} ${idx + 1}`}
                               placeholder={t("ADMIN.ENTER_IMAGE_URL")}
                               value={opt}
                               onChange={(e) => handleOptionChange(idx, e.target.value)}

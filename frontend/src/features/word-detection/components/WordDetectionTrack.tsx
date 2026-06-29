@@ -167,9 +167,7 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
         <Grid size={{ xs: 12, md: 6 }}>
           <TrackSummaryCard
             step={formatBadgeStep(currentUnit?.orderIndex ?? 1, locale)}
-            title={t("WORD_DETECTION.TRACK.LEARN_ABOUT_TITLE", {
-              title: currentUnitTitle,
-            })}
+            title={`${t("PHRASES.LEARN_ABOUT_PREFIX")} ${currentUnitTitle}`}
             description={t("WORD_DETECTION.TRACK.SUMMARY_DESCRIPTION")}
             completedCount={currentUnitCompleted}
             totalCount={currentUnitTotal}
@@ -226,7 +224,7 @@ function TrackSummaryCard({
   countLabel: string;
   active?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <Paper
@@ -255,11 +253,9 @@ function TrackSummaryCard({
               textAlign: "right",
             }}
           >
-            {t("WORD_DETECTION.TRACK.PROGRESS_SUMMARY", {
-              completed: completedCount,
-              total: totalCount,
-              label: countLabel,
-            })}
+            {locale === "kh"
+              ? `${t("PHRASES.COMPLETED")} ${completedCount}/${totalCount} ${countLabel}`
+              : `${completedCount} ${t("PHRASES.OF")} ${totalCount} ${countLabel} ${t("PHRASES.COMPLETED")}`}
           </Typography>
         </Stack>
 
@@ -403,10 +399,9 @@ function UnitTrackCard({
           <Typography
             sx={{ display: { xs: "none", md: "block" }, fontSize: KslFontSizes.sm, fontWeight: 700 }}
           >
-            {t("WORD_DETECTION.TRACK.CURRENT_UNIT_PROGRESS", {
-              completed: unit?.completedLessonCount,
-              total: unit?.totalLessonCount,
-            })}
+            {locale === "kh"
+              ? `${t("PHRASES.COMPLETED")} ${unit?.completedLessonCount ?? 0}/${unit?.totalLessonCount ?? 0} ${t("PHRASES.LESSONS")}`
+              : `${unit?.completedLessonCount ?? 0} ${t("PHRASES.OF")} ${unit?.totalLessonCount ?? 0} ${t("PHRASES.LESSONS")} ${t("PHRASES.COMPLETED")}`}
           </Typography>
           <Stack
             component="span"
@@ -532,7 +527,7 @@ function ChapterTrackSection({
           <Typography
             sx={{ display: { xs: "none", md: "block" }, fontSize: KslFontSizes.xs, fontWeight: 600 }}
           >
-            {t("WORD_DETECTION.TRACK.CHAPTER_LESSONS_COUNT", { count: chapter?.lessonCount })}
+            {`${chapter?.lessonCount ?? 0} ${t("PHRASES.LESSONS")}`}
           </Typography>
           <Stack
             component="span"
@@ -664,7 +659,7 @@ function LessonTrackRow({
                 lineHeight: 1,
               }}
             >
-              {t("WORD_DETECTION.TRACK.COMPLETED")}
+              {t("PHRASES.COMPLETED")}
             </Typography>
           ) : null}
           {status.showContinueLabel ? (

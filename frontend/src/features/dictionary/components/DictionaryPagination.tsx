@@ -95,7 +95,7 @@ export default function DictionaryPagination({
               key={item}
               onClick={() => onPageChange(item)}
               aria-current={item === page ? "page" : undefined}
-              aria-label={t("DICTIONARY.LIST.PAGE_LABEL", { page: item, pages: pageCount })}
+              aria-label={`${t("PHRASES.PAGE")} ${item} ${t("PHRASES.OF")} ${pageCount}`}
               sx={{
                 minWidth: 40,
                 width: 40,
