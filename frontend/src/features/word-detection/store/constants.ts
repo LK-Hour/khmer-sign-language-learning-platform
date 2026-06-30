@@ -1,0 +1,1 @@
+export const WORD_DETECTION_PASS_THRESHOLD = 50;

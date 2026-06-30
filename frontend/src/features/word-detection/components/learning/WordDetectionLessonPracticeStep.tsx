@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button, Grid, Paper, Stack, Typography } from "@mui/material";
+import type { RefObject } from "react";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
@@ -25,6 +26,17 @@ type WordDetectionLessonPracticeStepProps = {
   nextLessonId?: number;
   orderIndex: number;
   lessonStep: string;
+  passThreshold: number;
+  predictedLabel?: string | null;
+  predictedConfidence?: number | null;
+  liveLabel?: string | null;
+  liveConfidence?: number;
+  predictorReady?: boolean;
+  recError?: string | null;
+  videoRef?: RefObject<HTMLVideoElement | null>;
+  detectLandmarks: Parameters<typeof WdCameraPanel>[0]["detectLandmarks"];
+  isLandmarkerReady: boolean;
+  onDetection?: Parameters<typeof WdCameraPanel>[0]["onDetection"];
 };
 
 export default function WdLessonPracticeStep({
@@ -33,13 +45,52 @@ export default function WdLessonPracticeStep({
   tip,
   locale,
   nextLessonId,
+  passThreshold,
+  predictedLabel,
+  predictedConfidence = null,
+  liveLabel,
+  liveConfidence = 0,
+  predictorReady = false,
+  recError = null,
+  videoRef,
+  detectLandmarks,
+  isLandmarkerReady,
+  onDetection,
 }: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
   const sampleVideoUrl = resolveWordDetectionVideoUrl(word);
-
+  const targetWord = word.trim();
+  const finalLabel = predictedLabel?.trim() || null;
+  const showLivePrediction = !finalLabel && predictorReady && !!liveLabel;
+  const displayedLabel = showLivePrediction ? liveLabel : finalLabel;
+  const displayedConfidence = showLivePrediction
+    ? Math.round(liveConfidence)
+    : predictedConfidence != null
+      ? Math.round(predictedConfidence)
+      : null;
+  const labelMatches = !!displayedLabel && displayedLabel === targetWord;
+  const confidencePasses =
+    displayedConfidence != null && displayedConfidence >= passThreshold;
+  const predictionPassed = labelMatches && confidencePasses;
   return (
     <Stack spacing={2} sx={{ mt: 2 }}>
+      {recError ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 1.5,
+            border: `1px solid ${KslColors.warning}`,
+            borderRadius: `${KslRadii.card}px`,
+            bgcolor: "#fff5f4",
+          }}
+        >
+          <Typography sx={{ color: KslColors.warning, fontSize: KslFontSizes.sm }}>
+            {recError}
+          </Typography>
+        </Paper>
+      ) : null}
+
       {/* ── Two-panel visual row ─────────────────────────────────────── */}
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 5 }}>
@@ -62,7 +113,12 @@ export default function WdLessonPracticeStep({
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
-              <WdCameraPanel />
+              <WdCameraPanel
+                videoRef={videoRef}
+                detectLandmarks={detectLandmarks}
+                isLandmarkerReady={isLandmarkerReady}
+                onDetection={onDetection}
+              />
             </Stack>
             <Typography
               sx={{
@@ -84,15 +140,17 @@ export default function WdLessonPracticeStep({
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
-            label={t("WORD_DETECTION.LESSON.STATUS_LABEL")}
-            value={t("WORD_DETECTION.LESSON.STATUS_COMING_SOON")}
+            label={t("FINGER_SPELLING.LESSON.MATCH_CONFIDENCE")}
+            value={displayedConfidence != null ? `${displayedConfidence}%` : "—"}
+            highlight={confidencePasses}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
-            label={t("WORD_DETECTION.LESSON.WORD_LABEL")}
-            value={word}
-            khmerValue
+            label={t("FINGER_SPELLING.LESSON.PREDICT_RESULT")}
+            value={displayedLabel ?? "—"}
+            khmerValue={!!displayedLabel && displayedLabel !== "No Action"}
+            highlight={predictionPassed}
           />
         </Grid>
       </Grid>
@@ -101,14 +159,15 @@ export default function WdLessonPracticeStep({
       <Paper
         elevation={0}
         sx={{
-          alignItems: { xs: "flex-start", sm: "center" },
+          border: `1px solid ${KslColors.border}`,
           bgcolor: KslColors.primaryLighter,
-          borderRadius: `${KslRadii.signImage}px`,
+          borderRadius: `${KslRadii.card}px`,
+          p: 2,
           display: "flex",
           flexDirection: { xs: "column", sm: "row" },
-          gap: 2,
+          alignItems: { xs: "flex-start", sm: "center" },
           justifyContent: "space-between",
-          p: 2,
+          gap: 2,
         }}
       >
         <Stack spacing={0.5} sx={{ flex: 1 }}>
@@ -121,7 +180,7 @@ export default function WdLessonPracticeStep({
               m: 0,
             }}
           >
-            {t("WORD_DETECTION.LESSON.NAV_TITLE")}
+            {t("WORD_DETECTION.LESSON.WORD_PRACTICE_SIGN")}
           </Typography>
           <Typography
             sx={{
@@ -206,10 +265,12 @@ function MetricCard({
   label,
   value,
   khmerValue = false,
+  highlight = false,
 }: {
   label: string;
   value: string;
   khmerValue?: boolean;
+  highlight?: boolean;
 }) {
   return (
     <Paper
@@ -217,9 +278,9 @@ function MetricCard({
       sx={{
         height: "100%",
         p: 2,
-        border: `1px solid ${KslColors.border}`,
+        border: `1px solid ${highlight ? KslColors.primary : KslColors.border}`,
         borderRadius: `${KslRadii.card}px`,
-        bgcolor: KslColors.primaryLighter,
+        bgcolor: highlight ? KslColors.primaryLighter : KslColors.primaryLighter,
       }}
     >
       <Typography

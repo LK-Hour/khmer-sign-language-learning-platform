@@ -1,37 +1,45 @@
 "use client";
 
 import {
+  type Category,
   FilesetResolver,
   HandLandmarker,
-  PoseLandmarker,
   type NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Matches `landmark_extract.ipynb`: 33 pose points × (x, y, z, visibility). */
-export const WORD_DETECTION_POSE_LANDMARK_COUNT = 33;
-export const WORD_DETECTION_POSE_FEATURES =
-  WORD_DETECTION_POSE_LANDMARK_COUNT * 4;
+/** Matches the final active extraction loop in `landmark_extract.ipynb`. */
+export const WORD_DETECTION_SEQUENCE_LENGTH = 30;
+export const WORD_DETECTION_HAND_FEATURES = 21 * 3;   // 63 features per hand (x, y, z for 21 landmarks)
+export const WORD_DETECTION_POSITION_FEATURES =
+  WORD_DETECTION_HAND_FEATURES * 2;
+export const WORD_DETECTION_TOTAL_FEATURES =
+  WORD_DETECTION_POSITION_FEATURES * 2;
 
 const WASM_BASE =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm";
 const HAND_MODEL_PATH = "/models/hand_landmarker.task";
-const POSE_MODEL_PATH =
-  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
 
 let handLandmarkerPromise: Promise<HandLandmarker> | null = null;
-let poseLandmarkerPromise: Promise<PoseLandmarker> | null = null;
+
+const EMPTY_FRAME_FEATURES = new Float32Array(WORD_DETECTION_POSITION_FEATURES);
 
 const EMPTY_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
+  frameFeatures: EMPTY_FRAME_FEATURES,
+  sequenceFeatures: null,
 };
 
 export type WordDetectionLandmarks = {
-  /** 33 body landmarks (x, y, z, visibility) — first detected pose. */
+  /** Kept for overlay compatibility. Word model features are hands-only. */
   poseLandmarks: NormalizedLandmark[];
   /** Up to two hands, 21 landmarks each. */
   handLandmarks: NormalizedLandmark[][];
+  /** Current frame positions: left hand 63 + right hand 63. */
+  frameFeatures: Float32Array;
+  /** Flattened row-major (30, 252) sequence, or null before any valid frame. */
+  sequenceFeatures: Float32Array | null;
 };
 
 async function loadHandLandmarker(): Promise<HandLandmarker> {
@@ -45,30 +53,13 @@ async function loadHandLandmarker(): Promise<HandLandmarker> {
         },
         runningMode: "IMAGE",
         numHands: 2,
+        minHandDetectionConfidence: 0.5,
+        minHandPresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
       });
     })();
   }
   return handLandmarkerPromise;
-}
-
-async function loadPoseLandmarker(): Promise<PoseLandmarker> {
-  if (!poseLandmarkerPromise) {
-    poseLandmarkerPromise = (async () => {
-      const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
-      return PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: POSE_MODEL_PATH,
-          delegate: "GPU",
-        },
-        runningMode: "IMAGE",
-        numPoses: 1,
-        minPoseDetectionConfidence: 0.4,
-        minPosePresenceConfidence: 0.4,
-        minTrackingConfidence: 0.4,
-      });
-    })();
-  }
-  return poseLandmarkerPromise;
 }
 
 function createOffscreenCanvas(): HTMLCanvasElement {
@@ -91,35 +82,131 @@ function copyFrameToCanvas(
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 }
 
-function enhanceContrast(imageData: ImageData): void {
-  const data = imageData.data;
-  const len = data.length;
+function extractNativeHand(handLandmarks: NormalizedLandmark[] | undefined): Float32Array {
+  const features = new Float32Array(WORD_DETECTION_HAND_FEATURES);
+  if (!handLandmarks?.length) return features;
 
-  let min = 255;
-  let max = 0;
-  for (let i = 0; i < len; i += 4) {
-    const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    if (lum < min) min = lum;
-    if (lum > max) max = lum;
+  const wrist = handLandmarks[0];
+  const count = Math.min(handLandmarks.length, 21);
+
+  for (let i = 0; i < count; i += 1) {
+    const landmark = handLandmarks[i];
+    const offset = i * 3;
+    features[offset] = landmark.x - wrist.x;
+    features[offset + 1] = landmark.y - wrist.y;
+    features[offset + 2] = landmark.z - wrist.z;
   }
 
-  const range = max - min;
-  if (range < 3 || range > 200) return;
+  return features;
+}
 
-  const scale = 255 / range;
-  for (let i = 0; i < len; i += 4) {
-    data[i] = Math.min(255, Math.max(0, (data[i] - min) * scale));
-    data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - min) * scale));
-    data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - min) * scale));
+function handednessName(categories: Category[] | undefined): string {
+  return categories?.[0]?.categoryName?.toLowerCase() ?? "";
+}
+
+function slotHandsByHandedness(
+  landmarks: NormalizedLandmark[][],
+  handedness: Category[][],
+): [NormalizedLandmark[] | undefined, NormalizedLandmark[] | undefined] {
+  let leftHand: NormalizedLandmark[] | undefined;
+  let rightHand: NormalizedLandmark[] | undefined;
+  const fallbackHands: NormalizedLandmark[][] = [];
+
+  landmarks.forEach((hand, index) => {
+    const label = handednessName(handedness[index]);
+    if (label === "left" && !leftHand) {
+      leftHand = hand;
+      return;
+    }
+    if (label === "right" && !rightHand) {
+      rightHand = hand;
+      return;
+    }
+    fallbackHands.push(hand);
+  });
+
+  for (const hand of fallbackHands) {
+    if (!leftHand) {
+      leftHand = hand;
+    } else if (!rightHand) {
+      rightHand = hand;
+    }
   }
+
+  return [leftHand, rightHand];
+}
+
+function extractFrameFeatures(
+  landmarks: NormalizedLandmark[][],
+  handedness: Category[][],
+): Float32Array {
+  const [leftHand, rightHand] = slotHandsByHandedness(landmarks, handedness);
+  const frameFeatures = new Float32Array(WORD_DETECTION_POSITION_FEATURES);
+  frameFeatures.set(extractNativeHand(leftHand), 0);
+  frameFeatures.set(extractNativeHand(rightHand), WORD_DETECTION_HAND_FEATURES);
+  return frameFeatures;
+}
+
+function cloneFrame(frame: Float32Array): Float32Array {
+  return new Float32Array(frame);
+}
+
+function linspaceIndex(index: number, totalFrames: number): number {
+  if (WORD_DETECTION_SEQUENCE_LENGTH <= 1) return 0;
+  return Math.trunc(
+    (index * (totalFrames - 1)) / (WORD_DETECTION_SEQUENCE_LENGTH - 1),
+  );
+}
+
+function standardizeSequence(frames: Float32Array[]): Float32Array[] {
+  const totalFrames = frames.length;
+  if (totalFrames === 0) return [];
+
+  if (totalFrames >= WORD_DETECTION_SEQUENCE_LENGTH) {
+    return Array.from({ length: WORD_DETECTION_SEQUENCE_LENGTH }, (_, index) =>
+      cloneFrame(frames[linspaceIndex(index, totalFrames)]),
+    );
+  }
+
+  const positions = frames.map(cloneFrame);
+  const lastFrame = frames[totalFrames - 1];
+  while (positions.length < WORD_DETECTION_SEQUENCE_LENGTH) {
+    positions.push(cloneFrame(lastFrame));
+  }
+  return positions;
+}
+
+function buildSequenceFeatures(frames: Float32Array[]): Float32Array | null {
+  const positions = standardizeSequence(frames);
+  if (positions.length === 0) return null;
+
+  const sequenceFeatures = new Float32Array(
+    WORD_DETECTION_SEQUENCE_LENGTH * WORD_DETECTION_TOTAL_FEATURES,
+  );
+
+  for (let frameIndex = 0; frameIndex < WORD_DETECTION_SEQUENCE_LENGTH; frameIndex += 1) {
+    const position = positions[frameIndex];
+    const outputOffset = frameIndex * WORD_DETECTION_TOTAL_FEATURES;
+    sequenceFeatures.set(position, outputOffset);
+
+    if (frameIndex === 0) continue;
+
+    const previousPosition = positions[frameIndex - 1];
+    const velocityOffset = outputOffset + WORD_DETECTION_POSITION_FEATURES;
+    for (let i = 0; i < WORD_DETECTION_POSITION_FEATURES; i += 1) {
+      sequenceFeatures[velocityOffset + i] = position[i] - previousPosition[i];
+    }
+  }
+
+  return sequenceFeatures;
 }
 
 export function useWordDetectionLandmarker() {
   const handLandmarkerRef = useRef<HandLandmarker | null>(null);
-  const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const runtimeFailedRef = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const sequenceFramesRef = useRef<Float32Array[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,11 +218,10 @@ export function useWordDetectionLandmarker() {
     canvasRef.current = canvas;
     ctxRef.current = canvas.getContext("2d")!;
 
-    Promise.all([loadHandLandmarker(), loadPoseLandmarker()])
-      .then(([handLandmarker, poseLandmarker]) => {
+    loadHandLandmarker()
+      .then((handLandmarker) => {
         if (cancelled) return;
         handLandmarkerRef.current = handLandmarker;
-        poseLandmarkerRef.current = poseLandmarker;
         setIsReady(true);
       })
       .catch((loadError: unknown) => {
@@ -155,13 +241,16 @@ export function useWordDetectionLandmarker() {
     };
   }, []);
 
+  const resetSequence = useCallback(() => {
+    sequenceFramesRef.current = [];
+  }, []);
+
   const detectLandmarks = useCallback((video: HTMLVideoElement): WordDetectionLandmarks => {
     const handLandmarker = handLandmarkerRef.current;
-    const poseLandmarker = poseLandmarkerRef.current;
     const canvas = canvasRef.current;
     const ctx = ctxRef.current;
 
-    if (runtimeFailedRef.current || !handLandmarker || !poseLandmarker || !canvas || !ctx) {
+    if (runtimeFailedRef.current || !handLandmarker || !canvas || !ctx) {
       return EMPTY_DETECTION;
     }
 
@@ -173,18 +262,18 @@ export function useWordDetectionLandmarker() {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
     try {
-      let handResult = handLandmarker.detect(imageData);
-      let poseResult = poseLandmarker.detect(imageData);
-
-      if (!handResult.landmarks?.length || !poseResult.landmarks?.length) {
-        enhanceContrast(imageData);
-        handResult = handLandmarker.detect(imageData);
-        poseResult = poseLandmarker.detect(imageData);
-      }
+      const handResult = handLandmarker.detect(imageData);
+      const handLandmarks = handResult.landmarks ?? [];
+      const handedness = handResult.handedness ?? handResult.handednesses ?? [];
+      const frameFeatures = extractFrameFeatures(handLandmarks, handedness);
+      sequenceFramesRef.current.push(frameFeatures);
+      const sequenceFeatures = buildSequenceFeatures(sequenceFramesRef.current);
 
       return {
-        poseLandmarks: poseResult.landmarks?.[0] ?? [],
-        handLandmarks: handResult.landmarks ?? [],
+        poseLandmarks: [],
+        handLandmarks,
+        frameFeatures,
+        sequenceFeatures,
       };
     } catch {
       return EMPTY_DETECTION;
@@ -195,5 +284,6 @@ export function useWordDetectionLandmarker() {
     isReady,
     error,
     detectLandmarks,
+    resetSequence,
   };
 }

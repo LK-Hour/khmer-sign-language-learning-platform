@@ -2,11 +2,8 @@
 
 import { DrawingUtils, HandLandmarker, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { Stack, Typography } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  useWordDetectionLandmarker,
-  type WordDetectionLandmarks,
-} from "@/features/word-detection/ml/useWordDetectionLandmarker";
+import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import type { WordDetectionLandmarks } from "@/features/word-detection/ml/useWordDetectionLandmarker";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslFontSizes, KslRadii } from "@/theme/theme";
 
@@ -15,6 +12,8 @@ const OVERLAY_DETECTION_INTERVAL_MS = 0;
 const EMPTY_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
+  frameFeatures: new Float32Array(0),
+  sequenceFeatures: null,
 };
 
 function stopStream(stream: MediaStream | null) {
@@ -31,15 +30,26 @@ function landmarkKey(detection: WordDetectionLandmarks): string {
   return `${poseKey}::${handKey}`;
 }
 
-export default function WdCameraPanel() {
+type WdCameraPanelProps = {
+  videoRef?: RefObject<HTMLVideoElement | null>;
+  detectLandmarks: (video: HTMLVideoElement) => WordDetectionLandmarks;
+  isLandmarkerReady: boolean;
+  onDetection?: (detection: WordDetectionLandmarks) => void;
+};
+
+export default function WdCameraPanel({
+  videoRef: externalVideoRef,
+  detectLandmarks,
+  isLandmarkerReady,
+  onDetection,
+}: WdCameraPanelProps) {
   const { t } = useTranslation();
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const internalVideoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = externalVideoRef ?? internalVideoRef;
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const lastDetectionRef = useRef<WordDetectionLandmarks>(EMPTY_DETECTION);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-
-  const { detectLandmarks, isReady: isLandmarkerReady } = useWordDetectionLandmarker();
 
   const startCamera = useCallback(async () => {
     setCameraError(null);
@@ -66,7 +76,7 @@ export default function WdCameraPanel() {
     } catch {
       setCameraError(t("FINGER_SPELLING.LESSON.CAMERA_DENIED"));
     }
-  }, [t]);
+  }, [t, videoRef]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void startCamera(), 0);
@@ -105,7 +115,9 @@ export default function WdCameraPanel() {
 
       if (now - lastDetectionAt >= OVERLAY_DETECTION_INTERVAL_MS) {
         lastDetectionAt = now;
-        lastDetectionRef.current = detectLandmarks(video);
+        const detection = detectLandmarks(video);
+        lastDetectionRef.current = detection;
+        onDetection?.(detection);
       }
 
       const detection = lastDetectionRef.current;
@@ -153,7 +165,7 @@ export default function WdCameraPanel() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       lastDrawnKey = "";
     };
-  }, [cameraError, detectLandmarks, isLandmarkerReady]);
+  }, [cameraError, detectLandmarks, isLandmarkerReady, onDetection, videoRef]);
 
   return (
     <Stack
