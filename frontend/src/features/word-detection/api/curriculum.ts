@@ -63,10 +63,14 @@ export function fetchWdUnit(unitId: number): WdUnit | null {
   };
 }
 
-export function fetchWdLessonsInChapter(chapterId: number): WdLesson[] {
+export function fetchWdLessons(chapterId: number): WdLesson[] {
   for (const unit of mockWordDetectionCurriculum) {
     const found = unit.chapters.find((c) => c.id === chapterId);
     if (found) return [...found.lessons];
   }
   return [];
+}
+
+export function fetchWdLessonsInChapter(chapterId: number): WdLesson[] {
+  return fetchWdLessons(chapterId);
 }
