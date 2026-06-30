@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import AppProviders from "@/providers/AppProviders";
-import { appFonts } from "@/theme/fonts";
 import { DEFAULT_LOCALE } from "@/i18n/config";
 import "./globals.css";
 
@@ -15,7 +14,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang={DEFAULT_LOCALE} className={appFonts} style={{ height: "100%" }}>
+    <html lang={DEFAULT_LOCALE} style={{ height: "100%" }}>
       <body style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
         <AppProviders>{children}</AppProviders>
       </body>
