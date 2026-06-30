@@ -1,6 +1,10 @@
 # Browser-side MediaPipe extracts keypoints; backend only runs NumPy MLP inference.
+# Word-detection model was exported with Keras 2.13.1 — pin to that version.
 #   pip install -r requirements.txt -r requirements-ml.txt
 
-h5py>=3.10
+h5py>=3.10,<4.0
 mediapipe>=0.10
 Pillow>=10.0
+tensorflow==2.13.1
+keras==2.13.1
+numpy>=1.24.0,<1.25

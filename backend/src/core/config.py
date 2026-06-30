@@ -9,9 +9,16 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT = _BACKEND_ROOT.parent
 _DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "mlp_khmer_model_v3.h5"
 _DEFAULT_LANDMARKER = _BACKEND_ROOT / "ml" / "models" / "hand_landmarker.task"
 _DEFAULT_LABEL_ENCODER = _BACKEND_ROOT / "ml" / "models" / "khmer_label_encoder.pkl"
+_DEFAULT_WORD_ML_MODEL = (
+    _REPO_ROOT / "data_set" / "word_detection_model_assets" / "best_model_25class_fix.h5"
+)
+_DEFAULT_WORD_LABEL_MAP = (
+    _REPO_ROOT / "data_set" / "word_detection_model_assets" / "label_map_25class.json"
+)
 
 
 class Settings(BaseSettings):
@@ -51,6 +58,15 @@ class Settings(BaseSettings):
         default=_DEFAULT_LABEL_ENCODER,
         validation_alias="ML_LABEL_ENCODER_PATH",
     )
+    word_ml_enabled: bool = Field(default=True, validation_alias="WORD_ML_ENABLED")
+    word_ml_model_path: Path = Field(
+        default=_DEFAULT_WORD_ML_MODEL,
+        validation_alias="WORD_ML_MODEL_PATH",
+    )
+    word_ml_label_map_path: Path = Field(
+        default=_DEFAULT_WORD_LABEL_MAP,
+        validation_alias="WORD_ML_LABEL_MAP_PATH",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -70,6 +86,8 @@ class Settings(BaseSettings):
         "ml_model_path",
         "ml_landmarker_path",
         "ml_label_encoder_path",
+        "word_ml_model_path",
+        "word_ml_label_map_path",
         mode="before",
     )
     @classmethod

@@ -16,5 +16,5 @@ requests==2.31.0
 email-validator==2.1.0
 psycopg2-binary==2.9.9
 uuid7==0.1.0
-numpy>=1.24.0
+numpy>=1.24.0,<1.25
 h5py>=3.10.0
