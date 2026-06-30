@@ -1,3 +1,54 @@
+/* ─── Custom local fonts with font-display: swap (no auto-preload) ─── */
+@font-face {
+  font-family: "Niradei";
+  src: url("/Fonts/CADTNiradei/Niradei-Regular.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Niradei";
+  src: url("/Fonts/CADTNiradei/Niradei-Bold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Koh Santepheap";
+  src: url("/Fonts/Koh_Santepheap/KohSantepheap-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Koh Santepheap";
+  src: url("/Fonts/Koh_Santepheap/KohSantepheap-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Koh Santepheap";
+  src: url("/Fonts/Koh_Santepheap/KohSantepheap-Bold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Koh Santepheap";
+  src: url("/Fonts/Koh_Santepheap/KohSantepheap-Black.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "CADT Mono Display";
+  src: url("/Fonts/CADTMonoDisplay/CADTMonoDisplay-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --ksl-primary: #1f9f6f;
   --ksl-primary-dark: #147b55;
@@ -21,6 +72,9 @@
   --ksl-border: #d8e3df;
   --background: var(--ksl-page);
   --foreground: var(--ksl-text);
+  --font-niradei: "Niradei", system-ui, sans-serif;
+  --font-koh-santepheap: "Koh Santepheap", serif;
+  --font-mono-local: "CADT Mono Display", ui-monospace, monospace;
   --font-english: var(--font-niradei);
   --font-khmer: var(--font-koh-santepheap);
   --font-app-sans: var(--font-english), var(--font-khmer), system-ui, sans-serif;

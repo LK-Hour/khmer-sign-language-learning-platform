@@ -337,7 +337,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
                   },
                 }}
               >
-                {t("DICTIONARY.DETAIL.PRACTICE_SIGN")}
+                {t("DICTIONARY.DETAIL.FINGER_PRACTICE_SIGN")}
               </Button>
             ) : null}
           </Stack>
