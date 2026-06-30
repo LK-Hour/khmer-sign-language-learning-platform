@@ -160,7 +160,7 @@ export default function FingerSpellingTrack({
           variant="outlined"
           sx={{
             borderColor: KslColors.border,
-            borderRadius: 3,
+            borderRadius: `${KslRadii.button}px`,
             color: KslColors.primaryDark,
             fontWeight: 700,
             px: 2.5,

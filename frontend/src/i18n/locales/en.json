@@ -385,6 +385,7 @@
       "CONTINUE": "Continue",
       "EYEBROW": "Word Detection Track",
       "FALLBACK_UNIT_TITLE": "Khmer Sign Language Word Basics",
+      "LOAD_ERROR": "Lost connection to the database",
       "QUIZ_DESCRIPTION": "Word-level quizzes unlock after completing every lesson in a chapter.",
       "QUIZ_TITLE": "Word Quiz",
       "SUMMARY_DESCRIPTION": "Video samples, pose Key-points, and live word-level sign matching.",

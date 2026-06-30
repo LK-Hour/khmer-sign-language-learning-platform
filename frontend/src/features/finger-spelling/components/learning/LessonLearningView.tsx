@@ -66,7 +66,7 @@ export default function LessonLearningView({
   const capturingRef = useRef(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [isConsentPreviewOpen, setIsConsentPreviewOpen] = useState(true);
+  const [isConsentPreviewOpen, setIsConsentPreviewOpen] = useState(false);
   const [retryWaiting, setRetryWaiting] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;

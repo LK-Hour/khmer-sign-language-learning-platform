@@ -32,14 +32,15 @@ export default function PracticeFeedbackPanel({
     <Paper
       elevation={0}
       sx={{
+        border: `1px solid ${KslColors.border}`,
+        bgcolor: KslColors.primaryLighter,
+        borderRadius: `${KslRadii.card}px`,
+        p: 2,
         display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
         alignItems: { xs: "flex-start", sm: "center" },
         justifyContent: "space-between",
-        flexDirection: { xs: "column", sm: "row" },
         gap: 2,
-        p: 2,
-        borderRadius: `${KslRadii.signImage}px`,
-        bgcolor: KslColors.primaryLighter,
       }}
     >
       <Stack spacing={0.5} sx={{ flex: 1 }}>
