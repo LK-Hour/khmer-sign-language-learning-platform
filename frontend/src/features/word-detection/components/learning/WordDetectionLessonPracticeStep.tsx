@@ -20,7 +20,6 @@ const VISUAL_FRAME_SX = {
 
 type WordDetectionLessonPracticeStepProps = {
   word: string;
-  wordEn: string;
   tip?: string | null;
   locale: string;
   nextLessonId?: number;
@@ -41,7 +40,6 @@ type WordDetectionLessonPracticeStepProps = {
 
 export default function WdLessonPracticeStep({
   word,
-  wordEn,
   tip,
   locale,
   nextLessonId,
@@ -96,7 +94,7 @@ export default function WdLessonPracticeStep({
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
-              <WdWordCard videoUrl={sampleVideoUrl} wordEn={wordEn} />
+              <WdWordCard videoUrl={sampleVideoUrl} />
             </Stack>
             <Typography
               sx={{

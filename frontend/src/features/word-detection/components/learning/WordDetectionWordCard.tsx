@@ -10,10 +10,9 @@ const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
 type WdWordCardProps = {
   videoUrl: string;
-  wordEn: string;
 };
 
-export default function WdWordCard({ videoUrl, wordEn }: WdWordCardProps) {
+export default function WdWordCard({ videoUrl }: WdWordCardProps) {
   const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
@@ -62,7 +61,6 @@ export default function WdWordCard({ videoUrl, wordEn }: WdWordCardProps) {
         controls={false}
         width="100%"
         height="100%"
-        previewAriaLabel={`Play sign language video sample for ${wordEn}`}
         {...(!hasStarted && {
           onClickPreview: () => setHasStarted(true),
         })}

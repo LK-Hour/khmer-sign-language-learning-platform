@@ -624,28 +624,17 @@ function LessonTrackRow({
           >
             {title}:
           </Typography>
-          <Stack spacing={0.1} sx={{ minWidth: 0 }}>
-            <Typography
-              sx={{
-                color: KslColors.textPrimary,
-                fontSize: { xs: KslFontSizes.md, md: KslFontSizes.lg },
-                fontWeight: 700,
-                lineHeight: 1.2,
-              }}
-            >
-              {lesson?.word}
-            </Typography>
-            <Typography
-              sx={{
-                color: KslColors.textSecondary,
-                fontSize: KslFontSizes.xs,
-                fontWeight: 500,
-                lineHeight: 1.3,
-              }}
-            >
-              {lesson?.wordEn}
-            </Typography>
-          </Stack>
+          <Typography
+            sx={{
+              color: KslColors.textPrimary,
+              fontSize: { xs: KslFontSizes.md, md: KslFontSizes.lg },
+              fontWeight: 700,
+              lineHeight: 1.2,
+              minWidth: 0,
+            }}
+          >
+            {lesson?.word}
+          </Typography>
         </Stack>
 
         {/* Right: completed label + status icon */}

@@ -190,7 +190,6 @@ export default function WdLessonLearningView({
       {/* ── Main practice layout ─────────────────────────────────────── */}
       <WdLessonPracticeStep
         word={lesson.word}
-        wordEn={lesson.wordEn}
         tip={tip}
         locale={locale}
         nextLessonId={nextLessonId}
