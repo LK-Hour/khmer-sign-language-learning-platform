@@ -52,27 +52,24 @@ erDiagram
 		TIMESTAMPTZ revoked_at "NULL = active"
 	}
 
-	sign_user_lesson_progress {
+	word_detection_user_lesson_progress {
 		UUID id PK ""
-		UUID user_id FK "UK(user_id, sign_lesson_id)"
-		BIGINT sign_lesson_id FK ""
+		UUID user_id FK "UK(user_id, word_detection_lesson_id)"
+		BIGINT word_detection_lesson_id FK ""
 		BOOLEAN is_completed ""
 		BOOLEAN is_locked ""
-		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
 		INTEGER attempts "CHECK (>= 0)"
-		INTEGER total_time_spent "seconds"
-		TIMESTAMPTZ started_at ""
+		TIMESTAMPTZ last_practiced_at "DEFAULT NOW() — updated on every attempt"
 		TIMESTAMPTZ completed_at ""
-		TIMESTAMPTZ last_accessed_at ""
 		TIMESTAMPTZ created_at ""
 		TIMESTAMPTZ updated_at ""
 	}
 
-	sign_user_exercise_results {
+	word_detection_user_exercise_results {
 		UUID id PK ""
 		UUID user_id FK ""
-		BIGINT sign_exercise_id FK ""
-		UUID progress_id FK "-> sign_user_lesson_progress"
+		BIGINT word_detection_exercise_id FK ""
+		UUID progress_id FK "-> word_detection_user_lesson_progress"
 		BIGINT selected_option_id FK "nullable — for multiple choice"
 		TEXT selected_answer "nullable — for free_form"
 		BOOLEAN is_correct ""
@@ -89,7 +86,7 @@ erDiagram
 		TIMESTAMP updated_at  ""  
 	}
 
-	sign_units {
+	word_detection_units {
 		BIGINT id PK ""
 		VARCHAR name_en ""
 		VARCHAR name_kh UK ""
@@ -101,7 +98,7 @@ erDiagram
 		TIMESTAMPTZ updated_at ""
 	}
 
-	sign_chapters {
+	word_detection_chapters {
 		BIGINT id PK ""
 		BIGINT unit_id FK ""
 		VARCHAR name_en ""
@@ -114,7 +111,7 @@ erDiagram
 		TIMESTAMPTZ updated_at ""
 	}
 
-	sign_lessons {
+	word_detection_lessons {
 		BIGINT id PK ""
 		BIGINT chapter_id FK ""
 		VARCHAR name_en ""
@@ -127,7 +124,7 @@ erDiagram
 		TIMESTAMPTZ updated_at ""
 	}
 
-	sign_words {
+	word_detection_words {
 		BIGINT id PK ""
 		VARCHAR word_en ""
 		VARCHAR word_kh UK ""
@@ -138,7 +135,7 @@ erDiagram
 		TIMESTAMPTZ updated_at ""
 	}
 
-	sign_lesson_words {
+	word_detection_lesson_words {
 		BIGINT id PK ""
 		BIGINT lesson_id FK "UK(lesson_id, word_id)"
 		BIGINT word_id FK ""
@@ -146,18 +143,18 @@ erDiagram
 		TIMESTAMPTZ created_at ""
 	}
 
-	sign_word_medias {
+	word_detection_word_medias {
 		BIGINT id PK ""
 		BIGINT word_id FK ""
 		BIGINT media_id FK ""
 		TIMESTAMPTZ created_at ""
 	}
 
-	sign_practice_contributions {
+	word_detection_contributions {
 		UUID id PK ""
 		UUID user_id FK ""
 		BIGINT word_id FK "The specific sign demonstrated"
-		BIGINT sign_lesson_id FK "nullable — lesson context"
+		BIGINT word_detection_lesson_id FK "nullable — lesson context"
 		VARCHAR filename ""
 		BIGINT media_id FK ""
 		VARCHAR status "ENUM: pending|approved|rejected"
@@ -171,12 +168,12 @@ erDiagram
 		TIMESTAMPTZ updated_at ""
 	}
 
-	sign_exercises {
+	word_detection_exercises {
 		BIGINT id PK ""
 		BIGINT lesson_id FK ""
 		TEXT question_en ""
 		TEXT question_kh ""
-		VARCHAR exercise_type "ENUM: multiple_choice|free_form|video_select|matching"
+		VARCHAR exercise_type "ENUM: multiple_choice|free_form|image_select|matching"
 		BIGINT media_id FK "nullable — question media"
 		VARCHAR correct_answer "nullable — for free_form"
 		TEXT explanation_en ""
@@ -187,42 +184,18 @@ erDiagram
 		TIMESTAMPTZ updated_at ""
 	}
 
-	sign_exercise_options {
+	word_detection_exercise_options {
 		BIGINT id PK ""
 		BIGINT exercise_id FK ""
 		VARCHAR option_text_en ""
 		VARCHAR option_text_kh ""
-		BIGINT media_id FK "nullable — for video_select"
+		BIGINT media_id FK "nullable — for image_select"
 		BOOLEAN is_correct ""
 		INTEGER points "CHECK (>= 0)"
 		INTEGER order_index "UK(exercise_id, order_index)"
 		TIMESTAMPTZ created_at ""
 	}
 
-	sign_practice_sessions {
-		BIGINT id PK ""
-		UUID user_id FK ""
-		BIGINT lesson_id FK ""
-		BIGINT media_id FK "nullable — recorded webcam practice"
-		TIMESTAMPTZ started_at ""
-		TIMESTAMPTZ ended_at "CHECK (>= started_at)"
-		INTEGER duration "seconds, CHECK (>= 0)"
-		NUMERIC(5,2) average_accuracy "CHECK (BETWEEN 0 AND 100)"
-		NUMERIC(5,2) peak_accuracy "CHECK (BETWEEN 0 AND 100)"
-		BOOLEAN is_completed ""
-		TIMESTAMPTZ created_at ""
-	}
-
-	sign_practice_session_words {
-		BIGINT id PK ""
-		BIGINT session_id FK ""
-		BIGINT word_id FK ""
-		NUMERIC(5,2) accuracy "CHECK (BETWEEN 0 AND 100)"
-		INTEGER attempts "CHECK (>= 0)"
-		INTEGER time_spent_seconds "CHECK (>= 0)"
-		BIGINT media_id FK "nullable"
-		TIMESTAMPTZ created_at ""
-	}
 
 	finger_units {
 		BIGINT id PK ""
@@ -345,41 +318,35 @@ erDiagram
 
 	users ||--o{ user_oauth_providers : "authenticates via"
 	users ||--o{ user_sessions : "has"
-	users ||--o{ sign_user_lesson_progress : "tracks sign progress"
+	users ||--o{ word_detection_user_lesson_progress : "tracks sign progress"
 	users ||--o{ finger_user_lesson_progress : "tracks finger progress"
-	users ||--o{ sign_user_exercise_results : "records sign results"
+	users ||--o{ word_detection_user_exercise_results : "records sign results"
 	users ||--o{ finger_user_exercise_results : "records finger results"
-	users ||--o{ sign_practice_contributions : "submits"
-	users ||--o{ sign_practice_sessions : "practices"
+	users ||--o{ word_detection_contributions : "submits"
 	
 
-	sign_user_lesson_progress ||--o{ sign_user_exercise_results : "contains"
+	word_detection_user_lesson_progress ||--o{ word_detection_user_exercise_results : "contains"
 	finger_user_lesson_progress ||--o{ finger_user_exercise_results : "contains"
 
-	sign_lessons ||--o{ sign_user_lesson_progress : "tracks progress"
+	word_detection_lessons ||--o{ word_detection_user_lesson_progress : "tracks progress"
 	finger_lessons ||--o{ finger_user_lesson_progress : "tracks progress"
 
-	sign_exercises ||--o{ sign_user_exercise_results : "records result"
-	sign_exercise_options ||--o{ sign_user_exercise_results : "selected in"
+	word_detection_exercises ||--o{ word_detection_user_exercise_results : "records result"
+	word_detection_exercise_options ||--o{ word_detection_user_exercise_results : "selected in"
 
 	finger_exercises ||--o{ finger_user_exercise_results : "records result"
 	finger_exercise_options ||--o{ finger_user_exercise_results : "selected in"
 
-	sign_units ||--o{ sign_chapters : "contains"
-	sign_chapters ||--o{ sign_lessons : "contains"
-	sign_lessons ||--o{ sign_lesson_words : "teaches"
-	sign_words ||--o{ sign_lesson_words : "taught in"
+	word_detection_units ||--o{ word_detection_chapters : "contains"
+	word_detection_chapters ||--o{ word_detection_lessons : "contains"
+	word_detection_lessons ||--o{ word_detection_lesson_words : "teaches"
+	word_detection_words ||--o{ word_detection_lesson_words : "taught in"
 	
-	sign_lessons ||--o{ sign_exercises : "has"
-	sign_exercises ||--o{ sign_exercise_options : "offers"
+	word_detection_lessons ||--o{ word_detection_exercises : "has"
+	word_detection_exercises ||--o{ word_detection_exercise_options : "offers"
 	
-	medias ||--o{ sign_exercise_options : "used in"
-	medias ||--o{ sign_exercises : "used in question"
-	
-	sign_lessons ||--o{ sign_practice_sessions : "generates"
-	sign_practice_sessions ||--o{ sign_practice_session_words : "contains"
-	sign_words ||--o{ sign_practice_session_words : "practiced in"
-	medias ||--o{ sign_practice_session_words : "recorded for word"
+	medias ||--o{ word_detection_exercise_options : "used in"
+	medias ||--o{ word_detection_exercises : "used in question"
 	
 	finger_units ||--o{ finger_chapters : "contains"
 	finger_chapters ||--o{ finger_lessons : "contains"
@@ -392,14 +359,12 @@ erDiagram
 	medias ||--o{ finger_exercise_options : "used in"
 	medias ||--o{ finger_exercises : "used in question"
 	
-	sign_words ||--o{ sign_word_medias : "has media"
-	medias ||--o{ sign_word_medias : "used by words"
+	word_detection_words ||--o{ word_detection_word_medias : "has media"
+	medias ||--o{ word_detection_word_medias : "used by words"
 	
 	finger_letters ||--o{ finger_letter_medias : "has media"
 	medias ||--o{ finger_letter_medias : "used by letters"
 	
-	medias ||--o{ sign_practice_contributions : "submitted through"
-	sign_words ||--o{ sign_practice_contributions : "demonstrated in"
-	sign_lessons ||--o{ sign_practice_contributions : "referenced by"
-
-	medias ||--o{ sign_practice_sessions : "recorded as"
+	medias ||--o{ word_detection_contributions : "submitted through"
+	word_detection_words ||--o{ word_detection_contributions : "demonstrated in"
+	word_detection_lessons ||--o{ word_detection_contributions : "referenced by"

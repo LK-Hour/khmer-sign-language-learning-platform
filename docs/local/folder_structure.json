@@ -1,0 +1,1329 @@
+[
+  {
+    "id": 1,
+    "title": "កីឡា",
+    "titleKh": "កីឡា",
+    "category": "Sports",
+    "categoryKh": "កីឡា",
+    "orderIndex": 1,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 1,
+        "unitId": 1,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Sports vocabulary",
+        "descriptionKh": "ពាក្យកីឡា",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 1,
+            "chapterId": 1,
+            "word": "ទាត់បាល់",
+            "wordEn": "Football",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 2,
+            "chapterId": 1,
+            "word": "បាល់ទះ",
+            "wordEn": "Ball",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "គុណនាម",
+    "titleKh": "គុណនាម",
+    "category": "Adjectives",
+    "categoryKh": "គុណនាម",
+    "orderIndex": 2,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 2,
+        "unitId": 2,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Basic adjectives",
+        "descriptionKh": "គុណនាមមូលដ្ឋាន",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 3,
+            "chapterId": 2,
+            "word": "ក្រាស់",
+            "wordEn": "Thick",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "ទឹសដៅ",
+    "titleKh": "ទឹសដៅ",
+    "category": "Directions",
+    "categoryKh": "ទិសដៅ",
+    "orderIndex": 3,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 3,
+        "unitId": 3,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Core direction words",
+        "descriptionKh": "ពាក្យទិសដៅមូលដ្ឋាន",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 4,
+            "chapterId": 3,
+            "word": "កើត",
+            "wordEn": "East",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 5,
+            "chapterId": 3,
+            "word": "ឆ្វេង",
+            "wordEn": "Left",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 6,
+            "chapterId": 3,
+            "word": "ជើង",
+            "wordEn": "North",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 7,
+            "chapterId": 3,
+            "word": "ត្បូង",
+            "wordEn": "South",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 8,
+            "chapterId": 3,
+            "word": "លិច",
+            "wordEn": "West",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 9,
+            "chapterId": 3,
+            "word": "ស្ដាំ",
+            "wordEn": "Right",
+            "orderIndex": 6,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "unitId": 3,
+        "title": "Level_2",
+        "titleKh": "កម្រិត២",
+        "description": "Location and position",
+        "descriptionKh": "ទីតាំង និងទីកន្លែង",
+        "orderIndex": 2,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 10,
+            "chapterId": 4,
+            "word": "កណ្ដាល",
+            "wordEn": "Center",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 11,
+            "chapterId": 4,
+            "word": "កន្លែងណា",
+            "wordEn": "Where",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 12,
+            "chapterId": 4,
+            "word": "ទីតាំង",
+            "wordEn": "Location",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "សព្វនាម",
+    "titleKh": "សព្វនាម",
+    "category": "Pronouns",
+    "categoryKh": "សព្វនាម",
+    "orderIndex": 4,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 5,
+        "unitId": 4,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Personal pronouns",
+        "descriptionKh": "ពាក្យសព្វនាម",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 13,
+            "chapterId": 5,
+            "word": "ខ្ញុំ",
+            "wordEn": "I/Me",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 14,
+            "chapterId": 5,
+            "word": "គាត់",
+            "wordEn": "He/She",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 15,
+            "chapterId": 5,
+            "word": "ឈ្មោះ",
+            "wordEn": "Name",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 16,
+            "chapterId": 5,
+            "word": "ទី",
+            "wordEn": "Place/That",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 17,
+            "chapterId": 5,
+            "word": "អ្នក",
+            "wordEn": "You",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "ពេលវេលានិងទីកន្លែង",
+    "titleKh": "ពេលវេលានិងទីកន្លែង",
+    "category": "Time & Places",
+    "categoryKh": "ពេលវេលា និងទីកន្លែង",
+    "orderIndex": 5,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 6,
+        "unitId": 5,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Time and calendar basics",
+        "descriptionKh": "ពេលវេលា និងប្រតិទិនមូលដ្ឋាន",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 18,
+            "chapterId": 6,
+            "word": "ខែ",
+            "wordEn": "Month",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 19,
+            "chapterId": 6,
+            "word": "ឆ្នាំ",
+            "wordEn": "Year",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 20,
+            "chapterId": 6,
+            "word": "ថ្ងៃ",
+            "wordEn": "Day",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 21,
+            "chapterId": 6,
+            "word": "ថ្ងៃត្រង់",
+            "wordEn": "Noon",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 22,
+            "chapterId": 6,
+            "word": "ផ្សារ",
+            "wordEn": "Market",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 23,
+            "chapterId": 6,
+            "word": "ម៉ោង",
+            "wordEn": "Hour/Clock",
+            "orderIndex": 6,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "unitId": 5,
+        "title": "Level_2",
+        "titleKh": "កម្រិត២",
+        "description": "Specific times of day",
+        "descriptionKh": "ពេលវេលាក្នុងមួយថ្ងៃ",
+        "orderIndex": 2,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 24,
+            "chapterId": 7,
+            "word": "ពេលណា",
+            "wordEn": "When",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 25,
+            "chapterId": 7,
+            "word": "ពេលព្រឹក",
+            "wordEn": "Morning",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 26,
+            "chapterId": 7,
+            "word": "ពេលយប់",
+            "wordEn": "Night",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 27,
+            "chapterId": 7,
+            "word": "ពេលល្ងាច",
+            "wordEn": "Evening",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "ម្ហូបនិងភេសជ្ជៈ",
+    "titleKh": "ម្ហូបនិងភេសជ្ជៈ",
+    "category": "Food & Drinks",
+    "categoryKh": "ម្ហូប និងភេសជ្ជៈ",
+    "orderIndex": 6,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 8,
+        "unitId": 6,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Basic food and drink vocabulary",
+        "descriptionKh": "ពាក្យម្ហូប និងទឹកត្រូវទទួលទាន",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 28,
+            "chapterId": 8,
+            "word": "គុយទាវ",
+            "wordEn": "Noodles",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 29,
+            "chapterId": 8,
+            "word": "ម្ជូរ",
+            "wordEn": "Sour",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "unitId": 6,
+        "title": "Level_2",
+        "titleKh": "កម្រិត២",
+        "description": "Beverages",
+        "descriptionKh": "ភេសជ្ជៈ",
+        "orderIndex": 2,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 30,
+            "chapterId": 9,
+            "word": "ទឹកកក",
+            "wordEn": "Ice water",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 31,
+            "chapterId": 9,
+            "word": "ទឹកផ្លែឈើ",
+            "wordEn": "Fruit juice",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 32,
+            "chapterId": 9,
+            "word": "សម្លរ",
+            "wordEn": "Soup",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "សកម្មភាពប្រចាំថ្ងៃ",
+    "titleKh": "សកម្មភាពប្រចាំថ្ងៃ",
+    "category": "Daily Activities",
+    "categoryKh": "ប្រចាំថ្ងៃ",
+    "orderIndex": 7,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 10,
+        "unitId": 7,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Basic daily routines",
+        "descriptionKh": "ទម្លាប់ប្រចាំថ្ងៃមូលដ្ឋាន",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 33,
+            "chapterId": 10,
+            "word": "កក់សក់",
+            "wordEn": "Bath/Shower",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 34,
+            "chapterId": 10,
+            "word": "គេង",
+            "wordEn": "Sleep",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 35,
+            "chapterId": 10,
+            "word": "ញ៉ាំ",
+            "wordEn": "Eat",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 36,
+            "chapterId": 10,
+            "word": "ស្ងោរ",
+            "wordEn": "Rice paddy",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "unitId": 7,
+        "title": "Level_2",
+        "titleKh": "កម្រិត២",
+        "description": "Daily errands and actions",
+        "descriptionKh": "ការងារប្រចាំថ្ងៃ",
+        "orderIndex": 2,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 37,
+            "chapterId": 11,
+            "word": "ញ៉ាំបាយ",
+            "wordEn": "Eat rice/meal",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 38,
+            "chapterId": 11,
+            "word": "ទិញ",
+            "wordEn": "Buy",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 39,
+            "chapterId": 11,
+            "word": "ផឹកទឹក",
+            "wordEn": "Drink water",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "unitId": 7,
+        "title": "Level_3",
+        "titleKh": "កម្រិត៣",
+        "description": "Personal care",
+        "descriptionKh": "ការថែទាំខ្លួន",
+        "orderIndex": 3,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 40,
+            "chapterId": 12,
+            "word": "ងូតទឹក",
+            "wordEn": "Wash face",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "សម្ភារៈនៅផ្ទះ",
+    "titleKh": "សម្ភារៈនៅផ្ទះ",
+    "category": "Household",
+    "categoryKh": "ផ្ទះ",
+    "orderIndex": 8,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 13,
+        "unitId": 8,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "Basic household items",
+        "descriptionKh": "សម្ភារៈផ្ទះមូលដ្ឋាន",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 41,
+            "chapterId": 13,
+            "word": "កង់",
+            "wordEn": "Bicycle",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 42,
+            "chapterId": 13,
+            "word": "កញ្ចក់",
+            "wordEn": "Mirror",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 43,
+            "chapterId": 13,
+            "word": "កាបូប",
+            "wordEn": "Bag",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 44,
+            "chapterId": 13,
+            "word": "កែវ",
+            "wordEn": "Glass",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 45,
+            "chapterId": 13,
+            "word": "គ្រែ",
+            "wordEn": "Bed",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 46,
+            "chapterId": 13,
+            "word": "ចាន",
+            "wordEn": "Plate/Bowl",
+            "orderIndex": 6,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 47,
+            "chapterId": 13,
+            "word": "ច្រាសដុសធ្មេញ",
+            "wordEn": "Toothbrush",
+            "orderIndex": 7,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 48,
+            "chapterId": 13,
+            "word": "ទឹក",
+            "wordEn": "Water",
+            "orderIndex": 8,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 49,
+            "chapterId": 13,
+            "word": "ទឹកត្រី",
+            "wordEn": "Fish water",
+            "orderIndex": 9,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 50,
+            "chapterId": 13,
+            "word": "ទូរទស្សន៍",
+            "wordEn": "Television",
+            "orderIndex": 10,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 51,
+            "chapterId": 13,
+            "word": "នាឡិកា",
+            "wordEn": "Watch/Clock",
+            "orderIndex": 11,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 52,
+            "chapterId": 13,
+            "word": "បង្គន់",
+            "wordEn": "Mosquito net",
+            "orderIndex": 12,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 53,
+            "chapterId": 13,
+            "word": "វ៉ែនតា",
+            "wordEn": "Fan",
+            "orderIndex": 13,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 54,
+            "chapterId": 13,
+            "word": "អាវ",
+            "wordEn": "Shirt/Clothes",
+            "orderIndex": 14,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "unitId": 8,
+        "title": "Level_2",
+        "titleKh": "កម្រិត២",
+        "description": "More household items",
+        "descriptionKh": "សម្ភារៈផ្ទះបន្ថែម",
+        "orderIndex": 2,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 55,
+            "chapterId": 14,
+            "word": "កង្ហារ",
+            "wordEn": "Shoulder",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 56,
+            "chapterId": 14,
+            "word": "កន្ទេល",
+            "wordEn": "Pillow",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 57,
+            "chapterId": 14,
+            "word": "កាបូបប្រុស",
+            "wordEn": "Men's bag",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 58,
+            "chapterId": 14,
+            "word": "កៅស៊ូកង",
+            "wordEn": "Belt/Sash",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 59,
+            "chapterId": 14,
+            "word": "កំសៀវទឹក",
+            "wordEn": "Water heater",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 60,
+            "chapterId": 14,
+            "word": "ខោ",
+            "wordEn": "Pants",
+            "orderIndex": 6,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 61,
+            "chapterId": 14,
+            "word": "ខ្សែភ្លើង",
+            "wordEn": "Power cord",
+            "orderIndex": 7,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 62,
+            "chapterId": 14,
+            "word": "ឆ្នាំង",
+            "wordEn": "Pan/Pot",
+            "orderIndex": 8,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 63,
+            "chapterId": 14,
+            "word": "ថូផ្កា",
+            "wordEn": "Flower vase",
+            "orderIndex": 9,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 64,
+            "chapterId": 14,
+            "word": "ទឹកសុទ្ធ",
+            "wordEn": "Clean water",
+            "orderIndex": 10,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 65,
+            "chapterId": 14,
+            "word": "ធុងទឹក",
+            "wordEn": "Water bucket",
+            "orderIndex": 11,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 66,
+            "chapterId": 14,
+            "word": "មុង",
+            "wordEn": "Mosquito",
+            "orderIndex": 12,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 67,
+            "chapterId": 14,
+            "word": "សាប៊ូ",
+            "wordEn": "Soap",
+            "orderIndex": 13,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 68,
+            "chapterId": 14,
+            "word": "សោរ",
+            "wordEn": "Broom",
+            "orderIndex": 14,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 69,
+            "chapterId": 14,
+            "word": "ស្បែកជើង",
+            "wordEn": "Shoes",
+            "orderIndex": 15,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 70,
+            "chapterId": 14,
+            "word": "ឡាន",
+            "wordEn": "Car",
+            "orderIndex": 16,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 71,
+            "chapterId": 14,
+            "word": "អំពូលភ្លើង",
+            "wordEn": "Light bulb",
+            "orderIndex": 17,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "unitId": 8,
+        "title": "Level_3",
+        "titleKh": "កម្រិត៣",
+        "description": "Kitchen and dining",
+        "descriptionKh": "ផ្ទះបាយ និងទទួលទាន",
+        "orderIndex": 3,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 72,
+            "chapterId": 15,
+            "word": "ចានស្រាក់",
+            "wordEn": "Spoon",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 73,
+            "chapterId": 15,
+            "word": "ទូ",
+            "wordEn": "Cabinet/Drawer",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "unitId": 8,
+        "title": "Level_4",
+        "titleKh": "កម្រិត៤",
+        "description": "Bathroom and personal",
+        "descriptionKh": "បន្ទប់ទឹក និងការរក្សាសុខភាព",
+        "orderIndex": 4,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 74,
+            "chapterId": 16,
+            "word": "បន្ទប់ទឹក",
+            "wordEn": "Bathroom",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 75,
+            "chapterId": 16,
+            "word": "ភួយ",
+            "wordEn": "Pillow",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "title": "អប់រំ",
+    "titleKh": "អប់រំ",
+    "category": "Education",
+    "categoryKh": "សាលារៀន",
+    "orderIndex": 9,
+    "isLocked": false,
+    "chapters": [
+      {
+        "id": 17,
+        "unitId": 9,
+        "title": "Level_1",
+        "titleKh": "កម្រិត១",
+        "description": "School vocabulary basics",
+        "descriptionKh": "ពាក្យសាលាមូលដ្ឋាន",
+        "orderIndex": 1,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 76,
+            "chapterId": 17,
+            "word": "កៅអី",
+            "wordEn": "Chair",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 77,
+            "chapterId": 17,
+            "word": "ជ័រលុប",
+            "wordEn": "Eraser",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 78,
+            "chapterId": 17,
+            "word": "តុ",
+            "wordEn": "Desk/Table",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 79,
+            "chapterId": 17,
+            "word": "នាយករង",
+            "wordEn": "Principal",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 80,
+            "chapterId": 17,
+            "word": "បន្ទាត់",
+            "wordEn": "Line/Row",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "unitId": 9,
+        "title": "Level_2",
+        "titleKh": "កម្រិត២",
+        "description": "School supplies and subjects",
+        "descriptionKh": "សម្ភារៈសិក្សា និងមុខវិជ្ជា",
+        "orderIndex": 2,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 81,
+            "chapterId": 18,
+            "word": "កាតាប",
+            "wordEn": "Card",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 82,
+            "chapterId": 18,
+            "word": "កាតាបស្ពាយក្រោយ",
+            "wordEn": "Postcard",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 83,
+            "chapterId": 18,
+            "word": "កុំព្យូទ័រ",
+            "wordEn": "Computer",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 84,
+            "chapterId": 18,
+            "word": "ក្ដារខៀន",
+            "wordEn": "Whiteboard marker",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 85,
+            "chapterId": 18,
+            "word": "ខ្មៅដៃ",
+            "wordEn": "Blackboard",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 86,
+            "chapterId": 18,
+            "word": "ដីស",
+            "wordEn": "Disk",
+            "orderIndex": 6,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 87,
+            "chapterId": 18,
+            "word": "ទឹកលុប",
+            "wordEn": "Tissue",
+            "orderIndex": 7,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 88,
+            "chapterId": 18,
+            "word": "ប៊ិក",
+            "wordEn": "Pen",
+            "orderIndex": 8,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 89,
+            "chapterId": 18,
+            "word": "លោកនាយក",
+            "wordEn": "Mr/Director",
+            "orderIndex": 9,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 90,
+            "chapterId": 18,
+            "word": "សាលារៀន",
+            "wordEn": "School",
+            "orderIndex": 10,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 91,
+            "chapterId": 18,
+            "word": "សៀវភៅ",
+            "wordEn": "Book",
+            "orderIndex": 11,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "unitId": 9,
+        "title": "Level_3",
+        "titleKh": "កម្រិត៣",
+        "description": "People and roles in education",
+        "descriptionKh": "មនុស្ស និងតួនាទីក្នុងការអប់រំ",
+        "orderIndex": 3,
+        "isLocked": false,
+        "lessons": [
+          {
+            "id": 92,
+            "chapterId": 19,
+            "word": "នាយិកា",
+            "wordEn": "Female principal",
+            "orderIndex": 1,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 93,
+            "chapterId": 19,
+            "word": "ប៊ិកក្រហម",
+            "wordEn": "Red pen",
+            "orderIndex": 2,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 94,
+            "chapterId": 19,
+            "word": "ប៊ិកខៀវ",
+            "wordEn": "Blue pen",
+            "orderIndex": 3,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 95,
+            "chapterId": 19,
+            "word": "លោកគ្រូ",
+            "wordEn": "Male teacher",
+            "orderIndex": 4,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 96,
+            "chapterId": 19,
+            "word": "សៀវភៅពុម្ភ",
+            "wordEn": "Notebook",
+            "orderIndex": 5,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 97,
+            "chapterId": 19,
+            "word": "ហ្វឺតក្រហម",
+            "wordEn": "Red shoe",
+            "orderIndex": 6,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 98,
+            "chapterId": 19,
+            "word": "ហ្វឺតខៀវ",
+            "wordEn": "Blue shoe",
+            "orderIndex": 7,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 99,
+            "chapterId": 19,
+            "word": "ហ្វឺតខ្មៅ",
+            "wordEn": "Brown shoe",
+            "orderIndex": 8,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          },
+          {
+            "id": 100,
+            "chapterId": 19,
+            "word": "អ្នកគ្រូ",
+            "wordEn": "Female teacher",
+            "orderIndex": 9,
+            "progressStatus": "NOT_STARTED",
+            "progressPercent": 0,
+            "isLocked": false
+          }
+        ]
+      }
+    ]
+  }
+]
