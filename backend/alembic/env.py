@@ -30,6 +30,17 @@ from src.models import (  # noqa: F401
     FingerExerciseOption,
     FingerUserLessonProgress,
     FingerUserExerciseResult,
+    WordDetectionUnit,
+    WordDetectionChapter,
+    WordDetectionLesson,
+    WordDetectionWord,
+    WordDetectionLessonWord,
+    WordDetectionWordMedia,
+    WordDetectionExercise,
+    WordDetectionExerciseOption,
+    WordDetectionUserLessonProgress,
+    WordDetectionUserExerciseResult,
+    WordDetectionContribution,
 )
 
 config = context.config
