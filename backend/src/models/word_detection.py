@@ -119,6 +119,9 @@ class WordDetectionLesson(Base):
     exercises: Mapped[List["WordDetectionExercise"]] = relationship(
         back_populates="lesson", cascade="all, delete-orphan"
     )
+    contributions: Mapped[List["WordDetectionContribution"]] = relationship(
+        back_populates="lesson"
+    )
 
     __table_args__ = (
         UniqueConstraint("chapter_id", "order_index", name="uq_word_detection_lessons_chapter_id_order_index"),
@@ -147,6 +150,9 @@ class WordDetectionWord(Base):
         back_populates="word", cascade="all, delete-orphan"
     )
     word_medias: Mapped[List["WordDetectionWordMedia"]] = relationship(
+        back_populates="word", cascade="all, delete-orphan"
+    )
+    contributions: Mapped[List["WordDetectionContribution"]] = relationship(
         back_populates="word", cascade="all, delete-orphan"
     )
 
@@ -336,7 +342,7 @@ class WordDetectionUserExerciseResult(Base):
 
     # Relationships
     exercise: Mapped["WordDetectionExercise"] = relationship(back_populates="user_results")
-    user: Mapped["User"] = relationship(
+    user: Mapped[User] = relationship(
         back_populates="word_detection_exercise_results", foreign_keys=[user_id]
     )
     progress: Mapped["WordDetectionUserLessonProgress"] = relationship(back_populates="exercise_results")
@@ -348,4 +354,49 @@ class WordDetectionUserExerciseResult(Base):
         Index("ix_word_detection_user_exercise_results_user_id", "user_id"),
         Index("ix_word_detection_user_exercise_results_progress_id", "progress_id"),
         Index("ix_word_detection_user_exercise_results_exercise_id", "word_detection_exercise_id"),
+    )
+
+
+# ==================== CONTRIBUTIONS ====================
+
+class WordDetectionContribution(Base):
+    """User-submitted sign language contributions for words."""
+    __tablename__ = "word_detection_contributions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    word_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("word_detection_words.id"), nullable=False)
+    word_detection_lesson_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("word_detection_lessons.id")
+    )
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
+    review_notes: Mapped[Optional[str]] = mapped_column(Text)
+    reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    rejection_reason: Mapped[Optional[str]] = mapped_column(Text)
+    consent_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    consent_given: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    user: Mapped["User"] = relationship(
+        back_populates="word_detection_contributions",
+        foreign_keys=[user_id],
+    )
+    word: Mapped["WordDetectionWord"] = relationship(back_populates="contributions")
+    lesson: Mapped[Optional["WordDetectionLesson"]] = relationship(back_populates="contributions")
+    media: Mapped[Optional["Media"]] = relationship(
+        back_populates="word_detection_contributions",
+        foreign_keys=[media_id],
+    )
+    reviewer: Mapped[Optional["User"]] = relationship(foreign_keys=[reviewed_by])
+
+    __table_args__ = (
+        Index("ix_word_detection_contributions_word_id", "word_id"),
+        Index("ix_word_detection_contributions_lesson_id", "word_detection_lesson_id"),
+        Index("ix_word_detection_contributions_media_id", "media_id"),
+        Index("ix_word_detection_contributions_status", "status"),
     )

@@ -39,6 +39,8 @@ from .word_detection import (
     # Progress
     WordDetectionUserLessonProgress,
     WordDetectionUserExerciseResult,
+    # Contributions
+    WordDetectionContribution,
 )
 
 __all__ = [
@@ -73,4 +75,5 @@ __all__ = [
     "WordDetectionExerciseOption",
     "WordDetectionUserLessonProgress",
     "WordDetectionUserExerciseResult",
+    "WordDetectionContribution",
 ]

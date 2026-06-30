@@ -40,3 +40,15 @@ class User(Base):
     word_detection_exercise_results = relationship(
         "WordDetectionUserExerciseResult", back_populates="user", cascade="all, delete-orphan"
     )
+    
+    # Word detection contributions
+    word_detection_contributions = relationship(
+        "WordDetectionContribution",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="WordDetectionContribution.user_id",
+    )
+    reviewed_word_detection_contributions = relationship(
+        "WordDetectionContribution",
+        foreign_keys="WordDetectionContribution.reviewed_by",
+    )
