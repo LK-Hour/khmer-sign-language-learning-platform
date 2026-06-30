@@ -6,10 +6,10 @@ type BackendDictionaryWord = {
   id: number;
   text_en: string;
   text_kh: string;
+  entry_type: "character" | "word";
   media_url?: string | null;
   video_url?: string | null;
   category?: string | null;
-  entry_type?: "character" | "word" | null;
   description?: string | null;
   lesson_id?: number | null;
 };
@@ -23,17 +23,22 @@ type BackendDictionaryListResponse = {
   word_count: number;
 };
 
+function resolveMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return resolveApiAssetUrl(url) ?? url;
+}
+
 function normalizeWord(raw: BackendDictionaryWord): DictionaryWord {
   return {
-    id: raw?.id,
-    textEn: raw?.text_en,
-    textKh: raw?.text_kh,
-    mediaUrl: resolveApiAssetUrl(raw?.media_url ?? undefined) ?? null,
-    videoUrl: resolveApiAssetUrl(raw?.video_url ?? undefined) ?? null,
-    category: raw?.category ?? null,
-    entryType: raw?.entry_type ?? "character",
-    description: raw?.description ?? null,
-    lessonId: raw?.lesson_id ?? null,
+    id: raw.id,
+    textEn: raw.text_en,
+    textKh: raw.text_kh,
+    entryType: raw.entry_type,
+    mediaUrl: resolveMediaUrl(raw.media_url),
+    videoUrl: resolveMediaUrl(raw.video_url),
+    category: raw.category ?? null,
+    description: raw.description ?? null,
+    lessonId: raw.lesson_id ?? null,
   };
 }
 

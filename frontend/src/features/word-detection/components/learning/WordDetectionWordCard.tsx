@@ -1,7 +1,12 @@
 "use client";
 
 import { Stack } from "@mui/material";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import PlayButton from "@/components/ui/PlayButton";
 import { KslColors, KslRadii, KslShadows } from "@/theme/theme";
+
+const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
 type WdWordCardProps = {
   videoUrl: string;
@@ -9,6 +14,12 @@ type WdWordCardProps = {
 };
 
 export default function WdWordCard({ videoUrl, wordEn }: WdWordCardProps) {
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    setHasStarted(false);
+  }, [videoUrl]);
+
   return (
     <Stack
       sx={{
@@ -19,19 +30,48 @@ export default function WdWordCard({ videoUrl, wordEn }: WdWordCardProps) {
         overflow: "hidden",
         boxShadow: KslShadows.drop,
         bgcolor: KslColors.primaryLight,
+        "& video": {
+          objectFit: "cover",
+        },
+        "& .react-player__preview": {
+          backgroundSize: "cover !important",
+        },
       }}
     >
-      <video
+      <ReactPlayer
         src={videoUrl}
-        controls
-        playsInline
+        light={!hasStarted}
+        playIcon={
+          <Stack
+            aria-hidden
+            sx={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+              bgcolor: "rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            <PlayButton size={72} />
+          </Stack>
+        }
+        playing={hasStarted}
+        muted
         loop
-        aria-label={`Sign language video sample for ${wordEn}`}
+        playsInline
+        controls={false}
+        width="100%"
+        height="100%"
+        previewAriaLabel={`Play sign language video sample for ${wordEn}`}
+        {...(!hasStarted && {
+          onClickPreview: () => setHasStarted(true),
+        })}
         style={{
+          position: "absolute",
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          display: "block",
+          inset: 0,
         }}
       />
     </Stack>

@@ -48,10 +48,9 @@ function entryAccent(entryType: DictionaryWord["entryType"]) {
 
 export default function DictionaryEntryCard({ word }: DictionaryEntryCardProps) {
   const { t } = useTranslation();
-  const entryType = word?.entryType ?? "character";
   const { primary, secondary } = useDictionaryWordLabels(word);
-  const href = ROUTES.dictionaryWord(word?.id);
-  const accent = entryAccent(entryType);
+  const href = ROUTES.dictionaryWord(word.id);
+  const accent = entryAccent(word.entryType);
   const chipLabel = useDictionaryChipLabel(word);
 
   return (
@@ -130,7 +129,7 @@ export default function DictionaryEntryCard({ word }: DictionaryEntryCardProps) 
                 </Typography>
               ) : null}
 
-              {word?.description ? (
+              {word.description ? (
                 <Typography
                   sx={{
                     mt: 0.5,
@@ -143,7 +142,7 @@ export default function DictionaryEntryCard({ word }: DictionaryEntryCardProps) 
                     overflow: "hidden",
                   }}
                 >
-                  {word?.description}
+                  {word.description}
                 </Typography>
               ) : null}
             </Stack>

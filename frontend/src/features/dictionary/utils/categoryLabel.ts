@@ -15,16 +15,15 @@ const UNIT_CATEGORY_KEYS: Record<string, TranslationKey> = {
 export function getDictionaryCategoryKey(
   word: DictionaryWord
 ): TranslationKey | null {
-  if (!word?.category) return null;
-  return UNIT_CATEGORY_KEYS[word?.category] ?? null;
+  if (!word.category) return null;
+  return UNIT_CATEGORY_KEYS[word.category] ?? null;
 }
 
 export function getDictionaryChipKey(word: DictionaryWord): TranslationKey {
   const categoryKey = getDictionaryCategoryKey(word);
   if (categoryKey) return categoryKey;
 
-  const entryType = word?.entryType ?? "character";
-  return entryType === "word"
+  return word.entryType === "word"
     ? "DICTIONARY.LIST.TYPE_WORD"
     : "DICTIONARY.LIST.TYPE_CHARACTER";
 }

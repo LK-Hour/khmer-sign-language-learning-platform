@@ -112,10 +112,10 @@ class DictionaryService:
             id=letter.id,
             text_en=text_en,
             text_kh=letter.letter_kh,
+            entry_type="character",
             media_url=row.media.file_url if row.media else None,
             video_url=None,
             category=unit.name_en if unit else None,
-            entry_type="character",
             description=description,
             lesson_id=row.lesson.id if row.lesson else None,
         )

@@ -23,8 +23,6 @@ import {
   KslRadii,
 } from "@/theme/theme";
 
-const FALLBACK_MEDIA = "/finger-spelling/placeholder-sign.svg";
-
 type DictionaryWordDetailProps = {
   word: DictionaryWord;
 };
@@ -116,19 +114,21 @@ function InfoRow({ label, value, showDivider = true }: InfoRowProps) {
 export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps) {
   const { t, locale } = useTranslation();
   const { primary, secondary } = useDictionaryWordLabels(word);
-  const mediaSrc = word?.videoUrl ?? word?.mediaUrl ?? FALLBACK_MEDIA;
-  const isVideo = Boolean(word?.videoUrl);
-  const entryType = word?.entryType ?? "character";
+  const isVideo = Boolean(word.videoUrl);
+  const mediaSrc = word.videoUrl ?? word.mediaUrl ?? null;
   const typeLabel =
-    entryType === "character" ? t("DICTIONARY.LIST.TYPE_CHARACTER") : t("DICTIONARY.LIST.TYPE_WORD");
+    word.entryType === "character"
+      ? t("DICTIONARY.LIST.TYPE_CHARACTER")
+      : t("DICTIONARY.LIST.TYPE_WORD");
   const eyebrow =
-    entryType === "character"
+    word.entryType === "character"
       ? t("DICTIONARY.DETAIL.CHARACTER_EYEBROW")
       : t("DICTIONARY.DETAIL.WORD_EYEBROW");
-  const subtitle = word?.description ?? secondary ?? "";
-  const practiceHref = word?.lessonId
-    ? `/${locale}${ROUTES.fingerSpelling.lesson(word?.lessonId)}`
-    : null;
+  const subtitle = word.description ?? secondary ?? "";
+  const practiceHref =
+    word.lessonId != null
+      ? `/${locale}${ROUTES.fingerSpelling.lesson(word.lessonId)}`
+      : null;
 
   return (
     <Stack spacing={{ xs: 3, md: 4 }} sx={{ width: "100%" }}>
@@ -220,43 +220,66 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
               border: `1px solid ${KslPalette.primary.light}`,
             }}
           >
-            {isVideo ? (
-              <video
-                src={mediaSrc}
-                controls
-                playsInline
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
+            {mediaSrc ? (
+              isVideo ? (
+                <video
+                  src={mediaSrc}
+                  controls
+                  playsInline
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              ) : (
+                <Stack
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                  }}
+                >
+                  <Stack
+                    sx={{
+                      position: "relative",
+                      width: "100%",
+                      height: "100%",
+                    }}
+                  >
+                    <Image
+                      src={mediaSrc}
+                      alt={word.textEn}
+                      fill
+                      sizes="(max-width: 900px) 100vw, (max-width: 1200px) 66vw, 800px"
+                      style={{
+                        objectFit: "cover",
+                      }}
+                      priority
+                    />
+                  </Stack>
+                </Stack>
+              )
             ) : (
               <Stack
                 sx={{
-                  position: "absolute",
-                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  px: 3,
                 }}
               >
-                <Stack
+                <Typography
                   sx={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
+                    fontSize: KslFontSizes.md,
+                    lineHeight: KslLineHeights.md,
+                    color: KslColors.textSecondary,
+                    textAlign: "center",
                   }}
                 >
-                  <Image
-                    src={mediaSrc}
-                    alt={word?.textEn}
-                    fill
-                    sizes="(max-width: 900px) 100vw, (max-width: 1200px) 66vw, 800px"
-                    style={{
-                      objectFit: "cover",
-                    }}
-                    priority
-                  />
-                </Stack>
+                  {t("DICTIONARY.DETAIL.MEDIA_UNAVAILABLE")}
+                </Typography>
               </Stack>
             )}
           </Paper>

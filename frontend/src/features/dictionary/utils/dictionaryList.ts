@@ -57,9 +57,9 @@ function dictionaryUnitRank(category: string | null | undefined): number {
 
 function dictionaryLetterIndex(
   category: string | null | undefined,
-  textKh: string | null | undefined,
+  textKh: string,
 ): number {
-  const normalized = (textKh ?? "").trim();
+  const normalized = textKh.trim();
   if (!normalized) return 9999;
   return LETTER_INDEX.get(`${category ?? ""}:${normalized}`) ?? 9999;
 }
@@ -68,7 +68,7 @@ function dictionarySortKey(word: DictionaryWord): [number, number, string] {
   return [
     dictionaryUnitRank(word.category),
     dictionaryLetterIndex(word.category, word.textKh),
-    word.textKh ?? "",
+    word.textKh,
   ];
 }
 
@@ -107,7 +107,7 @@ export function matchesDictionaryType(
   entryType: DictionaryTypeFilter,
 ): boolean {
   if (entryType === "all") return true;
-  return (word.entryType ?? "character") === entryType;
+  return word.entryType === entryType;
 }
 
 export function filterDictionaryWords(
@@ -154,7 +154,7 @@ export function countDictionaryEntryTypes(words: DictionaryWord[]): {
   let wordCount = 0;
 
   for (const word of words) {
-    if ((word.entryType ?? "character") === "word") {
+    if (word.entryType === "word") {
       wordCount += 1;
     } else {
       characterCount += 1;

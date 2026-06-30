@@ -21,6 +21,5 @@ export function useDictionaryEntryLabels(
 }
 
 export function useDictionaryWordLabels(word: DictionaryWord) {
-  const entryType = word?.entryType ?? "character";
-  return useDictionaryEntryLabels(word?.textEn, word?.textKh, entryType);
+  return useDictionaryEntryLabels(word.textEn, word.textKh, word.entryType);
 }

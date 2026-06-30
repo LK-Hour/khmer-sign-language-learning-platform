@@ -4,12 +4,12 @@ export interface DictionaryWord {
   id: number;
   textEn: string;
   textKh: string;
+  entryType: DictionaryEntryType;
   /** Image or video poster URL */
   mediaUrl?: string | null;
-  /** When set, detail view plays sign video */
+  /** When set, detail view plays sign video instead of the image */
   videoUrl?: string | null;
   category?: string | null;
-  entryType?: DictionaryEntryType | null;
   description?: string | null;
   /** Linked finger-spelling lesson for practice */
   lessonId?: number | null;
