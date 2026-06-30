@@ -3,7 +3,7 @@ import { PageContainer } from "@/components/layout";
 import {
   fetchWdChapter,
   fetchWdLesson,
-  fetchWdLessonsInChapter,
+  fetchWdLessons,
   fetchWdUnit,
 } from "@/features/word-detection/api/curriculum";
 import { getNextLessonInChapter } from "@/features/word-detection/utils/progress";
@@ -18,16 +18,16 @@ export default async function WordDetectionLessonPage({ params }: PageProps) {
   const id = Number(lessonId);
   if (Number.isNaN(id)) notFound();
 
-  const lesson = fetchWdLesson(id);
+  const lesson = await fetchWdLesson(id);
   if (!lesson) notFound();
 
   const [chapterLessons, chapter] = await Promise.all([
-    fetchWdLessonsInChapter(lesson.chapterId),
+    fetchWdLessons(lesson.chapterId),
     fetchWdChapter(lesson.chapterId),
   ]);
   if (!chapter) notFound();
 
-  const unit = fetchWdUnit(chapter.unitId);
+  const unit = await fetchWdUnit(chapter.unitId);
   if (!unit) notFound();
 
   const nextLesson = getNextLessonInChapter(chapterLessons, lesson.id);
