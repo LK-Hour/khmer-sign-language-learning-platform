@@ -13,20 +13,27 @@ import {
   type WordDetectionLandmarks,
 } from "@/features/word-detection/ml/useWordDetectionLandmarker";
 import { useWordRealtimePredictor } from "@/features/word-detection/ml/useWordRealtimePredictor";
+import { useWordDetectionPracticeActions } from "@/features/word-detection/hooks/useWordDetectionPracticeActions";
 import { WORD_DETECTION_PASS_THRESHOLD } from "@/features/word-detection/store/constants";
 import { KslColors } from "@/theme/theme";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import WdLessonPracticeStep from "./WordDetectionLessonPracticeStep";
 
-const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 200;
-const WORD_AUTO_CAPTURE_FRAMES = 6;
-const WORD_MIN_LIVE_CONFIDENCE = 30;
+const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 100;
+/** Consecutive live frames matching the target word at >= pass threshold
+ *  before we latch a "passed" result (avoids a single flicker frame passing). */
+const WORD_PASS_STABLE_FRAMES = 4;
+/** Consecutive hand-present samples required before we start streaming, to
+ *  avoid a single flicker frame triggering a phantom prediction. */
+const WORD_HAND_WARMUP_FRAMES = 0;
 const WORD_SEQUENCE_FEATURE_COUNT =
   WORD_DETECTION_SEQUENCE_LENGTH * WORD_DETECTION_TOTAL_FEATURES;
 
 const EMPTY_WORD_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
+  handDetected: false,
   frameFeatures: new Float32Array(0),
   sequenceFeatures: null,
 };
@@ -45,16 +52,19 @@ export default function WdLessonLearningView({
   nextLessonId,
 }: WdLessonLearningViewProps) {
   const { locale, t } = useTranslation();
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const latestDetectionRef = useRef<WordDetectionLandmarks>(EMPTY_WORD_DETECTION);
-  const stableLabelRef = useRef<string | null>(null);
-  const stableCountRef = useRef(0);
+  const passStreakRef = useRef(0);
+  const handPresentCountRef = useRef(0);
   const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [recError, setRecError] = useState<string | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;
     confidence: number;
   } | null>(null);
+  const { completePractice } = useWordDetectionPracticeActions();
   const {
     detectLandmarks,
     resetSequence,
@@ -86,10 +96,39 @@ export default function WdLessonLearningView({
     latestDetectionRef.current = detection;
   }, []);
 
+  const handleContinue = useCallback(async () => {
+    if (isCompleting) return;
+
+    setIsCompleting(true);
+    const accuracy = capturedPrediction?.confidence ?? null;
+    const completed = await completePractice(lesson, accuracy);
+    setIsCompleting(false);
+
+    if (!completed) {
+      setRecError(t("WORD_DETECTION.LESSON.PROGRESS_SYNC_FAILED"));
+      return;
+    }
+
+    if (nextLessonId != null) {
+      router.push(`/${locale}${ROUTES.words.lesson(nextLessonId)}`);
+    } else {
+      router.push(`/${locale}${ROUTES.words.root}`);
+    }
+  }, [
+    capturedPrediction,
+    completePractice,
+    isCompleting,
+    lesson,
+    locale,
+    nextLessonId,
+    router,
+    t,
+  ]);
+
   const resetPredictionState = useCallback(() => {
     latestDetectionRef.current = EMPTY_WORD_DETECTION;
-    stableLabelRef.current = null;
-    stableCountRef.current = 0;
+    passStreakRef.current = 0;
+    handPresentCountRef.current = 0;
     setCapturedPrediction(null);
     setRecError(null);
     resetSequence();
@@ -119,7 +158,20 @@ export default function WdLessonLearningView({
     }
 
     samplingLoopRef.current = setInterval(() => {
-      const sequenceFeatures = latestDetectionRef.current.sequenceFeatures;
+      const detection = latestDetectionRef.current;
+
+      // Require the hand to be present for a few consecutive samples before
+      // streaming, so a single flicker frame can't trigger a phantom result.
+      if (!detection.handDetected) {
+        handPresentCountRef.current = 0;
+        return;
+      }
+      handPresentCountRef.current += 1;
+      if (handPresentCountRef.current < WORD_HAND_WARMUP_FRAMES) {
+        return;
+      }
+
+      const sequenceFeatures = detection.sequenceFeatures;
       if (!sequenceFeatures || sequenceFeatures.length !== WORD_SEQUENCE_FEATURE_COUNT) {
         return;
       }
@@ -136,33 +188,34 @@ export default function WdLessonLearningView({
   }, [isLandmarkerReady, predictorState, sendFeatures]);
 
   useEffect(() => {
+    // Once a passing result is latched, stop re-evaluating so the captured
+    // snapshot (and the enabled Continue button) stays stable.
+    if (capturedPrediction) return;
+
     const pred = livePrediction;
-    if (
-      !pred.label ||
-      pred.label === "No Action" ||
-      pred.confidence < WORD_MIN_LIVE_CONFIDENCE
-    ) {
-      stableLabelRef.current = null;
-      stableCountRef.current = 0;
+    // NOTE: target-word matching is intentionally disabled — we latch on
+    // confidence alone for any real live prediction.
+    // const targetWord = lesson.word.trim();
+    const matchesTarget =
+      !!pred.label &&
+      pred.label !== "No Action" &&
+      // pred.label.trim() === targetWord &&
+      pred.confidence >= WORD_DETECTION_PASS_THRESHOLD;
+
+    if (!matchesTarget) {
+      passStreakRef.current = 0;
       return;
     }
 
-    if (pred.label === stableLabelRef.current) {
-      stableCountRef.current += 1;
-      if (stableCountRef.current >= WORD_AUTO_CAPTURE_FRAMES) {
-        setCapturedPrediction({
-          label: pred.label,
-          confidence: pred.confidence,
-        });
-        stableLabelRef.current = null;
-        stableCountRef.current = 0;
-      }
-      return;
+    passStreakRef.current += 1;
+    if (passStreakRef.current >= WORD_PASS_STABLE_FRAMES) {
+      setCapturedPrediction({
+        label: pred.label as string,
+        confidence: pred.confidence,
+      });
+      passStreakRef.current = 0;
     }
-
-    stableLabelRef.current = pred.label;
-    stableCountRef.current = 1;
-  }, [livePrediction]);
+  }, [livePrediction, capturedPrediction, lesson.word]);
 
   return (
     <Stack spacing={3} sx={{ pb: 6 }}>
@@ -190,6 +243,7 @@ export default function WdLessonLearningView({
       {/* ── Main practice layout ─────────────────────────────────────── */}
       <WdLessonPracticeStep
         word={lesson.word}
+        videoUrl={lesson.videoUrl}
         tip={tip}
         locale={locale}
         nextLessonId={nextLessonId}
@@ -202,6 +256,8 @@ export default function WdLessonLearningView({
         liveConfidence={livePrediction.confidence}
         predictorReady={predictorState === "ready"}
         recError={recError ?? landmarkerError ?? predictorError}
+        isContinuing={isCompleting}
+        onContinue={handleContinue}
         videoRef={videoRef}
         detectLandmarks={detectLandmarks}
         isLandmarkerReady={isLandmarkerReady}

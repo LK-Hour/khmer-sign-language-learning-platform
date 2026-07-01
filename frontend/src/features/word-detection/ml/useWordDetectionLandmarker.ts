@@ -27,6 +27,7 @@ const EMPTY_FRAME_FEATURES = new Float32Array(WORD_DETECTION_POSITION_FEATURES);
 const EMPTY_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
+  handDetected: false,
   frameFeatures: EMPTY_FRAME_FEATURES,
   sequenceFeatures: null,
 };
@@ -36,6 +37,8 @@ export type WordDetectionLandmarks = {
   poseLandmarks: NormalizedLandmark[];
   /** Up to two hands, 21 landmarks each. */
   handLandmarks: NormalizedLandmark[][];
+  /** True when at least one hand was detected in this frame. */
+  handDetected: boolean;
   /** Current frame positions: left hand 63 + right hand 63. */
   frameFeatures: Float32Array;
   /** Flattened row-major (30, 252) sequence, or null before any valid frame. */
@@ -265,6 +268,21 @@ export function useWordDetectionLandmarker() {
       const handResult = handLandmarker.detect(imageData);
       const handLandmarks = handResult.landmarks ?? [];
       const handedness = handResult.handedness ?? handResult.handednesses ?? [];
+      const handDetected = handLandmarks.length > 0;
+
+      // Only accumulate real motion frames. Feeding all-zero frames (no hand)
+      // into the sequence makes the model emit a phantom default prediction,
+      // so we skip frames where no hand is present.
+      if (!handDetected) {
+        return {
+          poseLandmarks: [],
+          handLandmarks,
+          handDetected: false,
+          frameFeatures: EMPTY_FRAME_FEATURES,
+          sequenceFeatures: buildSequenceFeatures(sequenceFramesRef.current),
+        };
+      }
+
       const frameFeatures = extractFrameFeatures(handLandmarks, handedness);
       sequenceFramesRef.current.push(frameFeatures);
       const sequenceFeatures = buildSequenceFeatures(sequenceFramesRef.current);
@@ -272,6 +290,7 @@ export function useWordDetectionLandmarker() {
       return {
         poseLandmarks: [],
         handLandmarks,
+        handDetected: true,
         frameFeatures,
         sequenceFeatures,
       };

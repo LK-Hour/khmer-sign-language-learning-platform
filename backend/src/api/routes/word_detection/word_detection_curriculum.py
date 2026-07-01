@@ -192,6 +192,7 @@ def list_lessons(
     result: list[WdLessonResponse] = []
     for lesson in lessons:
         word = curriculum.curriculum.get_primary_word_for_lesson(lesson.id)
+        medias = curriculum.curriculum.list_medias_for_word(word.id) if word else []
         result.append(
             to_wd_lesson(
                 lesson=lesson,
@@ -201,6 +202,7 @@ def list_lessons(
                 order_index=lesson.order_index,
                 user_id=user_id,
                 progress=progress,
+                medias=medias,
             )
         )
     return result

@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { Button, Grid, Paper, Stack, Typography } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
+import { Grid, Paper, Stack, Typography } from "@mui/material";
 import type { RefObject } from "react";
-import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
@@ -20,6 +19,7 @@ const VISUAL_FRAME_SX = {
 
 type WordDetectionLessonPracticeStepProps = {
   word: string;
+  videoUrl?: string | null;
   tip?: string | null;
   locale: string;
   nextLessonId?: number;
@@ -32,6 +32,8 @@ type WordDetectionLessonPracticeStepProps = {
   liveConfidence?: number;
   predictorReady?: boolean;
   recError?: string | null;
+  isContinuing?: boolean;
+  onContinue: () => void | Promise<void>;
   videoRef?: RefObject<HTMLVideoElement | null>;
   detectLandmarks: Parameters<typeof WdCameraPanel>[0]["detectLandmarks"];
   isLandmarkerReady: boolean;
@@ -40,8 +42,8 @@ type WordDetectionLessonPracticeStepProps = {
 
 export default function WdLessonPracticeStep({
   word,
+  videoUrl,
   tip,
-  locale,
   nextLessonId,
   passThreshold,
   predictedLabel,
@@ -50,6 +52,8 @@ export default function WdLessonPracticeStep({
   liveConfidence = 0,
   predictorReady = false,
   recError = null,
+  isContinuing = false,
+  onContinue,
   videoRef,
   detectLandmarks,
   isLandmarkerReady,
@@ -57,8 +61,8 @@ export default function WdLessonPracticeStep({
 }: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
-  const sampleVideoUrl = resolveWordDetectionVideoUrl(word);
-  const targetWord = word.trim();
+  const sampleVideoUrl = videoUrl?.trim() || resolveWordDetectionVideoUrl(word);
+  // const targetWord = word.trim(); // target-word matching disabled
   const finalLabel = predictedLabel?.trim() || null;
   const showLivePrediction = !finalLabel && predictorReady && !!liveLabel;
   const displayedLabel = showLivePrediction ? liveLabel : finalLabel;
@@ -67,10 +71,18 @@ export default function WdLessonPracticeStep({
     : predictedConfidence != null
       ? Math.round(predictedConfidence)
       : null;
-  const labelMatches = !!displayedLabel && displayedLabel === targetWord;
   const confidencePasses =
     displayedConfidence != null && displayedConfidence >= passThreshold;
-  const predictionPassed = labelMatches && confidencePasses;
+  // Continue is gated ONLY on the latched (captured) result, never on a single
+  // live frame — the parent latches once the sign holds stably.
+  const finalConfidence =
+    predictedConfidence != null ? Math.round(predictedConfidence) : null;
+  const predictionPassed =
+    !!finalLabel &&
+    // NOTE: target-word matching intentionally disabled — confidence only.
+    // finalLabel === targetWord &&
+    finalConfidence != null &&
+    finalConfidence >= passThreshold;
   return (
     <Stack spacing={2} sx={{ mt: 2 }}>
       {recError ? (
@@ -192,30 +204,35 @@ export default function WdLessonPracticeStep({
         </Stack>
 
         <Stack direction="row" spacing={1} sx={{ flexShrink: 0, flexWrap: "wrap" }}>
-          <Button
-            component={Link}
-            href={
-              nextLessonId != null
-                ? `/${locale}${ROUTES.words.lesson(nextLessonId)}`
-                : `/${locale}${ROUTES.words.root}`
-            }
+          <LoadingButton
             variant="contained"
+            loading={isContinuing}
+            loadingPosition="center"
+            onClick={onContinue}
+            disabled={!predictionPassed || isContinuing}
             sx={{
-              bgcolor: KslColors.primary,
-              borderRadius: `${KslRadii.button}px`,
-              boxShadow: KslShadows.card,
-              color: "#fff",
-              fontWeight: 700,
-              minHeight: 46,
               minWidth: 150,
-              px: 2.5,
-              "&:hover": { bgcolor: KslColors.primaryDark },
+              minHeight: 46,
+              borderRadius: `${KslRadii.button}px`,
+              fontSize: KslFontSizes.md,
+              fontWeight: 700,
+              boxShadow: predictionPassed ? KslShadows.card : "none",
+              bgcolor: predictionPassed ? KslColors.primary : KslColors.disabled,
+              color: "#fff",
+              "&:hover": {
+                bgcolor: predictionPassed ? KslColors.primaryDark : KslColors.disabled,
+              },
+              "&.MuiLoadingButton-loading": {
+                color: "transparent",
+              },
             }}
           >
-            {nextLessonId != null
-              ? t("WORD_DETECTION.LESSON.CONTINUE")
-              : t("WORD_DETECTION.LESSON.BACK_TO_TRACK")}
-          </Button>
+            {isContinuing
+              ? null
+              : nextLessonId != null
+                ? t("WORD_DETECTION.LESSON.CONTINUE")
+                : t("WORD_DETECTION.LESSON.COMPLETE_CHAPTER")}
+          </LoadingButton>
         </Stack>
       </Paper>
     </Stack>

@@ -138,6 +138,7 @@ class WdLessonResponse(BaseModel):
     chapterId: int
     word: str
     wordEn: str | None = None
+    videoUrl: str
     orderIndex: int
     isLocked: bool
     progressStatus: str

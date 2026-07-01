@@ -6,6 +6,7 @@ import type {
   WdUnit,
 } from "../types";
 import { statusToPercent } from "../utils/progress";
+import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
 
 export function normalizeUnit(unit: WdUnit): WdUnit {
   return {
@@ -45,6 +46,7 @@ export function normalizeLesson(lesson: WdLesson): WdLesson {
     chapterId: lesson?.chapterId,
     word: lesson?.word,
     wordEn: lesson?.wordEn ?? "",
+    videoUrl: resolveApiAssetUrl(lesson?.videoUrl) ?? lesson?.videoUrl ?? "",
     orderIndex: lesson?.orderIndex,
     isLocked: lesson?.isLocked ?? false,
     progressStatus,

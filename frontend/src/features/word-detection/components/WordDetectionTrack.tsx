@@ -152,7 +152,7 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
           variant="outlined"
           sx={{
             borderColor: KslColors.border,
-            borderRadius: 3,
+            borderRadius: `${KslRadii.button}px`,
             color: KslColors.primaryDark,
             fontWeight: 700,
             px: 2.5,

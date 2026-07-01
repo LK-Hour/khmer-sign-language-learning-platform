@@ -1,76 +1,113 @@
 /**
  * Word-detection curriculum API.
- * Currently returns mock data synchronously.
- * Swap for real apiFetch calls once the backend is ready.
+ * Fetches the real backend curriculum, mirroring finger-spelling/api/curriculum.ts.
  */
 
 import type { WdChapter, WdLesson, WdLessonDetail, WdUnit } from "../types";
 import type { WdTrackUnit } from "../store/types";
-import { mockWordDetectionCurriculum } from "../data/mockCurriculum";
+import {
+  normalizeChapter,
+  normalizeLesson,
+  normalizeLessonDetail,
+  normalizeUnit,
+} from "./adapters";
+import { apiFetch } from "@/utils/api/client";
+
+// ─── Units ─────────────────────────────────────────────────────────────────
+
+export async function fetchWdUnits(): Promise<WdUnit[]> {
+  const raw = await apiFetch<WdUnit[]>("/api/word_detection/units");
+  return raw?.map(normalizeUnit);
+}
+
+export async function fetchWdUnit(unitId: number): Promise<WdUnit | null> {
+  try {
+    const unit = await apiFetch<WdUnit>(`/api/word_detection/units/${unitId}`);
+    return normalizeUnit(unit);
+  } catch {
+    return null;
+  }
+}
+
+// ─── Chapters ────────────────────────────────────────────────────────────────
+
+export async function fetchWdChapters(unitId: number): Promise<WdChapter[]> {
+  const raw = await apiFetch<WdChapter[]>(
+    `/api/word_detection/units/${unitId}/chapters`
+  );
+  return raw?.map(normalizeChapter);
+}
+
+export async function fetchWdChapter(
+  chapterId: number
+): Promise<WdChapter | null> {
+  try {
+    const chapter = await apiFetch<WdChapter>(
+      `/api/word_detection/chapters/${chapterId}`
+    );
+    return normalizeChapter(chapter);
+  } catch {
+    return null;
+  }
+}
+
+// ─── Lessons ──────────────────────────────────────────────────────────────────
+
+export async function fetchWdLessons(chapterId: number): Promise<WdLesson[]> {
+  const raw = await apiFetch<WdLesson[]>(
+    `/api/word_detection/chapters/${chapterId}/lessons`
+  );
+  return raw?.map(normalizeLesson);
+}
+
+export async function fetchWdLessonsInChapter(
+  chapterId: number
+): Promise<WdLesson[]> {
+  return fetchWdLessons(chapterId);
+}
+
+export async function fetchWdLesson(
+  lessonId: number
+): Promise<WdLessonDetail | null> {
+  try {
+    const lesson = await apiFetch<WdLessonDetail>(
+      `/api/word_detection/lessons/${lessonId}`
+    );
+    return normalizeLessonDetail(lesson);
+  } catch {
+    return null;
+  }
+}
 
 // ─── Track loader ────────────────────────────────────────────────────────────
 
-export function fetchWdTrackUnits(): WdTrackUnit[] {
-  return mockWordDetectionCurriculum;
-}
+export async function fetchWdTrackUnits(): Promise<WdTrackUnit[]> {
+  const baseUnits = (await fetchWdUnits()).sort(
+    (a, b) => a?.orderIndex - b?.orderIndex
+  );
 
-// ─── Lesson detail helpers ────────────────────────────────────────────────────
+  return Promise.all(
+    baseUnits.map(async (unit) => {
+      const chapters = (await fetchWdChapters(unit?.id)).sort(
+        (a, b) => a?.orderIndex - b?.orderIndex
+      );
+      const chaptersWithLessons = await Promise.all(
+        chapters.map(async (chapter) => {
+          const lessons = (await fetchWdLessons(chapter?.id)).sort(
+            (a, b) => a?.orderIndex - b?.orderIndex
+          );
 
-export function fetchWdLesson(id: number): WdLessonDetail | null {
-  for (const unit of mockWordDetectionCurriculum) {
-    for (const chapter of unit.chapters) {
-      const found = chapter.lessons.find((l) => l.id === id);
-      if (found) return { ...found };
-    }
-  }
-  return null;
-}
+          return {
+            ...chapter,
+            lessons,
+          };
+        })
+      );
 
-export function fetchWdChapter(chapterId: number): WdChapter | null {
-  for (const unit of mockWordDetectionCurriculum) {
-    const found = unit.chapters.find((c) => c.id === chapterId);
-    if (!found) continue;
-    return {
-      id: found.id,
-      unitId: found.unitId,
-      title: found.title,
-      titleKh: found.titleKh,
-      description: found.description,
-      descriptionKh: found.descriptionKh,
-      orderIndex: found.orderIndex,
-      lessonCount: found.lessonCount,
-      completedLessonCount: found.completedLessonCount,
-      isLocked: found.isLocked,
-    };
-  }
-  return null;
-}
-
-export function fetchWdUnit(unitId: number): WdUnit | null {
-  const found = mockWordDetectionCurriculum.find((u) => u.id === unitId);
-  if (!found) return null;
-  return {
-    id: found.id,
-    title: found.title,
-    titleKh: found.titleKh,
-    category: found.category,
-    categoryKh: found.categoryKh,
-    orderIndex: found.orderIndex,
-    chapterCount: found.chapterCount,
-    completedLessonCount: found.completedLessonCount,
-    totalLessonCount: found.totalLessonCount,
-    isLocked: found.isLocked,
-  };
-}
-
-export function fetchWdLessons(chapterId: number): WdLesson[] {
-  for (const unit of mockWordDetectionCurriculum) {
-    const found = unit.chapters.find((c) => c.id === chapterId);
-    if (found) return [...found.lessons];
-  }
-  return [];
-}
-
-export function fetchWdLessonsInChapter(chapterId: number): WdLesson[] {
-  return fetchWdLessons(chapterId);
+      return {
+        ...unit,
+        chapters: chaptersWithLessons,
+      };
+    })
+  );
 }

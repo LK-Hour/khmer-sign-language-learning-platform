@@ -6,3 +6,8 @@ export type {
   WdLesson,
   WdLessonDetail,
 } from "./curriculum";
+
+export type {
+  WdPracticeAttemptRequest,
+  WdPracticeAttemptResponse,
+} from "./practice";

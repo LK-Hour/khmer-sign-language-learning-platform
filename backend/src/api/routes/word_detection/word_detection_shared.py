@@ -14,10 +14,13 @@ from src.services.word_detection.word_detection_progress_service import (
 _PLACEHOLDER_IMAGE = "/word-detection/placeholder-sign.svg"
 
 
-def image_url(medias: list[Media]) -> str:
+_PLACEHOLDER_VIDEO = "/word-detection/placeholder-sign.svg"
+
+
+def video_url(medias: list[Media]) -> str:
     if medias:
         return medias[0].file_url
-    return _PLACEHOLDER_IMAGE
+    return _PLACEHOLDER_VIDEO
 
 
 def to_wd_lesson(
@@ -29,12 +32,14 @@ def to_wd_lesson(
     order_index: int,
     user_id: uuid.UUID | None,
     progress: WordDetectionProgressService,
+    medias: list[Media] | None = None,
 ) -> WdLessonResponse:
     return WdLessonResponse(
         id=lesson.id,
         chapterId=chapter_id,
         word=word_kh,
         wordEn=word_en,
+        videoUrl=video_url(medias or []),
         orderIndex=order_index,
         isLocked=progress.is_lesson_locked_by_id(user_id, lesson.id),
         progressStatus=progress.progress_status_for_lesson(user_id, lesson.id),
@@ -50,6 +55,7 @@ def lesson_detail_to_response(
     word = primary.word if primary else None
     word_kh = word.word_kh if word else bundle.lesson.name_kh
     word_en = word.word_en if word else bundle.lesson.name_en
+    medias = primary.medias if primary else []
 
     base = to_wd_lesson(
         lesson=bundle.lesson,
@@ -59,6 +65,7 @@ def lesson_detail_to_response(
         order_index=bundle.lesson.order_index,
         user_id=user_id,
         progress=progress,
+        medias=medias,
     )
     return WdLessonDetailResponse(
         **base.model_dump(),
