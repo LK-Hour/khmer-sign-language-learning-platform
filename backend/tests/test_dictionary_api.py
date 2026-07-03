@@ -130,5 +130,7 @@ def test_dictionary_list_invalid_entry_type(client):
 def test_dictionary_list_word_filter(client):
     response = client.get("/api/dictionary?entry_type=word")
     assert response.status_code == 200
-    assert response.json()["total"] == 0
-    assert response.json()["items"] == []
+    payload = response.json()
+    for item in payload["items"]:
+        assert item["entry_type"] == "word"
+    assert payload["word_count"] == payload["total"]

@@ -80,11 +80,39 @@ Older databases stamped at Alembic `002` sometimes still had a legacy `letter_co
 
 Demo users live in `seed_data.json` (6 users: 2 email/password students, 1 admin, 3 OAuth-linked accounts).
 
+### Demo login credentials (local dev only)
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@cadt.com` | `AdminPass123!` |
+| Student | `test@cadt.com` | *(see team — hash in fixture)* |
+| Student | `test2@cadt.com` | *(see team — hash in fixture)* |
+
+Load or refresh demo users **without wiping curriculum**:
+
+```bash
+cd backend
+python seed_data/seed_users.py
+```
+
+To replace all managed tables from the full fixture (destructive — clears curriculum too):
+
+```bash
+python seed_data/seed_database.py --output seed_data/seed_data.json --wipe
+```
+
+Upsert users only (safe, re-runnable):
+
+```bash
+python seed_data/seed_database.py --output seed_data/seed_data.json
+```
+
+Then sign in at `http://localhost:3000/en/login` → **Admin** tab with `admin@cadt.com` / `AdminPass123!`.
+
 ```bash
 cd backend
 alembic upgrade head   # through 004 (user/auth tables match ORM)
-python seed_data/seed_database.py --output seed_data/seed_data.json
-python scripts/verify_users_seed.py
+python seed_data/seed_users.py
 ```
 
 Migration `004_recreate_user_auth_tables` replaces legacy `users` columns (`first_name`, `hashed_password`, etc.) when those tables are still on the old layout. It is safe when user tables are empty.

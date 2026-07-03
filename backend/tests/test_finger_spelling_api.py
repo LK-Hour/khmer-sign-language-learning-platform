@@ -4,13 +4,25 @@ Finger spelling API tests for the current learner and admin curriculum routes.
 import uuid
 from types import SimpleNamespace
 
+from tests.helpers import safe_order_index, unique_suffix
+
+
+def _publish(client, admin_headers, entity: str, entity_id: int):
+    """Confirm-publish an admin-created draft so it becomes learner-visible."""
+    response = client.post(
+        f"/api/admin/finger/{entity}/{entity_id}/publish",
+        headers=admin_headers,
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
 
 def _create_curriculum(client, admin_headers):
-    suffix = uuid.uuid4().hex[:8]
-    order = int(suffix, 16)
+    suffix = unique_suffix()
+    order = safe_order_index(suffix)
 
     unit_response = client.post(
-        "/api/finger_spelling/admin/units",
+        "/api/admin/finger/units",
         json={
             "name_en": f"Test Unit {suffix}",
             "name_kh": f"ឯកតា {suffix}",
@@ -22,9 +34,10 @@ def _create_curriculum(client, admin_headers):
     )
     assert unit_response.status_code == 201
     unit = unit_response.json()
+    unit = _publish(client, admin_headers, "units", unit["id"])
 
     chapter_response = client.post(
-        "/api/finger_spelling/admin/chapters",
+        "/api/admin/finger/chapters",
         json={
             "unit_id": unit["id"],
             "name_en": f"Test Chapter {suffix}",
@@ -37,9 +50,10 @@ def _create_curriculum(client, admin_headers):
     )
     assert chapter_response.status_code == 201
     chapter = chapter_response.json()
+    chapter = _publish(client, admin_headers, "chapters", chapter["id"])
 
     lesson_response = client.post(
-        "/api/finger_spelling/admin/lessons",
+        "/api/admin/finger/lessons",
         json={
             "chapter_id": chapter["id"],
             "name_en": f"Test Lesson {suffix}",
@@ -51,22 +65,23 @@ def _create_curriculum(client, admin_headers):
         headers=admin_headers,
     )
     assert lesson_response.status_code == 201
+    lesson = _publish(client, admin_headers, "lessons", lesson_response.json()["id"])
 
-    return unit, chapter, lesson_response.json()
+    return unit, chapter, lesson
 
 
 class TestFingerSpellingAPI:
     """Test finger spelling units, chapters, lessons, and exercises."""
 
     def test_admin_create_finger_unit(self, client, admin_headers):
-        suffix = uuid.uuid4().hex[:8]
+        suffix = unique_suffix()
         response = client.post(
-            "/api/finger_spelling/admin/units",
+            "/api/admin/finger/units",
             json={
                 "name_en": f"Admin Unit {suffix}",
                 "name_kh": f"ឯកតា Admin {suffix}",
                 "description_en": "Admin unit description",
-                "order_index": int(suffix, 16),
+                "order_index": safe_order_index(suffix),
             },
             headers=admin_headers,
         )
@@ -76,19 +91,20 @@ class TestFingerSpellingAPI:
         assert data["name_en"] == f"Admin Unit {suffix}"
         assert data["description_en"] == "Admin unit description"
         assert data["is_active"] is True
+        assert data["publish_status"] == "draft"
         assert "id" in data
         assert "created_at" in data
 
     def test_admin_create_finger_unit_unauthorized(self, client):
         response = client.post(
-            "/api/finger_spelling/admin/units",
+            "/api/admin/finger/units",
             json={"name_en": "Test Unit", "name_kh": "ឯកតា", "order_index": 999001},
         )
         assert response.status_code == 401
 
     def test_admin_create_finger_unit_forbidden_for_student(self, client, auth_headers):
         response = client.post(
-            "/api/finger_spelling/admin/units",
+            "/api/admin/finger/units",
             json={"name_en": "Test Unit", "name_kh": "ឯកតា", "order_index": 999002},
             headers=auth_headers,
         )

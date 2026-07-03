@@ -3,6 +3,8 @@ Integration tests for complete API workflows.
 """
 import uuid
 
+from tests.helpers import safe_order_index, unique_suffix
+
 
 def _auth_token(client, user_data):
     response = client.post(
@@ -13,23 +15,31 @@ def _auth_token(client, user_data):
     return response.json()["access_token"]
 
 
+def _publish(client, headers, entity: str, entity_id: int):
+    response = client.post(
+        f"/api/admin/finger/{entity}/{entity_id}/publish", headers=headers
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
 def _create_admin_curriculum(client, headers):
-    suffix = uuid.uuid4().hex[:8]
+    suffix = unique_suffix()
     unit_response = client.post(
-        "/api/finger_spelling/admin/units",
+        "/api/admin/finger/units",
         json={
             "name_en": f"Integration Unit {suffix}",
             "name_kh": f"ឯកតា Integration {suffix}",
             "description_en": "Unit created during integration test",
-            "order_index": int(suffix, 16),
+            "order_index": safe_order_index(suffix),
         },
         headers=headers,
     )
     assert unit_response.status_code == 201
-    unit = unit_response.json()
+    unit = _publish(client, headers, "units", unit_response.json()["id"])
 
     chapter_response = client.post(
-        "/api/finger_spelling/admin/chapters",
+        "/api/admin/finger/chapters",
         json={
             "unit_id": unit["id"],
             "name_en": f"Integration Chapter {suffix}",
@@ -40,10 +50,10 @@ def _create_admin_curriculum(client, headers):
         headers=headers,
     )
     assert chapter_response.status_code == 201
-    chapter = chapter_response.json()
+    chapter = _publish(client, headers, "chapters", chapter_response.json()["id"])
 
     lesson_response = client.post(
-        "/api/finger_spelling/admin/lessons",
+        "/api/admin/finger/lessons",
         json={
             "chapter_id": chapter["id"],
             "name_en": f"Integration Lesson {suffix}",
@@ -54,7 +64,8 @@ def _create_admin_curriculum(client, headers):
         headers=headers,
     )
     assert lesson_response.status_code == 201
-    return unit, chapter, lesson_response.json()
+    lesson = _publish(client, headers, "lessons", lesson_response.json()["id"])
+    return unit, chapter, lesson
 
 
 class TestIntegration:
@@ -161,13 +172,13 @@ class TestIntegration:
         assert response.status_code == 401
 
         response = client.post(
-            "/api/finger_spelling/admin/units",
+            "/api/admin/finger/units",
             json={"name_en": "Test", "name_kh": "សាកល្បង", "order_index": 999003},
         )
         assert response.status_code == 401
 
         response = client.post(
-            "/api/finger_spelling/admin/units",
+            "/api/admin/finger/units",
             json={},
             headers=invalid_headers,
         )

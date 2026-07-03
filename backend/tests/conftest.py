@@ -5,7 +5,7 @@ import os
 import uuid
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 # Import your app and models
@@ -14,6 +14,7 @@ from src.db.session import Base, get_db
 from src.models import user as _user_models  # noqa: F401
 from src.models import media as _media_models  # noqa: F401
 from src.models import finger_spelling as _finger_models  # noqa: F401
+from src.models import word_detection as _word_detection_models  # noqa: F401
 from src.models import user_oauth_provider as _oauth_models  # noqa: F401
 from src.models import user_session as _session_models  # noqa: F401
 from src.models import refresh_token as _refresh_token_models  # noqa: F401
@@ -36,11 +37,43 @@ engine = create_engine(
 # Create test session
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Tables whose serial IDs must stay ahead of seeded rows when tests share a DB.
+_SERIAL_ID_TABLES = (
+    "finger_units",
+    "finger_chapters",
+    "finger_lessons",
+    "finger_exercises",
+    "word_detection_units",
+    "word_detection_chapters",
+    "word_detection_lessons",
+    "word_detection_exercises",
+)
+
+
+def _sync_serial_sequences(connection) -> None:
+    """Ensure the next INSERT id is above any committed seed/test rows."""
+    for table in _SERIAL_ID_TABLES:
+        connection.execute(
+            text(
+                f"""
+                SELECT setval(
+                    pg_get_serial_sequence('{table}', 'id'),
+                    COALESCE((SELECT MAX(id) FROM {table}), 0) + 1,
+                    false
+                )
+                WHERE pg_get_serial_sequence('{table}', 'id') IS NOT NULL
+                """
+            )
+        )
+
 
 @pytest.fixture(scope="session")
 def test_db():
     """Create test database schema for the test session."""
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as connection:
+        _sync_serial_sequences(connection)
+        connection.commit()
     yield
 
 
