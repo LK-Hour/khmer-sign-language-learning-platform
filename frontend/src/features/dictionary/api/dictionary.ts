@@ -12,6 +12,7 @@ type BackendDictionaryWord = {
   category?: string | null;
   description?: string | null;
   lesson_id?: number | null;
+  level?: number | null;
 };
 
 type BackendDictionaryListResponse = {
@@ -39,6 +40,7 @@ function normalizeWord(raw: BackendDictionaryWord): DictionaryWord {
     category: raw.category ?? null,
     description: raw.description ?? null,
     lessonId: raw.lesson_id ?? null,
+    level: raw.level ?? null,
   };
 }
 

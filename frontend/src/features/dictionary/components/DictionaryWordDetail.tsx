@@ -8,9 +8,12 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
+import PlayButton from "@/components/ui/PlayButton";
 import { ROUTES } from "@/constants/routes";
 import type { DictionaryWord } from "@/features/dictionary/types";
 import { useDictionaryWordLabels } from "@/features/dictionary/utils/useDictionaryEntryLabels";
@@ -22,6 +25,8 @@ import {
   KslPalette,
   KslRadii,
 } from "@/theme/theme";
+
+const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
 type DictionaryWordDetailProps = {
   word: DictionaryWord;
@@ -111,29 +116,103 @@ function InfoRow({ label, value, showDivider = true }: InfoRowProps) {
   );
 }
 
+type DictionaryVideoPlayerProps = {
+  videoUrl: string;
+};
+
+function DictionaryVideoPlayer({ videoUrl }: DictionaryVideoPlayerProps) {
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    setHasStarted(false);
+  }, [videoUrl]);
+
+  return (
+    <Stack
+      sx={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        "& video": {
+          objectFit: "cover",
+        },
+        "& .react-player__preview": {
+          backgroundSize: "cover !important",
+        },
+      }}
+    >
+      <ReactPlayer
+        src={videoUrl}
+        light={!hasStarted}
+        playIcon={
+          <Stack
+            aria-hidden
+            sx={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+              bgcolor: "rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            <PlayButton size={72} />
+          </Stack>
+        }
+        playing={hasStarted}
+        muted
+        loop
+        playsInline
+        controls={false}
+        width="100%"
+        height="100%"
+        {...(!hasStarted && {
+          onClickPreview: () => setHasStarted(true),
+        })}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          inset: 0,
+        }}
+      />
+    </Stack>
+  );
+}
+
 export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps) {
   const { t, locale } = useTranslation();
   const { primary, secondary } = useDictionaryWordLabels(word);
   const isVideo = Boolean(word.videoUrl);
   const mediaSrc = word.videoUrl ?? word.mediaUrl ?? null;
-  const typeLabel =
-    word.entryType === "character"
-      ? t("DICTIONARY.LIST.TYPE_CHARACTER")
-      : t("DICTIONARY.LIST.TYPE_WORD");
-  const eyebrow =
-    word.entryType === "character"
-      ? t("DICTIONARY.DETAIL.CHARACTER_EYEBROW")
-      : t("DICTIONARY.DETAIL.WORD_EYEBROW");
+  const isWord = word.entryType === "word";
+  const typeLabel = isWord
+    ? t("DICTIONARY.LIST.TYPE_WORD")
+    : t("DICTIONARY.LIST.TYPE_CHARACTER");
+  const learningTrack = isWord
+    ? t("DICTIONARY.DETAIL.LEARNING_TRACK_WORD_DETECTION")
+    : t("DICTIONARY.DETAIL.LEARNING_TRACK_FINGER_SPELLING");
+  const difficultyValue = `${t("ADMIN.LEVEL")} ${word.level ?? 1}`;
+  const suggestionBody = isWord
+    ? t("DICTIONARY.DETAIL.SUGGESTION_BODY_WORD")
+    : t("DICTIONARY.DETAIL.SUGGESTION_BODY_CHARACTER");
+  const practiceLabel = isWord
+    ? t("WORD_DETECTION.LESSON.WORD_PRACTICE_SIGN")
+    : t("DICTIONARY.DETAIL.FINGER_PRACTICE_SIGN");
   const subtitle = word.description ?? secondary ?? "";
   const practiceHref =
     word.lessonId != null
-      ? `/${locale}${ROUTES.fingerSpelling.lesson(word.lessonId)}`
+      ? isWord
+        ? `/${locale}${ROUTES.words.lesson(word.lessonId)}`
+        : `/${locale}${ROUTES.fingerSpelling.lesson(word.lessonId)}`
       : null;
 
   return (
     <Stack spacing={{ xs: 3, md: 4 }} sx={{ width: "100%" }}>
       <Stack
-        direction={{ xs: "column", md: "row" }}
+        direction={{ xs: "column-reverse", md: "row" }}
         spacing={2}
         sx={{
           alignItems: { xs: "stretch", md: "flex-start" },
@@ -141,19 +220,6 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
         }}
       >
         <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            component="span"
-            sx={{
-              fontSize: KslFontSizes.sm,
-              fontWeight: 700,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: KslColors.primary,
-            }}
-          >
-            {eyebrow}
-          </Typography>
-
           <Typography
             component="h1"
             sx={{
@@ -222,17 +288,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
           >
             {mediaSrc ? (
               isVideo ? (
-                <video
-                  src={mediaSrc}
-                  controls
-                  playsInline
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
+                <DictionaryVideoPlayer videoUrl={mediaSrc} />
               ) : (
                 <Stack
                   sx={{
@@ -289,13 +345,13 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
           <Stack spacing={2} sx={{ height: "100%" }}>
             <SidebarCard
               label={t("DICTIONARY.DETAIL.LEARNING_INFO_LABEL")}
-              title={t("DICTIONARY.DETAIL.LEARNING_TRACK_FINGER_SPELLING")}
+              title={learningTrack}
             >
               <Stack spacing={0}>
                 <InfoRow label={t("DICTIONARY.DETAIL.TYPE_LABEL")} value={typeLabel} />
                 <InfoRow
                   label={t("DICTIONARY.DETAIL.DIFFICULTY_LABEL")}
-                  value={t("DICTIONARY.DETAIL.DIFFICULTY_BEGINNER")}
+                  value={difficultyValue}
                   showDivider={false}
                 />
               </Stack>
@@ -312,7 +368,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
                   color: KslColors.textSecondary,
                 }}
               >
-                {t("DICTIONARY.DETAIL.SUGGESTION_BODY")}
+                {suggestionBody}
               </Typography>
             </SidebarCard>
 
@@ -337,7 +393,7 @@ export default function DictionaryWordDetail({ word }: DictionaryWordDetailProps
                   },
                 }}
               >
-                {t("DICTIONARY.DETAIL.FINGER_PRACTICE_SIGN")}
+                {practiceLabel}
               </Button>
             ) : null}
           </Stack>

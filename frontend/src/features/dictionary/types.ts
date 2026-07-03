@@ -11,8 +11,10 @@ export interface DictionaryWord {
   videoUrl?: string | null;
   category?: string | null;
   description?: string | null;
-  /** Linked finger-spelling lesson for practice */
+  /** Linked lesson for practice */
   lessonId?: number | null;
+  /** Curriculum chapter level (1, 2, 3, …) */
+  level?: number | null;
 }
 
 export type DictionarySortOrder = "default" | "az" | "za";

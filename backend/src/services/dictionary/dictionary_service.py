@@ -1,4 +1,4 @@
-"""Business logic for dictionary browse (finger-spelling characters today)."""
+"""Business logic for dictionary browse (finger-spelling characters + word detection words)."""
 
 from __future__ import annotations
 
@@ -85,8 +85,8 @@ class DictionaryService:
         return self.to_entry_response(row)
 
     @staticmethod
-    def _entry_type(_row: DictionaryEntryRow) -> str:
-        return "character"
+    def _entry_type(row: DictionaryEntryRow) -> str:
+        return row.entry_type
 
     @classmethod
     def _sort_rows(cls, rows: list[DictionaryEntryRow], sort: str) -> list[DictionaryEntryRow]:
@@ -99,8 +99,33 @@ class DictionaryService:
 
     @staticmethod
     def to_entry_response(row: DictionaryEntryRow) -> DictionaryEntryResponse:
-        letter = row.letter
         unit = row.unit
+
+        if row.entry_type == "word" and row.word is not None:
+            word = row.word
+            text_en = (word.word_en or word.word_kh or "").strip()
+            description = word.description_en or word.description_kh
+            media = row.media
+            video_url = media.file_url if media and media.media_type == "video" else None
+            image_url = media.file_url if media and media.media_type != "video" else None
+
+            return DictionaryEntryResponse(
+                id=row.dictionary_id,
+                text_en=text_en,
+                text_kh=word.word_kh,
+                entry_type="word",
+                media_url=image_url,
+                video_url=video_url,
+                category=unit.name_en if unit else None,
+                description=description,
+                lesson_id=row.lesson.id if row.lesson else None,
+                level=row.level,
+            )
+
+        letter = row.letter
+        if letter is None:
+            raise ValueError("Character dictionary row is missing letter")
+
         text_en = (letter.letter_en or letter.letter_kh or "").strip()
         description = (
             letter.description_en
@@ -109,7 +134,7 @@ class DictionaryService:
         )
 
         return DictionaryEntryResponse(
-            id=letter.id,
+            id=row.dictionary_id,
             text_en=text_en,
             text_kh=letter.letter_kh,
             entry_type="character",
@@ -118,12 +143,29 @@ class DictionaryService:
             category=unit.name_en if unit else None,
             description=description,
             lesson_id=row.lesson.id if row.lesson else None,
+            level=row.level,
         )
 
     @staticmethod
     def _matches_query(row: DictionaryEntryRow, query: str) -> bool:
-        letter = row.letter
         unit = row.unit
+
+        if row.entry_type == "word" and row.word is not None:
+            word = row.word
+            fields = (
+                word.word_en,
+                word.word_kh,
+                word.description_en,
+                word.description_kh,
+                unit.name_en if unit else None,
+                unit.name_kh if unit else None,
+            )
+            return any(query in (value or "").lower() for value in fields)
+
+        letter = row.letter
+        if letter is None:
+            return False
+
         fields = (
             letter.letter_en,
             letter.letter_kh,

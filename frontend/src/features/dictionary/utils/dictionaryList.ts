@@ -15,6 +15,19 @@ const DICTIONARY_UNIT_ORDER: Record<string, number> = {
   Diacritics: 5,
 };
 
+/** Keep in sync with backend dictionary_order.py WORD_DETECTION_UNIT_ORDER */
+const WORD_DETECTION_UNIT_ORDER: Record<string, number> = {
+  Education: 100,
+  "Directions and Places": 101,
+  Time: 102,
+  "Pronouns and Nouns": 103,
+  "Daily Activities": 104,
+  "Food and Drinks": 105,
+  "Household Items": 106,
+  Vehicles: 107,
+  Sports: 108,
+};
+
 const UNIT_LETTER_ORDERS: Record<string, string[]> = {
   Numbers: ["០", "១", "២", "៣", "៤", "៥", "៦", "៧", "៨", "៩"],
   "Dependent Vowels": [
@@ -51,7 +64,13 @@ type DictionaryListFilters = {
   sort?: DictionarySortOrder;
 };
 
-function dictionaryUnitRank(category: string | null | undefined): number {
+function dictionaryUnitRank(
+  category: string | null | undefined,
+  entryType: DictionaryWord["entryType"] = "character",
+): number {
+  if (entryType === "word") {
+    return WORD_DETECTION_UNIT_ORDER[category ?? ""] ?? 99;
+  }
   return DICTIONARY_UNIT_ORDER[category ?? ""] ?? 99;
 }
 
@@ -66,7 +85,7 @@ function dictionaryLetterIndex(
 
 function dictionarySortKey(word: DictionaryWord): [number, number, string] {
   return [
-    dictionaryUnitRank(word.category),
+    dictionaryUnitRank(word.category, word.entryType),
     dictionaryLetterIndex(word.category, word.textKh),
     word.textKh,
   ];

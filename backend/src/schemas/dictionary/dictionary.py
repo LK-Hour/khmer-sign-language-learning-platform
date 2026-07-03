@@ -11,6 +11,7 @@ class DictionaryEntryResponse(BaseModel):
     category: str | None = None
     description: str | None = None
     lesson_id: int | None = None
+    level: int | None = None
 
 
 class DictionaryListResponse(BaseModel):

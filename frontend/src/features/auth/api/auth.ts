@@ -88,8 +88,8 @@ export function loginAsGuest(): Promise<AuthTokenResponse> {
   });
 }
 
-export function fetchCurrentUser(): Promise<CurrentUserResponse> {
-  return apiFetch<CurrentUserResponse>('/api/auth/login/me');
+export function fetchCurrentUser(accessToken?: string): Promise<CurrentUserResponse> {
+  return apiFetch<CurrentUserResponse>('/api/auth/login/me', { accessToken });
 }
 
 export function logout(): Promise<{ detail: string }> {

@@ -2,8 +2,6 @@ import type { Locale } from "./config";
 import enTranslations from "./locales/en.json";
 import khTranslations from "./locales/kh.json";
 
-type TranslationValues = Record<string, string | number>;
-
 const translations = {
   en: enTranslations,
   kh: khTranslations,
@@ -46,21 +44,7 @@ function resolveMessage(
   return typeof current === "string" ? current : undefined;
 }
 
-function interpolate(template: string, values?: TranslationValues): string {
-  if (!values) return template;
-
-  return template.replace(/\{(\w+)\}/g, (match, name: string) => {
-    const value = values[name];
-    return value == null ? match : String(value);
-  });
-}
-
-export function t(
-  locale: Locale,
-  key: TranslationKey,
-  values?: TranslationValues
-): string {
+export function t(locale: Locale, key: TranslationKey): string {
   const messages = getTranslations(locale);
-  const template = resolveMessage(messages, key) ?? key;
-  return interpolate(template, values);
+  return resolveMessage(messages, key) ?? key;
 }

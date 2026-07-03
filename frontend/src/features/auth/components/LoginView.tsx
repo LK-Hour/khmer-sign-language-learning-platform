@@ -331,7 +331,7 @@ export function LoginView() {
 
     try {
       const response = await loginWithEmail(email, password, rememberMe);
-      const profile = await fetchCurrentUser();
+      const profile = await fetchCurrentUser(response.access_token);
 
       if (profile?.account_type !== 'admin') {
         setAuthError(t("LOGIN.NO_ADMIN_ACCESS"));
