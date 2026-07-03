@@ -148,6 +148,9 @@
     "SUCCESS": "Success",
     "WELCOME": "Welcome"
   },
+  "PREDICTION": {
+    "ANALYZING": "Analyzing..."
+  },
   "DICTIONARY": {
     "CATEGORY": {
       "CONSONANT": "Consonant",
@@ -279,6 +282,7 @@
       "CAMERA_UNAVAILABLE": "Camera is not available on this device.",
       "COMPLETE_SUBTITLE": "You've completed this lesson.",
       "COMPLETE_TITLE": "Great Job!!",
+      "COMPLETE_CHAPTER": "Complete Chapter",
       "CONTINUE_LESSON": "Continue Lesson",
       "CORRECTION_ALMOST": "Almost there. Adjust your hand angle and keep the palm closer to the sample.",
       "CORRECTION_PASSED": "Correct. Your thumb placement is strong. Raise the index finger slightly for a cleaner shape.",
@@ -436,8 +440,10 @@
       "CONTINUE": "Next Lesson",
       "DEFAULT_TIP": "Study the reference word carefully. In the future, sign it in front of your camera and the model will detect it in real time.",
       "NAV_DESC": "Word detection analysis is under development. You can still explore each word and move through the lessons.",
+      "NO_SAMPLE_VIDEO": "No sample video available",
       "WORD_PRACTICE_SIGN": "Practice this word",
       "PROGRESS_SYNC_FAILED": "Could not save lesson progress. Please try again.",
+      "RETRY": "Retry",
       "SAMPLE_CAPTION": "Reference — Khmer Sign Language word",
       "STATUS_COMING_SOON": "Coming soon",
       "STATUS_LABEL": "Match confidence",

@@ -14,6 +14,7 @@ export async function predictHandFromFeatures(
   features: number[],
   handedness?: string,
   category?: string,
+  targetLabel?: string,
 ): Promise<HandPredictResponse> {
   return apiFetch<HandPredictResponse>(
     "/api/finger_spelling/practice/predict/features",
@@ -24,6 +25,7 @@ export async function predictHandFromFeatures(
         features,
         handedness,
         category,
+        target_label: targetLabel,
       }),
     }
   );

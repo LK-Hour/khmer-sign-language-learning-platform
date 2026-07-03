@@ -13,4 +13,6 @@ export interface HandPredictResponse {
   predicted_class_index: number;
   predicted_label?: string | "";
   handedness: string;
+  target_label?: string | null;
+  label_matches?: boolean | null;
 }

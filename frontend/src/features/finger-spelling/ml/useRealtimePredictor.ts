@@ -9,6 +9,8 @@ export type LivePrediction = {
   label: string | null;
   confidence: number;
   handedness: string;
+  targetLabel: string | null;
+  labelMatches: boolean | null;
   /** Monotonically increasing sequence number so consumers can detect stale data. */
   seq: number;
 };
@@ -26,6 +28,8 @@ const INITIAL_LIVE_PREDICTION: LivePrediction = {
   label: null,
   confidence: 0,
   handedness: "Unknown",
+  targetLabel: null,
+  labelMatches: null,
   seq: 0,
 };
 
@@ -142,6 +146,8 @@ export function useRealtimePredictor() {
             label,
             confidence,
             handedness: data.handedness ?? "Unknown",
+            targetLabel: normalizePredictionLabel(data.targetLabel ?? null),
+            labelMatches: typeof data.labelMatches === "boolean" ? data.labelMatches : null,
             seq: seqRef.current,
           };
           lastPredictionRef.current = pred;
@@ -213,16 +219,17 @@ export function useRealtimePredictor() {
 
   // ── Send features for prediction ─────────────────────────────────────
   const sendFeatures = useCallback(
-    (features: number[], handedness?: string, category?: string) => {
+    (features: number[], handedness?: string, category?: string, targetLabel?: string) => {
       const ws = wsRef.current;
       if (!ws || ws.readyState !== WebSocket.OPEN) return false;
 
       ws.send(
         JSON.stringify({
-          type: "predict",
+          type: targetLabel ? "predict_label_match" : "predict",
           features,
           handedness: handedness ?? "Unknown",
           category: category ?? undefined,
+          targetLabel: targetLabel ?? undefined,
         })
       );
       return true;

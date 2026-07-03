@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 import type { RefObject } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
+import { labelsMatch } from "@/features/shared/usePredictionRetry";
 import {
   KslColors,
   KslFontSizes,
@@ -23,7 +24,6 @@ import LessonWebcamPanel from "./LessonWebcamPanel";
 import PracticeFeedbackPanel from "./PracticeFeedbackPanel";
 import { MetricCard, TipCard } from "./PracticeInfoCards";
 import SignImageCard from "./SignImageCard";
-import { useAnimatedScore } from "./useAnimatedScore";
 
 const VISUAL_FRAME_SX = {
   position: "relative" as const,
@@ -37,12 +37,13 @@ type LessonPracticeStepProps = {
   imageUrl: string;
   tip?: string | null;
   accuracy: number | null;
-  predictedLetter: string | null;
-  passThreshold: number;
   cameraResetKey: number;
   isSubmitting?: boolean;
   isContinuing?: boolean;
   retryWaiting?: boolean;
+  continueEnabled?: boolean;
+  displayLabel?: string | null;
+  displayConfidence?: number | null;
   isLandmarkerReady?: boolean;
   recError?: string | null;
   videoRef?: RefObject<HTMLVideoElement | null>;
@@ -50,6 +51,7 @@ type LessonPracticeStepProps = {
   onDetection?: (detection: RawHandDetection) => void;
   stabilityState: StabilityState;
   stabilityProgress: number;
+  continueLabel: string;
   onRetry: () => void;
   onContinue: () => void | Promise<void>;
   /** Prediction snapshot that triggered auto-capture. */
@@ -59,6 +61,8 @@ type LessonPracticeStepProps = {
   liveLabel?: string | null;
   /** Live prediction confidence from WebSocket (shown in realtime before capture). */
   liveConfidence?: number;
+  /** Whether the live prediction matches this lesson's target label. */
+  liveLabelMatches?: boolean | null;
   /** Whether the WebSocket predictor is connected and ready. */
   predictorReady?: boolean;
 };
@@ -68,12 +72,13 @@ export default function LessonPracticeStep({
   imageUrl,
   tip,
   accuracy,
-  predictedLetter,
-  passThreshold,
   cameraResetKey,
   isSubmitting = false,
   isContinuing = false,
   retryWaiting = false,
+  continueEnabled = false,
+  displayLabel = null,
+  displayConfidence = null,
   isLandmarkerReady = false,
   recError = null,
   videoRef,
@@ -81,36 +86,38 @@ export default function LessonPracticeStep({
   onDetection,
   stabilityState,
   stabilityProgress,
+  continueLabel,
   onRetry,
   onContinue,
   capturedLabel,
   capturedConfidence = null,
   liveLabel,
   liveConfidence = 0,
+  liveLabelMatches = null,
   predictorReady = false,
 }: LessonPracticeStepProps) {
   const { t } = useTranslation();
-  const displayConfidence = useAnimatedScore(accuracy);
 
   const hasCapturedPrediction = !!capturedLabel && capturedConfidence != null;
   const hasFinalResult = accuracy != null || retryWaiting || hasCapturedPrediction;
-  const passed = accuracy != null && accuracy >= passThreshold;
-  const resultLabel =
-    accuracy != null && predictedLetter
-      ? predictedLetter
-      : hasCapturedPrediction
-        ? capturedLabel
-        : null;
-  const resultConfidence =
-    accuracy != null
-      ? Math.round(accuracy)
-      : hasCapturedPrediction
-        ? Math.round(capturedConfidence)
-        : null;
-
-  const correctionText = passed
+  const canContinue = continueEnabled;
+  const capturedMatchesTarget = labelsMatch(capturedLabel, letter);
+  const capturedIsNoAction = capturedLabel === "No Action";
+  const capturedDisplayLabel = hasCapturedPrediction
+    ? capturedMatchesTarget
+      ? letter
+      : capturedIsNoAction
+        ? "No Action"
+        : t("BUTTON.TRY_AGAIN")
+    : null;
+  const capturedDisplayConfidence = hasCapturedPrediction
+    ? capturedMatchesTarget
+      ? Math.round(capturedConfidence)
+      : 0
+    : null;
+  const correctionText = canContinue
     ? t("FINGER_SPELLING.LESSON.CORRECTION_PASSED")
-    : accuracy != null
+    : hasFinalResult
       ? t("FINGER_SPELLING.LESSON.CORRECTION_ALMOST")
       : t("FINGER_SPELLING.LESSON.HOLD_STILL");
   const tipText =
@@ -120,11 +127,27 @@ export default function LessonPracticeStep({
     !hasFinalResult && !isSubmitting;
 
   // Determine what to show in the MetricCards
-  const showLivePrediction = !!(!hasFinalResult && !isSubmitting && predictorReady && liveLabel);
+  const showLivePrediction = !!(
+    !hasFinalResult &&
+    !isSubmitting &&
+    predictorReady &&
+    liveLabel &&
+    liveLabelMatches !== null
+  );
+  const liveIsNoAction = liveLabel === "No Action";
+  const liveDisplayLabel = liveLabelMatches
+    ? letter
+    : liveIsNoAction
+      ? "No Action"
+      : t("PREDICTION.ANALYZING");
+  const liveDisplayConfidence = liveLabelMatches ? Math.round(liveConfidence) : 0;
   const cardConfidence = showLivePrediction
-    ? Math.round(liveConfidence)
-    : resultConfidence ?? (displayConfidence != null ? displayConfidence : null);
-  const cardLabel = showLivePrediction ? liveLabel : resultLabel;
+    ? liveDisplayConfidence
+    : displayConfidence ?? capturedDisplayConfidence;
+  const cardLabel = showLivePrediction
+    ? liveDisplayLabel
+    : displayLabel ?? capturedDisplayLabel;
+  const showRetry = canContinue && hasFinalResult;
 
   return (
     <Stack
@@ -223,14 +246,14 @@ export default function LessonPracticeStep({
           <MetricCard
             label={t("FINGER_SPELLING.LESSON.MATCH_CONFIDENCE")}
             value={cardConfidence != null ? `${cardConfidence}%` : "—"}
-            highlight={passed || (showLivePrediction && liveConfidence >= passThreshold)}
+            highlight={canContinue}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <MetricCard
             label={t("FINGER_SPELLING.LESSON.PREDICT_RESULT")}
             value={cardLabel ?? "—"}
-            highlight={cardLabel != null && passed}
+            highlight={cardLabel != null && canContinue}
           />
         </Grid>
       </Grid>
@@ -238,8 +261,10 @@ export default function LessonPracticeStep({
       <PracticeFeedbackPanel
         title={t("FINGER_SPELLING.LESSON.CORRECTION_RESULT")}
         text={correctionText}
-        continueLabel={t("FINGER_SPELLING.LESSON.CONTINUE_LESSON")}
-        passed={passed}
+        continueLabel={continueLabel}
+        retryLabel={t("BUTTON.TRY_AGAIN")}
+        passed={canContinue}
+        showRetry={showRetry}
         isSubmitting={isSubmitting}
         isContinuing={isContinuing}
         onRetry={onRetry}

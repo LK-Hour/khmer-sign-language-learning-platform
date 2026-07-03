@@ -7,6 +7,8 @@ export type WordPredictResponse = {
   predicted_class_index: number;
   predicted_label?: string | null;
   probabilities: number[];
+  target_label?: string | null;
+  label_matches?: boolean | null;
 };
 
 function guestHeaders(): HeadersInit | undefined {
@@ -18,13 +20,14 @@ function guestHeaders(): HeadersInit | undefined {
 
 export async function predictWordFromFeatures(
   features: number[],
+  targetLabel?: string,
 ): Promise<WordPredictResponse> {
   return apiFetch<WordPredictResponse>(
     "/api/word_detection/practice/predict/features",
     {
       method: "POST",
       headers: guestHeaders(),
-      body: JSON.stringify({ features }),
+      body: JSON.stringify({ features, target_label: targetLabel }),
     },
   );
 }

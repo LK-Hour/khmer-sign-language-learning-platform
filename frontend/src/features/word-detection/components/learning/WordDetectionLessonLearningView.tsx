@@ -15,18 +15,23 @@ import {
 import { useWordRealtimePredictor } from "@/features/word-detection/ml/useWordRealtimePredictor";
 import { useWordDetectionPracticeActions } from "@/features/word-detection/hooks/useWordDetectionPracticeActions";
 import { WORD_DETECTION_PASS_THRESHOLD } from "@/features/word-detection/store/constants";
+import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
 import { KslColors } from "@/theme/theme";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import WdLessonPracticeStep from "./WordDetectionLessonPracticeStep";
+import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
 
 const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 100;
 /** Consecutive live frames matching the target word at >= pass threshold
  *  before we latch a "passed" result (avoids a single flicker frame passing). */
-const WORD_PASS_STABLE_FRAMES = 4;
+const WORD_PASS_STABLE_FRAMES = 6;
 /** Consecutive hand-present samples required before we start streaming, to
  *  avoid a single flicker frame triggering a phantom prediction. */
-const WORD_HAND_WARMUP_FRAMES = 0;
+const WORD_HAND_WARMUP_FRAMES = 10;
+const WORD_AUTO_RETRY_DELAY_MS = 1800;
+const WORD_AUTO_RETRY_POLL_INTERVAL_MS = 33;
+const WORD_DONATION_CONFIDENCE_THRESHOLD = 70;
 const WORD_SEQUENCE_FEATURE_COUNT =
   WORD_DETECTION_SEQUENCE_LENGTH * WORD_DETECTION_TOTAL_FEATURES;
 
@@ -55,14 +60,22 @@ export default function WdLessonLearningView({
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const latestDetectionRef = useRef<WordDetectionLandmarks>(EMPTY_WORD_DETECTION);
-  const passStreakRef = useRef(0);
+  const stableLabelRef = useRef<string | null>(null);
+  const stableCountRef = useRef(0);
   const handPresentCountRef = useRef(0);
   const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const donationPromptShownRef = useRef(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [retryWaiting, setRetryWaiting] = useState(false);
+  const [isConsentPreviewOpen, setIsConsentPreviewOpen] = useState(false);
+  const [manualRetryListening, setManualRetryListening] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;
     confidence: number;
+    seq: number;
   } | null>(null);
   const { completePractice } = useWordDetectionPracticeActions();
   const {
@@ -91,6 +104,22 @@ export default function WdLessonLearningView({
   const lessonStep = formatOrderIndex(lesson.orderIndex, locale);
 
   const trackHref = ROUTES.words.root;
+  const retryState = usePredictionRetry({
+    targetLabel: lesson.word,
+    predictedLabel: capturedPrediction?.label ?? null,
+    confidence: capturedPrediction?.confidence ?? null,
+    predictionSeq: capturedPrediction?.seq ?? null,
+    tryAgainLabel: t("BUTTON.TRY_AGAIN"),
+  });
+  const {
+    continueEnabled,
+    displayConfidence,
+    displayLabel,
+    labelMatches,
+    resetAttempts,
+    resetForAutoRetry,
+    shouldAutoRetry,
+  } = retryState;
 
   const handleDetection = useCallback((detection: WordDetectionLandmarks) => {
     latestDetectionRef.current = detection;
@@ -127,17 +156,24 @@ export default function WdLessonLearningView({
 
   const resetPredictionState = useCallback(() => {
     latestDetectionRef.current = EMPTY_WORD_DETECTION;
-    passStreakRef.current = 0;
+    stableLabelRef.current = null;
+    stableCountRef.current = 0;
     handPresentCountRef.current = 0;
     setCapturedPrediction(null);
     setRecError(null);
+    setRetryWaiting(false);
     resetSequence();
     resetLivePrediction();
   }, [resetLivePrediction, resetSequence]);
 
   useEffect(() => {
-    queueMicrotask(resetPredictionState);
-  }, [lesson.id, resetPredictionState]);
+    resetAttempts();
+    donationPromptShownRef.current = false;
+    queueMicrotask(() => {
+      setManualRetryListening(false);
+      resetPredictionState();
+    });
+  }, [lesson.id, resetAttempts, resetPredictionState]);
 
   useEffect(() => {
     if (isLandmarkerReady) {
@@ -176,7 +212,7 @@ export default function WdLessonLearningView({
         return;
       }
 
-      sendFeatures(Array.from(sequenceFeatures));
+      sendFeatures(Array.from(sequenceFeatures), lesson.word);
     }, WORD_PREDICTION_SAMPLE_INTERVAL_MS);
 
     return () => {
@@ -185,37 +221,113 @@ export default function WdLessonLearningView({
         samplingLoopRef.current = null;
       }
     };
-  }, [isLandmarkerReady, predictorState, sendFeatures]);
+  }, [isLandmarkerReady, lesson.word, predictorState, sendFeatures]);
 
   useEffect(() => {
-    // Once a passing result is latched, stop re-evaluating so the captured
-    // snapshot (and the enabled Continue button) stays stable.
-    if (capturedPrediction) return;
+    if ((continueEnabled && !manualRetryListening) || retryWaiting) return;
 
     const pred = livePrediction;
-    // NOTE: target-word matching is intentionally disabled — we latch on
-    // confidence alone for any real live prediction.
-    // const targetWord = lesson.word.trim();
-    const matchesTarget =
-      !!pred.label &&
-      pred.label !== "No Action" &&
-      // pred.label.trim() === targetWord &&
-      pred.confidence >= WORD_DETECTION_PASS_THRESHOLD;
-
-    if (!matchesTarget) {
-      passStreakRef.current = 0;
+    if (!pred.label || pred.label === "No Action") {
+      stableLabelRef.current = null;
+      stableCountRef.current = 0;
       return;
     }
 
-    passStreakRef.current += 1;
-    if (passStreakRef.current >= WORD_PASS_STABLE_FRAMES) {
+    if (pred.label === stableLabelRef.current) {
+      stableCountRef.current += 1;
+    } else {
+      stableLabelRef.current = pred.label;
+      stableCountRef.current = 1;
+    }
+
+    if (stableCountRef.current >= WORD_PASS_STABLE_FRAMES) {
       setCapturedPrediction({
         label: pred.label as string,
         confidence: pred.confidence,
+        seq: pred.seq,
       });
-      passStreakRef.current = 0;
+      setManualRetryListening(false);
+      stableLabelRef.current = null;
+      stableCountRef.current = 0;
     }
-  }, [livePrediction, capturedPrediction, lesson.word]);
+  }, [continueEnabled, livePrediction, manualRetryListening, retryWaiting]);
+
+  const clearAutoRetryTimers = useCallback(() => {
+    if (autoRetryTimerRef.current) {
+      clearTimeout(autoRetryTimerRef.current);
+      autoRetryTimerRef.current = null;
+    }
+    if (autoRetryPollRef.current) {
+      clearInterval(autoRetryPollRef.current);
+      autoRetryPollRef.current = null;
+    }
+  }, []);
+
+  const handleAutoRetry = useCallback(() => {
+    clearAutoRetryTimers();
+    setRetryWaiting(false);
+    resetForAutoRetry();
+    resetPredictionState();
+    setManualRetryListening(true);
+  }, [clearAutoRetryTimers, resetForAutoRetry, resetPredictionState]);
+
+  const handleRetry = useCallback(() => {
+    clearAutoRetryTimers();
+    setRetryWaiting(false);
+    resetAttempts();
+    resetPredictionState();
+    setManualRetryListening(true);
+  }, [clearAutoRetryTimers, resetAttempts, resetPredictionState]);
+
+  const hasHandInFrame = useCallback(() => latestDetectionRef.current.handDetected, []);
+
+  const waitForHandThenRetry = useCallback(() => {
+    if (autoRetryPollRef.current) return;
+
+    autoRetryPollRef.current = setInterval(() => {
+      if (hasHandInFrame()) {
+        handleAutoRetry();
+      }
+    }, WORD_AUTO_RETRY_POLL_INTERVAL_MS);
+  }, [handleAutoRetry, hasHandInFrame]);
+
+  const retryWhenHandIsReady = useCallback(() => {
+    if (hasHandInFrame()) {
+      handleAutoRetry();
+      return;
+    }
+
+    waitForHandThenRetry();
+  }, [handleAutoRetry, hasHandInFrame, waitForHandThenRetry]);
+
+  useEffect(() => {
+    if (!shouldAutoRetry || isCompleting) return;
+
+    queueMicrotask(() => {
+      setRetryWaiting(true);
+    });
+    autoRetryTimerRef.current = setTimeout(() => {
+      retryWhenHandIsReady();
+    }, WORD_AUTO_RETRY_DELAY_MS);
+
+    return () => {
+      clearAutoRetryTimers();
+    };
+  }, [clearAutoRetryTimers, isCompleting, retryWhenHandIsReady, shouldAutoRetry]);
+
+  useEffect(() => {
+    if (
+      labelMatches &&
+      capturedPrediction &&
+      capturedPrediction.confidence >= WORD_DONATION_CONFIDENCE_THRESHOLD &&
+      !donationPromptShownRef.current
+    ) {
+      donationPromptShownRef.current = true;
+      clearAutoRetryTimers();
+      setRetryWaiting(false);
+      setIsConsentPreviewOpen(true);
+    }
+  }, [capturedPrediction, clearAutoRetryTimers, labelMatches]);
 
   return (
     <Stack spacing={3} sx={{ pb: 6 }}>
@@ -252,16 +364,34 @@ export default function WdLessonLearningView({
         passThreshold={WORD_DETECTION_PASS_THRESHOLD}
         predictedLabel={capturedPrediction?.label ?? null}
         predictedConfidence={capturedPrediction?.confidence ?? null}
+        displayConfidence={displayConfidence}
+        displayLabel={displayLabel}
+        continueEnabled={continueEnabled}
+        retryWaiting={retryWaiting}
         liveLabel={livePrediction.label}
         liveConfidence={livePrediction.confidence}
+        liveLabelMatches={livePrediction.labelMatches}
         predictorReady={predictorState === "ready"}
         recError={recError ?? landmarkerError ?? predictorError}
         isContinuing={isCompleting}
+        showRetryButton={continueEnabled && capturedPrediction != null}
+        onRetry={handleRetry}
         onContinue={handleContinue}
         videoRef={videoRef}
         detectLandmarks={detectLandmarks}
         isLandmarkerReady={isLandmarkerReady}
         onDetection={handleDetection}
+      />
+      <PermissionRequestDialog
+        open={isConsentPreviewOpen}
+        title="Help improve the model"
+        description="Your prediction matched the target with high confidence. You can donate this practice data to help improve Khmer Sign Language recognition."
+        donateLabel="Donate My Data"
+        agreeLabel="Agree"
+        onDonate={() => setIsConsentPreviewOpen(false)}
+        onClose={() => setIsConsentPreviewOpen(false)}
+        onSkip={() => setIsConsentPreviewOpen(false)}
+        onAgree={() => setIsConsentPreviewOpen(false)}
       />
     </Stack>
   );

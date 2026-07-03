@@ -12,6 +12,7 @@ const OVERLAY_DETECTION_INTERVAL_MS = 0;
 const EMPTY_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
+  handDetected: false,
   frameFeatures: new Float32Array(0),
   sequenceFeatures: null,
 };
@@ -188,7 +189,7 @@ export default function WdCameraPanel({
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "cover",
+              objectFit: "contain",
               display: "block",
               transform: "scaleX(-1)",
             }}
@@ -201,7 +202,7 @@ export default function WdCameraPanel({
               inset: 0,
               width: "100%",
               height: "100%",
-              objectFit: "cover",
+              objectFit: "contain",
               pointerEvents: "none",
               transform: "scaleX(-1)",
             }}

@@ -11,7 +11,9 @@ type PracticeFeedbackPanelProps = {
   title: string;
   text: string;
   continueLabel: string;
+  retryLabel: string;
   passed: boolean;
+  showRetry?: boolean;
   isSubmitting: boolean;
   isContinuing?: boolean;
   onRetry: () => void;
@@ -22,12 +24,18 @@ export default function PracticeFeedbackPanel({
   title,
   text,
   continueLabel,
+  retryLabel,
   passed,
+  showRetry = false,
   isSubmitting,
   isContinuing = false,
   onRetry,
   onContinue,
 }: PracticeFeedbackPanelProps) {
+  const isRetryDisabled = Boolean(isSubmitting || isContinuing);
+  const isContinueLoading = Boolean(isContinuing);
+  const isContinueDisabled = Boolean(!passed || isSubmitting || isContinuing);
+
   return (
     <Paper
       elevation={0}
@@ -66,12 +74,29 @@ export default function PracticeFeedbackPanel({
         </Typography>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+        {showRetry ? (
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={onRetry}
+            disabled={isRetryDisabled}
+            sx={{
+              minWidth: 120,
+              minHeight: 46,
+              borderRadius: `${KslRadii.button}px`,
+              fontSize: KslFontSizes.md,
+              fontWeight: 700,
+            }}
+          >
+            {retryLabel}
+          </Button>
+        ) : null}
         <LoadingButton
           variant="contained"
-          loading={isContinuing}
+          loading={isContinueLoading}
           loadingPosition="center"
           onClick={onContinue}
-          disabled={!passed || isSubmitting || isContinuing}
+          disabled={isContinueDisabled}
           sx={{
             minWidth: 150,
             minHeight: 46,

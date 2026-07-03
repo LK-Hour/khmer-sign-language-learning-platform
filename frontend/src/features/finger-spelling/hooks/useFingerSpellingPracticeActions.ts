@@ -31,12 +31,18 @@ export function useFingerSpellingPracticeActions() {
       lessonId: number,
       features: number[],
       handedness?: string,
-      category?: string
+      category?: string,
+      targetLabel?: string,
     ) => {
       startPracticeSubmission();
 
       try {
-        const prediction = await predictHandFromFeatures(features, handedness, category);
+        const prediction = await predictHandFromFeatures(
+          features,
+          handedness,
+          category,
+          targetLabel,
+        );
         const score = Math.round(prediction?.match_confidence);
         const predicted =
           prediction?.predicted_label ?? String(prediction?.predicted_class_index);

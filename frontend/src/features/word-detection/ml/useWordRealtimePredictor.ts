@@ -9,6 +9,8 @@ export type WordLivePrediction = {
   label: string | null;
   confidence: number;
   classIndex: number | null;
+  targetLabel: string | null;
+  labelMatches: boolean | null;
   seq: number;
 };
 
@@ -25,6 +27,8 @@ const INITIAL_LIVE_PREDICTION: WordLivePrediction = {
   label: null,
   confidence: 0,
   classIndex: null,
+  targetLabel: null,
+  labelMatches: null,
   seq: 0,
 };
 
@@ -130,6 +134,8 @@ export function useWordRealtimePredictor() {
             label,
             confidence,
             classIndex: typeof data.classIndex === "number" ? data.classIndex : null,
+            targetLabel: normalizeWordLabel(data.targetLabel ?? null),
+            labelMatches: typeof data.labelMatches === "boolean" ? data.labelMatches : null,
             seq: seqRef.current,
           };
           lastPredictionRef.current = pred;
@@ -206,11 +212,15 @@ export function useWordRealtimePredictor() {
     setLivePrediction(INITIAL_LIVE_PREDICTION);
   }, []);
 
-  const sendFeatures = useCallback((features: number[]) => {
+  const sendFeatures = useCallback((features: number[], targetLabel?: string) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return false;
 
-    ws.send(JSON.stringify({ type: "predict", features }));
+    ws.send(JSON.stringify({
+      type: targetLabel ? "predict_label_match" : "predict",
+      features,
+      targetLabel: targetLabel ?? undefined,
+    }));
     return true;
   }, []);
 

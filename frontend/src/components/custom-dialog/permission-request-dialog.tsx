@@ -43,6 +43,7 @@ export type PermissionRequestDialogProps = Omit<
   checkboxLabel?: ReactNode;
   skipLabel?: string;
   agreeLabel?: string;
+  donateLabel?: string;
   storageKey?: string;
   defaultDoNotShowAgain?: boolean;
   onClose: (
@@ -51,6 +52,7 @@ export type PermissionRequestDialogProps = Omit<
   ) => void;
   onSkip: (doNotShowAgain: boolean) => void;
   onAgree: (doNotShowAgain: boolean) => void;
+  onDonate?: (doNotShowAgain: boolean) => void;
 };
 
 export function getPermissionRequestChoice(
@@ -79,12 +81,14 @@ export default function PermissionRequestDialog({
   checkboxLabel = "Do not show again",
   skipLabel = "Skip",
   agreeLabel = "Agree",
+  donateLabel = "Donate My Data",
   storageKey = DATA_IMPROVEMENT_PERMISSION_STORAGE_KEY,
   defaultDoNotShowAgain = false,
   open,
   onClose,
   onSkip,
   onAgree,
+  onDonate,
   ...other
 }: PermissionRequestDialogProps) {
   const titleId = useId();
@@ -127,6 +131,11 @@ export default function PermissionRequestDialog({
   const handleAgree = () => {
     rememberChoice("agreed");
     onAgree(doNotShowAgain);
+  };
+
+  const handleDonate = () => {
+    rememberChoice("agreed");
+    onDonate?.(doNotShowAgain);
   };
 
   return (
@@ -231,6 +240,16 @@ export default function PermissionRequestDialog({
           >
             {agreeLabel}
           </Button>
+          {onDonate ? (
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleDonate}
+              sx={{ minHeight: { xs: 44, sm: 48 } }}
+            >
+              {donateLabel}
+            </Button>
+          ) : null}
         </Stack>
       </DialogActions>
     </Dialog>

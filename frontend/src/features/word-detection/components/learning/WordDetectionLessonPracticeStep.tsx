@@ -1,12 +1,11 @@
 "use client";
 
 import LoadingButton from "@mui/lab/LoadingButton";
-import { Grid, Paper, Stack, Typography } from "@mui/material";
+import { Button, Grid, Paper, Stack, Typography } from "@mui/material";
 import type { RefObject } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
-import { resolveWordDetectionVideoUrl } from "@/features/word-detection/data/wordDetectionVideos";
 import WdCameraPanel from "./WordDetectionCameraPanel";
 import WdWordCard from "./WordDetectionWordCard";
 
@@ -28,11 +27,18 @@ type WordDetectionLessonPracticeStepProps = {
   passThreshold: number;
   predictedLabel?: string | null;
   predictedConfidence?: number | null;
+  displayLabel?: string | null;
+  displayConfidence?: number | null;
+  continueEnabled?: boolean;
+  retryWaiting?: boolean;
   liveLabel?: string | null;
   liveConfidence?: number;
+  liveLabelMatches?: boolean | null;
   predictorReady?: boolean;
   recError?: string | null;
   isContinuing?: boolean;
+  showRetryButton?: boolean;
+  onRetry?: () => void;
   onContinue: () => void | Promise<void>;
   videoRef?: RefObject<HTMLVideoElement | null>;
   detectLandmarks: Parameters<typeof WdCameraPanel>[0]["detectLandmarks"];
@@ -47,12 +53,18 @@ export default function WdLessonPracticeStep({
   nextLessonId,
   passThreshold,
   predictedLabel,
-  predictedConfidence = null,
+  displayLabel = null,
+  displayConfidence = null,
+  continueEnabled = false,
+  retryWaiting = false,
   liveLabel,
   liveConfidence = 0,
+  liveLabelMatches = null,
   predictorReady = false,
   recError = null,
   isContinuing = false,
+  showRetryButton = false,
+  onRetry,
   onContinue,
   videoRef,
   detectLandmarks,
@@ -61,28 +73,28 @@ export default function WdLessonPracticeStep({
 }: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
-  const sampleVideoUrl = videoUrl?.trim() || resolveWordDetectionVideoUrl(word);
-  // const targetWord = word.trim(); // target-word matching disabled
+  const sampleVideoUrl = videoUrl?.trim() ?? "";
+  const targetWord = word.trim();
   const finalLabel = predictedLabel?.trim() || null;
-  const showLivePrediction = !finalLabel && predictorReady && !!liveLabel;
-  const displayedLabel = showLivePrediction ? liveLabel : finalLabel;
+  const showLivePrediction =
+    !finalLabel && predictorReady && !!liveLabel && liveLabelMatches !== null;
+  const liveIsNoAction = liveLabel === "No Action";
+  const liveDisplayLabel = liveLabelMatches
+    ? targetWord
+    : liveIsNoAction
+      ? "No Action"
+      : t("PREDICTION.ANALYZING");
+  const liveDisplayConfidence = liveLabelMatches ? Math.round(liveConfidence) : 0;
+  const displayedLabel = displayLabel ?? (showLivePrediction ? liveDisplayLabel : null);
   const displayedConfidence = showLivePrediction
-    ? Math.round(liveConfidence)
-    : predictedConfidence != null
-      ? Math.round(predictedConfidence)
-      : null;
+    ? liveDisplayConfidence
+    : displayConfidence;
   const confidencePasses =
     displayedConfidence != null && displayedConfidence >= passThreshold;
-  // Continue is gated ONLY on the latched (captured) result, never on a single
-  // live frame — the parent latches once the sign holds stably.
-  const finalConfidence =
-    predictedConfidence != null ? Math.round(predictedConfidence) : null;
-  const predictionPassed =
-    !!finalLabel &&
-    // NOTE: target-word matching intentionally disabled — confidence only.
-    // finalLabel === targetWord &&
-    finalConfidence != null &&
-    finalConfidence >= passThreshold;
+  const predictionPassed = Boolean(continueEnabled);
+  const isRetryDisabled = Boolean(isContinuing || retryWaiting);
+  const isContinueLoading = Boolean(isContinuing);
+  const isContinueDisabled = Boolean(!predictionPassed || isContinuing);
   return (
     <Stack spacing={2} sx={{ mt: 2 }}>
       {recError ? (
@@ -204,12 +216,29 @@ export default function WdLessonPracticeStep({
         </Stack>
 
         <Stack direction="row" spacing={1} sx={{ flexShrink: 0, flexWrap: "wrap" }}>
+          {showRetryButton && onRetry ? (
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={onRetry}
+              disabled={isRetryDisabled}
+              sx={{
+                minWidth: 120,
+                minHeight: 46,
+                borderRadius: `${KslRadii.button}px`,
+                fontSize: KslFontSizes.md,
+                fontWeight: 700,
+              }}
+            >
+              {retryWaiting ? t("BUTTON.TRY_AGAIN") : t("WORD_DETECTION.LESSON.RETRY")}
+            </Button>
+          ) : null}
           <LoadingButton
             variant="contained"
-            loading={isContinuing}
+            loading={isContinueLoading}
             loadingPosition="center"
             onClick={onContinue}
-            disabled={!predictionPassed || isContinuing}
+            disabled={isContinueDisabled}
             sx={{
               minWidth: 150,
               minHeight: 46,
