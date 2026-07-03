@@ -1,12 +1,20 @@
 """Track-agnostic admin schemas for the curriculum hierarchy.
 
 Units, chapters, and lessons share an identical column layout between the
-Finger Spelling and Word Sign tracks, so these schemas are reused for both.
-Soft delete is expressed through the ``is_active`` flag rather than row removal.
+Finger Spelling and Word Detection tracks, so these schemas are reused for
+both. Word Detection chapters additionally carry a ``level`` column; the field
+is optional here and silently ignored for tracks whose model lacks it.
+
+Lifecycle fields:
+- Soft delete is expressed through the ``is_active`` flag (restorable).
+- ``publish_status`` implements the confirm-publish workflow: create/update
+  always produce ``draft`` rows; an explicit publish action makes them
+  learner-visible.
 """
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -40,6 +48,9 @@ class UnitResponse(BaseModel):
     description_kh: str | None = None
     order_index: int
     is_active: bool
+    publish_status: str = "published"
+    published_at: datetime | None = None
+    published_by: uuid.UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     chapter_count: int = 0
@@ -56,6 +67,7 @@ class ChapterCreate(BaseModel):
     description_en: str | None = None
     description_kh: str | None = None
     order_index: int = 0
+    level: int | None = None
     is_active: bool = True
 
 
@@ -66,6 +78,7 @@ class ChapterUpdate(BaseModel):
     description_en: str | None = None
     description_kh: str | None = None
     order_index: int | None = None
+    level: int | None = None
     is_active: bool | None = None
 
 
@@ -77,7 +90,11 @@ class ChapterResponse(BaseModel):
     description_en: str | None = None
     description_kh: str | None = None
     order_index: int
+    level: int | None = None
     is_active: bool
+    publish_status: str = "published"
+    published_at: datetime | None = None
+    published_by: uuid.UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     lesson_count: int = 0
@@ -117,6 +134,9 @@ class LessonResponse(BaseModel):
     description_kh: str | None = None
     order_index: int
     is_active: bool
+    publish_status: str = "published"
+    published_at: datetime | None = None
+    published_by: uuid.UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     exercise_count: int = 0

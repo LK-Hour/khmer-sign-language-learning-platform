@@ -6,8 +6,14 @@ Supports the required exercise types per track. For Finger Spelling:
 
     /api/admin/{track}/exercises             GET  POST
     /api/admin/{track}/exercises/{id}        GET  PUT  DELETE
+    /api/admin/{track}/exercises/{id}/restore              POST
+    /api/admin/{track}/exercises/{id}/publish              POST
     /api/admin/{track}/exercises/{id}/options              POST
     /api/admin/{track}/exercise-options/{id}               PUT  DELETE
+    /api/admin/{track}/exercise-options/{id}/restore       POST
+
+Create/update save exercises as ``draft`` (not learner-visible); the publish
+endpoint is the explicit confirm action that makes them live.
 """
 
 from __future__ import annotations
@@ -47,10 +53,14 @@ def list_exercises(
     lesson_id: int | None = Query(None),
     chapter_id: int | None = Query(None),
     active_only: bool = Query(False),
+    publish_status: str | None = Query(None, alias="status"),
     db: Session = Depends(get_db),
 ):
     return _svc(track, db).list_exercises(
-        lesson_id=lesson_id, chapter_id=chapter_id, active_only=active_only
+        lesson_id=lesson_id,
+        chapter_id=chapter_id,
+        active_only=active_only,
+        status=publish_status,
     )
 
 
@@ -96,6 +106,30 @@ def soft_delete_exercise(track: str, exercise_id: int, db: Session = Depends(get
     return result
 
 
+@router.post("/exercises/{exercise_id}/restore", response_model=ExerciseResponse)
+def restore_exercise(track: str, exercise_id: int, db: Session = Depends(get_db)):
+    result = _svc(track, db).restore_exercise(exercise_id)
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Exercise not found")
+    return result
+
+
+@router.post("/exercises/{exercise_id}/publish", response_model=ExerciseResponse)
+def publish_exercise(
+    track: str,
+    exercise_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_admin_user),
+):
+    try:
+        result = _svc(track, db).publish_exercise(exercise_id, user.id)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Exercise not found")
+    return result
+
+
 # ── Exercise options ─────────────────────────────────────────────────────────
 
 
@@ -134,6 +168,14 @@ def update_option(
 @router.delete(
     "/exercise-options/{option_id}", status_code=status.HTTP_204_NO_CONTENT
 )
-def delete_option(track: str, option_id: int, db: Session = Depends(get_db)):
-    if not _svc(track, db).delete_option(option_id):
+def soft_delete_option(track: str, option_id: int, db: Session = Depends(get_db)):
+    if not _svc(track, db).soft_delete_option(option_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Option not found")
+
+
+@router.post(
+    "/exercise-options/{option_id}/restore", status_code=status.HTTP_204_NO_CONTENT
+)
+def restore_option(track: str, option_id: int, db: Session = Depends(get_db)):
+    if not _svc(track, db).restore_option(option_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Option not found")

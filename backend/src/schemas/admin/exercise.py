@@ -22,6 +22,7 @@ class ExerciseOptionCreate(BaseModel):
     option_text_kh: str | None = None
     media_id: int | None = None
     is_correct: bool = False
+    is_active: bool = True
     points: int = 1
     order_index: int = 0
 
@@ -31,6 +32,7 @@ class ExerciseOptionUpdate(BaseModel):
     option_text_kh: str | None = None
     media_id: int | None = None
     is_correct: bool | None = None
+    is_active: bool | None = None
     points: int | None = None
     order_index: int | None = None
 
@@ -42,6 +44,7 @@ class ExerciseOptionResponse(BaseModel):
     option_text_kh: str | None = None
     media_id: int | None = None
     is_correct: bool
+    is_active: bool
     points: int
     order_index: int
     created_at: datetime | None = None
@@ -91,6 +94,8 @@ class ExerciseResponse(BaseModel):
     explanation_kh: str | None = None
     order_index: int
     is_active: bool
+    publish_status: str = "published"
+    published_at: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     options: List[ExerciseOptionResponse] = []

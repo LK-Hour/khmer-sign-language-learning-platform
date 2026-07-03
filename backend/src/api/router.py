@@ -6,6 +6,7 @@ individual modules so moving files does not change the public API.
 
 from fastapi import APIRouter
 
+from src.api.routes.admin.curriculum import router as admin_curriculum_router
 from src.api.routes.admin.exercise import router as admin_exercise_router
 from src.api.routes.auth_session import router as auth_session_router
 from src.api.routes.curriculum import router as curriculum_router
@@ -25,4 +26,5 @@ router.include_router(dictionary_router)
 router.include_router(feedback_router)
 router.include_router(finger_spelling_router)
 router.include_router(word_detection_router)
+router.include_router(admin_curriculum_router)
 router.include_router(admin_exercise_router)
