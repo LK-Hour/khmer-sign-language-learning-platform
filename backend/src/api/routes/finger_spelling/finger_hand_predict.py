@@ -37,6 +37,20 @@ def _get_hand_prediction_service():
     return get_hand_prediction_service()
 
 
+def _get_hand_label_match_prediction_service():
+    try:
+        from src.services.finger_spelling.hand_prediction_service_label_match import (
+            get_hand_label_match_prediction_service,
+        )
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Hand label-match prediction service is unavailable: {exc}",
+        ) from exc
+
+    return get_hand_label_match_prediction_service()
+
+
 @router.get("/predict/status", response_model=HandPredictStatusResponse)
 def hand_predict_status(
     user: User | None = Depends(get_optional_user),
@@ -67,7 +81,11 @@ def predict_from_features(
     guest_id: str | None = Header(default=None, alias=GUEST_ID_HEADER),
 ) -> HandPredictResponse:
     _require_user_or_guest(user, guest_id)
-    service = _get_hand_prediction_service()
+    service = (
+        _get_hand_label_match_prediction_service()
+        if body.target_label
+        else _get_hand_prediction_service()
+    )
     if not service.is_available:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -75,11 +93,22 @@ def predict_from_features(
         )
 
     try:
-        result = service.predict_from_features(
-            body.features,
-            handedness=body.handedness or "Unknown",
-            category=body.category,
-        )
+        if body.target_label:
+            result = service.predict_from_features_with_target(
+                body.features,
+                handedness=body.handedness or "Unknown",
+                category=body.category,
+                target_label=body.target_label,
+            )
+            base_result = result.base
+            label_match = result.label_match
+        else:
+            base_result = service.predict_from_features(
+                body.features,
+                handedness=body.handedness or "Unknown",
+                category=body.category,
+            )
+            label_match = None
     except FileNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -97,8 +126,10 @@ def predict_from_features(
         ) from exc
 
     return HandPredictResponse(
-        match_confidence=result.match_confidence,
-        predicted_class_index=result.prediction.predicted_class_index,
-        predicted_label=result.prediction.predicted_label,
-        handedness=result.features.handedness,
+        match_confidence=base_result.match_confidence,
+        predicted_class_index=base_result.prediction.predicted_class_index,
+        predicted_label=base_result.prediction.predicted_label,
+        handedness=base_result.features.handedness,
+        target_label=label_match.target_label if label_match else None,
+        label_matches=label_match.label_matches if label_match else None,
     )

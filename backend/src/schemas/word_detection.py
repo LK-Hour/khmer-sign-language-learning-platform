@@ -205,6 +205,32 @@ class WdPracticeAttemptResponse(BaseModel):
     lesson_completed: bool
 
 
+class WordPredictFeaturesRequest(BaseModel):
+    features: list[float]
+    target_label: str | None = None
+
+
+class WordPredictResponse(BaseModel):
+    match_confidence: float
+    predicted_class_index: int
+    predicted_label: str | None = None
+    probabilities: list[float]
+    target_label: str | None = None
+    label_matches: bool | None = None
+
+
+class WordPredictStatusResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
+    available: bool
+    model_loaded: bool = False
+    label_map_loaded: bool = False
+    label_count: int = 0
+    output_class_count: int | None = None
+    input_feature_count: int | None = None
+    label_map_matches_model: bool = False
+
+
 # ── Progress schemas ──────────────────────────────────────────────────────────
 
 class WdLessonProgressResponse(BaseModel):

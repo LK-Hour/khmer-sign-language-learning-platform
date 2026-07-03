@@ -204,6 +204,7 @@ class HandPredictFeaturesRequest(BaseModel):
     features: list[float]
     handedness: str | None = None
     category: str | None = None
+    target_label: str | None = None
 
 
 class HandPredictResponse(BaseModel):
@@ -211,6 +212,8 @@ class HandPredictResponse(BaseModel):
     predicted_class_index: int
     predicted_label: str | None = None
     handedness: str
+    target_label: str | None = None
+    label_matches: bool | None = None
 
 
 class HandPredictStatusResponse(BaseModel):

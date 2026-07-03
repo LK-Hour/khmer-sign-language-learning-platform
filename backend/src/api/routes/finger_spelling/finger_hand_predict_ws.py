@@ -13,6 +13,9 @@ from src.models.user import User
 from src.services.finger_spelling.hand_prediction_service import (
     get_hand_prediction_service,
 )
+from src.services.finger_spelling.hand_prediction_service_label_match import (
+    get_hand_label_match_prediction_service,
+)
 from src.utils.jwt_utils import verify_token
 
 logger = logging.getLogger(__name__)
@@ -29,6 +32,8 @@ class PredictMessage(BaseModel):
     features: list[float]
     handedness: str = "Unknown"
     category: str | None = None
+    target_label: str | None = None
+    targetLabel: str | None = None
 
 
 class WsPredictResponse(BaseModel):
@@ -36,6 +41,8 @@ class WsPredictResponse(BaseModel):
     label: str | None
     confidence: float
     handedness: str
+    targetLabel: str | None = None
+    labelMatches: bool | None = None
 
 
 class WsErrorResponse(BaseModel):
@@ -78,6 +85,7 @@ async def handle_websocket(websocket: WebSocket) -> None:
         )
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
         return
+    label_match_service = get_hand_label_match_prediction_service()
 
     authenticated = False
     subject_id: str | None = None
@@ -127,7 +135,7 @@ async def handle_websocket(websocket: WebSocket) -> None:
                     continue
 
             # ── Predict ────────────────────────────────────────────────────
-            elif msg_type == "predict":
+            elif msg_type in {"predict", "predict_label_match"}:
                 if not authenticated:
                     await websocket.send_json(
                         WsErrorResponse(message="Send auth message first").model_dump()
@@ -151,11 +159,24 @@ async def handle_websocket(websocket: WebSocket) -> None:
                     continue
 
                 try:
-                    result = service.predict_from_features(
-                        pred_msg.features,
-                        handedness=pred_msg.handedness,
-                        category=pred_msg.category,
-                    )
+                    label_match = None
+                    if msg_type == "predict_label_match":
+                        label_match_result = (
+                            label_match_service.predict_from_features_with_target(
+                                pred_msg.features,
+                                handedness=pred_msg.handedness,
+                                category=pred_msg.category,
+                                target_label=pred_msg.target_label or pred_msg.targetLabel,
+                            )
+                        )
+                        result = label_match_result.base
+                        label_match = label_match_result.label_match
+                    else:
+                        result = service.predict_from_features(
+                            pred_msg.features,
+                            handedness=pred_msg.handedness,
+                            category=pred_msg.category,
+                        )
                 except Exception as exc:
                     logger.exception("Prediction failed")
                     await websocket.send_json(
@@ -169,6 +190,8 @@ async def handle_websocket(websocket: WebSocket) -> None:
                         label=result.prediction.predicted_label,
                         confidence=result.match_confidence,
                         handedness=result.features.handedness,
+                        targetLabel=label_match.target_label if label_match else None,
+                        labelMatches=label_match.label_matches if label_match else None,
                     ).model_dump()
                 )
 
