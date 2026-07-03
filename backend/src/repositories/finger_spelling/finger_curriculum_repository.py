@@ -1,4 +1,8 @@
-"""Data access for finger spelling curriculum (units -> chapters -> lessons -> letters)."""
+"""Data access for finger spelling curriculum (units -> chapters -> lessons -> letters).
+
+Learner-facing queries: ``active_only=True`` restricts results to rows that are
+both active (not soft-deleted) and published (confirm-publish workflow).
+"""
 
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ from src.models.finger_spelling import (
     FingerUnit,
 )
 from src.models.media import Media
+from src.models.publishable import live
 
 
 class FingerCurriculumRepository:
@@ -25,19 +30,19 @@ class FingerCurriculumRepository:
     def list_units(self, *, active_only: bool = True) -> list[FingerUnit]:
         stmt = select(FingerUnit).order_by(FingerUnit.order_index)
         if active_only:
-            stmt = stmt.where(FingerUnit.is_active.is_(True))
+            stmt = stmt.where(live(FingerUnit))
         return list(self.db.scalars(stmt).all())
 
     def get_unit_by_id(self, unit_id: int, *, active_only: bool = True) -> FingerUnit | None:
         stmt = select(FingerUnit).where(FingerUnit.id == unit_id)
         if active_only:
-            stmt = stmt.where(FingerUnit.is_active.is_(True))
+            stmt = stmt.where(live(FingerUnit))
         return self.db.scalars(stmt).first()
 
     def count_chapters(self, unit_id: int, *, active_only: bool = True) -> int:
         stmt = select(func.count()).select_from(FingerChapter).where(FingerChapter.unit_id == unit_id)
         if active_only:
-            stmt = stmt.where(FingerChapter.is_active.is_(True))
+            stmt = stmt.where(live(FingerChapter))
         return int(self.db.scalar(stmt) or 0)
 
     def count_lessons_in_unit(self, unit_id: int, *, active_only: bool = True) -> int:
@@ -48,7 +53,7 @@ class FingerCurriculumRepository:
             .where(FingerChapter.unit_id == unit_id)
         )
         if active_only:
-            stmt = stmt.where(FingerLesson.is_active.is_(True), FingerChapter.is_active.is_(True))
+            stmt = stmt.where(live(FingerLesson), live(FingerChapter))
         return int(self.db.scalar(stmt) or 0)
 
     # --- Chapters ---
@@ -60,13 +65,13 @@ class FingerCurriculumRepository:
             .order_by(FingerChapter.order_index)
         )
         if active_only:
-            stmt = stmt.where(FingerChapter.is_active.is_(True))
+            stmt = stmt.where(live(FingerChapter))
         return list(self.db.scalars(stmt).all())
 
     def get_chapter_by_id(self, chapter_id: int, *, active_only: bool = True) -> FingerChapter | None:
         stmt = select(FingerChapter).where(FingerChapter.id == chapter_id)
         if active_only:
-            stmt = stmt.where(FingerChapter.is_active.is_(True))
+            stmt = stmt.where(live(FingerChapter))
         return self.db.scalars(stmt).first()
 
     def get_chapter_in_unit(
@@ -77,13 +82,13 @@ class FingerCurriculumRepository:
             FingerChapter.unit_id == unit_id,
         )
         if active_only:
-            stmt = stmt.where(FingerChapter.is_active.is_(True))
+            stmt = stmt.where(live(FingerChapter))
         return self.db.scalars(stmt).first()
 
     def count_lessons(self, chapter_id: int, *, active_only: bool = True) -> int:
         stmt = select(func.count()).select_from(FingerLesson).where(FingerLesson.chapter_id == chapter_id)
         if active_only:
-            stmt = stmt.where(FingerLesson.is_active.is_(True))
+            stmt = stmt.where(live(FingerLesson))
         return int(self.db.scalar(stmt) or 0)
 
     # --- Lessons ---
@@ -95,13 +100,13 @@ class FingerCurriculumRepository:
             .order_by(FingerLesson.order_index)
         )
         if active_only:
-            stmt = stmt.where(FingerLesson.is_active.is_(True))
+            stmt = stmt.where(live(FingerLesson))
         return list(self.db.scalars(stmt).all())
 
     def get_lesson_by_id(self, lesson_id: int, *, active_only: bool = True) -> FingerLesson | None:
         stmt = select(FingerLesson).where(FingerLesson.id == lesson_id)
         if active_only:
-            stmt = stmt.where(FingerLesson.is_active.is_(True))
+            stmt = stmt.where(live(FingerLesson))
         return self.db.scalars(stmt).first()
 
     def get_lesson_in_chapter(
@@ -112,7 +117,7 @@ class FingerCurriculumRepository:
             FingerLesson.chapter_id == chapter_id,
         )
         if active_only:
-            stmt = stmt.where(FingerLesson.is_active.is_(True))
+            stmt = stmt.where(live(FingerLesson))
         return self.db.scalars(stmt).first()
 
     def get_lesson_in_hierarchy(
@@ -134,8 +139,8 @@ class FingerCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                FingerLesson.is_active.is_(True),
-                FingerChapter.is_active.is_(True),
+                live(FingerLesson),
+                live(FingerChapter),
             )
         return self.db.scalars(stmt).first()
 
@@ -146,7 +151,7 @@ class FingerCurriculumRepository:
             .where(FingerLesson.id == lesson_id)
         )
         if active_only:
-            stmt = stmt.where(FingerLesson.is_active.is_(True))
+            stmt = stmt.where(live(FingerLesson))
         return self.db.scalars(stmt).first()
 
     # --- Letters ---
@@ -232,9 +237,9 @@ class FingerCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                FingerLesson.is_active.is_(True),
-                FingerChapter.is_active.is_(True),
-                FingerUnit.is_active.is_(True),
+                live(FingerLesson),
+                live(FingerChapter),
+                live(FingerUnit),
             )
         return list(self.db.execute(stmt).all())
 
@@ -251,8 +256,8 @@ class FingerCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                FingerLesson.is_active.is_(True),
-                FingerChapter.is_active.is_(True),
+                live(FingerLesson),
+                live(FingerChapter),
             )
         return list(self.db.scalars(stmt).all())
 
@@ -272,9 +277,9 @@ class FingerCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                FingerLesson.is_active.is_(True),
-                FingerChapter.is_active.is_(True),
-                FingerUnit.is_active.is_(True),
+                live(FingerLesson),
+                live(FingerChapter),
+                live(FingerUnit),
             )
         return list(self.db.scalars(stmt).all())
 

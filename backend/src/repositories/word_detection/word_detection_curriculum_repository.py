@@ -1,4 +1,8 @@
-"""Data access for word detection curriculum (units -> chapters -> lessons -> words)."""
+"""Data access for word detection curriculum (units -> chapters -> lessons -> words).
+
+Learner-facing queries: ``active_only=True`` restricts results to rows that are
+both active (not soft-deleted) and published (confirm-publish workflow).
+"""
 
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ from src.models.word_detection import (
     WordDetectionUnit,
 )
 from src.models.media import Media
+from src.models.publishable import live
 
 
 class WordDetectionCurriculumRepository:
@@ -25,13 +30,13 @@ class WordDetectionCurriculumRepository:
     def list_units(self, *, active_only: bool = True) -> list[WordDetectionUnit]:
         stmt = select(WordDetectionUnit).order_by(WordDetectionUnit.order_index)
         if active_only:
-            stmt = stmt.where(WordDetectionUnit.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionUnit))
         return list(self.db.scalars(stmt).all())
 
     def get_unit_by_id(self, unit_id: int, *, active_only: bool = True) -> WordDetectionUnit | None:
         stmt = select(WordDetectionUnit).where(WordDetectionUnit.id == unit_id)
         if active_only:
-            stmt = stmt.where(WordDetectionUnit.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionUnit))
         return self.db.scalars(stmt).first()
 
     def count_chapters(self, unit_id: int, *, active_only: bool = True) -> int:
@@ -39,7 +44,7 @@ class WordDetectionCurriculumRepository:
             WordDetectionChapter.unit_id == unit_id
         )
         if active_only:
-            stmt = stmt.where(WordDetectionChapter.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionChapter))
         return int(self.db.scalar(stmt) or 0)
 
     def count_lessons_in_unit(self, unit_id: int, *, active_only: bool = True) -> int:
@@ -51,8 +56,8 @@ class WordDetectionCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                WordDetectionLesson.is_active.is_(True),
-                WordDetectionChapter.is_active.is_(True),
+                live(WordDetectionLesson),
+                live(WordDetectionChapter),
             )
         return int(self.db.scalar(stmt) or 0)
 
@@ -67,7 +72,7 @@ class WordDetectionCurriculumRepository:
             .order_by(WordDetectionChapter.order_index)
         )
         if active_only:
-            stmt = stmt.where(WordDetectionChapter.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionChapter))
         return list(self.db.scalars(stmt).all())
 
     def get_chapter_by_id(
@@ -75,7 +80,7 @@ class WordDetectionCurriculumRepository:
     ) -> WordDetectionChapter | None:
         stmt = select(WordDetectionChapter).where(WordDetectionChapter.id == chapter_id)
         if active_only:
-            stmt = stmt.where(WordDetectionChapter.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionChapter))
         return self.db.scalars(stmt).first()
 
     def get_chapter_in_unit(
@@ -86,7 +91,7 @@ class WordDetectionCurriculumRepository:
             WordDetectionChapter.unit_id == unit_id,
         )
         if active_only:
-            stmt = stmt.where(WordDetectionChapter.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionChapter))
         return self.db.scalars(stmt).first()
 
     def count_lessons(self, chapter_id: int, *, active_only: bool = True) -> int:
@@ -94,7 +99,7 @@ class WordDetectionCurriculumRepository:
             WordDetectionLesson.chapter_id == chapter_id
         )
         if active_only:
-            stmt = stmt.where(WordDetectionLesson.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionLesson))
         return int(self.db.scalar(stmt) or 0)
 
     # --- Lessons ---
@@ -108,7 +113,7 @@ class WordDetectionCurriculumRepository:
             .order_by(WordDetectionLesson.order_index)
         )
         if active_only:
-            stmt = stmt.where(WordDetectionLesson.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionLesson))
         return list(self.db.scalars(stmt).all())
 
     def get_lesson_by_id(
@@ -116,7 +121,7 @@ class WordDetectionCurriculumRepository:
     ) -> WordDetectionLesson | None:
         stmt = select(WordDetectionLesson).where(WordDetectionLesson.id == lesson_id)
         if active_only:
-            stmt = stmt.where(WordDetectionLesson.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionLesson))
         return self.db.scalars(stmt).first()
 
     def get_lesson_in_chapter(
@@ -127,7 +132,7 @@ class WordDetectionCurriculumRepository:
             WordDetectionLesson.chapter_id == chapter_id,
         )
         if active_only:
-            stmt = stmt.where(WordDetectionLesson.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionLesson))
         return self.db.scalars(stmt).first()
 
     def get_lesson_in_hierarchy(
@@ -149,8 +154,8 @@ class WordDetectionCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                WordDetectionLesson.is_active.is_(True),
-                WordDetectionChapter.is_active.is_(True),
+                live(WordDetectionLesson),
+                live(WordDetectionChapter),
             )
         return self.db.scalars(stmt).first()
 
@@ -165,7 +170,7 @@ class WordDetectionCurriculumRepository:
             .where(WordDetectionLesson.id == lesson_id)
         )
         if active_only:
-            stmt = stmt.where(WordDetectionLesson.is_active.is_(True))
+            stmt = stmt.where(live(WordDetectionLesson))
         return self.db.scalars(stmt).first()
 
     # --- Words ---
@@ -190,6 +195,12 @@ class WordDetectionCurriculumRepository:
         if active_only:
             stmt = stmt.where(WordDetectionWord.is_active.is_(True))
         return self.db.scalars(stmt).first()
+
+    def list_all_words(self, *, active_only: bool = True) -> list[WordDetectionWord]:
+        stmt = select(WordDetectionWord).order_by(WordDetectionWord.id)
+        if active_only:
+            stmt = stmt.where(WordDetectionWord.is_active.is_(True))
+        return list(self.db.scalars(stmt).all())
 
     def get_word_with_medias(
         self, word_id: int, *, active_only: bool = True
@@ -244,6 +255,32 @@ class WordDetectionCurriculumRepository:
             ).where(WordDetectionWord.is_active.is_(True))
         return self.db.scalar(stmt) is not None
 
+    def list_lesson_paths_for_word(
+        self, word_id: int, *, active_only: bool = True
+    ) -> list[tuple[WordDetectionLesson, WordDetectionChapter, WordDetectionUnit]]:
+        stmt = (
+            select(WordDetectionLesson, WordDetectionChapter, WordDetectionUnit)
+            .join(
+                WordDetectionLessonWord,
+                WordDetectionLessonWord.lesson_id == WordDetectionLesson.id,
+            )
+            .join(WordDetectionChapter, WordDetectionLesson.chapter_id == WordDetectionChapter.id)
+            .join(WordDetectionUnit, WordDetectionChapter.unit_id == WordDetectionUnit.id)
+            .where(WordDetectionLessonWord.word_id == word_id)
+            .order_by(
+                WordDetectionUnit.order_index,
+                WordDetectionChapter.order_index,
+                WordDetectionLesson.order_index,
+            )
+        )
+        if active_only:
+            stmt = stmt.where(
+                live(WordDetectionLesson),
+                live(WordDetectionChapter),
+                live(WordDetectionUnit),
+            )
+        return list(self.db.execute(stmt).all())
+
     def list_lesson_ids_for_chapter(
         self, chapter_id: int, *, active_only: bool = True
     ) -> list[int]:
@@ -261,8 +298,8 @@ class WordDetectionCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                WordDetectionLesson.is_active.is_(True),
-                WordDetectionChapter.is_active.is_(True),
+                live(WordDetectionLesson),
+                live(WordDetectionChapter),
             )
         return list(self.db.scalars(stmt).all())
 
@@ -282,9 +319,9 @@ class WordDetectionCurriculumRepository:
         )
         if active_only:
             stmt = stmt.where(
-                WordDetectionLesson.is_active.is_(True),
-                WordDetectionChapter.is_active.is_(True),
-                WordDetectionUnit.is_active.is_(True),
+                live(WordDetectionLesson),
+                live(WordDetectionChapter),
+                live(WordDetectionUnit),
             )
         return list(self.db.scalars(stmt).all())
 

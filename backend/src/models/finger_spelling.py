@@ -26,6 +26,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.session import Base
 from src.models.media import Media
+from src.models.publishable import PublishableMixin
 
 
 class FingerExerciseType(str, Enum):
@@ -38,7 +39,7 @@ class FingerExerciseType(str, Enum):
 
 # ==================== CURRICULUM HIERARCHY ====================
 
-class FingerUnit(Base):
+class FingerUnit(PublishableMixin, Base):
     """Top-level curriculum container (e.g., Main Consonants)."""
     __tablename__ = "finger_units"
 
@@ -64,7 +65,7 @@ class FingerUnit(Base):
     )
 
 
-class FingerChapter(Base):
+class FingerChapter(PublishableMixin, Base):
     """Chapter within a unit (e.g., ក ខ គ ឃ ង)."""
     __tablename__ = "finger_chapters"
 
@@ -92,7 +93,7 @@ class FingerChapter(Base):
     )
 
 
-class FingerLesson(Base):
+class FingerLesson(PublishableMixin, Base):
     """Individual lesson (may contain multiple letters via junction table)."""
     __tablename__ = "finger_lessons"
 
@@ -198,7 +199,7 @@ class FingerLetterMedia(Base):
 
 # ==================== EXERCISES ====================
 
-class FingerExercise(Base):
+class FingerExercise(PublishableMixin, Base):
     """Lesson exercise/question (multiple choice, free form, image select)."""
     __tablename__ = "finger_exercises"
 
@@ -253,6 +254,7 @@ class FingerExerciseOption(Base):
     option_text_kh: Mapped[Optional[str]] = mapped_column(String(500))
     media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
     is_correct: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     points: Mapped[int] = mapped_column(BigInteger, default=1)
     order_index: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
