@@ -6,7 +6,7 @@ import { Stack } from "@mui/material";
 
 import MainHeader from "./header-nav";
 
-const HIDDEN_NAV_SEGMENTS = ["/login", "/test-login"];
+const HIDDEN_NAV_SEGMENTS = ["/login", "/test-login", "/admin"];
 
 type AppLayoutProps = {
   children: React.ReactNode;

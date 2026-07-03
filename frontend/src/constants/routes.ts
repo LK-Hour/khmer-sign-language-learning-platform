@@ -23,6 +23,9 @@ export const ROUTES = {
   },
 
   admin: {
+    root: "/admin",
+    curriculum: "/admin/curriculum",
+    exercises: "/admin/exercises",
     quiz: "/admin/quiz",
   },
 } as const;

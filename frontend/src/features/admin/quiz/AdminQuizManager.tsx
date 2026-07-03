@@ -7,8 +7,6 @@ import Edit from "@mui/icons-material/Edit";
 import ErrorOutline from "@mui/icons-material/ErrorOutlineOutlined";
 import FormatListNumbered from "@mui/icons-material/FormatListNumbered";
 import ImageIcon from "@mui/icons-material/Image";
-import Layers from "@mui/icons-material/Layers";
-import MenuBook from "@mui/icons-material/MenuBook";
 import TextFields from "@mui/icons-material/TextFields";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -229,81 +227,8 @@ export default function AdminQuizManager() {
   };
 
   return (
-    <Stack direction="row" sx={{ minHeight: "100vh", bgcolor: AdminQuizColors.page }}>
-      <Stack
-        component="aside"
-        sx={{
-          display: { xs: "none", md: "flex" },
-          width: 256,
-          flexShrink: 0,
-          bgcolor: AdminQuizColors.sidebar,
-          color: AdminQuizColors.sidebarText,
-        }}
-      >
-        <Stack
-          direction="row"
-          spacing={1.5}
-          sx={{
-            alignItems: "center",
-            p: 2,
-            borderBottom: `1px solid ${AdminQuizColors.sidebarBorder}`,
-            bgcolor: AdminQuizColors.sidebarStrong,
-          }}
-        >
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              display: "grid",
-              placeItems: "center",
-              bgcolor: AdminQuizColors.primary,
-              color: "common.white",
-              fontWeight: 700,
-            }}
-          >
-            K
-          </Box>
-          <Stack>
-            <Typography sx={{ fontSize: AdminQuizFontSizes.body, fontWeight: 700, color: "common.white", lineHeight: 1 }}>
-              KSL Admin
-            </Typography>
-            <Typography sx={{ mt: 0.5, fontSize: AdminQuizFontSizes.eyebrow, textTransform: "uppercase", color: AdminQuizColors.muted }}>
-              {t("ADMIN.MANAGEMENT")}
-            </Typography>
-          </Stack>
-        </Stack>
-
-        <Stack component="nav" spacing={1} sx={{ flex: 1, p: 2 }}>
-          <Typography sx={{ px: 1, mb: 1, fontSize: AdminQuizFontSizes.eyebrow, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: AdminQuizColors.muted }}>
-            {t("ADMIN.NAVIGATION")}
-          </Typography>
-          <Button
-            startIcon={<Layers sx={{ fontSize: 18 }} />}
-            sx={{
-              justifyContent: "flex-start",
-              color: AdminQuizColors.primaryText,
-              bgcolor: AdminQuizColors.primaryTint,
-              border: `1px solid ${AdminQuizColors.primaryTintBorder}`,
-              "&:hover": { bgcolor: AdminQuizColors.primaryTintHover },
-            }}
-          >
-            {t("ADMIN.CURRICULUM")}
-          </Button>
-          <Button
-            startIcon={<MenuBook sx={{ fontSize: 18 }} />}
-            sx={{
-              justifyContent: "flex-start",
-              color: AdminQuizColors.sidebarMuted,
-              "&:hover": { bgcolor: AdminQuizColors.sidebarBorder, color: "common.white" },
-            }}
-          >
-            {t("ADMIN.EXERCISES")}
-          </Button>
-        </Stack>
-      </Stack>
-
-      <Stack component="main" sx={{ flex: 1, minWidth: 0 }}>
+    <>
+      <Stack sx={{ flex: 1, minWidth: 0, bgcolor: AdminQuizColors.page }}>
         <Paper square elevation={0} sx={{ zIndex: 1, p: 2, borderBottom: `1px solid ${AdminQuizColors.border}` }}>
           <Stack spacing={1.5}>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
@@ -696,6 +621,6 @@ export default function AdminQuizManager() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Stack>
+    </>
   );
 }
