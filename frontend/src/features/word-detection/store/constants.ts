@@ -1,1 +1,1 @@
-export const WORD_DETECTION_PASS_THRESHOLD = 50;
+// Threshold removed - completion now based on label matching instead of confidence

@@ -15,7 +15,8 @@ export function useWordDetectionPracticeActions() {
   const completePractice = useCallback(
     async (
       lesson: WdLessonDetail,
-      accuracy: number | null
+      accuracy: number | null,
+      labelMatched: boolean
     ): Promise<boolean> => {
       const lessonId = lesson?.id;
       const authUser = useAuthStore.getState().user;
@@ -25,7 +26,7 @@ export function useWordDetectionPracticeActions() {
         return false;
       }
 
-      // Guests: record locally and allow navigation (even if accuracy is low)
+      // Guests: record locally and allow navigation
       if (authUser?.is_guest) {
         useWordDetectionGuestProgressStore
           .getState()
@@ -40,9 +41,12 @@ export function useWordDetectionPracticeActions() {
 
       // Submit attempt to backend
       try {
-        await submitWdPracticeAttempt(lessonId, { accuracy });
-        // Always navigate forward — lesson stays uncompleted if accuracy < threshold
-        return true;
+        const response = await submitWdPracticeAttempt(lessonId, { 
+          accuracy,
+          label_matched: labelMatched 
+        });
+        // Only navigate if lesson was actually completed (label matched)
+        return response.lesson_completed;
       } catch (error) {
         console.error("[wd completePractice] submit failed:", error);
         return false;
