@@ -24,7 +24,6 @@ type WordDetectionLessonPracticeStepProps = {
   nextLessonId?: number;
   orderIndex: number;
   lessonStep: string;
-  passThreshold: number;
   predictedLabel?: string | null;
   predictedConfidence?: number | null;
   displayLabel?: string | null;
@@ -44,6 +43,7 @@ type WordDetectionLessonPracticeStepProps = {
   detectLandmarks: Parameters<typeof WdCameraPanel>[0]["detectLandmarks"];
   isLandmarkerReady: boolean;
   onDetection?: Parameters<typeof WdCameraPanel>[0]["onDetection"];
+  onRawStreamReady?: Parameters<typeof WdCameraPanel>[0]["onRawStreamReady"];
 };
 
 export default function WdLessonPracticeStep({
@@ -51,7 +51,6 @@ export default function WdLessonPracticeStep({
   videoUrl,
   tip,
   nextLessonId,
-  passThreshold,
   predictedLabel,
   displayLabel = null,
   displayConfidence = null,
@@ -70,6 +69,7 @@ export default function WdLessonPracticeStep({
   detectLandmarks,
   isLandmarkerReady,
   onDetection,
+  onRawStreamReady,
 }: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
@@ -89,8 +89,6 @@ export default function WdLessonPracticeStep({
   const displayedConfidence = showLivePrediction
     ? liveDisplayConfidence
     : displayConfidence;
-  const confidencePasses =
-    displayedConfidence != null && displayedConfidence >= passThreshold;
   const predictionPassed = Boolean(continueEnabled);
   const isRetryDisabled = Boolean(isContinuing || retryWaiting);
   const isContinueLoading = Boolean(isContinuing);
@@ -140,6 +138,7 @@ export default function WdLessonPracticeStep({
                 detectLandmarks={detectLandmarks}
                 isLandmarkerReady={isLandmarkerReady}
                 onDetection={onDetection}
+                onRawStreamReady={onRawStreamReady}
               />
             </Stack>
             <Typography
@@ -164,7 +163,7 @@ export default function WdLessonPracticeStep({
           <MetricCard
             label={t("FINGER_SPELLING.LESSON.MATCH_CONFIDENCE")}
             value={displayedConfidence != null ? `${displayedConfidence}%` : "—"}
-            highlight={confidencePasses}
+            highlight={displayedConfidence != null && displayedConfidence >= 50}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>

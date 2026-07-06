@@ -14,13 +14,14 @@ import {
 } from "@/features/word-detection/ml/useWordDetectionLandmarker";
 import { useWordRealtimePredictor } from "@/features/word-detection/ml/useWordRealtimePredictor";
 import { useWordDetectionPracticeActions } from "@/features/word-detection/hooks/useWordDetectionPracticeActions";
-import { WORD_DETECTION_PASS_THRESHOLD } from "@/features/word-detection/store/constants";
 import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
+import { useWordContributionUpload } from "@/features/word-detection/hooks/useWordContributionUpload";
+import { useWordRecording } from "@/features/word-detection/hooks/useWordRecording";
 import { KslColors } from "@/theme/theme";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import WdLessonPracticeStep from "./WordDetectionLessonPracticeStep";
-import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
+import WordRecordingPreview from "./WordRecordingPreview";
 
 const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 100;
 /** Consecutive live frames matching the target word at >= pass threshold
@@ -32,6 +33,7 @@ const WORD_HAND_WARMUP_FRAMES = 10;
 const WORD_AUTO_RETRY_DELAY_MS = 1800;
 const WORD_AUTO_RETRY_POLL_INTERVAL_MS = 33;
 const WORD_DONATION_CONFIDENCE_THRESHOLD = 70;
+const WORD_RECORDING_DURATION_MS = 4000;
 const WORD_SEQUENCE_FEATURE_COUNT =
   WORD_DETECTION_SEQUENCE_LENGTH * WORD_DETECTION_TOTAL_FEATURES;
 
@@ -66,11 +68,17 @@ export default function WdLessonLearningView({
   const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const donationPromptShownRef = useRef(false);
+  const recordingInFlightRef = useRef(false);
+  const recordingStartTimeRef = useRef<number | null>(null);
+  const capturedPredictionRef = useRef<typeof capturedPrediction>(null);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [retryWaiting, setRetryWaiting] = useState(false);
-  const [isConsentPreviewOpen, setIsConsentPreviewOpen] = useState(false);
+  const [rawStream, setRawStream] = useState<MediaStream | null>(null);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [isRecordingPreviewOpen, setIsRecordingPreviewOpen] = useState(false);
+  const [handDetected, setHandDetected] = useState(false);
+  const [handWarmupComplete, setHandWarmupComplete] = useState(false);
   const [manualRetryListening, setManualRetryListening] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;
@@ -78,6 +86,17 @@ export default function WdLessonLearningView({
     seq: number;
   } | null>(null);
   const { completePractice } = useWordDetectionPracticeActions();
+  const {
+    isRecording,
+    error: recordingError,
+    recordForDuration,
+    stopRecording,
+  } = useWordRecording();
+  const {
+    isUploading,
+    error: uploadError,
+    uploadContribution,
+  } = useWordContributionUpload();
   const {
     detectLandmarks,
     resetSequence,
@@ -126,11 +145,11 @@ export default function WdLessonLearningView({
   }, []);
 
   const handleContinue = useCallback(async () => {
-    if (isCompleting) return;
+    if (isCompleting || isRecording || isUploading) return;
 
     setIsCompleting(true);
     const accuracy = capturedPrediction?.confidence ?? null;
-    const completed = await completePractice(lesson, accuracy);
+    const completed = await completePractice(lesson, accuracy, labelMatches);
     setIsCompleting(false);
 
     if (!completed) {
@@ -152,6 +171,9 @@ export default function WdLessonLearningView({
     nextLessonId,
     router,
     t,
+    isRecording,
+    isUploading,
+    labelMatches,
   ]);
 
   const resetPredictionState = useCallback(() => {
@@ -159,8 +181,15 @@ export default function WdLessonLearningView({
     stableLabelRef.current = null;
     stableCountRef.current = 0;
     handPresentCountRef.current = 0;
+    setHandDetected(false);
+    setHandWarmupComplete(false);
     setCapturedPrediction(null);
+    capturedPredictionRef.current = null;
     setRecError(null);
+    setRecordedBlob(null);
+    setIsRecordingPreviewOpen(false);
+    recordingInFlightRef.current = false;
+    recordingStartTimeRef.current = null;
     setRetryWaiting(false);
     resetSequence();
     resetLivePrediction();
@@ -168,7 +197,6 @@ export default function WdLessonLearningView({
 
   useEffect(() => {
     resetAttempts();
-    donationPromptShownRef.current = false;
     queueMicrotask(() => {
       setManualRetryListening(false);
       resetPredictionState();
@@ -200,11 +228,21 @@ export default function WdLessonLearningView({
       // streaming, so a single flicker frame can't trigger a phantom result.
       if (!detection.handDetected) {
         handPresentCountRef.current = 0;
+        setHandDetected(false);
         return;
       }
       handPresentCountRef.current += 1;
+
+      if (!handDetected) {
+        setHandDetected(true);
+      }
+
       if (handPresentCountRef.current < WORD_HAND_WARMUP_FRAMES) {
         return;
+      }
+
+      if (!handWarmupComplete) {
+        setHandWarmupComplete(true);
       }
 
       const sequenceFeatures = detection.sequenceFeatures;
@@ -226,25 +264,25 @@ export default function WdLessonLearningView({
   useEffect(() => {
     if ((continueEnabled && !manualRetryListening) || retryWaiting) return;
 
-    const pred = livePrediction;
-    if (!pred.label || pred.label === "No Action") {
+    const prediction = livePrediction;
+    if (!prediction.label || prediction.label === "No Action") {
       stableLabelRef.current = null;
       stableCountRef.current = 0;
       return;
     }
 
-    if (pred.label === stableLabelRef.current) {
+    if (prediction.label === stableLabelRef.current) {
       stableCountRef.current += 1;
     } else {
-      stableLabelRef.current = pred.label;
+      stableLabelRef.current = prediction.label;
       stableCountRef.current = 1;
     }
 
     if (stableCountRef.current >= WORD_PASS_STABLE_FRAMES) {
       setCapturedPrediction({
-        label: pred.label as string,
-        confidence: pred.confidence,
-        seq: pred.seq,
+        label: prediction.label as string,
+        confidence: prediction.confidence,
+        seq: prediction.seq,
       });
       setManualRetryListening(false);
       stableLabelRef.current = null;
@@ -316,18 +354,92 @@ export default function WdLessonLearningView({
   }, [clearAutoRetryTimers, isCompleting, retryWhenHandIsReady, shouldAutoRetry]);
 
   useEffect(() => {
+    capturedPredictionRef.current = capturedPrediction;
+  }, [capturedPrediction]);
+
+  useEffect(() => {
+    if (!rawStream || recordingInFlightRef.current || !handDetected) return;
+    if (recordedBlob || isRecordingPreviewOpen) return;
+    if (continueEnabled) return;
+
+    recordingStartTimeRef.current = Date.now();
+    recordingInFlightRef.current = true;
+
+    recordForDuration(rawStream, WORD_RECORDING_DURATION_MS)
+      .then(({ blob }) => {
+        // Use ref to get the latest prediction at the time recording finished
+        const latestPrediction = capturedPredictionRef.current;
+        const predictionMatches =
+          latestPrediction &&
+          latestPrediction.label === lesson.word &&
+          latestPrediction.confidence >= WORD_DONATION_CONFIDENCE_THRESHOLD;
+
+        if (predictionMatches) {
+          setRecordedBlob(blob);
+          setIsRecordingPreviewOpen(true);
+        } else {
+          // Discard silently - no preview shown
+          setRecordedBlob(null);
+        }
+      })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : "Recording failed.";
+        setRecError(message);
+      })
+      .finally(() => {
+        recordingInFlightRef.current = false;
+        recordingStartTimeRef.current = null;
+      });
+  }, [rawStream, recordForDuration, recordedBlob, isRecordingPreviewOpen, handDetected, lesson.word]);
+
+  // Recording no longer stops early on prediction; it runs for full 4s
+
+  useEffect(() => {
     if (
       labelMatches &&
       capturedPrediction &&
-      capturedPrediction.confidence >= WORD_DONATION_CONFIDENCE_THRESHOLD &&
-      !donationPromptShownRef.current
+      capturedPrediction.confidence >= WORD_DONATION_CONFIDENCE_THRESHOLD
     ) {
-      donationPromptShownRef.current = true;
       clearAutoRetryTimers();
-      setRetryWaiting(false);
-      setIsConsentPreviewOpen(true);
+      queueMicrotask(() => {
+        setRetryWaiting(false);
+        setRecError(null);
+      });
     }
   }, [capturedPrediction, clearAutoRetryTimers, labelMatches]);
+
+  useEffect(() => {
+    if (recordingError) {
+      queueMicrotask(() => {
+        setRecError(recordingError);
+      });
+    }
+  }, [recordingError]);
+
+  const handleDiscardRecording = useCallback(() => {
+    setIsRecordingPreviewOpen(false);
+    setRecordedBlob(null);
+    setHandWarmupComplete(false);
+  }, []);
+
+  const handleUploadRecording = useCallback(async () => {
+    if (!recordedBlob || !capturedPrediction) return;
+
+    try {
+      await uploadContribution({
+        video: recordedBlob,
+        lessonId: lesson.id,
+        word: lesson.word,
+        predictedLabel: capturedPrediction.label,
+        confidence: capturedPrediction.confidence,
+      });
+      setIsRecordingPreviewOpen(false);
+      setRecordedBlob(null);
+      setHandWarmupComplete(false);
+    } catch {
+      // The upload hook owns the visible error state and keeps the blob for retry.
+    }
+  }, [capturedPrediction, lesson.id, lesson.word, recordedBlob, uploadContribution]);
 
   return (
     <Stack spacing={3} sx={{ pb: 6 }}>
@@ -361,7 +473,6 @@ export default function WdLessonLearningView({
         nextLessonId={nextLessonId}
         orderIndex={lesson.orderIndex}
         lessonStep={lessonStep}
-        passThreshold={WORD_DETECTION_PASS_THRESHOLD}
         predictedLabel={capturedPrediction?.label ?? null}
         predictedConfidence={capturedPrediction?.confidence ?? null}
         displayConfidence={displayConfidence}
@@ -373,7 +484,7 @@ export default function WdLessonLearningView({
         liveLabelMatches={livePrediction.labelMatches}
         predictorReady={predictorState === "ready"}
         recError={recError ?? landmarkerError ?? predictorError}
-        isContinuing={isCompleting}
+        isContinuing={isCompleting || isRecording || isUploading}
         showRetryButton={continueEnabled && capturedPrediction != null}
         onRetry={handleRetry}
         onContinue={handleContinue}
@@ -381,17 +492,18 @@ export default function WdLessonLearningView({
         detectLandmarks={detectLandmarks}
         isLandmarkerReady={isLandmarkerReady}
         onDetection={handleDetection}
+        onRawStreamReady={setRawStream}
       />
-      <PermissionRequestDialog
-        open={isConsentPreviewOpen}
-        title="Help improve the model"
-        description="Your prediction matched the target with high confidence. You can donate this practice data to help improve Khmer Sign Language recognition."
-        donateLabel="Donate My Data"
-        agreeLabel="Agree"
-        onDonate={() => setIsConsentPreviewOpen(false)}
-        onClose={() => setIsConsentPreviewOpen(false)}
-        onSkip={() => setIsConsentPreviewOpen(false)}
-        onAgree={() => setIsConsentPreviewOpen(false)}
+      <WordRecordingPreview
+        open={isRecordingPreviewOpen}
+        videoBlob={recordedBlob}
+        word={lesson.word}
+        predictedLabel={capturedPrediction?.label ?? null}
+        confidence={capturedPrediction?.confidence ?? null}
+        isUploading={isUploading}
+        uploadError={uploadError}
+        onDiscard={handleDiscardRecording}
+        onUpload={handleUploadRecording}
       />
     </Stack>
   );
