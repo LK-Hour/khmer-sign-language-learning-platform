@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SQLEnum, String, func
+from sqlalchemy import BigInteger, DateTime, Enum as SQLEnum, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.session import Base
@@ -48,7 +48,7 @@ class Media(Base):
     """
     __tablename__ = "medias"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     media_type: Mapped[str] = mapped_column(
         SQLEnum(MediaType, name="media_type", values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,

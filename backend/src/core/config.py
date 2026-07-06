@@ -19,6 +19,9 @@ _DEFAULT_WORD_ML_MODEL = (
 _DEFAULT_WORD_LABEL_MAP = (
     _REPO_ROOT / "data_set" / "word_detection_model_assets" / "label_map_25class.json"
 )
+_DEFAULT_WORD_CONTRIBUTIONS_DIR = (
+    _REPO_ROOT / "data_set" / "word_detection_contributions"
+)
 
 
 class Settings(BaseSettings):
@@ -67,6 +70,10 @@ class Settings(BaseSettings):
         default=_DEFAULT_WORD_LABEL_MAP,
         validation_alias="WORD_ML_LABEL_MAP_PATH",
     )
+    word_detection_contributions_dir: Path = Field(
+        default=_DEFAULT_WORD_CONTRIBUTIONS_DIR,
+        validation_alias="WORD_DETECTION_CONTRIBUTIONS_DIR",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -88,6 +95,7 @@ class Settings(BaseSettings):
         "ml_label_encoder_path",
         "word_ml_model_path",
         "word_ml_label_map_path",
+        "word_detection_contributions_dir",
         mode="before",
     )
     @classmethod

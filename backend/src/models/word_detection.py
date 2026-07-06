@@ -366,7 +366,8 @@ class WordDetectionContribution(Base):
     __tablename__ = "word_detection_contributions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    guest_id: Mapped[Optional[str]] = mapped_column(String(100))
     word_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("word_detection_words.id"), nullable=False)
     word_detection_lesson_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("word_detection_lessons.id")
@@ -384,7 +385,7 @@ class WordDetectionContribution(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    user: Mapped["User"] = relationship(
+    user: Mapped[Optional["User"]] = relationship(
         back_populates="word_detection_contributions",
         foreign_keys=[user_id],
     )
@@ -401,4 +402,5 @@ class WordDetectionContribution(Base):
         Index("ix_word_detection_contributions_lesson_id", "word_detection_lesson_id"),
         Index("ix_word_detection_contributions_media_id", "media_id"),
         Index("ix_word_detection_contributions_status", "status"),
+        Index("ix_word_detection_contributions_guest_id", "guest_id"),
     )
