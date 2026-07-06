@@ -416,26 +416,26 @@ export default function LessonLearningView({
   useEffect(() => {
     if (capturingRef.current || continueEnabled || isSubmitting) return;
 
-    const pred = livePrediction;
-    if (!pred.label || pred.confidence < 30 || pred.label === "No Action") {
+    const prediction = livePrediction;
+    if (!prediction.label || prediction.confidence < 30 || prediction.label === "No Action") {
       stableLabelRef.current = null;
       stableCountRef.current = 0;
       return;
     }
 
-    if (pred.label === stableLabelRef.current) {
+    if (prediction.label === stableLabelRef.current) {
       stableCountRef.current += 1;
       if (stableCountRef.current >= AUTO_CAPTURE_FRAMES) {
         setCapturedPrediction({
-          label: pred.label,
-          confidence: pred.confidence,
+          label: prediction.label,
+          confidence: prediction.confidence,
         });
         stableLabelRef.current = null;
         stableCountRef.current = 0;
         void doCaptureFromPrediction();
       }
     } else {
-      stableLabelRef.current = pred.label;
+      stableLabelRef.current = prediction.label;
       stableCountRef.current = 1;
     }
   }, [livePrediction, continueEnabled, isSubmitting, doCaptureFromPrediction]);

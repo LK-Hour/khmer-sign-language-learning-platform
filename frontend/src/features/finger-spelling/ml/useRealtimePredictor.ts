@@ -142,7 +142,7 @@ export function useRealtimePredictor() {
           seqRef.current += 1;
           const label = normalizePredictionLabel(data.label ?? null);
           const confidence = normalizePredictionConfidence(data.label ?? null, data.confidence);
-          const pred: LivePrediction = {
+          const prediction: LivePrediction = {
             label,
             confidence,
             handedness: data.handedness ?? "Unknown",
@@ -150,8 +150,8 @@ export function useRealtimePredictor() {
             labelMatches: typeof data.labelMatches === "boolean" ? data.labelMatches : null,
             seq: seqRef.current,
           };
-          lastPredictionRef.current = pred;
-          setLivePrediction(pred);
+          lastPredictionRef.current = prediction;
+          setLivePrediction(prediction);
           return;
         }
 

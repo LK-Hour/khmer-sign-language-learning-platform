@@ -36,6 +36,7 @@ type WdCameraPanelProps = {
   detectLandmarks: (video: HTMLVideoElement) => WordDetectionLandmarks;
   isLandmarkerReady: boolean;
   onDetection?: (detection: WordDetectionLandmarks) => void;
+  onRawStreamReady?: (stream: MediaStream | null) => void;
 };
 
 export default function WdCameraPanel({
@@ -43,6 +44,7 @@ export default function WdCameraPanel({
   detectLandmarks,
   isLandmarkerReady,
   onDetection,
+  onRawStreamReady,
 }: WdCameraPanelProps) {
   const { t } = useTranslation();
   const internalVideoRef = useRef<HTMLVideoElement>(null);
@@ -56,6 +58,7 @@ export default function WdCameraPanel({
     setCameraError(null);
     stopStream(streamRef.current);
     streamRef.current = null;
+    onRawStreamReady?.(null);
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError(t("FINGER_SPELLING.LESSON.CAMERA_UNAVAILABLE"));
@@ -68,6 +71,7 @@ export default function WdCameraPanel({
         audio: false,
       });
       streamRef.current = stream;
+      onRawStreamReady?.(stream);
 
       const video = videoRef.current;
       if (video) {
@@ -75,17 +79,19 @@ export default function WdCameraPanel({
         await video.play();
       }
     } catch {
+      onRawStreamReady?.(null);
       setCameraError(t("FINGER_SPELLING.LESSON.CAMERA_DENIED"));
     }
-  }, [t, videoRef]);
+  }, [onRawStreamReady, t, videoRef]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void startCamera(), 0);
     return () => {
       window.clearTimeout(timer);
       stopStream(streamRef.current);
+      onRawStreamReady?.(null);
     };
-  }, [startCamera]);
+  }, [onRawStreamReady, startCamera]);
 
   useEffect(() => {
     if (!isLandmarkerReady || cameraError) return;

@@ -130,7 +130,7 @@ export function useWordRealtimePredictor() {
           seqRef.current += 1;
           const label = normalizeWordLabel(data.label ?? null);
           const confidence = normalizeWordConfidence(data.label ?? null, data.confidence);
-          const pred: WordLivePrediction = {
+          const prediction: WordLivePrediction = {
             label,
             confidence,
             classIndex: typeof data.classIndex === "number" ? data.classIndex : null,
@@ -138,8 +138,8 @@ export function useWordRealtimePredictor() {
             labelMatches: typeof data.labelMatches === "boolean" ? data.labelMatches : null,
             seq: seqRef.current,
           };
-          lastPredictionRef.current = pred;
-          setLivePrediction(pred);
+          lastPredictionRef.current = prediction;
+          setLivePrediction(prediction);
           return;
         }
 
