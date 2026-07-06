@@ -197,6 +197,7 @@ class WdExerciseSubmitResponse(BaseModel):
 
 class WdPracticeAttemptRequest(BaseModel):
     accuracy: float | None = None
+    label_matched: bool = False
 
 
 class WdPracticeAttemptResponse(BaseModel):
@@ -229,6 +230,13 @@ class WordPredictStatusResponse(BaseModel):
     output_class_count: int | None = None
     input_feature_count: int | None = None
     label_map_matches_model: bool = False
+
+
+class WdContributionUploadResponse(BaseModel):
+    id: uuid.UUID
+    media_id: int
+    file_url: str
+    status: str
 
 
 # ── Progress schemas ──────────────────────────────────────────────────────────
