@@ -51,9 +51,8 @@ export function useFingerSpellingPracticeActions() {
           accuracy: score,
           predictedLetter: predicted,
         });
-      } catch (error) {
+      } catch {
         failPracticeSubmission();
-        console.error("[runPracticePredict] ML prediction failed:", error);
         throw new Error("Hand prediction failed");
       }
     },
@@ -70,16 +69,14 @@ export function useFingerSpellingPracticeActions() {
     const lessonId = practiceContext?.lesson?.id;
     const authUser = useAuthStore.getState().user;
 
-    console.log("[completePractice] lessonId:", lessonId, "accuracy:", accuracy, "isGuest:", authUser?.is_guest);
+    // debug logging removed for production
 
     if (lessonId == null) {
-      console.error("[completePractice] lessonId is null — practiceContext missing");
       return false;
     }
 
     // Guests: record locally and mark completed (even if accuracy is low)
     if (authUser?.is_guest) {
-      console.log("[completePractice] guest user — recording locally");
       useGuestProgressStore.getState().recordLessonCompletion(lessonId, accuracy ?? undefined);
       markLessonCompleted(lessonId);
       return true;
@@ -87,23 +84,20 @@ export function useFingerSpellingPracticeActions() {
 
     // Already completed via previous attempt
     if (practiceContext?.lesson?.progressStatus === "COMPLETED") {
-      console.log("[completePractice] lesson already completed");
       markLessonCompleted(lessonId);
       return true;
     }
 
     // Submit attempt to backend
     try {
-      console.log("[completePractice] submitting attempt to backend...");
       const result = await submitPracticeAttempt(lessonId, { accuracy });
-      console.log("[completePractice] backend response:", result);
+      // backend response handled below
       if (result?.lesson_completed) {
         markLessonCompleted(lessonId);
       }
       // Always navigate forward — lesson stays uncompleted if accuracy < threshold
       return true;
-    } catch (error) {
-      console.error("[completePractice] submitPracticeAttempt failed:", error);
+    } catch {
       return false;
     }
   }, [markLessonCompleted]);
