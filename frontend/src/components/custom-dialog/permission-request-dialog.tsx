@@ -9,6 +9,7 @@ import {
 } from "react";
 
 // @mui
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Dialog from "@mui/material/Dialog";
@@ -20,7 +21,8 @@ import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { KslFontSizes } from "@/theme/theme";
+import { KslColors, KslFontSizes } from "@/theme/theme";
+import { usePermissionStore } from "@/store/permission.store";
 
 // ----------------------------------------------------------------------
 
@@ -29,22 +31,19 @@ type PermissionRequestCloseReason =
   | "escapeKeyDown"
   | "closeButton";
 
-export type PermissionRequestChoice = "agreed" | "skipped" | "dismissed";
-
-export const DATA_IMPROVEMENT_PERMISSION_STORAGE_KEY =
-  "ksl:data-improvement-permission-request";
-
 export type PermissionRequestDialogProps = Omit<
   DialogProps,
   "children" | "onClose" | "title"
 > & {
   title?: ReactNode;
   description?: ReactNode;
+  videoUrl?: string;
+  targetLabel?: string;
+  targetConfidence?: number;
   checkboxLabel?: ReactNode;
   skipLabel?: string;
   agreeLabel?: string;
   donateLabel?: string;
-  storageKey?: string;
   defaultDoNotShowAgain?: boolean;
   onClose: (
     doNotShowAgain: boolean,
@@ -55,34 +54,16 @@ export type PermissionRequestDialogProps = Omit<
   onDonate?: (doNotShowAgain: boolean) => void;
 };
 
-export function getPermissionRequestChoice(
-  storageKey = DATA_IMPROVEMENT_PERMISSION_STORAGE_KEY
-): PermissionRequestChoice | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedValue = window.localStorage.getItem(storageKey);
-
-  if (
-    storedValue === "agreed" ||
-    storedValue === "skipped" ||
-    storedValue === "dismissed"
-  ) {
-    return storedValue;
-  }
-
-  return null;
-}
-
 export default function PermissionRequestDialog({
   title = "Help improve the model",
   description = "Allow us to use your learning activity, feedback, and prediction results to improve Khmer Sign Language recognition.",
+  videoUrl,
+  targetLabel,
+  targetConfidence,
   checkboxLabel = "Do not show again",
   skipLabel = "Skip",
   agreeLabel = "Agree",
   donateLabel = "Donate My Data",
-  storageKey = DATA_IMPROVEMENT_PERMISSION_STORAGE_KEY,
   defaultDoNotShowAgain = false,
   open,
   onClose,
@@ -110,31 +91,31 @@ export default function PermissionRequestDialog({
     }
   }, [open]);
 
-  const rememberChoice = (choice: PermissionRequestChoice) => {
-    if (!doNotShowAgain || typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(storageKey, choice);
-  };
-
   const handleDialogClose: DialogProps["onClose"] = (_event, reason) => {
-    rememberChoice("dismissed");
+    if (doNotShowAgain) {
+      usePermissionStore.getState().markLandingDialogSeen();
+    }
     onClose(doNotShowAgain, reason);
   };
 
   const handleSkip = () => {
-    rememberChoice("skipped");
+    if (doNotShowAgain) {
+      usePermissionStore.getState().markLandingDialogSeen();
+    }
     onSkip(doNotShowAgain);
   };
 
   const handleAgree = () => {
-    rememberChoice("agreed");
+    if (doNotShowAgain) {
+      usePermissionStore.getState().setAgreed();
+    }
     onAgree(doNotShowAgain);
   };
 
   const handleDonate = () => {
-    rememberChoice("agreed");
+    if (doNotShowAgain) {
+      usePermissionStore.getState().setAgreed();
+    }
     onDonate?.(doNotShowAgain);
   };
 
@@ -174,8 +155,6 @@ export default function PermissionRequestDialog({
       <DialogContent
         dividers
         sx={{
-          px: { xs: 2, sm: 3, md: 4 },
-          // py: { xs: 1.5, sm: 2, md: 2 },
           pb: 0,
         }}
       >
@@ -196,6 +175,76 @@ export default function PermissionRequestDialog({
           {description}
         </DialogContentText>
 
+        {videoUrl && (
+          <Box
+            sx={{
+              mt: 2,
+              mb: 1.5,
+              borderRadius: 1,
+              overflow: "hidden",
+              bgcolor: "black",
+              lineHeight: 0,
+            }}
+          >
+            <video
+              src={videoUrl}
+              controls
+              autoPlay
+              muted
+              playsInline
+              style={{ width: "100%", display: "block", maxHeight: 320 }}
+            />
+          </Box>
+        )}
+
+        {(targetLabel || targetConfidence != null) && (
+          <Box
+            sx={{
+              mt: 2,
+              mb: 1.5,
+              p: 2,
+              bgcolor: KslColors.primaryLighter,
+              borderRadius: 1,
+              border: `1px solid`,
+              borderColor: KslColors.primaryLight,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 600,
+                color: KslColors.textSecondary,
+                mb: 0.5,
+                fontSize: { xs: KslFontSizes.sm, sm: KslFontSizes.md },
+              }}
+            >
+              Target Word
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: KslFontSizes.md, sm: KslFontSizes.lg },
+                mb: targetConfidence != null ? 0.5 : 0,
+              }}
+            >
+              {targetLabel}
+            </Typography>
+            {targetConfidence != null && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: KslColors.textSecondary,
+                  fontWeight: 600,
+                  fontSize: { xs: KslFontSizes.sm, sm: KslFontSizes.md },
+                }}
+              >
+                Confidence: {targetConfidence}%
+              </Typography>
+            )}
+          </Box>
+        )}
+
         <FormControlLabel
           control={
             <Checkbox
@@ -208,7 +257,7 @@ export default function PermissionRequestDialog({
               {checkboxLabel}
             </Typography>
           }
-          sx={{ m: 0 }}
+          sx={{ m: 0, px: 0 }}
         />
       </DialogContent>
 
