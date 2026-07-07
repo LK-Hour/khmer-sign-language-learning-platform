@@ -21,6 +21,10 @@ from .finger_spelling import (
     # Progress
     FingerUserLessonProgress,
     FingerUserExerciseResult,
+    # Practice
+    FingerPractice,
+    FingerUserPracticeProgress,
+    FingerPracticeMedia,
 )
 from .word_detection import (
     # Enums
@@ -41,6 +45,10 @@ from .word_detection import (
     WordDetectionUserExerciseResult,
     # Contributions
     WordDetectionContribution,
+    # Practice
+    WordDetectionPractice,
+    WordDetectionUserPracticeProgress,
+    WordDetectionPracticeMedia,
 )
 
 __all__ = [
@@ -64,6 +72,9 @@ __all__ = [
     "FingerExerciseOption",
     "FingerUserLessonProgress",
     "FingerUserExerciseResult",
+    "FingerPractice",
+    "FingerUserPracticeProgress",
+    "FingerPracticeMedia",
     "WordDetectionExerciseType",
     "WordDetectionUnit",
     "WordDetectionChapter",
@@ -76,4 +87,7 @@ __all__ = [
     "WordDetectionUserLessonProgress",
     "WordDetectionUserExerciseResult",
     "WordDetectionContribution",
+    "WordDetectionPractice",
+    "WordDetectionUserPracticeProgress",
+    "WordDetectionPracticeMedia",
 ]

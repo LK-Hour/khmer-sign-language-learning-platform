@@ -21,12 +21,14 @@ if TYPE_CHECKING:
         FingerLetterMedia,
         FingerExercise,
         FingerExerciseOption,
+        FingerPracticeMedia,
     )
     from .word_detection import (
         WordDetectionWordMedia,
         WordDetectionExercise,
         WordDetectionExerciseOption,
         WordDetectionContribution,
+        WordDetectionPracticeMedia,
     )
 
 
@@ -82,4 +84,12 @@ class Media(Base):
         back_populates="media",
         cascade="all, delete-orphan",
         foreign_keys="WordDetectionContribution.media_id",
+    )
+
+    # Relationships - Practice
+    finger_practice_medias: Mapped[List["FingerPracticeMedia"]] = relationship(
+        back_populates="media"
+    )
+    word_detection_practice_medias: Mapped[List["WordDetectionPracticeMedia"]] = relationship(
+        back_populates="media"
     )

@@ -52,3 +52,11 @@ class User(Base):
         "WordDetectionContribution",
         foreign_keys="WordDetectionContribution.reviewed_by",
     )
+
+    # Practice progress tracking
+    finger_practice_progress = relationship(
+        "FingerUserPracticeProgress", back_populates="user", cascade="all, delete-orphan"
+    )
+    word_detection_practice_progress = relationship(
+        "WordDetectionUserPracticeProgress", back_populates="user", cascade="all, delete-orphan"
+    )

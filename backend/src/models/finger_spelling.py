@@ -14,6 +14,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Enum as SQLEnum,
+    Float,
     ForeignKey,
     Index,
     String,
@@ -84,6 +85,9 @@ class FingerChapter(PublishableMixin, Base):
     unit: Mapped["FingerUnit"] = relationship(back_populates="chapters")
     lessons: Mapped[List["FingerLesson"]] = relationship(
         back_populates="chapter", cascade="all, delete-orphan"
+    )
+    practice: Mapped[Optional["FingerPractice"]] = relationship(
+        back_populates="chapter", cascade="all, delete-orphan", uselist=False
     )
 
     __table_args__ = (
@@ -338,4 +342,98 @@ class FingerUserExerciseResult(Base):
         Index("ix_finger_user_exercise_results_user_id", "user_id"),
         Index("ix_finger_user_exercise_results_progress_id", "progress_id"),
         Index("ix_finger_user_exercise_results_exercise_id", "finger_exercise_id"),
+    )
+
+
+# ==================== PRACTICE ====================
+
+class FingerPractice(Base):
+    """Practice configuration linked 1:1 with a chapter."""
+    __tablename__ = "finger_practices"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    chapter_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("finger_chapters.id"), nullable=False
+    )
+    lesson_count: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, server_default="5"
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    chapter: Mapped["FingerChapter"] = relationship(back_populates="practice")
+    practice_medias: Mapped[List["FingerPracticeMedia"]] = relationship(
+        back_populates="practice", cascade="all, delete-orphan"
+    )
+    user_progress: Mapped[List["FingerUserPracticeProgress"]] = relationship(
+        back_populates="practice", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("chapter_id", name="uq_finger_practices_chapter_id"),
+        Index("ix_finger_practices_chapter_id", "chapter_id"),
+    )
+
+
+class FingerUserPracticeProgress(Base):
+    """Per-user practice progress tracking."""
+    __tablename__ = "finger_user_practice_progress"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
+    finger_practice_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("finger_practices.id"), nullable=False
+    )
+    is_complete: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    is_locked: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    attempts: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    avg_score: Mapped[float] = mapped_column(Float, server_default="0")
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship(
+        back_populates="finger_practice_progress", foreign_keys=[user_id]
+    )
+    practice: Mapped["FingerPractice"] = relationship(back_populates="user_progress")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "finger_practice_id",
+            name="uq_finger_user_practice_progress_user_practice"
+        ),
+        Index("ix_finger_user_practice_progress_user_id", "user_id"),
+        Index("ix_finger_user_practice_progress_practice_id", "finger_practice_id"),
+    )
+
+
+class FingerPracticeMedia(Base):
+    """Junction table linking practices to media."""
+    __tablename__ = "finger_practice_medias"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    practice_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("finger_practices.id"), nullable=False
+    )
+    media_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("medias.id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    # Relationships
+    practice: Mapped["FingerPractice"] = relationship(back_populates="practice_medias")
+    media: Mapped["Media"] = relationship(back_populates="finger_practice_medias")
+
+    __table_args__ = (
+        Index("ix_finger_practice_medias_practice_id", "practice_id"),
+        Index("ix_finger_practice_medias_media_id", "media_id"),
     )
