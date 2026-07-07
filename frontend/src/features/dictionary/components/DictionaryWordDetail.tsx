@@ -124,7 +124,7 @@ function DictionaryVideoPlayer({ videoUrl }: DictionaryVideoPlayerProps) {
   const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    setHasStarted(false);
+    void Promise.resolve().then(() => setHasStarted(false));
   }, [videoUrl]);
 
   return (

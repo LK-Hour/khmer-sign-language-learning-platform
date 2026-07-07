@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import {
   Box,
@@ -11,9 +12,12 @@ import {
   Typography,
 } from "@mui/material";
 
+import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
 import { PageContainer } from "@/components/layout";
+import { PERMISSION_DIALOG_CONTENT } from "@/constants/permission-dialog";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
+import { usePermissionStore } from "@/store/permission.store";
 import { KslColors, KslFontSizes, KslLineHeights, KslRadii } from "@/theme/theme";
 
 import { useFingerSpellingProgressStat } from "./hooks/useFingerSpellingProgressStat";
@@ -24,9 +28,30 @@ const HERO_IMAGE = "/assets/landing-hero-hand.png";
 export default function LandingPage() {
   const { t, locale } = useTranslation();
   const { stat: fingerSpellingStat } = useFingerSpellingProgressStat();
+  const [isPermissionOpen, setIsPermissionOpen] = useState(false);
 
   const fingerSpellingHref = `/${locale}${ROUTES.fingerSpelling.root}`;
   const wordDetectionHref = `/${locale}${ROUTES.words.root}`;
+
+  useEffect(() => {
+    const { hasSeenLandingDialog } = usePermissionStore.getState();
+
+    if (!hasSeenLandingDialog) {
+      setIsPermissionOpen(true);
+    }
+  }, []);
+
+  const handlePermissionClose = (_doNotShowAgain: boolean) => {
+    setIsPermissionOpen(false);
+  };
+
+  const handlePermissionSkip = (_doNotShowAgain: boolean) => {
+    setIsPermissionOpen(false);
+  };
+
+  const handlePermissionAgree = (_doNotShowAgain: boolean) => {
+    setIsPermissionOpen(false);
+  };
 
   return (
     <PageContainer>
@@ -174,6 +199,18 @@ export default function LandingPage() {
           </Grid>
         </Grid>
       </Stack>
+
+      <PermissionRequestDialog
+        open={isPermissionOpen}
+        title={PERMISSION_DIALOG_CONTENT.title}
+        description={PERMISSION_DIALOG_CONTENT.description}
+        checkboxLabel={PERMISSION_DIALOG_CONTENT.checkboxLabel}
+        skipLabel={PERMISSION_DIALOG_CONTENT.skipLabel}
+        agreeLabel={PERMISSION_DIALOG_CONTENT.agreeLabel}
+        onClose={handlePermissionClose}
+        onSkip={handlePermissionSkip}
+        onAgree={handlePermissionAgree}
+      />
     </PageContainer>
   );
 }
