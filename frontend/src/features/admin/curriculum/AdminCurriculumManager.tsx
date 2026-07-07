@@ -52,9 +52,7 @@ import {
 import { ConfirmActionDialog, PublishConfirmDialog } from "../components/ConfirmDialogs";
 import { ActiveChip, PublishChip } from "../components/StatusChips";
 import { AdminColors, AdminFontSizes, adminTableHeaderSx } from "../components/adminTokens";
-import { useAdminEntityTab, useAdminTrack, type AdminEntityTab } from "../store/adminUi.store";
-
-type EntityTab = AdminEntityTab;
+import { useAdminEntityTab, useAdminTrack } from "../store/adminUi.store";
 
 type FormState = {
   name_en: string;
@@ -126,11 +124,11 @@ export default function AdminCurriculumManager() {
   }, [track, t]);
 
   useEffect(() => {
-    void loadAll();
+    void Promise.resolve().then(() => loadAll());
   }, [loadAll]);
 
   useEffect(() => {
-    setPage(0);
+    void Promise.resolve().then(() => setPage(0));
   }, [track, tab, search, statusFilter, activeFilter]);
 
   const rows: AdminEntity[] =

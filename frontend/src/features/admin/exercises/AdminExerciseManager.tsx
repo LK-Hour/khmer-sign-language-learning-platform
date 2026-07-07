@@ -137,11 +137,11 @@ export default function AdminExerciseManager() {
   }, [track, t]);
 
   useEffect(() => {
-    void loadAll();
+    void Promise.resolve().then(() => loadAll());
   }, [loadAll]);
 
   useEffect(() => {
-    setPage(0);
+    void Promise.resolve().then(() => setPage(0));
   }, [track, search, lessonFilter, statusFilter]);
 
   const lessonName = (lessonId: number) =>
