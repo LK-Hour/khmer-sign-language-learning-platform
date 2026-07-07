@@ -20,6 +20,9 @@ import { useWordRecording } from "@/features/word-detection/hooks/useWordRecordi
 import { KslColors } from "@/theme/theme";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
+import { PERMISSION_DIALOG_CONTENT } from "@/constants/permission-dialog";
+import { usePermissionStore } from "@/store/permission.store";
 import WdLessonPracticeStep from "./WordDetectionLessonPracticeStep";
 import WordRecordingPreview from "./WordRecordingPreview";
 
@@ -77,6 +80,7 @@ export default function WdLessonLearningView({
   const [rawStream, setRawStream] = useState<MediaStream | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [isRecordingPreviewOpen, setIsRecordingPreviewOpen] = useState(false);
+  const [isPermissionOpen, setIsPermissionOpen] = useState(false);
   const [handDetected, setHandDetected] = useState(false);
   const [handWarmupComplete, setHandWarmupComplete] = useState(false);
   const [manualRetryListening, setManualRetryListening] = useState(false);
@@ -90,7 +94,6 @@ export default function WdLessonLearningView({
     isRecording,
     error: recordingError,
     recordForDuration,
-    stopRecording,
   } = useWordRecording();
   const {
     isUploading,
@@ -139,6 +142,21 @@ export default function WdLessonLearningView({
     resetForAutoRetry,
     shouldAutoRetry,
   } = retryState;
+
+  const handlePermissionClose = useCallback((_doNotShowAgain: boolean) => {
+    setIsPermissionOpen(false);
+  }, []);
+
+  const handlePermissionSkip = useCallback((_doNotShowAgain: boolean) => {
+    setIsPermissionOpen(false);
+  }, []);
+
+  const handlePermissionAgree = useCallback((doNotShowAgain: boolean) => {
+    if (doNotShowAgain) {
+      usePermissionStore.getState().setAgreed();
+    }
+    setIsPermissionOpen(false);
+  }, []);
 
   const handleDetection = useCallback((detection: WordDetectionLandmarks) => {
     latestDetectionRef.current = detection;
@@ -204,6 +222,17 @@ export default function WdLessonLearningView({
   }, [lesson.id, resetAttempts, resetPredictionState]);
 
   useEffect(() => {
+    if (lesson.orderIndex !== 1) {
+      return;
+    }
+
+    const { hasAgreed } = usePermissionStore.getState();
+    if (!hasAgreed) {
+      setIsPermissionOpen(true);
+    }
+  }, [lesson.orderIndex]);
+
+  useEffect(() => {
     if (isLandmarkerReady) {
       connectPredictor();
     }
@@ -259,7 +288,7 @@ export default function WdLessonLearningView({
         samplingLoopRef.current = null;
       }
     };
-  }, [isLandmarkerReady, lesson.word, predictorState, sendFeatures]);
+  }, [isLandmarkerReady, lesson.word, predictorState, sendFeatures, handDetected, handWarmupComplete]);
 
   useEffect(() => {
     if ((continueEnabled && !manualRetryListening) || retryWaiting) return;
@@ -390,7 +419,7 @@ export default function WdLessonLearningView({
         recordingInFlightRef.current = false;
         recordingStartTimeRef.current = null;
       });
-  }, [rawStream, recordForDuration, recordedBlob, isRecordingPreviewOpen, handDetected, lesson.word]);
+  }, [rawStream, recordForDuration, recordedBlob, isRecordingPreviewOpen, handDetected, lesson.word, continueEnabled]);
 
   // Recording no longer stops early on prediction; it runs for full 4s
 
@@ -416,30 +445,39 @@ export default function WdLessonLearningView({
     }
   }, [recordingError]);
 
-  const handleDiscardRecording = useCallback(() => {
+  const handleDiscardRecording = useCallback((doNotShowAgain: boolean) => {
+    if (doNotShowAgain) {
+      usePermissionStore.getState().setAgreed();
+    }
     setIsRecordingPreviewOpen(false);
     setRecordedBlob(null);
     setHandWarmupComplete(false);
   }, []);
 
-  const handleUploadRecording = useCallback(async () => {
-    if (!recordedBlob || !capturedPrediction) return;
+  const handleUploadRecording = useCallback(
+    async (doNotShowAgain: boolean) => {
+      if (!recordedBlob || !capturedPrediction) return;
 
-    try {
-      await uploadContribution({
-        video: recordedBlob,
-        lessonId: lesson.id,
-        word: lesson.word,
-        predictedLabel: capturedPrediction.label,
-        confidence: capturedPrediction.confidence,
-      });
-      setIsRecordingPreviewOpen(false);
-      setRecordedBlob(null);
-      setHandWarmupComplete(false);
-    } catch {
-      // The upload hook owns the visible error state and keeps the blob for retry.
-    }
-  }, [capturedPrediction, lesson.id, lesson.word, recordedBlob, uploadContribution]);
+      try {
+        await uploadContribution({
+          video: recordedBlob,
+          lessonId: lesson.id,
+          word: lesson.word,
+          predictedLabel: capturedPrediction.label,
+          confidence: capturedPrediction.confidence,
+        });
+        if (doNotShowAgain) {
+          usePermissionStore.getState().setAgreed();
+        }
+        setIsRecordingPreviewOpen(false);
+        setRecordedBlob(null);
+        setHandWarmupComplete(false);
+      } catch {
+        // The upload hook owns the visible error state and keeps the blob for retry.
+      }
+    },
+    [capturedPrediction, lesson.id, lesson.word, recordedBlob, uploadContribution],
+  );
 
   return (
     <Stack spacing={3} sx={{ pb: 6 }}>
@@ -504,6 +542,18 @@ export default function WdLessonLearningView({
         uploadError={uploadError}
         onDiscard={handleDiscardRecording}
         onUpload={handleUploadRecording}
+      />
+
+      <PermissionRequestDialog
+        open={isPermissionOpen}
+        title={PERMISSION_DIALOG_CONTENT.title}
+        description={PERMISSION_DIALOG_CONTENT.description}
+        checkboxLabel={PERMISSION_DIALOG_CONTENT.checkboxLabel}
+        skipLabel={PERMISSION_DIALOG_CONTENT.skipLabel}
+        agreeLabel={PERMISSION_DIALOG_CONTENT.agreeLabel}
+        onClose={handlePermissionClose}
+        onSkip={handlePermissionSkip}
+        onAgree={handlePermissionAgree}
       />
     </Stack>
   );

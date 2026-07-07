@@ -2,15 +2,18 @@
 
 import LoadingButton from "@mui/lab/LoadingButton";
 import {
+  Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { KslColors, KslFontSizes } from "@/theme/theme";
 
 type WordRecordingPreviewProps = {
@@ -21,8 +24,8 @@ type WordRecordingPreviewProps = {
   confidence: number | null;
   isUploading?: boolean;
   uploadError?: string | null;
-  onDiscard: () => void;
-  onUpload: () => void;
+  onDiscard: (doNotShowAgain: boolean) => void;
+  onUpload: (doNotShowAgain: boolean) => void;
 };
 
 export default function WordRecordingPreview({
@@ -41,6 +44,8 @@ export default function WordRecordingPreview({
     return URL.createObjectURL(videoBlob);
   }, [videoBlob]);
 
+  const [doNotShowAgain, setDoNotShowAgain] = useState(false);
+
   useEffect(() => {
     return () => {
       if (videoUrl) {
@@ -49,22 +54,43 @@ export default function WordRecordingPreview({
     };
   }, [videoUrl]);
 
+  const handleDiscard = () => {
+    onDiscard(doNotShowAgain);
+  };
+
+  const handleUpload = () => {
+    onUpload(doNotShowAgain);
+  };
+
   return (
-    <Dialog fullWidth maxWidth="sm" open={open} onClose={isUploading ? undefined : onDiscard}>
-      <DialogTitle>Review practice recording</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2}>
+    <Dialog 
+    fullWidth 
+    maxWidth="sm" 
+    open={open} 
+    scroll="paper"
+    onClose={isUploading ? undefined : handleDiscard} 
+    sx={{ "& .MuiDialog-paper": { borderRadius: "12px" }, pb: 0, mb:0 }}>
+      <DialogTitle>Review practice recording (donation)</DialogTitle>
+      <DialogContent
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        py: 0,
+      }}
+      >
+        
+        <Stack spacing={1.5}>
           {videoUrl ? (
             <video
               src={videoUrl}
               controls
+              muted
               autoPlay
               playsInline
               style={{
                 width: "100%",
-                maxHeight: 360,
-                background: "#111",
-                borderRadius: 8,
+                background: "#a1f8ab",
+                borderRadius: "8px",
               }}
             />
           ) : null}
@@ -74,14 +100,30 @@ export default function WordRecordingPreview({
               Target word
             </Typography>
             <Typography sx={{ fontSize: KslFontSizes.xl, fontWeight: 700 }}>
-              {word}
+              {word}  
+              {confidence != null ? ` ${Math.round(confidence)}%` : ""}
             </Typography>
           </Stack>
 
-          <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary }}>
-            Prediction: {predictedLabel ?? "-"}
-            {confidence != null ? ` (${Math.round(confidence)}%)` : ""}
+          <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary, lineHeight: 1.6 }}>
+            If you are willing to share or contribute sign language data, it would greatly help us improve the system and make it more inclusive for everyone. Together, we can make communication more accessible and impactful.
           </Typography>
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={doNotShowAgain}
+                onChange={(event) => setDoNotShowAgain(event.target.checked)}
+                sx={{m:0, p:0}}
+              />
+            }
+            label={
+              <Typography sx={{ fontSize: KslFontSizes.sm }}>
+                Remember my choice
+              </Typography>
+            }
+            sx={{ m: 0}}
+          />
 
           {uploadError ? (
             <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.warning }}>
@@ -90,17 +132,23 @@ export default function WordRecordingPreview({
           ) : null}
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button color="inherit" onClick={onDiscard} disabled={isUploading}>
+      <DialogActions sx={{ px: 3, pb: 3, gap: 1, justifyContent: "flex-end" }}>
+        <Button 
+          color="inherit" 
+          onClick={handleDiscard} 
+          disabled={isUploading} 
+          sx={{ bgcolor: "grey.300", "&:hover": { bgcolor: "grey.500" }, borderRadius: "8px" }}
+        >
           Discard
         </Button>
         <LoadingButton
           variant="contained"
           loading={isUploading}
-          onClick={onUpload}
+          onClick={handleUpload}
           disabled={!videoBlob}
+          sx={{ borderRadius: "8px" }}
         >
-          Keep & Upload
+          Donate
         </LoadingButton>
       </DialogActions>
     </Dialog>
