@@ -20,7 +20,7 @@ from .finger_spelling import (
     FingerExerciseOption,
     # Progress
     FingerUserLessonProgress,
-    FingerUserExerciseResult,
+    FingerExerciseProgress,
     # Practice
     FingerPractice,
     FingerUserPracticeProgress,
@@ -42,7 +42,7 @@ from .word_detection import (
     WordDetectionExerciseOption,
     # Progress
     WordDetectionUserLessonProgress,
-    WordDetectionUserExerciseResult,
+    WordDetectionExerciseProgress,
     # Contributions
     WordDetectionContribution,
     # Practice
@@ -71,7 +71,7 @@ __all__ = [
     "FingerExercise",
     "FingerExerciseOption",
     "FingerUserLessonProgress",
-    "FingerUserExerciseResult",
+    "FingerExerciseProgress",
     "FingerPractice",
     "FingerUserPracticeProgress",
     "FingerPracticeMedia",
@@ -85,7 +85,7 @@ __all__ = [
     "WordDetectionExercise",
     "WordDetectionExerciseOption",
     "WordDetectionUserLessonProgress",
-    "WordDetectionUserExerciseResult",
+    "WordDetectionExerciseProgress",
     "WordDetectionContribution",
     "WordDetectionPractice",
     "WordDetectionUserPracticeProgress",
