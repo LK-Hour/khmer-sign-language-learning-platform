@@ -7,7 +7,7 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from src.models.finger_spelling import FingerUserExerciseResult, FingerUserLessonProgress
+from src.models.finger_spelling import FingerExerciseProgress, FingerUserLessonProgress
 
 
 class FingerProgressRepository:
@@ -97,10 +97,10 @@ class FingerProgressRepository:
 
     def next_exercise_attempt_number(self, user_id: uuid.UUID, exercise_id: int) -> int:
         stmt = (
-            select(func.coalesce(func.max(FingerUserExerciseResult.attempt_number), 0))
+            select(func.coalesce(func.max(FingerExerciseProgress.attempts), 0))
             .where(
-                FingerUserExerciseResult.user_id == user_id,
-                FingerUserExerciseResult.finger_exercise_id == exercise_id,
+                FingerExerciseProgress.user_id == user_id,
+                FingerExerciseProgress.finger_exercise_id == exercise_id,
             )
         )
         return int(self.db.scalar(stmt) or 0) + 1
@@ -109,23 +109,19 @@ class FingerProgressRepository:
         self,
         *,
         user_id: uuid.UUID,
-        progress_id: uuid.UUID,
         exercise_id: int,
         is_correct: bool,
-        time_taken: int,
-        attempt_number: int,
-        selected_option_id: int | None = None,
+        attempts: int,
+        selected_answer_id: int | None = None,
         selected_answer: str | None = None,
-    ) -> FingerUserExerciseResult:
-        result = FingerUserExerciseResult(
+    ) -> FingerExerciseProgress:
+        result = FingerExerciseProgress(
             user_id=user_id,
-            progress_id=progress_id,
             finger_exercise_id=exercise_id,
-            selected_option_id=selected_option_id,
+            selected_answer_id=selected_answer_id,
             selected_answer=selected_answer,
             is_correct=is_correct,
-            time_taken=time_taken,
-            attempt_number=attempt_number,
+            attempts=attempts,
         )
         self.db.add(result)
         self.db.flush()

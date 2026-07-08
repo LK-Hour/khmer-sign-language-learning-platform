@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.models.word_detection import (
-    WordDetectionUserExerciseResult,
+    WordDetectionExerciseProgress,
     WordDetectionUserLessonProgress,
 )
 
@@ -109,10 +109,10 @@ class WordDetectionProgressRepository:
 
     def next_exercise_attempt_number(self, user_id: uuid.UUID, exercise_id: int) -> int:
         stmt = (
-            select(func.coalesce(func.max(WordDetectionUserExerciseResult.attempt_number), 0))
+            select(func.coalesce(func.max(WordDetectionExerciseProgress.attempts), 0))
             .where(
-                WordDetectionUserExerciseResult.user_id == user_id,
-                WordDetectionUserExerciseResult.word_detection_exercise_id == exercise_id,
+                WordDetectionExerciseProgress.user_id == user_id,
+                WordDetectionExerciseProgress.word_detection_exercise_id == exercise_id,
             )
         )
         return int(self.db.scalar(stmt) or 0) + 1
@@ -121,23 +121,19 @@ class WordDetectionProgressRepository:
         self,
         *,
         user_id: uuid.UUID,
-        progress_id: uuid.UUID,
         exercise_id: int,
         is_correct: bool,
-        time_taken: int,
-        attempt_number: int,
-        selected_option_id: int | None = None,
+        attempts: int,
+        selected_answer_id: int | None = None,
         selected_answer: str | None = None,
-    ) -> WordDetectionUserExerciseResult:
-        result = WordDetectionUserExerciseResult(
+    ) -> WordDetectionExerciseProgress:
+        result = WordDetectionExerciseProgress(
             user_id=user_id,
-            progress_id=progress_id,
             word_detection_exercise_id=exercise_id,
-            selected_option_id=selected_option_id,
+            selected_answer_id=selected_answer_id,
             selected_answer=selected_answer,
             is_correct=is_correct,
-            time_taken=time_taken,
-            attempt_number=attempt_number,
+            attempts=attempts,
         )
         self.db.add(result)
         self.db.flush()
