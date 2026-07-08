@@ -12,7 +12,7 @@ from ..models.user import User
 from ..models.user_oauth_provider import UserOAuthProvider
 from ..models.finger_spelling import (
     FingerLesson,
-    FingerUserExerciseResult,
+    FingerExerciseProgress,
     FingerUserLessonProgress,
 )
 from ..schemas.oauth import GuestProgressImportRequest
@@ -158,13 +158,12 @@ def migrate_guest_progress_to_user(
 
     # Repoint exercise results and normalize user ownership.
     guest_results = (
-        db.query(FingerUserExerciseResult)
-        .filter(FingerUserExerciseResult.user_id == guest_user_id)
+        db.query(FingerExerciseProgress)
+        .filter(FingerExerciseProgress.user_id == guest_user_id)
         .all()
     )
     for result in guest_results:
         result.user_id = target_user_id
-        result.progress_id = progress_id_remap.get(result.progress_id, result.progress_id)
 
     db.commit()
     return True

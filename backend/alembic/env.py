@@ -29,7 +29,7 @@ from src.models import (  # noqa: F401
     FingerExercise,
     FingerExerciseOption,
     FingerUserLessonProgress,
-    FingerUserExerciseResult,
+    FingerExerciseProgress,
     WordDetectionUnit,
     WordDetectionChapter,
     WordDetectionLesson,
@@ -39,7 +39,7 @@ from src.models import (  # noqa: F401
     WordDetectionExercise,
     WordDetectionExerciseOption,
     WordDetectionUserLessonProgress,
-    WordDetectionUserExerciseResult,
+    WordDetectionExerciseProgress,
     WordDetectionContribution,
 )
 

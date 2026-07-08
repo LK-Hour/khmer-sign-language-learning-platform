@@ -655,7 +655,7 @@ def seed_word_detection(wipe: bool = False, dry_run: bool = False) -> None:
                     word_detection_exercises,
                     word_detection_word_medias,
                     word_detection_lesson_words,
-                    word_detection_user_exercise_results,
+                    word_detection_exercise_progress,
                     word_detection_user_lesson_progress,
                     word_detection_contributions,
                     word_detection_lessons,
