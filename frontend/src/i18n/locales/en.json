@@ -322,6 +322,22 @@
       "SUBTITLE": "Your progress",
       "TITLE": "Profile"
     },
+    "PRACTICE": {
+      "BACK_TO_TRACK": "Back to Track",
+      "CARD_ACTION": "Start",
+      "CARD_LABEL": "Practice",
+      "CARD_LABEL_KH": "ហាត់ប្រាណ",
+      "CARD_TITLE": "Chapter Practice",
+      "CARD_TITLE_KH": "ការហាត់ប្រឡងជំពូក",
+      "COMPLETE_SUBTITLE": "You've completed this chapter practice.",
+      "COMPLETE_TITLE": "Chapter Complete!",
+      "HOLD_STILL": "Hold your hand steady...",
+      "LOCKED_HINT": "Complete all lessons in this chapter to unlock practice.",
+      "LOCKED_TITLE": "Practice Locked",
+      "PASSED": "Correct! Moving to next character...",
+      "PROGRESS": "Character",
+      "RETURN_TO_TRACK": "Return to Track"
+    },
     "TRACK": {
       "CHAPTER_LOCKED_UNTIL": "Locked until Chapter",
       "CONTINUE": "Continue",
