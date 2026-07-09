@@ -1,5 +1,4 @@
 import { Button, Paper, Stack, Typography } from "@mui/material";
-import LoadingButton from "@mui/lab/LoadingButton";
 import {
   KslColors,
   KslFontSizes,
@@ -91,7 +90,7 @@ export default function PracticeFeedbackPanel({
             {retryLabel}
           </Button>
         ) : null}
-        <LoadingButton
+        <Button
           variant="contained"
           loading={isContinueLoading}
           loadingPosition="center"
@@ -108,13 +107,13 @@ export default function PracticeFeedbackPanel({
             "&:hover": {
               bgcolor: passed ? KslColors.primaryDark : KslColors.disabled,
             },
-            "&.MuiLoadingButton-loading": {
+            "&.MuiButton-loading": {
               color: "transparent",
             },
           }}
         >
           {isContinuing ? null : continueLabel}
-        </LoadingButton>
+        </Button>
       </Stack>
     </Paper>
   );

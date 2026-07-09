@@ -2,8 +2,7 @@
 
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { Alert, Stack, IconButton, Paper, TextField, Tooltip, Typography } from "@mui/material";
-import LoadingButton from "@mui/lab/LoadingButton";
+import { Alert, Button, Stack, IconButton, Paper, TextField, Tooltip, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { submitLessonFeedback, type FeedbackMood, type FeedbackType } from "@/features/finger-spelling/api/feedback";
 import { useTranslation } from "@/i18n/useTranslation";
@@ -260,7 +259,7 @@ export default function LessonFeedbackWidget({
 
                 {error ? <Alert severity="warning">{error}</Alert> : null}
 
-                <LoadingButton
+                <Button
                   variant="contained"
                   loading={submitting}
                   onClick={handleSubmit}
@@ -274,7 +273,7 @@ export default function LessonFeedbackWidget({
                   }}
                 >
                   {t("FEEDBACK.SUBMIT")}
-                </LoadingButton>
+                </Button>
               </>
             )}
           </Stack>
