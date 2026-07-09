@@ -61,7 +61,8 @@ class WordDetectionContributionService:
         target_dir = root / _safe_path_part(word.word_kh)
         target_dir.mkdir(parents=True, exist_ok=True)
 
-        filename = f"{uuid4()}{_extension_for_upload(upload)}"
+        ext = _extension_for_upload(upload)
+        filename = f"{_safe_path_part(word.word_kh)}-contribution-{uuid4().hex[:8]}{ext}"
         file_path = target_dir / filename
         relative_url = f"/data_set/word_detection_contributions/{_safe_path_part(word.word_kh)}/{filename}"
 
