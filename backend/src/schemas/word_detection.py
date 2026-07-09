@@ -130,6 +130,8 @@ class WdChapterResponse(BaseModel):
     lessonCount: int
     completedLessonCount: int
     isLocked: bool = False
+    isPracticeUnlocked: bool = False
+    isPracticeComplete: bool = False
 
 
 class WdLessonResponse(BaseModel):
@@ -204,6 +206,45 @@ class WdPracticeAttemptResponse(BaseModel):
     lesson_id: int
     accuracy: float | None = None
     lesson_completed: bool
+
+
+# ── Chapter practice schemas ──────────────────────────────────────────────────
+
+class WdPracticeItemResponse(BaseModel):
+    lessonId: int
+    wordId: int
+    wordKh: str
+    wordEn: str | None = None
+    orderIndex: int
+    practiceImageUrl: str
+
+
+class WdChapterPracticeResponse(BaseModel):
+    chapterId: int
+    chapterTitle: str
+    chapterTitleKh: str
+    unitId: int
+    unitTitle: str
+    unitTitleKh: str
+    isUnlocked: bool
+    practiceId: int | None = None
+    items: list[WdPracticeItemResponse] = []
+    isComplete: bool = False
+    attempts: int = 0
+    avgScore: float = 0.0
+
+
+class WdChapterPracticeResultRequest(BaseModel):
+    avgScore: float
+    isComplete: bool
+
+
+class WdChapterPracticeResultResponse(BaseModel):
+    chapterId: int
+    practiceId: int
+    avgScore: float
+    isComplete: bool
+    attempts: int
 
 
 class WordPredictFeaturesRequest(BaseModel):

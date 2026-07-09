@@ -17,6 +17,9 @@ from src.schemas.word_detection import (
     WdLessonResponse,
     WdUnitResponse,
 )
+from src.services.word_detection.word_detection_chapter_practice_service import (
+    WordDetectionChapterPracticeService,
+)
 from src.services.word_detection.word_detection_curriculum_service import (
     WordDetectionCurriculumService,
 )
@@ -108,6 +111,7 @@ def list_chapters(
     user_id = user.id if user else None
     progress_svc = WordDetectionProgressService(db)
     locking = WordDetectionLockingService(db)
+    practice_svc = WordDetectionChapterPracticeService(db)
     result: list[WdChapterResponse] = []
     for chapter in chapters:
         lesson_ids = curriculum.curriculum.list_lesson_ids_for_chapter(chapter.id)
@@ -129,6 +133,8 @@ def list_chapters(
                 lessonCount=len(lesson_ids),
                 completedLessonCount=completed,
                 isLocked=locking.is_chapter_locked(chapter.id, user_id),
+                isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+                isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
             )
         )
     return result
@@ -148,6 +154,7 @@ def get_chapter(
     user_id = user.id if user else None
     locking = WordDetectionLockingService(db)
     progress_svc = WordDetectionProgressService(db)
+    practice_svc = WordDetectionChapterPracticeService(db)
     lesson_ids = curriculum.curriculum.list_lesson_ids_for_chapter(chapter.id)
     completed = (
         progress_svc.progress.count_completed_lessons(user_id, lesson_ids) if user_id else 0
@@ -164,6 +171,8 @@ def get_chapter(
         lessonCount=len(lesson_ids),
         completedLessonCount=completed,
         isLocked=locking.is_chapter_locked(chapter.id, user_id),
+        isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+        isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
     )
 
 
