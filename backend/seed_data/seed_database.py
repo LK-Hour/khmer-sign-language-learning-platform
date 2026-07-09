@@ -218,6 +218,12 @@ def main() -> None:
     import_fixture(args.output, args.batch_size, args.wipe)
     print(f"Seeded database from {args.output}")
 
+    # Reset sequences after importing fixture with explicit IDs
+    from seed_data.reset_sequences import reset_all_sequences
+    print("🔄 Resetting sequences...")
+    reset_all_sequences()
+    print("✅ Sequences synced.")
+
 
 if __name__ == "__main__":
     main()

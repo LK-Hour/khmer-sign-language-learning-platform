@@ -768,6 +768,12 @@ def seed_curriculum(wipe: bool = False, wipe_media: bool = False) -> None:
         f"{total_letter_medias} letter-media links successfully."
     )
 
+    # Reset sequences after inserting with explicit IDs
+    from seed_data.reset_sequences import reset_all_sequences
+    print("\n🔄 Resetting sequences...")
+    reset_all_sequences()
+    print("✅ Sequences synced.")
+
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 

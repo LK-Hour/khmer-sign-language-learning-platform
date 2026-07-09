@@ -695,6 +695,12 @@ def seed_word_detection(wipe: bool = False, dry_run: bool = False) -> None:
           f"{len(data['word_detection_words'])} words, "
           f"{len(data['medias'])} media files")
 
+    # Reset sequences after inserting with explicit IDs
+    from seed_data.reset_sequences import reset_all_sequences
+    print("\n🔄 Resetting sequences...")
+    reset_all_sequences()
+    print("✅ Sequences synced.")
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Seed the Khmer word detection curriculum.")

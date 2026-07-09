@@ -334,6 +334,11 @@ def seed_practices(wipe: bool = False, dry_run: bool = False) -> None:
         print("\n🌱 Seeding word detection practices...")
         seed_word_detection_practices(db, word_media, next_media_id - 1)
 
+        # Reset sequences after inserting with explicit IDs
+        from seed_data.reset_sequences import reset_all_sequences
+        print("\n🔄 Resetting sequences...")
+        reset_all_sequences(db)
+
     print("\n✅ Practice seeding complete!")
 
 
