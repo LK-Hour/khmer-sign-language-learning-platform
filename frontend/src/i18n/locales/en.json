@@ -463,7 +463,7 @@
       "SAMPLE_CAPTION": "Reference — Khmer Sign Language word",
       "STATUS_COMING_SOON": "Coming soon",
       "STATUS_LABEL": "Match confidence",
-      "TIP": "Learning tip",
+      "TIP": "Tip",
       "WORD_LABEL": "Predict result"
     },
     "TRACK": {
@@ -475,6 +475,22 @@
       "QUIZ_TITLE": "Word Quiz",
       "SUMMARY_DESCRIPTION": "Video samples, pose Key-points, and live word-level sign matching.",
       "TITLE": "Learn Khmer words step by step"
+    },
+    "PRACTICE": {
+      "BACK_TO_TRACK": "Back to Track",
+      "CARD_ACTION": "Start",
+      "CARD_LABEL": "Practice",
+      "CARD_LABEL_KH": "ហាត់ប្រាណ",
+      "CARD_TITLE": "Chapter Practice",
+      "COMPLETE_SUBTITLE": "You've completed this chapter practice.",
+      "COMPLETE_TITLE": "Chapter Complete!",
+      "DEFAULT_TIP": "Watch the sample image, then sign the word clearly in front of the camera. Keep your hands visible and hold the sign steady.",
+      "HOLD_STILL": "Hold your sign steady...",
+      "LOCKED_HINT": "Complete all lessons in this chapter to unlock practice.",
+      "LOCKED_TITLE": "Practice Locked",
+      "PASSED": "Correct! Moving to next word...",
+      "PROGRESS": "Word",
+      "RETURN_TO_TRACK": "Return to Track"
     }
   },
   "QUIZ": {
