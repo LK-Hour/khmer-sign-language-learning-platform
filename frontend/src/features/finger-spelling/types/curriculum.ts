@@ -23,6 +23,8 @@ export interface FsChapter {
   lessonCount: number;
   completedLessonCount: number;
   isExerciseUnlocked: boolean;
+  isPracticeUnlocked: boolean;
+  isPracticeComplete: boolean;
   isLocked?: boolean;
 }
 

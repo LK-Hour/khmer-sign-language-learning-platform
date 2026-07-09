@@ -4,6 +4,7 @@ export { FingerSpellingTrackSkeleton } from "./FingerSpellingPageLoading";
 export { default as FingerSpellingTrack } from "./FingerSpellingTrack";
 export { default as FingerSpellingTrackContainer } from "./FingerSpellingTrackContainer";
 export { default as LessonLearningView } from "./learning/LessonLearningView";
+export { ChapterPracticeView, ChapterPracticeContainer } from "./practice";
 export { CompletionText, ExerciseStartButtonLink } from "./common";
 export { CurriculumCard } from "./curriculum";
 

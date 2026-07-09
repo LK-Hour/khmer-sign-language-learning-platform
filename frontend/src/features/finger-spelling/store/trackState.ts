@@ -17,9 +17,13 @@ export function mergeUnitsProgress(
       progressPercent: number;
     }
   >();
+  const practiceCompleteByChapterId = new Set<number>();
 
   for (const unit of current) {
     for (const chapter of unit?.chapters) {
+      if (chapter?.isPracticeComplete) {
+        practiceCompleteByChapterId.add(chapter?.id);
+      }
       for (const lesson of chapter?.lessons) {
         progressByLessonId.set(lesson?.id, {
           progressStatus: lesson?.progressStatus,
@@ -33,6 +37,9 @@ export function mergeUnitsProgress(
     ...unit,
     chapters: unit?.chapters.map((chapter) => ({
       ...chapter,
+      isPracticeComplete:
+        chapter?.isPracticeComplete === true ||
+        practiceCompleteByChapterId.has(chapter?.id),
       lessons: chapter?.lessons.map((lesson) => {
         const stored = progressByLessonId.get(lesson?.id);
         if (!stored) return lesson;

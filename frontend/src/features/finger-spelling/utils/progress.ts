@@ -2,6 +2,17 @@ import type { FsLesson, FsProgressStatus } from "../types";
 
 export type LessonDisplayState = "done" | "now" | "lock";
 
+export type PracticeDisplayState = LessonDisplayState;
+
+export function resolvePracticeState(chapter: {
+  isPracticeUnlocked?: boolean;
+  isPracticeComplete?: boolean;
+}): PracticeDisplayState {
+  if (chapter?.isPracticeComplete) return "done";
+  if (chapter?.isPracticeUnlocked) return "now";
+  return "lock";
+}
+
 export function getLessonProgressPercent(lesson: FsLesson): number {
   if (lesson?.progressPercent != null) return lesson?.progressPercent;
   if (lesson?.progressStatus === "COMPLETED") return 100;

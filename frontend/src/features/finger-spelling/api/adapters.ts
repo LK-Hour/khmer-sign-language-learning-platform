@@ -43,6 +43,8 @@ export function normalizeChapter(chapter: FsChapter): FsChapter {
     lessonCount: chapter?.lessonCount,
     completedLessonCount: chapter?.completedLessonCount,
     isExerciseUnlocked: chapter?.isExerciseUnlocked,
+    isPracticeUnlocked: chapter?.isPracticeUnlocked ?? false,
+    isPracticeComplete: chapter?.isPracticeComplete ?? false,
     isLocked: chapter?.isLocked ?? false,
   };
 }

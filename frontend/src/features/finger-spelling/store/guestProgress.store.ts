@@ -19,9 +19,11 @@ export type LocalGuestPracticeSummary = {
 type GuestProgressState = {
   lessons: Record<number, LocalGuestLessonProgress>;
   practiceSummaries: LocalGuestPracticeSummary[];
+  completedChapterPracticeIds: number[];
   lastAccessedLessonId: number | null;
   recordLessonCompletion: (lessonId: number, accuracy?: number | null) => void;
   recordPracticeSummary: (summary: Omit<LocalGuestPracticeSummary, "completedAt">) => void;
+  recordChapterPracticeComplete: (chapterId: number) => void;
   toImportPayload: () => GuestProgressImportPayload;
   hasProgress: () => boolean;
   clear: () => void;
@@ -34,6 +36,7 @@ export const useGuestProgressStore = create<GuestProgressState>()(
     (set, get) => ({
       lessons: {},
       practiceSummaries: [],
+      completedChapterPracticeIds: [],
       lastAccessedLessonId: null,
 
       recordLessonCompletion: (lessonId) =>
@@ -67,6 +70,15 @@ export const useGuestProgressStore = create<GuestProgressState>()(
           lastAccessedLessonId: summary?.lessonId,
         })),
 
+      recordChapterPracticeComplete: (chapterId) =>
+        set((state) => ({
+          completedChapterPracticeIds: state.completedChapterPracticeIds.includes(
+            chapterId
+          )
+            ? state.completedChapterPracticeIds
+            : [...state.completedChapterPracticeIds, chapterId],
+        })),
+
       toImportPayload: () => {
         const state = get();
         return {
@@ -88,12 +100,14 @@ export const useGuestProgressStore = create<GuestProgressState>()(
       hasProgress: () =>
         Object.keys(get().lessons).length > 0 ||
         get().practiceSummaries.length > 0 ||
+        get().completedChapterPracticeIds.length > 0 ||
         get().lastAccessedLessonId != null,
 
       clear: () =>
         set({
           lessons: {},
           practiceSummaries: [],
+          completedChapterPracticeIds: [],
           lastAccessedLessonId: null,
         }),
     }),

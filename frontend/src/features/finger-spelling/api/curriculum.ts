@@ -1,4 +1,4 @@
-import type { FsChapter, FsLesson, FsLessonDetail, FsUnit } from "../types";
+import type { FsChapter, FsChapterPractice, FsLesson, FsLessonDetail, FsUnit } from "../types";
 import type { FsTrackUnit } from "../store/types";
 import {
   normalizeChapter,
@@ -59,6 +59,19 @@ export async function fetchFsLesson(
       `/api/finger_spelling/lessons/${lessonId}`
     );
     return normalizeLessonDetail(lesson);
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchFsChapterPractice(
+  chapterId: number
+): Promise<FsChapterPractice | null> {
+  try {
+    const data = await apiFetch<FsChapterPractice>(
+      `/api/finger_spelling/chapters/${chapterId}/practice`
+    );
+    return data;
   } catch {
     return null;
   }

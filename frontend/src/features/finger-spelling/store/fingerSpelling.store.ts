@@ -10,6 +10,7 @@ import {
   mergeUnitsProgress,
   resolveInitialUnitId,
 } from "./trackState";
+import { isChapterPracticeUnlocked } from "../utils/chapterPracticeUnlock";
 import { useAuthStore } from "@/store/auth.store";
 import { useGuestProgressStore } from "./guestProgress.store";
 
@@ -54,6 +55,7 @@ export interface FingerSpellingState {
   setStabilityProgress: (progress: number) => void;
 
   markLessonCompleted: (lessonId: number) => void;
+  markPracticeCompleted: (chapterId: number) => void;
 }
 
 function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
@@ -64,6 +66,9 @@ function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
     Object.values(useGuestProgressStore.getState().lessons)
       .filter((lesson) => lesson?.isCompleted)
       .map((lesson) => lesson?.lessonId)
+  );
+  const completedChapterPractices = new Set(
+    useGuestProgressStore.getState().completedChapterPracticeIds
   );
   const orderedLessonIds = units
     .flatMap((unit) =>
@@ -109,11 +114,19 @@ function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
           progressPercent: isCompleted ? 100 : lesson?.progressPercent,
         };
       });
+      const effectiveCompleted = Math.max(chapter?.completedLessonCount, chapterCompleted);
       return {
         ...chapter,
         isLocked: !hasUnlockedLessonInChapter,
+        isPracticeUnlocked: isChapterPracticeUnlocked(
+          lessons,
+          chapter?.lessonCount ?? 0
+        ),
+        isPracticeComplete:
+          chapter?.isPracticeComplete === true ||
+          completedChapterPractices.has(chapter?.id),
         lessons,
-        completedLessonCount: Math.max(chapter?.completedLessonCount, chapterCompleted),
+        completedLessonCount: effectiveCompleted,
       };
     });
     return {
@@ -285,11 +298,17 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
                 return chapter;
               }
 
+              const completedLessonCount =
+                chapter?.completedLessonCount + chapterCompletedDelta;
+
               return {
                 ...chapter,
                 lessons,
-                completedLessonCount:
-                  chapter?.completedLessonCount + chapterCompletedDelta,
+                completedLessonCount,
+                isPracticeUnlocked: isChapterPracticeUnlocked(
+                  lessons,
+                  chapter?.lessonCount ?? 0
+                ),
               };
             });
 
@@ -304,6 +323,25 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
                 unit?.completedLessonCount + unitCompletedDelta,
             };
           });
+          return { units: applyGuestProgress(units) };
+        }),
+
+      markPracticeCompleted: (chapterId) =>
+        set((state) => {
+          const authUser = useAuthStore.getState().user;
+          if (authUser?.is_guest) {
+            useGuestProgressStore.getState().recordChapterPracticeComplete(chapterId);
+          }
+
+          const units = state.units.map((unit) => ({
+            ...unit,
+            chapters: unit?.chapters.map((chapter) =>
+              chapter?.id === chapterId
+                ? { ...chapter, isPracticeComplete: true }
+                : chapter
+            ),
+          }));
+
           return { units: applyGuestProgress(units) };
         }),
     }),

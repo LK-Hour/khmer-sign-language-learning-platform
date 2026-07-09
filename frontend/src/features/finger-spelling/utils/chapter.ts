@@ -76,3 +76,21 @@ export function getLessonDisplayLetter(lesson: {
     ""
   );
 }
+
+/** Letter range shown on the chapter practice track row. */
+export function getPracticeDisplayRange(
+  lessons: Array<{
+    orderIndex: number;
+    letter: string;
+    letterNameKh?: string | null;
+    letterNameEn?: string | null;
+    romanization?: string | null;
+  }>
+): string {
+  const sorted = [...lessons].sort((a, b) => a.orderIndex - b.orderIndex);
+  if (sorted.length === 0) return "";
+
+  const first = getLessonDisplayLetter(sorted[0]);
+  const last = getLessonDisplayLetter(sorted[sorted.length - 1]);
+  return first === last ? first : `${first} - ${last}`;
+}

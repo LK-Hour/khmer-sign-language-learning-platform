@@ -15,6 +15,8 @@ export const ROUTES = {
     root: "/finger-spelling",
     lesson: (lessonId: string | number) =>
       `/finger-spelling/lessons/${lessonId}`,
+    practice: (chapterId: string | number) =>
+      `/finger-spelling/chapters/${chapterId}/practice`,
   },
 
   words: {
