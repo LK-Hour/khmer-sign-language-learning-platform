@@ -22,7 +22,7 @@ export function TipCard({ label, text }: TipCardProps) {
       <Typography
         sx={{
           color: KslColors.textSecondary,
-          fontSize: KslFontSizes.xs,
+          fontSize: KslFontSizes.lg,
           fontWeight: 600,
           mb: 0.75,
         }}

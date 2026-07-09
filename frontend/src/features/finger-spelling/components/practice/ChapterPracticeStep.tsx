@@ -125,28 +125,54 @@ export default function ChapterPracticeStep({
     >
       <Stack
         direction="row"
-        spacing={1.5}
-        sx={{ alignItems: "center", justifyContent: "space-between" }}
+        spacing={1}
+        sx={{ alignItems: "baseline", flexWrap: "wrap" }}
       >
         <Typography
+          component="span"
+          sx={{
+            color: KslColors.textPrimary,
+            fontSize: { xs: KslFontSizes.lg, sm: KslFontSizes.xl },
+            fontWeight: 700,
+            lineHeight: 1.2,
+          }}
+        >
+          {t("FINGER_SPELLING.PRACTICE.PROGRESS")}
+        </Typography>
+        <Typography
+          component="span"
+          sx={{
+            color: KslColors.primary,
+            fontSize: { xs: KslFontSizes["2xl"], sm: KslFontSizes["3xl"] },
+            fontWeight: 800,
+            lineHeight: 1,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {currentIndex + 1}
+        </Typography>
+        <Typography
+          component="span"
           sx={{
             color: KslColors.textSecondary,
-            fontSize: KslFontSizes.sm,
+            fontSize: { xs: KslFontSizes.lg, sm: KslFontSizes.xl },
             fontWeight: 600,
+            lineHeight: 1.2,
           }}
         >
-          {t("FINGER_SPELLING.PRACTICE.PROGRESS")} {currentIndex + 1} / {totalItems}
+          /
         </Typography>
-
         <Typography
+          component="span"
           sx={{
-            color: continueEnabled ? KslColors.success : KslColors.textSecondary,
-            fontSize: KslFontSizes.sm,
-            fontWeight: 700,
-            transition: "color 0.2s ease",
+            color: KslColors.primaryDark,
+            fontSize: { xs: KslFontSizes.xl, sm: 28 },
+            fontWeight: 800,
+            lineHeight: 1,
+            letterSpacing: "-0.02em",
           }}
         >
-          {statusText}
+          {totalItems}
         </Typography>
       </Stack>
 
@@ -174,6 +200,28 @@ export default function ChapterPracticeStep({
               isLandmarkerReady={isLandmarkerReady}
               onDetection={onDetection}
             />
+            <Typography
+              sx={{
+                position: "absolute",
+                top: 12,
+                left: 12,
+                zIndex: 2,
+                px: 1.25,
+                py: 0.75,
+                borderRadius: `${KslRadii.wordCard}px`,
+                bgcolor: KslColors.surface,
+                color: continueEnabled ? KslColors.success : KslColors.textPrimary,
+                fontSize: KslFontSizes.sm,
+                fontWeight: 700,
+                lineHeight: 1.3,
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.18)",
+                maxWidth: "calc(100% - 24px)",
+                pointerEvents: "none",
+                transition: "color 0.2s ease",
+              }}
+            >
+              {statusText}
+            </Typography>
           </Stack>
         </Grid>
       </Grid>
