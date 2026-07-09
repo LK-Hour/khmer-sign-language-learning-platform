@@ -1,8 +1,7 @@
 "use client";
 
-import LoadingButton from "@mui/lab/LoadingButton";
 import { Button, Grid, Paper, Stack, Typography } from "@mui/material";
-import type { RefObject } from "react";
+import { type RefObject, useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
@@ -72,6 +71,8 @@ export default function WdLessonPracticeStep({
   onRawStreamReady,
 }: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
   const sampleVideoUrl = videoUrl?.trim() ?? "";
   const targetWord = word.trim();
@@ -92,7 +93,7 @@ export default function WdLessonPracticeStep({
   const predictionPassed = Boolean(continueEnabled);
   const isRetryDisabled = Boolean(isContinuing || retryWaiting);
   const isContinueLoading = Boolean(isContinuing);
-  const isContinueDisabled = Boolean(!predictionPassed || isContinuing);
+  const isContinueDisabled = mounted ? Boolean(!predictionPassed || isContinuing) : false;
   return (
     <Stack spacing={2} sx={{ mt: 2 }}>
       {recError ? (
@@ -232,7 +233,7 @@ export default function WdLessonPracticeStep({
               {retryWaiting ? t("BUTTON.TRY_AGAIN") : t("WORD_DETECTION.LESSON.RETRY")}
             </Button>
           ) : null}
-          <LoadingButton
+          <Button
             variant="contained"
             loading={isContinueLoading}
             loadingPosition="center"
@@ -250,7 +251,7 @@ export default function WdLessonPracticeStep({
               "&:hover": {
                 bgcolor: predictionPassed ? KslColors.primaryDark : KslColors.disabled,
               },
-              "&.MuiLoadingButton-loading": {
+              "&.MuiButton-loading": {
                 color: "transparent",
               },
             }}
@@ -260,7 +261,7 @@ export default function WdLessonPracticeStep({
               : nextLessonId != null
                 ? t("WORD_DETECTION.LESSON.CONTINUE")
                 : t("WORD_DETECTION.LESSON.COMPLETE_CHAPTER")}
-          </LoadingButton>
+          </Button>
         </Stack>
       </Paper>
     </Stack>

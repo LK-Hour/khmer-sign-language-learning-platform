@@ -1,6 +1,5 @@
 "use client";
 
-import LoadingButton from "@mui/lab/LoadingButton";
 import {
   Box,
   Button,
@@ -141,7 +140,7 @@ export default function WordRecordingPreview({
         >
           Discard
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
           loading={isUploading}
           onClick={handleUpload}
@@ -149,7 +148,7 @@ export default function WordRecordingPreview({
           sx={{ borderRadius: "8px" }}
         >
           Donate
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -195,7 +195,7 @@ export default function WdCameraPanel({
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "contain",
+              objectFit: "cover",
               display: "block",
               transform: "scaleX(-1)",
             }}
@@ -208,7 +208,7 @@ export default function WdCameraPanel({
               inset: 0,
               width: "100%",
               height: "100%",
-              objectFit: "contain",
+              objectFit: "cover",
               pointerEvents: "none",
               transform: "scaleX(-1)",
             }}

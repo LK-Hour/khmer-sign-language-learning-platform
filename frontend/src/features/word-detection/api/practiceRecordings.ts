@@ -40,7 +40,7 @@ export async function submitWdRecording({
   confidence,
 }: SubmitWdRecordingInput): Promise<WdContributionUploadResponse> {
   const formData = new FormData();
-  formData.append("video", video, `word-detection.${extensionForBlob(video)}`);
+  formData.append("video", video, `${word}-contribution.${extensionForBlob(video)}`);
   formData.append("lesson_id", String(lessonId));
   formData.append("word", word);
   formData.append("predicted_label", predictedLabel);
