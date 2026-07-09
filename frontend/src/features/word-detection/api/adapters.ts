@@ -35,6 +35,8 @@ export function normalizeChapter(chapter: WdChapter): WdChapter {
     lessonCount: chapter?.lessonCount,
     completedLessonCount: chapter?.completedLessonCount,
     isLocked: chapter?.isLocked ?? false,
+    isPracticeUnlocked: chapter?.isPracticeUnlocked ?? false,
+    isPracticeComplete: chapter?.isPracticeComplete ?? false,
   };
 }
 

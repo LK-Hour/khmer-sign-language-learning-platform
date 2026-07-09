@@ -31,8 +31,13 @@ import {
   formatChapterBadge,
   formatLessonLabel,
   formatUnitBadge,
+  getPracticeDisplayRange,
 } from "../utils/chapter";
-import { resolveLessonStates, type LessonDisplayState } from "../utils/progress";
+import {
+  resolveLessonStates,
+  resolvePracticeState,
+  type LessonDisplayState,
+} from "../utils/progress";
 
 type WordDetectionTrackProps = {
   units: WdTrackUnit[];
@@ -559,6 +564,7 @@ function ChapterTrackSection({
               state={lessonStates.get(lesson?.id) ?? "lock"}
             />
           ))}
+          <PracticeTrackRow chapter={chapter} locale={locale} />
         </Stack>
       </Collapse>
     </Paper>
@@ -711,6 +717,165 @@ function LessonTrackRow({
 
   return (
     <Link href={ROUTES.words.lesson(lesson?.id)} style={{ color: "inherit", textDecoration: "none" }}>
+      {row}
+    </Link>
+  );
+}
+
+function PracticeTrackRow({
+  chapter,
+  locale,
+}: {
+  chapter: WdTrackChapter;
+  locale: "kh" | "en";
+}) {
+  const { t } = useTranslation();
+  const state = resolvePracticeState(chapter);
+  const status = lessonStatus[state];
+  const unlocked = state !== "lock";
+  const title =
+    locale === "kh"
+      ? t("WORD_DETECTION.PRACTICE.CARD_LABEL_KH")
+      : t("WORD_DETECTION.PRACTICE.CARD_LABEL");
+  const subtitle = getPracticeDisplayRange(chapter?.lessons ?? []);
+
+  const row = (
+    <Paper
+      elevation={0}
+      sx={{
+        alignItems: "center",
+        bgcolor: status.rowBg,
+        border: `1px solid ${status.rowBorder}`,
+        borderRadius: `${KslRadii.wordCard + 4}px`,
+        display: "flex",
+        gap: { xs: 1.25, md: 2 },
+        opacity: status.rowOpacity,
+        px: { xs: 1.25, md: 2 },
+        py: 1.25,
+        cursor: unlocked ? "pointer" : "not-allowed",
+        transform: "translateY(0)",
+        transition:
+          "border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease",
+        ...(unlocked && {
+          "&:hover": {
+            bgcolor: KslColors.primaryLighter,
+            borderColor: KslColors.primary,
+            boxShadow: KslShadows.card,
+            transform: "translateY(-3px)",
+          },
+        }),
+      }}
+    >
+      <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          sx={{
+            color: KslColors.textPrimary,
+            fontSize: KslFontSizes.md,
+            fontWeight: 700,
+            lineHeight: 1.25,
+          }}
+        >
+          {title}:
+        </Typography>
+        <Typography
+          sx={{
+            color: KslColors.textPrimary,
+            fontSize: KslFontSizes.md,
+            fontWeight: 700,
+            lineHeight: 1.25,
+            fontFamily: fontFamilies.khmer,
+          }}
+        >
+          {subtitle}
+        </Typography>
+      </Stack>
+
+      <Stack
+        direction="row"
+        spacing={1.25}
+        sx={{ alignItems: "center", flexShrink: 0 }}
+      >
+        <Stack
+          component="span"
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: "center" }}
+        >
+          {status.showCompletedLabel ? (
+            <Typography
+              sx={{
+                color: KslColors.success,
+                fontSize: KslFontSizes.sm,
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              {t("PHRASES.COMPLETED")}
+            </Typography>
+          ) : null}
+          {state === "now" ? (
+            <Typography
+              sx={{
+                color: KslColors.inProgress,
+                fontSize: KslFontSizes.sm,
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              {t("WORD_DETECTION.PRACTICE.CARD_ACTION")}
+            </Typography>
+          ) : null}
+          <Stack
+            component="span"
+            sx={{
+              alignItems: "center",
+              bgcolor: status.iconBg,
+              borderRadius: "50%",
+              height: 34,
+              justifyContent: "center",
+              width: 34,
+            }}
+          >
+            {status.iconInnerBg ? (
+              <Stack
+                component="span"
+                sx={{
+                  alignItems: "center",
+                  bgcolor: status.iconInnerBg,
+                  borderRadius: "50%",
+                  color: status.iconColor,
+                  height: 22,
+                  justifyContent: "center",
+                  width: 22,
+                }}
+              >
+                <Icon icon={status.icon} width={14} />
+              </Stack>
+            ) : (
+              <Stack
+                component="span"
+                sx={{
+                  alignItems: "center",
+                  color: status.iconColor,
+                  justifyContent: "center",
+                }}
+              >
+                <Icon icon={status.icon} width={18} />
+              </Stack>
+            )}
+          </Stack>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+
+  if (!unlocked) return row;
+
+  return (
+    <Link
+      href={`/${locale}${ROUTES.words.practice(chapter?.id)}`}
+      style={{ color: "inherit", textDecoration: "none" }}
+    >
       {row}
     </Link>
   );

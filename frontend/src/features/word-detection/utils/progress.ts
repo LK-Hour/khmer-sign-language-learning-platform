@@ -2,6 +2,17 @@ import type { WdLesson, WdProgressStatus } from "../types";
 
 export type LessonDisplayState = "done" | "now" | "lock";
 
+export type PracticeDisplayState = LessonDisplayState;
+
+export function resolvePracticeState(chapter: {
+  isPracticeUnlocked?: boolean;
+  isPracticeComplete?: boolean;
+}): PracticeDisplayState {
+  if (chapter?.isPracticeComplete) return "done";
+  if (chapter?.isPracticeUnlocked) return "now";
+  return "lock";
+}
+
 export function statusToPercent(status: WdProgressStatus): number {
   if (status === "COMPLETED") return 100;
   if (status === "IN_PROGRESS") return 50;

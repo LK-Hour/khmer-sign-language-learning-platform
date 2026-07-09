@@ -22,6 +22,8 @@ export const ROUTES = {
   words: {
     root: "/words",
     lesson: (lessonId: string | number) => `/words/lessons/${lessonId}`,
+    practice: (chapterId: string | number) =>
+      `/words/chapters/${chapterId}/practice`,
   },
 
   admin: {

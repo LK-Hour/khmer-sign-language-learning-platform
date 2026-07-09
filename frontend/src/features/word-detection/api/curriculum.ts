@@ -3,7 +3,13 @@
  * Fetches the real backend curriculum, mirroring finger-spelling/api/curriculum.ts.
  */
 
-import type { WdChapter, WdLesson, WdLessonDetail, WdUnit } from "../types";
+import type {
+  WdChapter,
+  WdChapterPractice,
+  WdLesson,
+  WdLessonDetail,
+  WdUnit,
+} from "../types";
 import type { WdTrackUnit } from "../store/types";
 import {
   normalizeChapter,
@@ -74,6 +80,20 @@ export async function fetchWdLesson(
       `/api/word_detection/lessons/${lessonId}`
     );
     return normalizeLessonDetail(lesson);
+  } catch {
+    return null;
+  }
+}
+
+// ─── Chapter practice ────────────────────────────────────────────────────────
+
+export async function fetchWdChapterPractice(
+  chapterId: number
+): Promise<WdChapterPractice | null> {
+  try {
+    return await apiFetch<WdChapterPractice>(
+      `/api/word_detection/chapters/${chapterId}/practice`
+    );
   } catch {
     return null;
   }

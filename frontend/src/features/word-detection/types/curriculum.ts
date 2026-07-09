@@ -24,6 +24,8 @@ export interface WdChapter {
   lessonCount: number;
   completedLessonCount: number;
   isLocked?: boolean;
+  isPracticeUnlocked?: boolean;
+  isPracticeComplete?: boolean;
 }
 
 /**

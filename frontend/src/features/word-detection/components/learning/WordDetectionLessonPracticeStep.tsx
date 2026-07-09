@@ -285,7 +285,7 @@ function TipCard({ label, text }: { label: string; text: string }) {
       <Typography
         sx={{
           color: KslColors.textSecondary,
-          fontSize: KslFontSizes.xs,
+          fontSize: KslFontSizes.lg,
           fontWeight: 600,
           mb: 0.75,
         }}
