@@ -18,6 +18,7 @@ from src.schemas.finger_spelling import (
     FsLessonResponse,
     FsUnitResponse,
 )
+from src.services.finger_spelling.finger_chapter_practice_service import FingerChapterPracticeService
 from src.services.finger_spelling.finger_curriculum_service import FingerCurriculumService
 from src.services.finger_spelling.finger_locking_service import FingerLockingService
 from src.services.finger_spelling.finger_progress_service import FingerProgressService
@@ -100,6 +101,7 @@ def list_chapters(
     user_id = user.id if user else None
     progress_svc = FingerProgressService(db)
     locking = FingerLockingService(db)
+    practice_svc = FingerChapterPracticeService(db)
     result: list[FsChapterResponse] = []
     for chapter in chapters:
         lesson_ids = curriculum.curriculum.list_lesson_ids_for_chapter(chapter.id)
@@ -116,6 +118,8 @@ def list_chapters(
                 lessonCount=len(lesson_ids),
                 completedLessonCount=completed,
                 isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id),
+                isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+                isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
                 isLocked=locking.is_chapter_locked(chapter.id, user_id),
             )
         )
@@ -135,6 +139,7 @@ def get_chapter(
 
     user_id = user.id if user else None
     locking = FingerLockingService(db)
+    practice_svc = FingerChapterPracticeService(db)
     lesson_ids = curriculum.curriculum.list_lesson_ids_for_chapter(chapter.id)
     completed = (
         FingerProgressService(db).progress.count_completed_lessons(user_id, lesson_ids) if user_id else 0
@@ -150,6 +155,8 @@ def get_chapter(
         lessonCount=len(lesson_ids),
         completedLessonCount=completed,
         isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id),
+        isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+        isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
         isLocked=locking.is_chapter_locked(chapter.id, user_id),
     )
 

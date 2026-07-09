@@ -128,6 +128,8 @@ class FsChapterResponse(BaseModel):
     lessonCount: int
     completedLessonCount: int
     isExerciseUnlocked: bool
+    isPracticeUnlocked: bool = False
+    isPracticeComplete: bool = False
     isLocked: bool = False
 
 
@@ -249,3 +251,43 @@ class FsChapterProgressResponse(BaseModel):
     totalLessonCount: int
     isExerciseUnlocked: bool
     lessons: List[FsChapterLessonProgressItem] = []
+
+
+# ── Chapter practice schemas ───────────────────────────────────────────────
+
+class FsPracticeItemResponse(BaseModel):
+    lessonId: int
+    letterId: int
+    letterKh: str
+    letterEn: Optional[str] = None
+    orderIndex: int
+    practiceImageUrl: str
+
+
+class FsChapterPracticeResponse(BaseModel):
+    chapterId: int
+    chapterTitle: str
+    chapterTitleKh: str
+    unitId: int
+    unitTitle: str
+    unitTitleKh: str
+    isUnlocked: bool
+    practiceId: Optional[int] = None
+    items: List[FsPracticeItemResponse] = []
+    # Per-user progress
+    isComplete: bool = False
+    attempts: int = 0
+    avgScore: float = 0.0
+
+
+class ChapterPracticeResultRequest(BaseModel):
+    avgScore: float
+    isComplete: bool
+
+
+class ChapterPracticeResultResponse(BaseModel):
+    chapterId: int
+    practiceId: int
+    avgScore: float
+    isComplete: bool
+    attempts: int
