@@ -41,15 +41,21 @@ export default function LandingPage() {
     }
   }, []);
 
-  const handlePermissionClose = (_doNotShowAgain: boolean) => {
+  const handlePermissionClose = (doNotShowAgain: boolean) => {
+    usePermissionStore.getState().markLandingDialogSeen();
     setIsPermissionOpen(false);
   };
 
-  const handlePermissionSkip = (_doNotShowAgain: boolean) => {
+  const handlePermissionSkip = (doNotShowAgain: boolean) => {
+    usePermissionStore.getState().markLandingDialogSeen();
     setIsPermissionOpen(false);
   };
 
-  const handlePermissionAgree = (_doNotShowAgain: boolean) => {
+  const handlePermissionAgree = (doNotShowAgain: boolean) => {
+    usePermissionStore.getState().markLandingDialogSeen();
+    if (doNotShowAgain) {
+      usePermissionStore.getState().setAgreed();
+    }
     setIsPermissionOpen(false);
   };
 

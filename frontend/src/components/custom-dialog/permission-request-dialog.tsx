@@ -22,7 +22,6 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { KslColors, KslFontSizes } from "@/theme/theme";
-import { usePermissionStore } from "@/store/permission.store";
 
 // ----------------------------------------------------------------------
 
@@ -92,30 +91,18 @@ export default function PermissionRequestDialog({
   }, [open]);
 
   const handleDialogClose: DialogProps["onClose"] = (_event, reason) => {
-    if (doNotShowAgain) {
-      usePermissionStore.getState().markLandingDialogSeen();
-    }
     onClose(doNotShowAgain, reason);
   };
 
   const handleSkip = () => {
-    if (doNotShowAgain) {
-      usePermissionStore.getState().markLandingDialogSeen();
-    }
     onSkip(doNotShowAgain);
   };
 
   const handleAgree = () => {
-    if (doNotShowAgain) {
-      usePermissionStore.getState().setAgreed();
-    }
     onAgree(doNotShowAgain);
   };
 
   const handleDonate = () => {
-    if (doNotShowAgain) {
-      usePermissionStore.getState().setAgreed();
-    }
     onDonate?.(doNotShowAgain);
   };
 

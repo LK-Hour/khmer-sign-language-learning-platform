@@ -23,6 +23,8 @@ import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
 import LessonFeedbackWidget from "./LessonFeedbackWidget";
 import LessonPracticeStep from "./LessonPracticeStep";
 import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
+import { usePermissionStore } from "@/store/permission.store";
+import { PERMISSION_DIALOG_CONTENT } from "@/constants/permission-dialog";
 
 const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
 
@@ -66,7 +68,7 @@ export default function LessonLearningView({
   const capturingRef = useRef(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [isConsentPreviewOpen, setIsConsentPreviewOpen] = useState(false);
+  const [isPermissionOpen, setIsPermissionOpen] = useState(false);
   const [retryWaiting, setRetryWaiting] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;
@@ -474,6 +476,29 @@ export default function LessonLearningView({
     unit,
   ]);
 
+  useEffect(() => {
+    if (lesson.orderIndex !== 1) return;
+    const { hasAgreed } = usePermissionStore.getState();
+    if (!hasAgreed) {
+      setIsPermissionOpen(true);
+    }
+  }, [lesson.orderIndex]);
+
+  const handlePermissionClose = useCallback((_doNotShowAgain: boolean) => {
+    setIsPermissionOpen(false);
+  }, []);
+
+  const handlePermissionSkip = useCallback((_doNotShowAgain: boolean) => {
+    setIsPermissionOpen(false);
+  }, []);
+
+  const handlePermissionAgree = useCallback((doNotShowAgain: boolean) => {
+    if (doNotShowAgain) {
+      usePermissionStore.getState().setAgreed();
+    }
+    setIsPermissionOpen(false);
+  }, []);
+
   const handleDetection = useCallback((detection: RawHandDetection) => {
     latestDetectionRef.current = detection;
   }, []);
@@ -570,12 +595,15 @@ export default function LessonLearningView({
       />
 
       <PermissionRequestDialog
-        open={isConsentPreviewOpen}
-        title="Help improve the model"
-        description="Allow us to use your practice data,asdfadfasdfjhaksdjfhkaljsd aksdhfkjasdh fkjasdh fkasdhfklash fklajshf lashflka shfkasdh fkashf kasdfh akfh askfh aksdhfaks hfkasdhfaksdhfaksdhf klasjhfadbfm,asdbfmasndbfmasdbfamsdhf k ahfkasd hfklasdhf lkasdhffeedback, and prediction results to improve Khmer Sign Language recognition.asdfasdfasdkfaskljdhjfasknfasknfaksjnfilasdnkas kjahklfjash klashhkfas hdkjhasdklfhaslkjfh klasdh fklajsd hkljshfkasd hfkhfkashfkjasiwyribnm,ndasb fm afkahsdkljf  ahsdk f haskjdfhaskl faksfkjasd hfk;jasfoweuropiwqe rhsdfa sdmbcasmbfiw yeia sdfhasdfyweirh abnfnmasdbfweryiuo yklasbfasdmf bkalsdhfiasdh fklashfka sdhfiosdh of pawkf asdkfask; dfh kasdhfkjasdhf [ou r omadfasdf uaefohasdkjfn ,asdnfoasid hfowehasdnfasdhfwoehr asddfasdfawey rasdfe rasdfhasdfbasdmfbbzxmcn,vbamcbvzmxcvbzxmcnvbwiehfkajsdhfkwhiw whoiw hte oasfsahdfakshdfasham i asdhfa-sdfklasdfjlkjasdoakt aopor nopw raksdflaread yunmfadnf,mnzcv,.mnzxcvnwho shnmdsfswho si tyis sare yaoudf asndflasjdfaspalktk ahdskhfaksdfhaskdjfhwhoswr=hwerwerhamsdnf,amsdnfalsdfjo;iwpeir[wirn,vmnzxc,m.vnzx,./fjha;lsdufoa[sduf]p0aeriu[awjejv,./asdnf'lasdhjfo'iaiur]qwe0puir[qwoepuiro,nmzxc.,vnzx.c,vn"
-        onClose={() => setIsConsentPreviewOpen(false)}
-        onSkip={() => setIsConsentPreviewOpen(false)}
-        onAgree={() => setIsConsentPreviewOpen(false)}
+        open={isPermissionOpen}
+        title={PERMISSION_DIALOG_CONTENT.title}
+        description={PERMISSION_DIALOG_CONTENT.description}
+        checkboxLabel={PERMISSION_DIALOG_CONTENT.checkboxLabel}
+        skipLabel={PERMISSION_DIALOG_CONTENT.skipLabel}
+        agreeLabel={PERMISSION_DIALOG_CONTENT.agreeLabel}
+        onClose={handlePermissionClose}
+        onSkip={handlePermissionSkip}
+        onAgree={handlePermissionAgree}
       />
     </Stack>
   );

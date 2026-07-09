@@ -404,8 +404,22 @@ export default function WdLessonLearningView({
           latestPrediction.confidence >= WORD_DONATION_CONFIDENCE_THRESHOLD;
 
         if (predictionMatches) {
-          setRecordedBlob(blob);
-          setIsRecordingPreviewOpen(true);
+          // Auto-donate when user has previously agreed
+          const { hasAgreed } = usePermissionStore.getState();
+          if (hasAgreed) {
+            // Auto-donate: upload directly without showing preview dialog
+            uploadContribution({
+              video: blob,
+              lessonId: lesson.id,
+              word: lesson.word,
+              predictedLabel: latestPrediction.label,
+              confidence: latestPrediction.confidence,
+            });
+          } else {
+            // Show preview dialog for user to choose
+            setRecordedBlob(blob);
+            setIsRecordingPreviewOpen(true);
+          }
         } else {
           // Discard silently - no preview shown
           setRecordedBlob(null);
@@ -419,7 +433,7 @@ export default function WdLessonLearningView({
         recordingInFlightRef.current = false;
         recordingStartTimeRef.current = null;
       });
-  }, [rawStream, recordForDuration, recordedBlob, isRecordingPreviewOpen, handDetected, lesson.word, continueEnabled]);
+  }, [rawStream, recordForDuration, recordedBlob, isRecordingPreviewOpen, handDetected, lesson.word, lesson.id, continueEnabled, uploadContribution]);
 
   // Recording no longer stops early on prediction; it runs for full 4s
 
@@ -445,10 +459,7 @@ export default function WdLessonLearningView({
     }
   }, [recordingError]);
 
-  const handleDiscardRecording = useCallback((doNotShowAgain: boolean) => {
-    if (doNotShowAgain) {
-      usePermissionStore.getState().setAgreed();
-    }
+  const handleDiscardRecording = useCallback((_doNotShowAgain: boolean) => {
     setIsRecordingPreviewOpen(false);
     setRecordedBlob(null);
     setHandWarmupComplete(false);
