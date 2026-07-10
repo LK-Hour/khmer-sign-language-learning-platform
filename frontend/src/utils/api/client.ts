@@ -44,7 +44,11 @@ export async function refreshAuthSession(): Promise<string | null> {
         });
 
         if (!res.ok) {
-          store.clear();
+          // Only clear auth if the server explicitly rejected the session.
+          // Network errors and transient failures should NOT log the user out.
+          if (res.status === 401 || res.status === 403) {
+            store.clear();
+          }
           return null;
         }
 
@@ -55,7 +59,9 @@ export async function refreshAuthSession(): Promise<string | null> {
         store.setAccessToken(tokenResp);
         return tokenResp?.access_token;
       } catch {
-        // Network error (e.g., backend unreachable) — return null silently
+        // Network error (e.g., backend unreachable) — return null silently.
+        // Do NOT clear auth; the user may still have a valid refresh cookie
+        // and can retry when connectivity is restored.
         return null;
       } finally {
         store.setRefreshing(false);

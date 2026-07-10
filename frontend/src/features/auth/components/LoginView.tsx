@@ -638,7 +638,7 @@ function WorkspaceTabs({ mode, onChange }: WorkspaceTabsProps) {
         bgcolor: colors.softBg,
         borderRadius: `${KslRadii.wordCard}px`,
         gap: "1px",
-        display: {xs: 'none', sm: 'flex'},
+        display: {xs: 'none', md: 'flex'},
       }}
     >
       <TabButton

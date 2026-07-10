@@ -77,6 +77,7 @@ export const KslRadii = {
   headerBottom: 40,
   progress: 50,
   button: 16,
+  showCard: "12px",
 } as const;
 
 /** Core text scale. Prefer these tokens over raw pixel values in sx props. */
