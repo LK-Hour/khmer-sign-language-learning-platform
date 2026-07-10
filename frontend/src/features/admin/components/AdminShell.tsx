@@ -1,13 +1,15 @@
 "use client";
 
+import ChevronLeft from "@mui/icons-material/ChevronLeft";
 import FormatListNumbered from "@mui/icons-material/FormatListNumbered";
 import Layers from "@mui/icons-material/Layers";
 import Logout from "@mui/icons-material/Logout";
 import MenuBook from "@mui/icons-material/MenuBook";
-import { Avatar, Box, Button, Stack, Typography } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { Avatar, Box, Button, IconButton, Stack, Typography } from "@mui/material";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 import { ROUTES } from "@/constants/routes";
 import { useLocale } from "@/i18n";
@@ -16,6 +18,10 @@ import type { TranslationKey } from "@/i18n/translations";
 import { useAuthStore } from "@/store/auth.store";
 
 import { AdminColors, AdminFontSizes } from "./adminTokens";
+import { KslRadii } from "@/theme/theme";
+
+const SIDEBAR_WIDTH = 256;
+const SIDEBAR_COLLAPSED_WIDTH = 64;
 
 type NavItem = {
   labelKey: TranslationKey;
@@ -45,12 +51,15 @@ type AdminShellProps = {
   children: ReactNode;
 };
 
-/** Two-pane admin dashboard shell: fixed dark sidebar + scrollable content panel. */
+/** Two-pane admin dashboard shell: collapsible dark sidebar + scrollable content panel. */
 export default function AdminShell({ children }: AdminShellProps) {
   const { t } = useTranslation();
   const locale = useLocale();
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
+  const [collapsed, setCollapsed] = useState(false);
+
+  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
 
   const displayName = user
     ? `${user?.first_name ?? ""}${user?.last_name ? ` ${user.last_name}` : ""}`.trim() ||
@@ -64,82 +73,120 @@ export default function AdminShell({ children }: AdminShellProps) {
         component="aside"
         sx={{
           display: { xs: "none", md: "flex" },
-          width: 256,
+          width: sidebarWidth,
           flexShrink: 0,
           bgcolor: AdminColors.sidebar,
           color: AdminColors.sidebarText,
           position: "sticky",
           top: 0,
           height: "100dvh",
+          transition: "width 0.2s ease",
+          overflow: "hidden",
         }}
       >
-        {/* Brand */}
+        {/* Brand + Toggle */}
         <Stack
           direction="row"
-          spacing={1.5}
           sx={{
             alignItems: "center",
-            p: 2,
+            justifyContent: collapsed ? "center" : "space-between",
+            p: collapsed ? 1 : 2,
             borderBottom: `1px solid ${AdminColors.sidebarBorder}`,
             bgcolor: AdminColors.sidebarStrong,
+            minHeight: 56,
           }}
         >
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              display: "grid",
-              placeItems: "center",
-              bgcolor: AdminColors.primary,
-              color: "common.white",
-              fontWeight: 700,
-            }}
+          {!collapsed && (
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 1,
+                  display: "grid",
+                  placeItems: "center",
+                  bgcolor: AdminColors.primary,
+                  color: "common.white",
+                  fontWeight: 700,
+                }}
+              >
+                K
+              </Box>
+              <Stack>
+                <Typography
+                  sx={{
+                    fontSize: AdminFontSizes.body,
+                    fontWeight: 700,
+                    color: "common.white",
+                    lineHeight: 1,
+                  }}
+                >
+                  KSL Admin
+                </Typography>
+                <Typography
+                  sx={{
+                    mt: 0.5,
+                    fontSize: AdminFontSizes.eyebrow,
+                    textTransform: "uppercase",
+                    color: AdminColors.muted,
+                  }}
+                >
+                  {t("ADMIN.MANAGEMENT")}
+                </Typography>
+              </Stack>
+            </Stack>
+          )}
+          <IconButton
+            onClick={() => setCollapsed(!collapsed)}
+            size="small"
+            sx={{ color: AdminColors.sidebarMuted, "&:hover": { color: "common.white" } }}
           >
-            K
-          </Box>
-          <Stack>
-            <Typography
-              sx={{
-                fontSize: AdminFontSizes.body,
-                fontWeight: 700,
-                color: "common.white",
-                lineHeight: 1,
-              }}
-            >
-              KSL Admin
-            </Typography>
-            <Typography
-              sx={{
-                mt: 0.5,
-                fontSize: AdminFontSizes.eyebrow,
-                textTransform: "uppercase",
-                color: AdminColors.muted,
-              }}
-            >
-              {t("ADMIN.MANAGEMENT")}
-            </Typography>
-          </Stack>
+            {collapsed ? <MenuIcon fontSize="small" /> : <ChevronLeft fontSize="small" />}
+          </IconButton>
         </Stack>
 
         {/* Navigation */}
-        <Stack component="nav" spacing={1} sx={{ flex: 1, p: 2 }}>
-          <Typography
-            sx={{
-              px: 1,
-              mb: 1,
-              fontSize: AdminFontSizes.eyebrow,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: 1,
-              color: AdminColors.muted,
-            }}
-          >
-            {t("ADMIN.NAVIGATION")}
-          </Typography>
+        <Stack component="nav" spacing={1} sx={{ flex: 1, p: collapsed ? 1 : 2 }}>
+          {!collapsed && (
+            <Typography
+              sx={{
+                px: 1,
+                mb: 1,
+                fontSize: AdminFontSizes.eyebrow,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                color: AdminColors.muted,
+              }}
+            >
+              {t("ADMIN.NAVIGATION")}
+            </Typography>
+          )}
           {NAV_ITEMS.map((item) => {
             const href = `/${locale}${item.href}`;
             const active = pathname.startsWith(href);
+
+            if (collapsed) {
+              return (
+                <IconButton
+                  key={item.href}
+                  component={Link}
+                  href={href}
+                  sx={{
+                    color: active ? AdminColors.primaryText : AdminColors.sidebarMuted,
+                    bgcolor: active ? AdminColors.primaryTint : "transparent",
+                    borderRadius: KslRadii.showCard,
+                    "&:hover": {
+                      bgcolor: active ? AdminColors.primaryTintHover : AdminColors.sidebarBorder,
+                      color: active ? AdminColors.primaryText : "common.white",
+                    },
+                  }}
+                >
+                  {item.icon}
+                </IconButton>
+              );
+            }
+
             return (
               <Button
                 key={item.href}
@@ -152,12 +199,14 @@ export default function AdminShell({ children }: AdminShellProps) {
                         justifyContent: "flex-start",
                         color: AdminColors.primaryText,
                         bgcolor: AdminColors.primaryTint,
+                        borderRadius: KslRadii.showCard,
                         border: `1px solid ${AdminColors.primaryTintBorder}`,
                         "&:hover": { bgcolor: AdminColors.primaryTintHover },
                       }
                     : {
                         justifyContent: "flex-start",
                         color: AdminColors.sidebarMuted,
+                        borderRadius: KslRadii.showCard,
                         "&:hover": {
                           bgcolor: AdminColors.sidebarBorder,
                           color: "common.white",
@@ -174,51 +223,74 @@ export default function AdminShell({ children }: AdminShellProps) {
         {/* Footer: signed-in admin + back to site */}
         <Stack
           spacing={1.5}
-          sx={{ p: 2, borderTop: `1px solid ${AdminColors.sidebarBorder}` }}
+          sx={{ p: collapsed ? 1 : 2, borderTop: `1px solid ${AdminColors.sidebarBorder}`, alignItems: collapsed ? "center" : "stretch" }}
         >
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
-            <Avatar
-              src={user?.picture ?? ""}
-              alt={displayName}
-              sx={{ width: 32, height: 32, fontSize: AdminFontSizes.small }}
-            >
-              {displayName[0]?.toUpperCase()}
-            </Avatar>
-            <Stack sx={{ minWidth: 0 }}>
-              <Typography
-                noWrap
+          {!collapsed ? (
+            <>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
+                <Avatar
+                  src={user?.picture ?? ""}
+                  alt={displayName}
+                  sx={{ width: 32, height: 32, fontSize: AdminFontSizes.small }}
+                >
+                  {displayName[0]?.toUpperCase()}
+                </Avatar>
+                <Stack sx={{ minWidth: 0 }}>
+                  <Typography
+                    noWrap
+                    sx={{
+                      fontSize: AdminFontSizes.small,
+                      fontWeight: 700,
+                      color: "common.white",
+                    }}
+                  >
+                    {displayName}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: AdminFontSizes.eyebrow,
+                      textTransform: "uppercase",
+                      color: AdminColors.sidebarMuted,
+                    }}
+                  >
+                    {t("ADMIN.ROLE_ADMIN")}
+                  </Typography>
+                </Stack>
+              </Stack>
+              <Button
+                component={Link}
+                href={`/${locale}`}
+                startIcon={<Logout sx={{ fontSize: 16 }} />}
+                size="small"
                 sx={{
-                  fontSize: AdminFontSizes.small,
-                  fontWeight: 700,
-                  color: "common.white",
-                }}
-              >
-                {displayName}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: AdminFontSizes.eyebrow,
-                  textTransform: "uppercase",
+                  justifyContent: "flex-start",
                   color: AdminColors.sidebarMuted,
+                  borderRadius: KslRadii.showCard,
+                  "&:hover": { bgcolor: AdminColors.sidebarBorder, color: "common.white" },
                 }}
               >
-                {t("ADMIN.ROLE_ADMIN")}
-              </Typography>
-            </Stack>
-          </Stack>
-          <Button
-            component={Link}
-            href={`/${locale}`}
-            startIcon={<Logout sx={{ fontSize: 16 }} />}
-            size="small"
-            sx={{
-              justifyContent: "flex-start",
-              color: AdminColors.sidebarMuted,
-              "&:hover": { bgcolor: AdminColors.sidebarBorder, color: "common.white" },
-            }}
-          >
-            {t("ADMIN.BACK_TO_SITE")}
-          </Button>
+                {t("ADMIN.BACK_TO_SITE")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Avatar
+                src={user?.picture ?? ""}
+                alt={displayName}
+                sx={{ width: 32, height: 32, fontSize: AdminFontSizes.small }}
+              >
+                {displayName[0]?.toUpperCase()}
+              </Avatar>
+              <IconButton
+                component={Link}
+                href={`/${locale}`}
+                size="small"
+                sx={{ color: AdminColors.sidebarMuted, "&:hover": { color: "common.white" } }}
+              >
+                <Logout sx={{ fontSize: 16 }} />
+              </IconButton>
+            </>
+          )}
         </Stack>
       </Stack>
 

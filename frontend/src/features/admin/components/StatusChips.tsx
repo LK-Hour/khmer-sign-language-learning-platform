@@ -6,6 +6,7 @@ import { useTranslation } from "@/i18n/useTranslation";
 
 import { AdminColors, AdminFontSizes } from "./adminTokens";
 import type { PublishStatus } from "../api/types";
+import { correctBorderRadius } from "framer-motion";
 
 const chipSx = (bg: string, color: string) => ({
   height: 22,

@@ -53,6 +53,7 @@ import { ConfirmActionDialog, PublishConfirmDialog } from "../components/Confirm
 import { ActiveChip, PublishChip } from "../components/StatusChips";
 import { AdminColors, AdminFontSizes, adminTableHeaderSx } from "../components/adminTokens";
 import { useAdminEntityTab, useAdminTrack } from "../store/adminUi.store";
+import { KslColors, KslRadii } from "@/theme/theme";
 
 type FormState = {
   name_en: string;
@@ -301,7 +302,7 @@ export default function AdminCurriculumManager() {
         title={t("ADMIN.CURRICULUM_MANAGEMENT")}
         icon={<Layers sx={{ fontSize: 24, color: AdminColors.primary }} />}
         action={
-          <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
+          <Button variant="contained" startIcon={<Add />} onClick={openCreate} sx={{borderRadius: KslRadii.showCard}}>
             {entityActionLabel("ADMIN.ADD", entityLabel)}
           </Button>
         }
@@ -330,12 +331,12 @@ export default function AdminCurriculumManager() {
             value={track}
             onChange={(_, value) => value && setTrack(value)}
           >
-            <ToggleButton value="finger" sx={{ fontSize: AdminFontSizes.small, fontWeight: 700 }}>
+            <ToggleButton value="finger" sx={{ fontSize: AdminFontSizes.small, fontWeight: 700, borderRadius: KslRadii.showCard}}>
               {t("ADMIN.TRACK_FINGER")}
             </ToggleButton>
             <ToggleButton
               value="word_detection"
-              sx={{ fontSize: AdminFontSizes.small, fontWeight: 700 }}
+              sx={{ fontSize: AdminFontSizes.small, fontWeight: 700, borderRadius: KslRadii.showCard }}
             >
               {t("ADMIN.TRACK_WORD_DETECTION")}
             </ToggleButton>
@@ -590,10 +591,10 @@ export default function AdminCurriculumManager() {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={() => setFormOpen(false)} disabled={busy}>
+          <Button onClick={() => setFormOpen(false)} disabled={busy} sx={{color:KslColors.muted ,borderRadius: KslRadii.showCard}}>
             {t("BUTTON.CANCEL")}
           </Button>
-          <Button type="submit" form="curriculumForm" variant="contained" disabled={busy}>
+          <Button type="submit" form="curriculumForm" variant="contained" disabled={busy} sx={{borderRadius: KslRadii.showCard}}>
             {t("ADMIN.SAVE_DRAFT")}
           </Button>
         </DialogActions>

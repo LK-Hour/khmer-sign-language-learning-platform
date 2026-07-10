@@ -142,7 +142,7 @@ export function AdminTableFooter({
 export function AdminEmptyState({ message }: { message: string }) {
   return (
     <Stack sx={{ py: 6, alignItems: "center" }}>
-      <Typography sx={{ fontSize: AdminFontSizes.body, color: AdminColors.muted }}>
+      <Typography sx={{ fontSize: AdminFontSizes.body, color: AdminColors }}>
         {message}
       </Typography>
     </Stack>
