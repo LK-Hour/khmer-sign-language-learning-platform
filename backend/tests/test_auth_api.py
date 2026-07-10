@@ -64,6 +64,14 @@ class TestAuthAPI:
         assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 0
 
     def test_refresh_reuse_detection_revokes_all_tokens(self, client, db, test_user_data):
+        """Reuse outside the grace period revokes all sessions.
+
+        Within the 10-second grace window a reused token is tolerated (race
+        condition between browser tabs). We patch the grace period to 0 so
+        the test exercises the revoke-all path without sleeping.
+        """
+        from unittest.mock import patch
+
         client.post("/users/", json=test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
@@ -79,13 +87,43 @@ class TestAuthAPI:
         )
         assert refresh_response.status_code == 200
 
+        # Simulate reuse OUTSIDE the grace period (set grace to 0 seconds)
+        client.cookies.set("refresh_token", stolen_cookie)
+        with patch("src.utils.refresh_tokens.REUSE_GRACE_PERIOD_SECONDS", 0):
+            reuse_response = client.post(
+                "/api/auth/refresh",
+                headers={"X-Requested-With": "KSL-Client"},
+            )
+        assert reuse_response.status_code == 401
+        assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 0
+
+    def test_refresh_reuse_within_grace_period_is_tolerated(self, client, db, test_user_data):
+        """Reuse within the grace period (race condition) returns 200 instead of revoking."""
+        client.post("/users/", json=test_user_data)
+        login_response = client.post(
+            "/api/auth/login/email",
+            json={"email": test_user_data["email"], "password": test_user_data["password"]},
+        )
+        stolen_cookie = login_response.cookies.get("refresh_token")
+        user = db.query(User).filter(User.email == test_user_data["email"]).one()
+        user_tokens = db.query(RefreshToken).filter(RefreshToken.user_id == user.id)
+
+        # First refresh rotates the token
+        refresh_response = client.post(
+            "/api/auth/refresh",
+            headers={"X-Requested-With": "KSL-Client"},
+        )
+        assert refresh_response.status_code == 200
+
+        # Immediate reuse (within 10s grace period) — should succeed
         client.cookies.set("refresh_token", stolen_cookie)
         reuse_response = client.post(
             "/api/auth/refresh",
             headers={"X-Requested-With": "KSL-Client"},
         )
-        assert reuse_response.status_code == 401
-        assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 0
+        assert reuse_response.status_code == 200
+        # At least one non-revoked token remains
+        assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() >= 1
 
     def test_admin_remember_me_uses_three_day_refresh_lifetime(self, client, db, test_admin_data):
         client.post("/users/", json=test_admin_data)

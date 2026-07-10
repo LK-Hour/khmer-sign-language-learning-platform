@@ -15,6 +15,12 @@ from src.models.refresh_token import RefreshToken
 
 REFRESH_TOKEN_BYTES = 32
 
+# Grace period (seconds) after a token is revoked during rotation.
+# If the same token is reused within this window, we treat it as a
+# benign race condition (e.g. two browser tabs refreshing simultaneously)
+# rather than a malicious replay attack.
+REUSE_GRACE_PERIOD_SECONDS = 10
+
 
 def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
@@ -47,12 +53,38 @@ def get_refresh_token_record(db: Session, plain_token: str) -> RefreshToken | No
     return db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash(plain_token)).first()
 
 
+def _is_within_reuse_grace_period(record: RefreshToken) -> bool:
+    """Check if a revoked token was rotated very recently (race condition window)."""
+    if record.last_used_at is None:
+        return False
+    elapsed = (datetime.now(timezone.utc) - record.last_used_at).total_seconds()
+    return elapsed <= REUSE_GRACE_PERIOD_SECONDS
+
+
 def validate_refresh_token(db: Session, plain_token: str) -> RefreshToken:
     record = get_refresh_token_record(db, plain_token)
     if record is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
     if record.revoked:
+        # If the token was rotated very recently, this is likely a race condition
+        # (e.g. two concurrent API calls both tried to refresh). Return the latest
+        # active token for this user instead of nuking all sessions.
+        if _is_within_reuse_grace_period(record):
+            latest_active = (
+                db.query(RefreshToken)
+                .filter(
+                    RefreshToken.user_id == record.user_id,
+                    RefreshToken.revoked.is_(False),
+                    RefreshToken.expires_at > datetime.now(timezone.utc),
+                )
+                .order_by(RefreshToken.created_at.desc())
+                .first()
+            )
+            if latest_active is not None:
+                return latest_active
+
+        # Outside grace period — genuine reuse attack, revoke everything
         revoke_all_user_refresh_tokens(db, record.user_id)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

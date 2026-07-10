@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = Field(default=7, validation_alias="REFRESH_TOKEN_EXPIRE_DAYS")
     cookie_domain: str | None = Field(default=None, validation_alias="COOKIE_DOMAIN")
     cookie_secure: bool = Field(default=False, validation_alias="COOKIE_SECURE")
-    cookie_samesite: str = Field(default="lax", validation_alias="COOKIE_SAMESITE")
+    cookie_samesite: str = Field(default="none", validation_alias="COOKIE_SAMESITE")
     csrf_header_value: str = Field(default="KSL-Client", validation_alias="CSRF_HEADER_VALUE")
 
     ml_enabled: bool = Field(default=True, validation_alias="ML_ENABLED")
