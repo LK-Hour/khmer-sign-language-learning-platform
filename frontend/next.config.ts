@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const isDevelopment = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   allowedDevOrigins: [
     "delicious-folk-recount.ngrok-free.dev",
     "*.ngrok-free.dev",
