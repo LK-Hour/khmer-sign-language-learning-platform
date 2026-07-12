@@ -12,6 +12,17 @@ from .core.config import settings
 
 app = FastAPI(title=settings.app_title)
 
+# Configure CORS — must be added before mounting static files so that
+# cross-origin requests to /data_set/... (video/image assets) also receive
+# the appropriate Access-Control-Allow-Origin headers.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routes
 app.include_router(api_router)
 
@@ -22,14 +33,6 @@ _DATASET_DIR = os.path.join(_REPO_ROOT_DIR, "data_set")
 if os.path.isdir(_DATASET_DIR):
     app.mount("/data_set", StaticFiles(directory=_DATASET_DIR), name="data_set")
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 @app.get("/")
 def read_root():

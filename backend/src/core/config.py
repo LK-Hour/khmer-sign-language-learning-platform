@@ -22,6 +22,7 @@ _DEFAULT_WORD_LABEL_MAP = (
 _DEFAULT_WORD_CONTRIBUTIONS_DIR = (
     _REPO_ROOT / "data_set" / "word_detection_contributions"
 )
+_DEFAULT_MEDIA_UPLOAD_DIR = _REPO_ROOT / "data_set" / "media_uploads"
 
 
 class Settings(BaseSettings):
@@ -74,6 +75,10 @@ class Settings(BaseSettings):
         default=_DEFAULT_WORD_CONTRIBUTIONS_DIR,
         validation_alias="WORD_DETECTION_CONTRIBUTIONS_DIR",
     )
+    media_upload_dir: Path = Field(
+        default=_DEFAULT_MEDIA_UPLOAD_DIR,
+        validation_alias="MEDIA_UPLOAD_DIR",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -96,6 +101,7 @@ class Settings(BaseSettings):
         "word_ml_model_path",
         "word_ml_label_map_path",
         "word_detection_contributions_dir",
+        "media_upload_dir",
         mode="before",
     )
     @classmethod
