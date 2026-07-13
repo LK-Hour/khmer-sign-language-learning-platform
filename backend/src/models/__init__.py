@@ -25,6 +25,9 @@ from .finger_spelling import (
     FingerPractice,
     FingerUserPracticeProgress,
     FingerPracticeMedia,
+    # Unit exercise attempts
+    FingerExerciseAttempt,
+    FingerExerciseAttemptAnswer,
 )
 from .word_detection import (
     # Enums
@@ -75,6 +78,8 @@ __all__ = [
     "FingerPractice",
     "FingerUserPracticeProgress",
     "FingerPracticeMedia",
+    "FingerExerciseAttempt",
+    "FingerExerciseAttemptAnswer",
     "WordDetectionExerciseType",
     "WordDetectionUnit",
     "WordDetectionChapter",

@@ -12,6 +12,7 @@ from .finger_hand_predict import router as hand_predict_router
 from .finger_hand_predict_ws import handle_websocket
 from .finger_practice import router as practice_router
 from .finger_progress import router as progress_router
+from .finger_exercise_attempt import router as exercise_attempt_router
 
 practice_router.include_router(hand_predict_router)
 
@@ -21,6 +22,7 @@ router.include_router(practice_router)
 router.include_router(chapter_practice_router)
 router.include_router(exercise_router)
 router.include_router(progress_router)
+router.include_router(exercise_attempt_router)
 
 # WebSocket endpoint for real-time prediction
 # Full path: /api/finger_spelling/ws/predict (the parent api_router has no prefix,

@@ -253,7 +253,11 @@ class TestAuthAPI:
         )
 
         assert response.status_code == 200
-        assert response.json() == {"imported_lessons": 2, "skipped_lessons": 1}
+        body = response.json()
+        assert body["imported_lessons"] == 2
+        assert body["skipped_lessons"] == 1
+        assert body.get("imported_chapter_practices", 0) == 0
+        assert body.get("imported_unit_exercises", 0) == 0
         progress = db.query(FingerUserLessonProgress).filter(
             FingerUserLessonProgress.finger_lesson_id == 9001
         ).one()

@@ -22,6 +22,7 @@ from src.services.finger_spelling.finger_chapter_practice_service import FingerC
 from src.services.finger_spelling.finger_curriculum_service import FingerCurriculumService
 from src.services.finger_spelling.finger_locking_service import FingerLockingService
 from src.services.finger_spelling.finger_progress_service import FingerProgressService
+from src.services.finger_spelling.finger_exercise_attempt_service import FingerExerciseAttemptService
 
 from .finger_shared import lesson_detail_to_response, to_fs_lesson
 
@@ -37,11 +38,13 @@ def list_units(
     curriculum = FingerCurriculumService(db)
     progress = FingerProgressService(db)
     locking = FingerLockingService(db)
+    exercise_svc = FingerExerciseAttemptService(db)
     user_id = user.id if user else None
     result: list[FsUnitResponse] = []
     for unit in curriculum.list_units():
         lesson_ids = curriculum.curriculum.list_lesson_ids_for_unit(unit.id)
         completed = progress.progress.count_completed_lessons(user_id, lesson_ids) if user_id else 0
+        exercise_status = exercise_svc.get_unit_exercise_status(user_id, unit.id)
         result.append(
             FsUnitResponse(
                 id=unit.id,
@@ -53,6 +56,10 @@ def list_units(
                 completedLessonCount=completed,
                 totalLessonCount=len(lesson_ids),
                 isLocked=locking.is_unit_locked(unit.id, user_id),
+                isExerciseUnlocked=exercise_status["isExerciseUnlocked"],
+                isExerciseCompleted=exercise_status["isExerciseCompleted"],
+                bestScore=exercise_status["bestScore"],
+                maxScore=exercise_status["maxScore"],
             )
         )
     return result
@@ -71,10 +78,12 @@ def get_unit(
 
     user_id = user.id if user else None
     locking = FingerLockingService(db)
+    exercise_svc = FingerExerciseAttemptService(db)
     lesson_ids = curriculum.curriculum.list_lesson_ids_for_unit(unit.id)
     completed = (
         FingerProgressService(db).progress.count_completed_lessons(user_id, lesson_ids) if user_id else 0
     )
+    exercise_status = exercise_svc.get_unit_exercise_status(user_id, unit_id)
     return FsUnitResponse(
         id=unit.id,
         title=unit.name_en,
@@ -84,6 +93,10 @@ def get_unit(
         completedLessonCount=completed,
         totalLessonCount=len(lesson_ids),
         isLocked=locking.is_unit_locked(unit.id, user_id),
+        isExerciseUnlocked=exercise_status["isExerciseUnlocked"],
+        isExerciseCompleted=exercise_status["isExerciseCompleted"],
+        bestScore=exercise_status["bestScore"],
+        maxScore=exercise_status["maxScore"],
     )
 
 

@@ -55,12 +55,30 @@ class GuestPracticeSummaryImport(BaseModel):
     completed_at: datetime | None = None
 
 
+class GuestChapterPracticeImport(BaseModel):
+    chapter_id: int
+    avg_score: float = 0
+    completed_at: datetime | None = None
+
+
+class GuestUnitExerciseImport(BaseModel):
+    unit_id: int
+    score: int
+    max_score: int
+    question_ids: list[int] = []
+    completed_at: datetime | None = None
+
+
 class GuestProgressImportRequest(BaseModel):
     lessons: list[GuestLessonProgressImport] = []
     practice_summaries: list[GuestPracticeSummaryImport] = []
     last_accessed_lesson_id: int | None = None
+    chapter_practices: list[GuestChapterPracticeImport] = []
+    unit_exercises: list[GuestUnitExerciseImport] = []
 
 
 class GuestProgressImportResponse(BaseModel):
     imported_lessons: int
     skipped_lessons: int
+    imported_chapter_practices: int = 0
+    imported_unit_exercises: int = 0

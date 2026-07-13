@@ -30,6 +30,8 @@ from src.models import (  # noqa: F401
     FingerExerciseOption,
     FingerUserLessonProgress,
     FingerExerciseProgress,
+    FingerExerciseAttempt,
+    FingerExerciseAttemptAnswer,
     WordDetectionUnit,
     WordDetectionChapter,
     WordDetectionLesson,

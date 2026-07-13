@@ -106,5 +106,12 @@ def import_guest_progress(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> GuestProgressImportResponse:
-    imported, skipped = import_local_guest_progress(db, target_user_id=user.id, payload=payload)
-    return GuestProgressImportResponse(imported_lessons=imported, skipped_lessons=skipped)
+    imported, skipped, imported_chapter_practices, imported_unit_exercises = (
+        import_local_guest_progress(db, target_user_id=user.id, payload=payload)
+    )
+    return GuestProgressImportResponse(
+        imported_lessons=imported,
+        skipped_lessons=skipped,
+        imported_chapter_practices=imported_chapter_practices,
+        imported_unit_exercises=imported_unit_exercises,
+    )

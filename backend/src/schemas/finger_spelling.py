@@ -115,6 +115,10 @@ class FsUnitResponse(BaseModel):
     completedLessonCount: int
     totalLessonCount: int
     isLocked: bool = False
+    isExerciseUnlocked: bool = False
+    isExerciseCompleted: bool = False
+    bestScore: int | None = None
+    maxScore: int | None = None
 
 
 class FsChapterResponse(BaseModel):
@@ -291,3 +295,69 @@ class ChapterPracticeResultResponse(BaseModel):
     avgScore: float
     isComplete: bool
     attempts: int
+
+
+# ── Unit exercise session schemas ─────────────────────────────────────────────
+
+class ExerciseSessionOptionResponse(BaseModel):
+    id: int
+    option_text_en: str | None = None
+    option_text_kh: str | None = None
+    media_url: str | None = None
+    is_correct: bool = False
+    order_index: int
+
+
+class ExerciseSessionQuestionResponse(BaseModel):
+    exercise_id: int
+    exercise_type: str
+    question_en: str
+    question_kh: str
+    media_url: str | None = None
+    options: List[ExerciseSessionOptionResponse] = []
+
+
+class ExerciseSessionAnswerResultResponse(BaseModel):
+    exercise_id: int
+    is_correct: bool
+    score: int
+    selected_option_ids: List[int] = []
+    correct_option_ids: List[int] = []
+    matching_pairs: dict | None = None
+
+
+class ExerciseSessionResponse(BaseModel):
+    attempt_id: uuid.UUID
+    unit_id: int
+    questions: List[ExerciseSessionQuestionResponse] = []
+    is_completed: bool = False
+    score: int = 0
+    max_score: int = 0
+    per_question_results: List[ExerciseSessionAnswerResultResponse] = []
+
+
+class ExerciseSessionAnswerSubmit(BaseModel):
+    exercise_id: int
+    selected_option_ids: List[int] = []
+    matching_pairs: dict | None = None
+
+
+class ExerciseSessionSubmitRequest(BaseModel):
+    attempt_id: uuid.UUID
+    answers: List[ExerciseSessionAnswerSubmit] = []
+
+
+class GuestExerciseGradeRequest(BaseModel):
+    """Grade a guest exercise without persisting to the database."""
+
+    attempt_id: uuid.UUID
+    question_ids: List[int]
+    answers: List[ExerciseSessionAnswerSubmit] = []
+
+
+class UnitExerciseStatusResponse(BaseModel):
+    unit_id: int
+    isExerciseUnlocked: bool
+    isExerciseCompleted: bool
+    bestScore: int | None = None
+    maxScore: int | None = None

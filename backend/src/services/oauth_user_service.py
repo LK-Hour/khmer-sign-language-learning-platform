@@ -6,14 +6,25 @@ Finds or creates users from OAuth provider data in the database
 import uuid
 from typing import Optional
 from datetime import datetime
+from uuid import uuid4
+
 from sqlalchemy.orm import Session
 
 from ..models.user import User
 from ..models.user_oauth_provider import UserOAuthProvider
 from ..models.finger_spelling import (
+    FingerChapter,
+    FingerExerciseAttempt,
     FingerLesson,
     FingerExerciseProgress,
+    FingerUnit,
     FingerUserLessonProgress,
+)
+from ..repositories.finger_spelling.finger_chapter_practice_repository import (
+    FingerChapterPracticeRepository,
+)
+from ..repositories.finger_spelling.finger_curriculum_repository import (
+    FingerCurriculumRepository,
 )
 from ..schemas.oauth import GuestProgressImportRequest
 
@@ -174,8 +185,11 @@ def import_local_guest_progress(
     *,
     target_user_id: uuid.UUID,
     payload: GuestProgressImportRequest,
-) -> tuple[int, int]:
-    """Merge browser-local guest progress into a signed-in user."""
+) -> tuple[int, int, int, int]:
+    """Merge browser-local guest progress into a signed-in user.
+
+    Returns (imported_lessons, skipped_lessons, imported_chapter_practices, imported_unit_exercises).
+    """
     lesson_ids = {
         item.lesson_id for item in payload.lessons
     } | {
@@ -199,7 +213,7 @@ def import_local_guest_progress(
             FingerUserLessonProgress.finger_lesson_id.in_(valid_lesson_ids),
         )
         .all()
-    }
+    } if valid_lesson_ids else {}
 
     imported = 0
     skipped = len(lesson_ids - valid_lesson_ids)
@@ -248,5 +262,59 @@ def import_local_guest_progress(
     ):
         get_progress(payload.last_accessed_lesson_id)
 
+    imported_chapter_practices = 0
+    chapter_ids = {item.chapter_id for item in payload.chapter_practices}
+    valid_chapter_ids = {
+        row[0]
+        for row in db.query(FingerChapter.id)
+        .filter(FingerChapter.id.in_(chapter_ids))
+        .all()
+    } if chapter_ids else set()
+
+    practice_repo = FingerChapterPracticeRepository(db)
+    curriculum = FingerCurriculumRepository(db)
+    for item in payload.chapter_practices:
+        if item.chapter_id not in valid_chapter_ids:
+            continue
+        lessons = curriculum.list_lessons_by_chapter(item.chapter_id)
+        practice = practice_repo.get_or_create_practice(item.chapter_id, len(lessons))
+        db.flush()
+        practice_repo.upsert_user_progress(
+            user_id=target_user_id,
+            practice_id=practice.id,
+            avg_score=float(item.avg_score or 0),
+            is_complete=True,
+        )
+        imported_chapter_practices += 1
+
+    imported_unit_exercises = 0
+    unit_ids = {item.unit_id for item in payload.unit_exercises}
+    valid_unit_ids = {
+        row[0]
+        for row in db.query(FingerUnit.id)
+        .filter(FingerUnit.id.in_(unit_ids))
+        .all()
+    } if unit_ids else set()
+
+    for item in payload.unit_exercises:
+        if item.unit_id not in valid_unit_ids:
+            continue
+        question_ids = list(item.question_ids or [])
+        max_score = max(item.max_score, len(question_ids), 1)
+        score = max(0, min(item.score, max_score))
+        completed_at = _naive_datetime(item.completed_at) or datetime.utcnow()
+        attempt = FingerExerciseAttempt(
+            id=uuid4(),
+            user_id=target_user_id,
+            unit_id=item.unit_id,
+            question_ids=question_ids,
+            score=score,
+            max_score=max_score,
+            is_completed=True,
+            completed_at=completed_at,
+        )
+        db.add(attempt)
+        imported_unit_exercises += 1
+
     db.commit()
-    return imported, skipped
+    return imported, skipped, imported_chapter_practices, imported_unit_exercises

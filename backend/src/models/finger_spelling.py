@@ -17,12 +17,13 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.session import Base
@@ -31,10 +32,10 @@ from src.models.publishable import PublishableMixin
 
 
 class FingerExerciseType(str, Enum):
-    """Exercise question types."""
+    """Exercise question types for the unit exercise session."""
     MULTIPLE_CHOICE = "multiple_choice"
-    FREE_FORM = "free_form"
-    IMAGE_SELECT = "image_select"
+    TRUE_FALSE = "true_false"
+    MULTIPLE_ANSWER = "multiple_answer"
     MATCHING = "matching"
 
 
@@ -56,6 +57,9 @@ class FingerUnit(PublishableMixin, Base):
 
     # Relationships
     chapters: Mapped[List["FingerChapter"]] = relationship(
+        back_populates="unit", cascade="all, delete-orphan"
+    )
+    exercise_attempts: Mapped[List["FingerExerciseAttempt"]] = relationship(
         back_populates="unit", cascade="all, delete-orphan"
     )
 
@@ -204,13 +208,12 @@ class FingerLetterMedia(Base):
 # ==================== EXERCISES ====================
 
 class FingerExercise(Base):
-    """Lesson exercise/question (multiple choice, free form, image select)."""
+    """Lesson exercise/question for unit exercises (multiple_choice, true_false, multiple_answer, matching)."""
     __tablename__ = "finger_exercises"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     unit_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_units.id"), nullable=False)
     lesson_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_lessons.id"), nullable=False)
-    lesson_count: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default="5")
     question_en: Mapped[str] = mapped_column(Text, nullable=False)
     question_kh: Mapped[str] = mapped_column(Text, nullable=False)
     exercise_type: Mapped[str] = mapped_column(
@@ -222,8 +225,8 @@ class FingerExercise(Base):
         nullable=False,
     )
     media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
-    description_en: Mapped[Optional[str]] = mapped_column(Text)
-    description_kh: Mapped[Optional[str]] = mapped_column(Text)
+    explanation_en: Mapped[Optional[str]] = mapped_column(Text)
+    explanation_kh: Mapped[Optional[str]] = mapped_column(Text)
     order_index: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
@@ -250,7 +253,7 @@ class FingerExercise(Base):
 
 
 class FingerExerciseOption(Base):
-    """Exercise option (for multiple_choice, image_select, matching)."""
+    """Exercise option (for multiple_choice, true_false, multiple_answer, matching)."""
     __tablename__ = "finger_exercise_options"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -429,4 +432,63 @@ class FingerPracticeMedia(Base):
     __table_args__ = (
         Index("ix_finger_practice_medias_practice_id", "practice_id"),
         Index("ix_finger_practice_medias_media_id", "media_id"),
+    )
+
+
+# ==================== QUIZ ATTEMPTS ====================
+
+class FingerExerciseAttempt(Base):
+    """Unit-level exercise session (15 random questions drawn from the unit pool)."""
+    __tablename__ = "finger_exercise_attempts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
+    unit_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_units.id"), nullable=False)
+    question_ids: Mapped[list] = mapped_column(JSONB, nullable=False)
+    score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    max_score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Relationships
+    user: Mapped["User"] = relationship(back_populates="exercise_attempts", foreign_keys=[user_id])
+    unit: Mapped["FingerUnit"] = relationship(back_populates="exercise_attempts")
+    answers: Mapped[List["FingerExerciseAttemptAnswer"]] = relationship(
+        back_populates="attempt", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("ix_finger_exercise_attempts_user_id", "user_id"),
+        Index("ix_finger_exercise_attempts_unit_id", "unit_id"),
+    )
+
+
+class FingerExerciseAttemptAnswer(Base):
+    """Per-question answer within a unit exercise attempt."""
+    __tablename__ = "finger_exercise_attempt_answers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    attempt_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("finger_exercise_attempts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    exercise_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("finger_exercises.id"), nullable=False
+    )
+    selected_option_ids: Mapped[list] = mapped_column(JSONB, nullable=False, server_default="[]")
+    matching_pairs: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+
+    # Relationships
+    attempt: Mapped["FingerExerciseAttempt"] = relationship(back_populates="answers")
+    exercise: Mapped["FingerExercise"] = relationship()
+
+    __table_args__ = (
+        Index("ix_finger_exercise_attempt_answers_attempt_id", "attempt_id"),
+        Index("ix_finger_exercise_attempt_answers_exercise_id", "exercise_id"),
     )

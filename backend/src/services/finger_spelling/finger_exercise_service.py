@@ -148,7 +148,8 @@ class FingerExerciseService:
 
         if exercise_type in (
             FingerExerciseType.MULTIPLE_CHOICE.value,
-            FingerExerciseType.IMAGE_SELECT.value,
+            FingerExerciseType.TRUE_FALSE.value,
+            FingerExerciseType.MULTIPLE_ANSWER.value,
             FingerExerciseType.MATCHING.value,
         ):
             if selected_option_id is None:
@@ -157,10 +158,5 @@ class FingerExerciseService:
             if option is None or option.exercise_id != exercise.id:
                 return False
             return bool(option.is_correct)
-
-        if exercise_type == FingerExerciseType.FREE_FORM.value:
-            if not selected_answer or not exercise.correct_answer:
-                return False
-            return selected_answer.strip().casefold() == exercise.correct_answer.strip().casefold()
 
         return False
