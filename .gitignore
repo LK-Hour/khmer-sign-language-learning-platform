@@ -78,3 +78,6 @@ finger_spelling_data_set/
 # ML model binaries)
 backend/ml/models/*.h5
 backend/ml/models/*.task
+
+# Graphify knowledge graph
+graphify-out/
