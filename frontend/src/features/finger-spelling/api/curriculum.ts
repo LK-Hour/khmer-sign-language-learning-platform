@@ -1,4 +1,5 @@
 import type { FsChapter, FsChapterPractice, FsLesson, FsLessonDetail, FsUnit } from "../types";
+import type { ExerciseSessionData, ExerciseSubmitRequest } from "../types/exercise";
 import type { FsTrackUnit } from "../store/types";
 import {
   normalizeChapter,
@@ -75,6 +76,48 @@ export async function fetchFsChapterPractice(
   } catch {
     return null;
   }
+}
+
+export async function fetchFsExerciseSession(unitId: number): Promise<ExerciseSessionData> {
+  return apiFetch<ExerciseSessionData>(`/api/finger_spelling/units/${unitId}/exercise`);
+}
+
+export async function fetchFsGuestExerciseSession(
+  unitId: number
+): Promise<ExerciseSessionData> {
+  return apiFetch<ExerciseSessionData>(
+    `/api/finger_spelling/units/${unitId}/exercise/guest`,
+    { skipAuth: true }
+  );
+}
+
+export async function submitFsExercise(
+  unitId: number,
+  body: ExerciseSubmitRequest
+): Promise<ExerciseSessionData> {
+  return apiFetch<ExerciseSessionData>(
+    `/api/finger_spelling/units/${unitId}/exercise/submit`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
+}
+
+export async function submitFsGuestExercise(
+  unitId: number,
+  body: ExerciseSubmitRequest & { question_ids: number[] }
+): Promise<ExerciseSessionData> {
+  return apiFetch<ExerciseSessionData>(
+    `/api/finger_spelling/units/${unitId}/exercise/guest/grade`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      skipAuth: true,
+    }
+  );
 }
 
 export async function fetchFsTrackUnits(): Promise<FsTrackUnit[]> {

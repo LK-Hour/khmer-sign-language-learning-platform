@@ -10,6 +10,10 @@ export interface FsUnit {
   completedLessonCount: number;
   totalLessonCount: number;
   isLocked?: boolean;
+  isExerciseUnlocked?: boolean;
+  isExerciseCompleted?: boolean;
+  bestScore?: number | null;
+  maxScore?: number | null;
 }
 
 export interface FsChapter {

@@ -26,6 +26,10 @@ export function normalizeUnit(unit: FsUnit): FsUnit {
     completedLessonCount: unit?.completedLessonCount,
     totalLessonCount: unit?.totalLessonCount,
     isLocked: unit?.isLocked ?? false,
+    isExerciseUnlocked: unit?.isExerciseUnlocked ?? false,
+    isExerciseCompleted: unit?.isExerciseCompleted ?? false,
+    bestScore: unit?.bestScore ?? null,
+    maxScore: unit?.maxScore ?? null,
   };
 }
 

@@ -532,7 +532,9 @@ function ChapterTrackSection({
           <Typography
             sx={{ display: { xs: "none", md: "block" }, fontSize: KslFontSizes.xs, fontWeight: 600 }}
           >
-            {`${chapter?.lessonCount ?? 0} ${t("PHRASES.LESSONS")}`}
+            {locale === "kh"
+              ? `${t("PHRASES.LESSONS")} ${chapter?.lessonCount ?? 0} ${t("PHRASES.PLUS")} ${t("PHRASES.PRACTICE")}`
+              : `${chapter?.lessonCount ?? 0} ${t("PHRASES.LESSONS")} ${t("PHRASES.PLUS")} ${t("PHRASES.PRACTICE")}`}
           </Typography>
           <Stack
             component="span"
@@ -780,7 +782,7 @@ function PracticeTrackRow({
         <Typography
           sx={{
             color: KslColors.textPrimary,
-            fontSize: KslFontSizes.md,
+            fontSize: KslFontSizes.lg,
             fontWeight: 700,
             lineHeight: 1.25,
             fontFamily: fontFamilies.khmer,

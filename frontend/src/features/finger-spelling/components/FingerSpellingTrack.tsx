@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react";
 import {
+  Box,
   Button,
   ButtonBase,
   Collapse,
@@ -110,10 +111,8 @@ export default function FingerSpellingTrack({
     : t("FINGER_SPELLING.TRACK.FALLBACK_UNIT_TITLE");
   const currentUnitCompleted = currentUnit?.completedLessonCount ?? 0;
   const currentUnitTotal = currentUnit?.totalLessonCount ?? 0;
-  const quizChaptersUnlocked =
-    currentUnit?.chapters.filter((chapter) => chapter?.isExerciseUnlocked)
-      .length ?? 0;
-  const quizChaptersTotal = currentUnit?.chapters?.length ?? 0;
+  const exerciseUnitsUnlocked = units?.filter((u) => u.isExerciseUnlocked).length ?? 0;
+  const exerciseUnitsTotal = units?.length ?? 0;
 
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ width: "100%" }}>
@@ -192,9 +191,11 @@ export default function FingerSpellingTrack({
             step={formatBadgeStep(2, locale)}
             title={t("FINGER_SPELLING.TRACK.QUIZ_TITLE")}
             description={t("FINGER_SPELLING.TRACK.QUIZ_DESCRIPTION")}
-            completedCount={quizChaptersUnlocked}
-            totalCount={quizChaptersTotal}
-            countLabel={t("FINGER_SPELLING.LABELS.CHAPTER")}
+            completedCount={exerciseUnitsUnlocked}
+            totalCount={exerciseUnitsTotal}
+            countLabel={t("FINGER_SPELLING.LABELS.UNIT")}
+            ctaHref={`/${locale}${ROUTES.fingerSpelling.exercises}`}
+            ctaLabel={t("BUTTON.TAKE_EXERCISE")}
           />
         </Grid>
       </Grid>
@@ -227,6 +228,8 @@ function TrackSummaryCard({
   totalCount,
   countLabel,
   active = false,
+  ctaHref,
+  ctaLabel,
 }: {
   step: string;
   title: string;
@@ -235,6 +238,8 @@ function TrackSummaryCard({
   totalCount: number;
   countLabel: string;
   active?: boolean;
+  ctaHref?: string;
+  ctaLabel?: string;
 }) {
   const { t, locale } = useTranslation();
 
@@ -249,7 +254,7 @@ function TrackSummaryCard({
         p: { xs: 2.25, md: 3 },
       }}
     >
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ height: "100%" }}>
         <Stack
           direction="row"
           spacing={2}
@@ -274,7 +279,7 @@ function TrackSummaryCard({
           </Typography>
         </Stack>
 
-        <Stack spacing={0.75}>
+        <Stack spacing={0.75} sx={{ flex: 1 }}>
           <Typography
             sx={{
               color: KslColors.textPrimary,
@@ -285,16 +290,46 @@ function TrackSummaryCard({
           >
             {title}
           </Typography>
-          <Typography
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
             sx={{
-              color: KslColors.textSecondary,
-              fontSize: KslFontSizes.sm,
-              lineHeight: 1.45,
-              maxWidth: 380,
+              alignItems: { xs: "stretch", sm: "flex-end" },
+              justifyContent: "space-between",
+              gap: 2,
             }}
           >
-            {description}
-          </Typography>
+            <Typography
+              sx={{
+                color: KslColors.textSecondary,
+                fontSize: KslFontSizes.sm,
+                lineHeight: 1.45,
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {description}
+            </Typography>
+            {ctaHref && ctaLabel && (
+              <Button
+                component={Link}
+                href={ctaHref}
+                variant="outlined"
+                size="small"
+                sx={{
+                  flexShrink: 0,
+                  alignSelf: { xs: "flex-end", sm: "auto" },
+                  borderColor: KslColors.primary,
+                  color: KslColors.primary,
+                  fontWeight: 700,
+                  borderRadius: "8px",
+                  "&:hover": { bgcolor: KslColors.primaryLight },
+                }}
+              >
+                {ctaLabel}
+              </Button>
+            )}
+          </Stack>
         </Stack>
       </Stack>
     </Paper>

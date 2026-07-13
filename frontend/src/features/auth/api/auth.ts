@@ -39,10 +39,26 @@ export type GuestPracticeSummaryImport = {
   completed_at?: string | null;
 };
 
+export type GuestChapterPracticeImport = {
+  chapter_id: number;
+  avg_score?: number;
+  completed_at?: string | null;
+};
+
+export type GuestUnitExerciseImport = {
+  unit_id: number;
+  score: number;
+  max_score: number;
+  question_ids?: number[];
+  completed_at?: string | null;
+};
+
 export type GuestProgressImportPayload = {
   lessons: GuestLessonProgressImport[];
   practice_summaries: GuestPracticeSummaryImport[];
   last_accessed_lesson_id?: number | null;
+  chapter_practices?: GuestChapterPracticeImport[];
+  unit_exercises?: GuestUnitExerciseImport[];
 };
 
 export function importGuestProgress(payload: GuestProgressImportPayload) {

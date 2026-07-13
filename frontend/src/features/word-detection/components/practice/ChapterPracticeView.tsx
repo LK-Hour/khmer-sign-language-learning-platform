@@ -1,16 +1,16 @@
 "use client";
 
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { Breadcrumbs, Button, CircularProgress, Link, Stack, Typography } from "@mui/material";
-import { motion } from "framer-motion";
+import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ROUTES } from "@/constants/routes";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
 import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
+import PracticeCompleteCelebration from "@/features/shared/PracticeCompleteCelebration";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
-import { KslColors, KslFontSizes } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 import { submitWdChapterPracticeResult } from "../../api/chapterPracticeResult";
 import {
   useWordDetectionLandmarker,
@@ -28,7 +28,7 @@ const WORD_PASS_STABLE_FRAMES = 6;
 const WORD_HAND_WARMUP_FRAMES = 10;
 const WORD_AUTO_RETRY_DELAY_MS = 1800;
 const WORD_AUTO_RETRY_POLL_INTERVAL_MS = 33;
-const ADVANCE_DELAY_MS = 1000;
+const ADVANCE_DELAY_MS = 2200;
 const PRACTICE_MAX_ATTEMPTS = Number.MAX_SAFE_INTEGER;
 const WORD_SEQUENCE_FEATURE_COUNT =
   WORD_DETECTION_SEQUENCE_LENGTH * WORD_DETECTION_TOTAL_FEATURES;
@@ -63,6 +63,7 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [finalAvgScore, setFinalAvgScore] = useState<number | null>(null);
   const [recError, setRecError] = useState<string | null>(null);
   const [retryWaiting, setRetryWaiting] = useState(false);
   const [handDetected, setHandDetected] = useState(false);
@@ -145,6 +146,8 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
         scores.length > 0
           ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
           : 100;
+
+      setFinalAvgScore(avgScore);
 
       const authUser = useAuthStore.getState().user;
       if (!authUser?.is_guest) {
@@ -359,47 +362,15 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
 
   if (isComplete) {
     return (
-      <Stack
-        component={motion.div}
-        spacing={4}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        sx={{ alignItems: "center", justifyContent: "center", minHeight: 320, py: 8 }}
-      >
-        {isSaving ? (
-          <CircularProgress />
-        ) : (
-          <>
-            <Typography
-              variant="h4"
-              sx={{
-                color: KslColors.primary,
-                fontWeight: 800,
-                textAlign: "center",
-              }}
-            >
-              {t("WORD_DETECTION.PRACTICE.COMPLETE_TITLE")}
-            </Typography>
-            <Typography
-              sx={{
-                color: KslColors.textSecondary,
-                fontSize: KslFontSizes.md,
-                textAlign: "center",
-              }}
-            >
-              {t("WORD_DETECTION.PRACTICE.COMPLETE_SUBTITLE")}
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => router.push(`/${locale}${trackHref}`)}
-              sx={{ fontWeight: 700, minHeight: 46, px: 4 }}
-            >
-              {t("WORD_DETECTION.PRACTICE.RETURN_TO_TRACK")}
-            </Button>
-          </>
-        )}
-      </Stack>
+      <PracticeCompleteCelebration
+        title={t("WORD_DETECTION.PRACTICE.COMPLETE_TITLE")}
+        subtitle={t("WORD_DETECTION.PRACTICE.COMPLETE_SUBTITLE")}
+        actionLabel={t("WORD_DETECTION.PRACTICE.RETURN_TO_TRACK")}
+        onAction={() => router.push(`/${locale}${trackHref}`)}
+        isSaving={isSaving}
+        avgScore={finalAvgScore}
+        scoreLabel={t("WORD_DETECTION.PRACTICE.AVG_SCORE")}
+      />
     );
   }
 

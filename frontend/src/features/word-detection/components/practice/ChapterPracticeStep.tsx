@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import type { RefObject } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import { labelsMatch } from "@/features/shared/usePredictionRetry";
+import PracticeCorrectOverlay from "@/features/shared/PracticeCorrectOverlay";
 import SignImageCard from "@/features/finger-spelling/components/learning/SignImageCard";
 import { MetricCard, TipCard } from "@/features/finger-spelling/components/learning/PracticeInfoCards";
 import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
@@ -105,7 +106,9 @@ export default function ChapterPracticeStep({
   const tipText = t("WORD_DETECTION.PRACTICE.DEFAULT_TIP");
   const statusText = continueEnabled
     ? t("WORD_DETECTION.PRACTICE.PASSED")
-    : t("WORD_DETECTION.PRACTICE.HOLD_STILL");
+    : liveLabelMatches
+      ? t("WORD_DETECTION.PRACTICE.LOOKING_GOOD")
+      : t("WORD_DETECTION.PRACTICE.HOLD_STILL");
 
   return (
     <Stack
@@ -176,6 +179,25 @@ export default function ChapterPracticeStep({
         </Alert>
       ) : null}
 
+      {continueEnabled ? (
+        <Alert
+          severity="success"
+          sx={{
+            borderRadius: `${KslRadii.card}px`,
+            bgcolor: "rgba(31,159,111,0.12)",
+            border: `1px solid rgba(31,159,111,0.35)`,
+            "& .MuiAlert-message": { width: "100%" },
+          }}
+        >
+          <Typography sx={{ fontWeight: 800, color: KslColors.success }}>
+            {t("WORD_DETECTION.PRACTICE.CORRECT_TITLE")}
+          </Typography>
+          <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary }}>
+            {t("WORD_DETECTION.PRACTICE.CORRECT_NEXT")}
+          </Typography>
+        </Alert>
+      ) : null}
+
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack sx={VISUAL_FRAME_SX}>
@@ -204,7 +226,10 @@ export default function ChapterPracticeStep({
                 py: 0.75,
                 borderRadius: `${KslRadii.wordCard}px`,
                 bgcolor: KslColors.surface,
-                color: continueEnabled ? KslColors.success : KslColors.textPrimary,
+                color:
+                  continueEnabled || liveLabelMatches
+                    ? KslColors.success
+                    : KslColors.textPrimary,
                 fontSize: KslFontSizes.sm,
                 fontWeight: 700,
                 lineHeight: 1.3,
@@ -216,6 +241,12 @@ export default function ChapterPracticeStep({
             >
               {statusText}
             </Typography>
+            <PracticeCorrectOverlay
+              open={continueEnabled}
+              title={t("WORD_DETECTION.PRACTICE.CORRECT_TITLE")}
+              subtitle={t("WORD_DETECTION.PRACTICE.CORRECT_NEXT")}
+              targetLabel={word}
+            />
           </Stack>
         </Grid>
       </Grid>

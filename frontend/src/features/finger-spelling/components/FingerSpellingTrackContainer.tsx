@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fetchFsTrackUnits } from "../api/curriculum";
 import { useFingerSpellingStore } from "../store";
+import { useGuestProgressStore } from "../store/guestProgress.store";
 import { useAuthStore } from "@/store/auth.store";
 import FingerSpellingPageLoading from "./FingerSpellingPageLoading";
 import FingerSpellingTrack from "./FingerSpellingTrack";
@@ -20,6 +21,11 @@ export default function FingerSpellingTrackContainer() {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const isRefreshing = useAuthStore((state) => state.isRefreshing);
+  const guestLessons = useGuestProgressStore((state) => state.lessons);
+  const guestChapterPractices = useGuestProgressStore(
+    (state) => state.completedChapterPractices
+  );
+  const guestUnitExercises = useGuestProgressStore((state) => state.unitExercises);
   const [fetchState, setFetchState] = useState<FetchState>("idle");
 
   const authReady =
@@ -52,6 +58,13 @@ export default function FingerSpellingTrackContainer() {
       ignore = true;
     };
   }, [authReady, setUnits, user?.id]);
+
+  useEffect(() => {
+    if (!authReady || user?.is_guest !== true) return;
+    const currentUnits = useFingerSpellingStore.getState().units;
+    if (currentUnits.length === 0) return;
+    setUnits(currentUnits);
+  }, [authReady, guestChapterPractices, guestLessons, guestUnitExercises, setUnits, user?.is_guest]);
 
   if (isLoading) {
     return <FingerSpellingPageLoading />;

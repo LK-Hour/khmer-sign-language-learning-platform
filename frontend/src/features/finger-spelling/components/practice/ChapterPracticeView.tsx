@@ -1,8 +1,7 @@
 "use client";
 
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { Breadcrumbs, Button, CircularProgress, Link, Stack, Typography } from "@mui/material";
-import { motion } from "framer-motion";
+import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ROUTES } from "@/constants/routes";
@@ -13,9 +12,10 @@ import {
 import { useRealtimePredictor } from "@/features/finger-spelling/ml/useRealtimePredictor";
 import { useFingerSpellingPracticeActions } from "@/features/finger-spelling/hooks/useFingerSpellingPracticeActions";
 import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
+import PracticeCompleteCelebration from "@/features/shared/PracticeCompleteCelebration";
 import { useFingerSpellingStore } from "@/features/finger-spelling/store";
 import { useTranslation } from "@/i18n/useTranslation";
-import { KslColors, KslFontSizes } from "@/theme/theme";
+import { KslColors } from "@/theme/theme";
 import { submitChapterPracticeResult } from "../../api/chapterPracticeResult";
 import { resolveApiAssetUrl } from "../../api/config";
 import type { FsChapterPractice, FsPracticeItem } from "../../types";
@@ -30,7 +30,7 @@ const PREDICTION_SAMPLE_INTERVAL_MS = 200;
 const AUTO_CAPTURE_FRAMES = 6;
 const AUTO_RETRY_DELAY_MS = 1800;
 const AUTO_RETRY_POLL_INTERVAL_MS = 300;
-const ADVANCE_DELAY_MS = 1000;
+const ADVANCE_DELAY_MS = 2200;
 
 /** Unlimited retries — only label match enables advance (no skip after N fails). */
 const PRACTICE_MAX_ATTEMPTS = Number.MAX_SAFE_INTEGER;
@@ -57,6 +57,7 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [finalAvgScore, setFinalAvgScore] = useState<number | null>(null);
   const [recError, setRecError] = useState<string | null>(null);
   const [retryWaiting, setRetryWaiting] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
@@ -141,6 +142,8 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
           ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
           : 100;
 
+      setFinalAvgScore(avgScore);
+
       const authUser = useAuthStore.getState().user;
       if (!authUser?.is_guest) {
         setIsSaving(true);
@@ -154,7 +157,9 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
         }
       }
 
-      useFingerSpellingStore.getState().markPracticeCompleted(practice.chapterId);
+      useFingerSpellingStore
+        .getState()
+        .markPracticeCompleted(practice.chapterId, avgScore);
       setIsComplete(true);
     },
     [practice.chapterId]
@@ -421,47 +426,15 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
 
   if (isComplete) {
     return (
-      <Stack
-        component={motion.div}
-        spacing={4}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        sx={{ alignItems: "center", justifyContent: "center", minHeight: 320, py: 8 }}
-      >
-        {isSaving ? (
-          <CircularProgress />
-        ) : (
-          <>
-            <Typography
-              variant="h4"
-              sx={{
-                color: KslColors.primary,
-                fontWeight: 800,
-                textAlign: "center",
-              }}
-            >
-              {t("FINGER_SPELLING.PRACTICE.COMPLETE_TITLE")}
-            </Typography>
-            <Typography
-              sx={{
-                color: KslColors.textSecondary,
-                fontSize: KslFontSizes.md,
-                textAlign: "center",
-              }}
-            >
-              {t("FINGER_SPELLING.PRACTICE.COMPLETE_SUBTITLE")}
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => router.push(`/${locale}${trackHref}`)}
-              sx={{ fontWeight: 700, minHeight: 46, px: 4 }}
-            >
-              {t("FINGER_SPELLING.PRACTICE.RETURN_TO_TRACK")}
-            </Button>
-          </>
-        )}
-      </Stack>
+      <PracticeCompleteCelebration
+        title={t("FINGER_SPELLING.PRACTICE.COMPLETE_TITLE")}
+        subtitle={t("FINGER_SPELLING.PRACTICE.COMPLETE_SUBTITLE")}
+        actionLabel={t("FINGER_SPELLING.PRACTICE.RETURN_TO_TRACK")}
+        onAction={() => router.push(`/${locale}${trackHref}`)}
+        isSaving={isSaving}
+        avgScore={finalAvgScore}
+        scoreLabel={t("FINGER_SPELLING.PRACTICE.AVG_SCORE")}
+      />
     );
   }
 

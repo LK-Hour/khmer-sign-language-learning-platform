@@ -17,6 +17,9 @@ export const ROUTES = {
       `/finger-spelling/lessons/${lessonId}`,
     practice: (chapterId: string | number) =>
       `/finger-spelling/chapters/${chapterId}/practice`,
+    exercises: "/finger-spelling/exercises",
+    exercise: (unitId: string | number) =>
+      `/finger-spelling/units/${unitId}/exercise`,
   },
 
   words: {

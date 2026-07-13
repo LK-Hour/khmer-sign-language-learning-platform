@@ -21,6 +21,7 @@ import { usePermissionStore } from "@/store/permission.store";
 import { KslColors, KslFontSizes, KslLineHeights, KslRadii } from "@/theme/theme";
 
 import { useFingerSpellingProgressStat } from "./hooks/useFingerSpellingProgressStat";
+import { useWordDetectionProgressStat } from "./hooks/useWordDetectionProgressStat";
 import LearningModeCard from "./LearningModeCard";
 
 const HERO_IMAGE = "/assets/landing-hero-hand.png";
@@ -28,6 +29,7 @@ const HERO_IMAGE = "/assets/landing-hero-hand.png";
 export default function LandingPage() {
   const { t, locale } = useTranslation();
   const { stat: fingerSpellingStat } = useFingerSpellingProgressStat();
+  const { stat: wordDetectionStat } = useWordDetectionProgressStat();
   const [isPermissionOpen, setIsPermissionOpen] = useState(false);
 
   const fingerSpellingHref = `/${locale}${ROUTES.fingerSpelling.root}`;
@@ -200,7 +202,7 @@ export default function LandingPage() {
               modeLabel={t("HOME.MODE_02")}
               title={t("NAV.WORD_DETECTION")}
               description={t("HOME.WORD_DETECTION_DESC")}
-              stat={t("HOME.WORD_DETECTION_STAT")}
+              stat={wordDetectionStat}
             />
           </Grid>
         </Grid>
