@@ -23,9 +23,15 @@ export type ApiFetchOptions = RequestInit & {
 };
 
 let refreshPromise: Promise<string | null> | null = null;
+let refreshPromiseExpiresAt = 0;
+
+// Keep the resolved promise cached for 10 seconds so that rapid successive
+// calls (e.g. multiple tabs, concurrent API calls after token expiry) reuse
+// the same result instead of hitting the backend with a stale cookie.
+const REFRESH_PROMISE_TTL_MS = 10_000;
 
 export async function refreshAuthSession(): Promise<string | null> {
-  if (refreshPromise) return refreshPromise;
+  if (refreshPromise && Date.now() < refreshPromiseExpiresAt) return refreshPromise;
 
   refreshPromise = (async () => {
     const store = useAuthStore.getState();
@@ -70,15 +76,16 @@ export async function refreshAuthSession(): Promise<string | null> {
       store.setRefreshing(false);
     })
     .then((result) => {
-      queueMicrotask(() => {
+      refreshPromiseExpiresAt = Date.now() + REFRESH_PROMISE_TTL_MS;
+      setTimeout(() => {
         refreshPromise = null;
-      });
+      }, REFRESH_PROMISE_TTL_MS);
       return result;
     })
     .catch(() => {
-      queueMicrotask(() => {
-        refreshPromise = null;
-      });
+      // On failure, clear immediately so next call can retry
+      refreshPromise = null;
+      refreshPromiseExpiresAt = 0;
       return null;
     });
 
