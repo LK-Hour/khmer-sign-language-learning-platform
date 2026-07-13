@@ -16,6 +16,7 @@ from src.utils.cookies import REFRESH_COOKIE_NAME, clear_refresh_cookie, set_ref
 from src.utils.jwt_utils import create_access_token
 from src.utils.refresh_tokens import (
     create_refresh_token,
+    get_refresh_token_record,
     revoke_all_user_refresh_tokens,
     revoke_refresh_token,
     validate_refresh_token,
@@ -49,13 +50,19 @@ def refresh_access_token(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token cookie")
 
     try:
+        # Set last_used_at BEFORE validation so concurrent requests can observe
+        # an up-to-date timestamp during their grace period checks.
+        pre_record = get_refresh_token_record(db, refresh_token)
+        if pre_record is not None:
+            pre_record.last_used_at = datetime.now(timezone.utc)
+            db.flush()
+
         old_record = validate_refresh_token(db, refresh_token)
         user = old_record.user
         if user is None or not user.is_active:
             old_record.revoked = True
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive user")
         old_record.revoked = True
-        old_record.last_used_at = datetime.now(timezone.utc)
         new_refresh_token = create_refresh_token(
             db,
             user_id=old_record.user_id,

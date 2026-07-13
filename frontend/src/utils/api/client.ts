@@ -27,47 +27,60 @@ let refreshPromise: Promise<string | null> | null = null;
 export async function refreshAuthSession(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
 
-    refreshPromise = (async () => {
-      const store = useAuthStore.getState();
-      const user = store.user;
-      if (!user || user?.is_guest) return null;
+  refreshPromise = (async () => {
+    const store = useAuthStore.getState();
+    const user = store.user;
+    if (!user || user?.is_guest) return null;
 
-      store.setRefreshing(true);
-      try {
-        const res = await fetch(`${baseURL}/api/auth/refresh`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Cache-Control": "no-store",
-            "X-Requested-With": CSRF_HEADER_VALUE,
-          },
-        });
+    store.setRefreshing(true);
+    try {
+      const res = await fetch(`${baseURL}/api/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-store",
+          "X-Requested-With": CSRF_HEADER_VALUE,
+        },
+      });
 
-        if (!res.ok) {
-          // Only clear auth if the server explicitly rejected the session.
-          // Network errors and transient failures should NOT log the user out.
-          if (res.status === 401 || res.status === 403) {
-            store.clear();
-          }
-          return null;
+      if (!res.ok) {
+        // Only clear auth on a confirmed 401 (invalid/revoked token).
+        // 403 (CSRF mismatch) and 5xx are transient — do NOT log the user out.
+        if (res.status === 401) {
+          store.clear();
         }
-
-        const tokenResp = (await res.json()) as {
-          access_token: string;
-          token_type: string;
-        };
-        store.setAccessToken(tokenResp);
-        return tokenResp?.access_token;
-      } catch {
-        // Network error (e.g., backend unreachable) — return null silently.
-        // Do NOT clear auth; the user may still have a valid refresh cookie
-        // and can retry when connectivity is restored.
         return null;
-      } finally {
-        store.setRefreshing(false);
-        refreshPromise = null;
       }
-  })();
+
+      const tokenResp = (await res.json()) as {
+        access_token: string;
+        token_type: string;
+      };
+      store.setAccessToken(tokenResp);
+      return tokenResp?.access_token;
+    } catch {
+      // Network error (e.g., backend unreachable) — return null silently.
+      // Do NOT clear auth; the user may still have a valid refresh cookie
+      // and can retry when connectivity is restored.
+      return null;
+    }
+  })()
+    .finally(() => {
+      const store = useAuthStore.getState();
+      store.setRefreshing(false);
+    })
+    .then((result) => {
+      queueMicrotask(() => {
+        refreshPromise = null;
+      });
+      return result;
+    })
+    .catch(() => {
+      queueMicrotask(() => {
+        refreshPromise = null;
+      });
+      return null;
+    });
 
   return refreshPromise;
 }
@@ -124,12 +137,10 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    if (res.status === 401) {
-      const store = useAuthStore.getState();
-      if (!store.user?.is_guest) {
-        store.clear();
-      }
-    }
+    // No redundant store.clear() here — refreshAuthSession() already handles
+    // clearing auth on confirmed 401 (revoked token). Clearing here would
+    // double-clear or incorrectly clear when refresh returned null due to a
+    // transient error.
     throw new ApiError(res.status, path);
   }
 
