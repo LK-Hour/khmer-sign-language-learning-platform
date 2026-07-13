@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
@@ -21,6 +22,8 @@ from src.utils.refresh_tokens import (
     revoke_refresh_token,
     validate_refresh_token,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 CSRF_HEADER = "X-Requested-With"
@@ -47,6 +50,7 @@ def refresh_access_token(
     _require_csrf(x_requested_with)
     refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
     if not refresh_token:
+        logger.warning("REFRESH 401: No refresh token cookie present")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token cookie")
 
     try:
@@ -61,6 +65,7 @@ def refresh_access_token(
         user = old_record.user
         if user is None or not user.is_active:
             old_record.revoked = True
+            logger.warning("REFRESH 401: Inactive user (user_id=%s)", old_record.user_id)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive user")
         old_record.revoked = True
         new_refresh_token = create_refresh_token(
@@ -74,7 +79,8 @@ def refresh_access_token(
         set_refresh_cookie(response, new_refresh_token, settings, max_age_days=old_record.lifetime_days)
         db.commit()
         return AccessTokenResponse(access_token=access_token, token_type="bearer")
-    except HTTPException:
+    except HTTPException as exc:
+        logger.warning("REFRESH 401: %s", exc.detail)
         db.commit()
         raise
 

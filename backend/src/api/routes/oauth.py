@@ -341,7 +341,7 @@ def email_login(
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    refresh_days = 3 if user.account_type == "admin" and body.remember_me else None
+    refresh_days = 30 if body.remember_me else None
     return _auth_response_for_user(
         db=db,
         user=user,
