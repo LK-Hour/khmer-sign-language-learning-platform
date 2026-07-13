@@ -51,6 +51,7 @@ class User(Base):
     )
     reviewed_word_detection_contributions = relationship(
         "WordDetectionContribution",
+        back_populates="reviewer",
         foreign_keys="WordDetectionContribution.reviewed_by",
     )
 

@@ -392,7 +392,10 @@ class WordDetectionContribution(Base):
         back_populates="word_detection_contributions",
         foreign_keys=[media_id],
     )
-    reviewer: Mapped[Optional["User"]] = relationship(foreign_keys=[reviewed_by])
+    reviewer: Mapped[Optional["User"]] = relationship(
+        back_populates="reviewed_word_detection_contributions",
+        foreign_keys=[reviewed_by],
+    )
 
     __table_args__ = (
         Index("ix_word_detection_contributions_word_id", "word_id"),
