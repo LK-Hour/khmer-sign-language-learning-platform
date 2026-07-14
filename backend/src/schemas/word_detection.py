@@ -275,7 +275,7 @@ class WordPredictStatusResponse(BaseModel):
 
 class WdContributionUploadResponse(BaseModel):
     id: uuid.UUID
-    media_id: int
+    contribution_media_id: int
     file_url: str
     status: str
 

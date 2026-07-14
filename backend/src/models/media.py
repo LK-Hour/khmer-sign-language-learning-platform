@@ -27,7 +27,6 @@ if TYPE_CHECKING:
         WordDetectionWordMedia,
         WordDetectionExercise,
         WordDetectionExerciseOption,
-        WordDetectionContribution,
         WordDetectionPracticeMedia,
     )
 
@@ -79,11 +78,6 @@ class Media(Base):
     )
     word_detection_exercise_options: Mapped[List["WordDetectionExerciseOption"]] = relationship(
         back_populates="media", foreign_keys="WordDetectionExerciseOption.media_id"
-    )
-    word_detection_contributions: Mapped[List["WordDetectionContribution"]] = relationship(
-        back_populates="media",
-        cascade="all, delete-orphan",
-        foreign_keys="WordDetectionContribution.media_id",
     )
 
     # Relationships - Practice

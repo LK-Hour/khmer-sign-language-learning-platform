@@ -4,6 +4,7 @@ from .user_session import UserSession
 from .refresh_token import RefreshToken
 from .feedback import LessonFeedback, FeedbackMood, FeedbackType
 from .media import Media, MediaType
+from .contribution_media import ContributionMedia
 from .finger_spelling import (
     # Enums
     FingerExerciseType,
@@ -64,6 +65,7 @@ __all__ = [
     "FeedbackType",
     "Media",
     "MediaType",
+    "ContributionMedia",
     "FingerExerciseType",
     "FingerUnit",
     "FingerChapter",

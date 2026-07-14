@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, List, Optional
 from uuid import uuid4
 
 if TYPE_CHECKING:
+    from src.models.contribution_media import ContributionMedia
     from src.models.user import User
 
 from sqlalchemy import (
@@ -370,7 +371,9 @@ class WordDetectionContribution(Base):
         BigInteger, ForeignKey("word_detection_lessons.id")
     )
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
+    contribution_media_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("contribution_medias.id"), nullable=True
+    )
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     review_notes: Mapped[Optional[str]] = mapped_column(Text)
     reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
@@ -388,9 +391,9 @@ class WordDetectionContribution(Base):
     )
     word: Mapped["WordDetectionWord"] = relationship(back_populates="contributions")
     lesson: Mapped[Optional["WordDetectionLesson"]] = relationship(back_populates="contributions")
-    media: Mapped[Optional["Media"]] = relationship(
-        back_populates="word_detection_contributions",
-        foreign_keys=[media_id],
+    contribution_media: Mapped[Optional["ContributionMedia"]] = relationship(
+        back_populates="contributions",
+        foreign_keys=[contribution_media_id],
     )
     reviewer: Mapped[Optional["User"]] = relationship(
         back_populates="reviewed_word_detection_contributions",
@@ -400,7 +403,7 @@ class WordDetectionContribution(Base):
     __table_args__ = (
         Index("ix_word_detection_contributions_word_id", "word_id"),
         Index("ix_word_detection_contributions_lesson_id", "word_detection_lesson_id"),
-        Index("ix_word_detection_contributions_media_id", "media_id"),
+        Index("ix_word_detection_contributions_contribution_media_id", "contribution_media_id"),
         Index("ix_word_detection_contributions_status", "status"),
         Index("ix_word_detection_contributions_guest_id", "guest_id"),
     )

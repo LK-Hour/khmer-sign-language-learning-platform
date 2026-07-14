@@ -8,7 +8,8 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from src.core.config import settings
-from src.models.media import Media, MediaType
+from src.models.contribution_media import ContributionMedia
+from src.models.media import MediaType
 from src.models.word_detection import WordDetectionContribution, WordDetectionLesson, WordDetectionWord
 
 _SAFE_PART_RE = re.compile(r"[^a-zA-Z0-9._\-\u1780-\u17ff]+")
@@ -78,8 +79,8 @@ class WordDetectionContributionService:
                         )
                     out_file.write(chunk)
 
-            media = Media(media_type=MediaType.VIDEO.value, file_url=relative_url)
-            self.db.add(media)
+            contribution_media = ContributionMedia(media_type=MediaType.VIDEO.value, file_url=relative_url)
+            self.db.add(contribution_media)
             self.db.flush()
 
             contribution = WordDetectionContribution(
@@ -88,7 +89,7 @@ class WordDetectionContributionService:
                 word_id=word.id,
                 word_detection_lesson_id=lesson.id if lesson else None,
                 filename=filename,
-                media_id=media.id,
+                contribution_media_id=contribution_media.id,
                 status="pending",
                 consent_version="deferred-v1",
                 consent_given=False,

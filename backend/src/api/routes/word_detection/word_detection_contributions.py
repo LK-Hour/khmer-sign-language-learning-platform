@@ -63,7 +63,7 @@ def upload_contribution(
     )
     return WdContributionUploadResponse(
         id=contribution.id,
-        media_id=contribution.media_id or 0,
-        file_url=contribution.media.file_url if contribution.media else "",
+        contribution_media_id=contribution.contribution_media_id or 0,
+        file_url=contribution.contribution_media.file_url if contribution.contribution_media else "",
         status=contribution.status,
     )

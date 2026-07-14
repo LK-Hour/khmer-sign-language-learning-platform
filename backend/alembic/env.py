@@ -20,6 +20,7 @@ from src.models import (  # noqa: F401
     RefreshToken,
     LessonFeedback,
     Media,
+    ContributionMedia,
     FingerUnit,
     FingerChapter,
     FingerLesson,
