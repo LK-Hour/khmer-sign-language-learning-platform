@@ -34,5 +34,9 @@ export const ROUTES = {
     curriculum: "/admin/curriculum",
     exercises: "/admin/exercises",
     quiz: "/admin/quiz",
+    users: "/admin/users",
+    media: "/admin/media",
+    analytics: "/admin/analytics",
+    contributions: "/admin/contributions",
   },
 } as const;

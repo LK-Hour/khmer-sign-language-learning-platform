@@ -1,303 +1,61 @@
 "use client";
 
-import ChevronLeft from "@mui/icons-material/ChevronLeft";
-import FormatListNumbered from "@mui/icons-material/FormatListNumbered";
-import Layers from "@mui/icons-material/Layers";
-import Logout from "@mui/icons-material/Logout";
-import MenuBook from "@mui/icons-material/MenuBook";
-import MenuIcon from "@mui/icons-material/Menu";
-import { Avatar, Box, Button, IconButton, Stack, Typography } from "@mui/material";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { Box, Drawer, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { useState } from "react";
+import Sidebar from "./sidebar/Sidebar";
+import Header from "./header/Header";
 
-import { ROUTES } from "@/constants/routes";
-import { useLocale } from "@/i18n";
-import { useTranslation } from "@/i18n/useTranslation";
-import type { TranslationKey } from "@/i18n/translations";
-import { useAuthStore } from "@/store/auth.store";
+const SIDEBAR_WIDTH = 280;
+const SIDEBAR_COLLAPSED_WIDTH = 72;
 
-import { AdminColors, AdminFontSizes } from "./adminTokens";
-import { KslRadii } from "@/theme/theme";
-
-const SIDEBAR_WIDTH = 256;
-const SIDEBAR_COLLAPSED_WIDTH = 64;
-
-type NavItem = {
-  labelKey: TranslationKey;
-  href: string;
-  icon: ReactNode;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  {
-    labelKey: "ADMIN.CURRICULUM",
-    href: ROUTES.admin.curriculum,
-    icon: <Layers sx={{ fontSize: 18 }} />,
-  },
-  {
-    labelKey: "ADMIN.EXERCISES",
-    href: ROUTES.admin.exercises,
-    icon: <MenuBook sx={{ fontSize: 18 }} />,
-  },
-  {
-    labelKey: "ADMIN.QUIZ_MANAGEMENT",
-    href: ROUTES.admin.quiz,
-    icon: <FormatListNumbered sx={{ fontSize: 18 }} />,
-  },
-];
-
-type AdminShellProps = {
-  children: ReactNode;
-};
-
-/** Two-pane admin dashboard shell: collapsible dark sidebar + scrollable content panel. */
-export default function AdminShell({ children }: AdminShellProps) {
-  const { t } = useTranslation();
-  const locale = useLocale();
-  const pathname = usePathname();
-  const user = useAuthStore((state) => state.user);
+export default function AdminShell({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("lg")); // 1200px
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
 
-  const displayName = user
-    ? `${user?.first_name ?? ""}${user?.last_name ? ` ${user.last_name}` : ""}`.trim() ||
-      user?.email ||
-      "Admin"
-    : "Admin";
-
   return (
-    <Stack direction="row" sx={{ minHeight: "100dvh", bgcolor: AdminColors.page }}>
-      <Stack
-        component="aside"
+    <Box sx={{ display: "flex", minHeight: "100dvh", bgcolor: "background.default" }}>
+      {/* Desktop: persistent sidebar */}
+      {isDesktop ? (
+        <Sidebar
+          width={sidebarWidth}
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed((prev) => !prev)}
+        />
+      ) : (
+        <Drawer
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          slotProps={{ paper: { sx: { width: SIDEBAR_WIDTH } } }}
+        >
+          <Sidebar
+            width={SIDEBAR_WIDTH}
+            collapsed={false}
+            onNavigate={() => setMobileOpen(false)}
+          />
+        </Drawer>
+      )}
+
+      {/* Main content area */}
+      <Box
         sx={{
-          display: { xs: "none", md: "flex" },
-          width: sidebarWidth,
-          flexShrink: 0,
-          bgcolor: AdminColors.sidebar,
-          color: AdminColors.sidebarText,
-          position: "sticky",
-          top: 0,
-          height: "100dvh",
-          transition: "width 0.2s ease",
-          overflow: "hidden",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
+          ml: isDesktop ? `${sidebarWidth}px` : 0,
+          transition: "margin-left 0.3s ease",
         }}
       >
-        {/* Brand + Toggle */}
-        <Stack
-          direction="row"
-          sx={{
-            alignItems: "center",
-            justifyContent: collapsed ? "center" : "space-between",
-            p: collapsed ? 1 : 2,
-            borderBottom: `1px solid ${AdminColors.sidebarBorder}`,
-            bgcolor: AdminColors.sidebarStrong,
-            minHeight: 56,
-          }}
-        >
-          {!collapsed && (
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-              <Box
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 1,
-                  display: "grid",
-                  placeItems: "center",
-                  bgcolor: AdminColors.primary,
-                  color: "common.white",
-                  fontWeight: 700,
-                }}
-              >
-                K
-              </Box>
-              <Stack>
-                <Typography
-                  sx={{
-                    fontSize: AdminFontSizes.body,
-                    fontWeight: 700,
-                    color: "common.white",
-                    lineHeight: 1,
-                  }}
-                >
-                  KSL Admin
-                </Typography>
-                <Typography
-                  sx={{
-                    mt: 0.5,
-                    fontSize: AdminFontSizes.eyebrow,
-                    textTransform: "uppercase",
-                    color: AdminColors.muted,
-                  }}
-                >
-                  {t("ADMIN.MANAGEMENT")}
-                </Typography>
-              </Stack>
-            </Stack>
-          )}
-          <IconButton
-            onClick={() => setCollapsed(!collapsed)}
-            size="small"
-            sx={{ color: AdminColors.sidebarMuted, "&:hover": { color: "common.white" } }}
-          >
-            {collapsed ? <MenuIcon fontSize="small" /> : <ChevronLeft fontSize="small" />}
-          </IconButton>
-        </Stack>
-
-        {/* Navigation */}
-        <Stack component="nav" spacing={1} sx={{ flex: 1, p: collapsed ? 1 : 2 }}>
-          {!collapsed && (
-            <Typography
-              sx={{
-                px: 1,
-                mb: 1,
-                fontSize: AdminFontSizes.eyebrow,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                color: AdminColors.muted,
-              }}
-            >
-              {t("ADMIN.NAVIGATION")}
-            </Typography>
-          )}
-          {NAV_ITEMS.map((item) => {
-            const href = `/${locale}${item.href}`;
-            const active = pathname.startsWith(href);
-
-            if (collapsed) {
-              return (
-                <IconButton
-                  key={item.href}
-                  component={Link}
-                  href={href}
-                  sx={{
-                    color: active ? AdminColors.primaryText : AdminColors.sidebarMuted,
-                    bgcolor: active ? AdminColors.primaryTint : "transparent",
-                    borderRadius: KslRadii.showCard,
-                    "&:hover": {
-                      bgcolor: active ? AdminColors.primaryTintHover : AdminColors.sidebarBorder,
-                      color: active ? AdminColors.primaryText : "common.white",
-                    },
-                  }}
-                >
-                  {item.icon}
-                </IconButton>
-              );
-            }
-
-            return (
-              <Button
-                key={item.href}
-                component={Link}
-                href={href}
-                startIcon={item.icon}
-                sx={
-                  active
-                    ? {
-                        justifyContent: "flex-start",
-                        color: AdminColors.primaryText,
-                        bgcolor: AdminColors.primaryTint,
-                        borderRadius: KslRadii.showCard,
-                        border: `1px solid ${AdminColors.primaryTintBorder}`,
-                        "&:hover": { bgcolor: AdminColors.primaryTintHover },
-                      }
-                    : {
-                        justifyContent: "flex-start",
-                        color: AdminColors.sidebarMuted,
-                        borderRadius: KslRadii.showCard,
-                        "&:hover": {
-                          bgcolor: AdminColors.sidebarBorder,
-                          color: "common.white",
-                        },
-                      }
-                }
-              >
-                {t(item.labelKey)}
-              </Button>
-            );
-          })}
-        </Stack>
-
-        {/* Footer: signed-in admin + back to site */}
-        <Stack
-          spacing={1.5}
-          sx={{ p: collapsed ? 1 : 2, borderTop: `1px solid ${AdminColors.sidebarBorder}`, alignItems: collapsed ? "center" : "stretch" }}
-        >
-          {!collapsed ? (
-            <>
-              <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
-                <Avatar
-                  src={user?.picture ?? ""}
-                  alt={displayName}
-                  sx={{ width: 32, height: 32, fontSize: AdminFontSizes.small }}
-                >
-                  {displayName[0]?.toUpperCase()}
-                </Avatar>
-                <Stack sx={{ minWidth: 0 }}>
-                  <Typography
-                    noWrap
-                    sx={{
-                      fontSize: AdminFontSizes.small,
-                      fontWeight: 700,
-                      color: "common.white",
-                    }}
-                  >
-                    {displayName}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: AdminFontSizes.eyebrow,
-                      textTransform: "uppercase",
-                      color: AdminColors.sidebarMuted,
-                    }}
-                  >
-                    {t("ADMIN.ROLE_ADMIN")}
-                  </Typography>
-                </Stack>
-              </Stack>
-              <Button
-                component={Link}
-                href={`/${locale}`}
-                startIcon={<Logout sx={{ fontSize: 16 }} />}
-                size="small"
-                sx={{
-                  justifyContent: "flex-start",
-                  color: AdminColors.sidebarMuted,
-                  borderRadius: KslRadii.showCard,
-                  "&:hover": { bgcolor: AdminColors.sidebarBorder, color: "common.white" },
-                }}
-              >
-                {t("ADMIN.BACK_TO_SITE")}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Avatar
-                src={user?.picture ?? ""}
-                alt={displayName}
-                sx={{ width: 32, height: 32, fontSize: AdminFontSizes.small }}
-              >
-                {displayName[0]?.toUpperCase()}
-              </Avatar>
-              <IconButton
-                component={Link}
-                href={`/${locale}`}
-                size="small"
-                sx={{ color: AdminColors.sidebarMuted, "&:hover": { color: "common.white" } }}
-              >
-                <Logout sx={{ fontSize: 16 }} />
-              </IconButton>
-            </>
-          )}
-        </Stack>
-      </Stack>
-
-      {/* Content panel */}
-      <Stack component="main" sx={{ flex: 1, minWidth: 0 }}>
-        {children}
-      </Stack>
-    </Stack>
+        <Header onMenuClick={() => setMobileOpen(true)} showMenuButton={!isDesktop} />
+        <Box component="main" sx={{ flex: 1, px: 3, py: 3 }}>
+          {children}
+        </Box>
+      </Box>
+    </Box>
   );
 }

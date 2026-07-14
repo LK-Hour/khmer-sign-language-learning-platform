@@ -8,5 +8,5 @@ export default async function AdminIndexPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  redirect(`/${locale}${ROUTES.admin.curriculum}`);
+  redirect(`/${locale}${ROUTES.admin.analytics}`);
 }

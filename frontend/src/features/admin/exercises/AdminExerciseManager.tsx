@@ -4,7 +4,6 @@ import Add from "@mui/icons-material/Add";
 import Close from "@mui/icons-material/Close";
 import Delete from "@mui/icons-material/Delete";
 import Edit from "@mui/icons-material/Edit";
-import MenuBook from "@mui/icons-material/MenuBook";
 import Publish from "@mui/icons-material/Publish";
 import RestoreFromTrash from "@mui/icons-material/RestoreFromTrash";
 import {
@@ -12,21 +11,11 @@ import {
   Button,
   Checkbox,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControlLabel,
   IconButton,
   MenuItem,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -45,18 +34,13 @@ import type {
   AdminLesson,
 } from "../api/types";
 import { EXERCISE_TYPES } from "../api/types";
-import {
-  AdminEmptyState,
-  AdminFilterBar,
-  AdminPageHeader,
-  AdminTableFooter,
-} from "../components/AdminTablePage";
-import { ConfirmActionDialog, PublishConfirmDialog } from "../components/ConfirmDialogs";
-import { ActiveChip, PublishChip } from "../components/StatusChips";
-import { AdminColors, AdminFontSizes, adminTableHeaderSx } from "../components/adminTokens";
+import PageHeader from "../components/shared/PageHeader";
+import DataTable from "../components/shared/DataTable";
+import type { DataTableColumn } from "../components/shared/DataTable";
+import StatusChip from "../components/shared/StatusChip";
+import FormDialog from "../components/shared/FormDialog";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useAdminTrack } from "../store/adminUi.store";
-import { KslColors, KslRadii } from "@/theme/theme";
-import { color } from "framer-motion";
 
 type OptionDraft = {
   id: number | null;
@@ -106,8 +90,7 @@ export default function AdminExerciseManager() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [lessonFilter, setLessonFilter] = useState<number | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
+  const [statusFilter, setStatusFilter] = useState<number>(0); // 0=All, 1=Draft, 2=Published
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -144,7 +127,7 @@ export default function AdminExerciseManager() {
 
   useEffect(() => {
     void Promise.resolve().then(() => setPage(0));
-  }, [track, search, lessonFilter, statusFilter]);
+  }, [track, search, statusFilter]);
 
   const lessonName = (lessonId: number) =>
     lessons.find((lesson) => lesson.id === lessonId)?.name_en ?? `#${lessonId}`;
@@ -152,8 +135,8 @@ export default function AdminExerciseManager() {
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return exercises.filter((row) => {
-      if (lessonFilter !== "all" && row.lesson_id !== lessonFilter) return false;
-      if (statusFilter !== "all" && row.publish_status !== statusFilter) return false;
+      if (statusFilter === 1 && row.publish_status !== "draft") return false;
+      if (statusFilter === 2 && row.publish_status !== "published") return false;
       if (
         needle &&
         !row.question_en.toLowerCase().includes(needle) &&
@@ -163,7 +146,7 @@ export default function AdminExerciseManager() {
       }
       return true;
     });
-  }, [exercises, search, lessonFilter, statusFilter]);
+  }, [exercises, search, statusFilter]);
 
   const pagedRows = useMemo(
     () => filteredRows.slice(page * rowsPerPage, (page + 1) * rowsPerPage),
@@ -214,9 +197,7 @@ export default function AdminExerciseManager() {
     }
   };
 
-  const handleSave = async (event: React.FormEvent) => {
-    event.preventDefault();
-
+  const handleSave = async () => {
     const exerciseBody = {
       lesson_id: Number(form.lesson_id),
       question_en: form.question_en,
@@ -329,20 +310,116 @@ export default function AdminExerciseManager() {
     }));
   };
 
+  // DataTable columns
+  const columns: DataTableColumn<AdminExercise>[] = useMemo(() => [
+    {
+      id: "question_en",
+      label: t("ADMIN.CONTENT_PREVIEW"),
+      render: (row) => (
+        <Stack sx={{ opacity: row.is_active ? 1 : 0.55 }}>
+          <Typography sx={{ fontSize: "0.875rem", fontWeight: 700 }}>
+            {row.question_en}
+          </Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+            {row.question_kh}
+          </Typography>
+        </Stack>
+      ),
+    },
+    {
+      id: "exercise_type",
+      label: t("ADMIN.TYPE"),
+      render: (row) => (
+        <Chip
+          label={row.exercise_type.replace(/_/g, " ")}
+          size="small"
+          sx={{
+            height: 22,
+            fontSize: "0.6875rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            bgcolor: "rgba(12, 68, 174, 0.08)",
+            color: "primary.main",
+          }}
+        />
+      ),
+    },
+    {
+      id: "lesson_id",
+      label: t("ADMIN.LESSON"),
+      render: (row) => (
+        <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
+          {lessonName(row.lesson_id)}
+        </Typography>
+      ),
+    },
+    {
+      id: "status",
+      label: t("ADMIN.STATUS"),
+      sortable: false,
+      render: (row) => (
+        <Stack direction="row" spacing={0.5}>
+          <StatusChip variant={row.is_active ? "active" : "inactive"} />
+          <StatusChip variant={row.publish_status === "published" ? "published" : "draft"} />
+        </Stack>
+      ),
+    },
+    {
+      id: "actions",
+      label: t("ADMIN.ACTIONS"),
+      sortable: false,
+      width: 140,
+      render: (row) => (
+        <Stack direction="row" spacing={0.5}>
+          <Tooltip title={t("BUTTON.EDIT")}>
+            <IconButton size="small" onClick={() => openEdit(row)}>
+              <Edit fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          {row.is_active && row.publish_status === "draft" && (
+            <Tooltip title={t("ADMIN.PUBLISH")}>
+              <IconButton size="small" color="success" onClick={() => setPublishTarget(row)}>
+                <Publish fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {row.is_active ? (
+            <Tooltip title={t("BUTTON.DELETE")}>
+              <IconButton size="small" color="error" onClick={() => setDeleteTarget(row)}>
+                <Delete fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title={t("ADMIN.RESTORE")}>
+              <IconButton size="small" color="success" onClick={() => setRestoreTarget(row)}>
+                <RestoreFromTrash fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Stack>
+      ),
+    },
+  ], [t, lessons]);
+
+  const filterTabs = [
+    { label: t("ADMIN.FILTER_ALL"), count: exercises.length },
+    { label: t("ADMIN.DRAFT") },
+    { label: t("ADMIN.PUBLISHED") },
+  ];
+
   return (
     <>
-      <AdminPageHeader
-        eyebrow={`${t("ADMIN.MANAGEMENT")} / ${t("ADMIN.EXERCISES")}`}
+      <PageHeader
         title={t("ADMIN.EXERCISE_MANAGEMENT")}
-        icon={<MenuBook sx={{ fontSize: 24, color: AdminColors.primary }} />}
+        subtitle={`${t("ADMIN.MANAGEMENT")} / ${t("ADMIN.EXERCISES")}`}
         action={
-          <Button variant="contained" startIcon={<Add />} onClick={openCreate} sx={{borderRadius: KslRadii.showCard}}>
+          <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
             {entityActionLabel("ADMIN.ADD", exerciseLabel)}
           </Button>
         }
       />
 
-      <Stack sx={{ flex: 1, overflow: "auto", p: { xs: 2, md: 3 } }} spacing={2}>
+      <Stack spacing={2}>
         {error && (
           <Alert severity="error" onClose={() => setError(null)}>
             {error}
@@ -360,386 +437,197 @@ export default function AdminExerciseManager() {
           value={track}
           onChange={(_, value) => value && setTrack(value)}
         >
-          <ToggleButton value="finger" sx={{ fontSize: AdminFontSizes.small, fontWeight: 700, borderRadius: KslRadii.showCard }}>
+          <ToggleButton value="finger" sx={{ fontWeight: 700 }}>
             {t("ADMIN.TRACK_FINGER")}
           </ToggleButton>
-          <ToggleButton
-            value="word_detection"
-            sx={{ fontSize: AdminFontSizes.small, fontWeight: 700, borderRadius: KslRadii.showCard}}
-          >
+          <ToggleButton value="word_detection" sx={{ fontWeight: 700 }}>
             {t("ADMIN.TRACK_WORD_DETECTION")}
           </ToggleButton>
         </ToggleButtonGroup>
 
-        <AdminFilterBar search={search} onSearchChange={setSearch}>
-          <TextField
-            select
-            size="small"
-            value={lessonFilter}
-            onChange={(e) =>
-              setLessonFilter(e.target.value === "all" ? "all" : Number(e.target.value))
-            }
-            label={t("ADMIN.LESSON")}
-            sx={{ minWidth: 200, bgcolor: "background.paper" }}
-          >
-            <MenuItem value="all">{t("ADMIN.FILTER_ALL")}</MenuItem>
-            {lessons.map((lesson) => (
-              <MenuItem key={lesson.id} value={lesson.id}>
-                {lesson.name_en}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            label={t("ADMIN.FILTER_STATUS")}
-            sx={{ minWidth: 160, bgcolor: "background.paper" }}
-          >
-            <MenuItem value="all">{t("ADMIN.FILTER_ALL")}</MenuItem>
-            <MenuItem value="draft">{t("ADMIN.DRAFT")}</MenuItem>
-            <MenuItem value="published">{t("ADMIN.PUBLISHED")}</MenuItem>
-          </TextField>
-        </AdminFilterBar>
-
-        <TableContainer component={Paper} variant="outlined">
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: AdminColors.page }}>
-                <TableCell align="center" sx={{ width: 64, ...adminTableHeaderSx }}>
-                  {t("ADMIN.ORDER")}
-                </TableCell>
-                <TableCell sx={adminTableHeaderSx}>{t("ADMIN.CONTENT_PREVIEW")}</TableCell>
-                <TableCell sx={adminTableHeaderSx}>{t("ADMIN.LESSON")}</TableCell>
-                <TableCell sx={adminTableHeaderSx}>{t("ADMIN.TYPE")}</TableCell>
-                <TableCell sx={adminTableHeaderSx}>{t("ADMIN.STATUS")}</TableCell>
-                <TableCell align="right" sx={adminTableHeaderSx}>
-                  {t("ADMIN.ACTIONS")}
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {!loading && pagedRows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <AdminEmptyState message={t("ADMIN.NO_RECORDS")} />
-                  </TableCell>
-                </TableRow>
-              )}
-              {pagedRows.map((row) => (
-                <TableRow key={row.id} hover sx={{ opacity: row.is_active ? 1 : 0.55 }}>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontFamily: "var(--font-app-mono)",
-                      fontSize: AdminFontSizes.small,
-                      color: AdminColors.sidebarMuted,
-                    }}
-                  >
-                    {row.order_index}
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      sx={{
-                        fontSize: AdminFontSizes.body,
-                        fontWeight: 700,
-                        color: AdminColors.heading,
-                      }}
-                    >
-                      {row.question_en}
-                    </Typography>
-                    <Typography
-                      sx={{ mt: 0.5, fontSize: AdminFontSizes.small, color: AdminColors.muted }}
-                    >
-                      {row.question_kh}
-                    </Typography>
-                  </TableCell>
-                  <TableCell sx={{ fontSize: AdminFontSizes.small, color: AdminColors.muted }}>
-                    {lessonName(row.lesson_id)}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={row.exercise_type.replace(/_/g, " ")}
-                      size="small"
-                      sx={{
-                        height: 22,
-                        fontSize: AdminFontSizes.eyebrow,
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        bgcolor: AdminColors.primaryTint,
-                        color: AdminColors.primary,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.75}>
-                      <ActiveChip active={row.is_active} />
-                      <PublishChip status={row.publish_status} />
-                    </Stack>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title={t("BUTTON.EDIT")}>
-                      <IconButton size="small" onClick={() => openEdit(row)}>
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    {row.is_active && row.publish_status === "draft" && (
-                      <Tooltip title={t("ADMIN.PUBLISH")}>
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => setPublishTarget(row)}
-                        >
-                          <Publish fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                    {row.is_active ? (
-                      <Tooltip title={t("BUTTON.DELETE")}>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => setDeleteTarget(row)}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title={t("ADMIN.RESTORE")}>
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => setRestoreTarget(row)}
-                        >
-                          <RestoreFromTrash fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <AdminTableFooter
-            count={filteredRows.length}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            onPageChange={setPage}
-            onRowsPerPageChange={(rows) => {
-              setRowsPerPage(rows);
-              setPage(0);
-            }}
-          />
-        </TableContainer>
+        <DataTable<AdminExercise>
+          columns={columns}
+          rows={pagedRows}
+          loading={loading}
+          searchValue={search}
+          onSearchChange={setSearch}
+          filterTabs={filterTabs}
+          activeFilterIndex={statusFilter}
+          onFilterChange={setStatusFilter}
+          pagination={{
+            page,
+            rowsPerPage,
+            total: filteredRows.length,
+          }}
+          onPageChange={setPage}
+          onRowsPerPageChange={(rpp) => {
+            setRowsPerPage(rpp);
+            setPage(0);
+          }}
+        />
       </Stack>
 
-      {/* Create / edit exercise — saves as draft until published */}
-      <Dialog open={formOpen} onClose={() => setFormOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle
-          sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      {/* Create / Edit Exercise Form Dialog */}
+      <FormDialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        title={
+          editing
+            ? entityActionLabel("BUTTON.EDIT", exerciseLabel)
+            : entityActionLabel("ADMIN.ADD", exerciseLabel)
+        }
+        subtitle={t("ADMIN.DRAFT_WORKFLOW_NOTE")}
+        onSubmit={handleSave}
+        loading={busy}
+        submitLabel={t("ADMIN.SAVE_DRAFT")}
+        cancelLabel={t("BUTTON.CANCEL")}
+        sx={{ maxWidth: 720 }}
+      >
+        <TextField
+          select
+          required
+          fullWidth
+          label={t("ADMIN.LESSON")}
+          value={form.lesson_id}
+          onChange={(e) => setForm({ ...form, lesson_id: Number(e.target.value) })}
         >
-          <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
-            {editing
-              ? entityActionLabel("BUTTON.EDIT", exerciseLabel)
-              : entityActionLabel("ADMIN.ADD", exerciseLabel)}
-          </Typography>
-          <IconButton aria-label={t("ADMIN.CLOSE_DIALOG")} onClick={() => setFormOpen(false)}>
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ bgcolor: AdminColors.page }}>
-          <Stack id="exerciseForm" component="form" onSubmit={handleSave} spacing={2} sx={{ pt: 1 }}>
-            <Alert severity="info" sx={{ fontSize: AdminFontSizes.small }}>
-              {t("ADMIN.DRAFT_WORKFLOW_NOTE")}
-            </Alert>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                select
-                required
-                fullWidth
-                label={t("ADMIN.LESSON")}
-                value={form.lesson_id}
-                onChange={(e) => setForm({ ...form, lesson_id: Number(e.target.value) })}
-              >
-                {lessons.map((lesson) => (
-                  <MenuItem key={lesson.id} value={lesson.id}>
-                    {lesson.name_en} · {lesson.name_kh}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                required
-                fullWidth
-                label={t("ADMIN.EXERCISE_TYPE")}
-                value={form.exercise_type}
-                onChange={(e) => setForm({ ...form, exercise_type: e.target.value })}
-              >
-                {EXERCISE_TYPES.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type.replace(/_/g, " ")}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Stack>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                required
-                fullWidth
-                label={t("ADMIN.QUESTION_EN")}
-                value={form.question_en}
-                onChange={(e) => setForm({ ...form, question_en: e.target.value })}
-              />
-              <TextField
-                required
-                fullWidth
-                label={t("ADMIN.QUESTION_KH")}
-                value={form.question_kh}
-                onChange={(e) => setForm({ ...form, question_kh: e.target.value })}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label={t("ADMIN.CORRECT_ANSWER")}
-                value={form.correct_answer}
-                onChange={(e) => setForm({ ...form, correct_answer: e.target.value })}
-                helperText={
-                  form.exercise_type === "free_form"
-                    ? t("ADMIN.TEXT_ANSWER_NOTE")
-                    : undefined
-                }
-              />
-              <TextField
-                type="number"
-                label={t("ADMIN.SORT_ORDER")}
-                value={form.order_index}
-                onChange={(e) =>
-                  setForm({ ...form, order_index: Number.parseInt(e.target.value, 10) || 0 })
-                }
-                sx={{ width: 140 }}
-              />
-            </Stack>
+          {lessons.map((lesson) => (
+            <MenuItem key={lesson.id} value={lesson.id}>
+              {lesson.name_en} · {lesson.name_kh}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          required
+          fullWidth
+          label={t("ADMIN.EXERCISE_TYPE")}
+          value={form.exercise_type}
+          onChange={(e) => setForm({ ...form, exercise_type: e.target.value })}
+        >
+          {EXERCISE_TYPES.map((type) => (
+            <MenuItem key={type} value={type}>
+              {type.replace(/_/g, " ")}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          required
+          fullWidth
+          label={t("ADMIN.QUESTION_EN")}
+          value={form.question_en}
+          onChange={(e) => setForm({ ...form, question_en: e.target.value })}
+        />
+        <TextField
+          required
+          fullWidth
+          label={t("ADMIN.QUESTION_KH")}
+          value={form.question_kh}
+          onChange={(e) => setForm({ ...form, question_kh: e.target.value })}
+        />
+        <TextField
+          fullWidth
+          label={t("ADMIN.CORRECT_ANSWER")}
+          value={form.correct_answer}
+          onChange={(e) => setForm({ ...form, correct_answer: e.target.value })}
+        />
+        <TextField
+          type="number"
+          label={t("ADMIN.SORT_ORDER")}
+          value={form.order_index}
+          onChange={(e) =>
+            setForm({ ...form, order_index: Number.parseInt(e.target.value, 10) || 0 })
+          }
+        />
 
-            {hasOptions(form.exercise_type) && (
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Stack spacing={1.5}>
-                  <Stack
-                    direction="row"
-                    sx={{ justifyContent: "space-between", alignItems: "center" }}
+        {hasOptions(form.exercise_type) && (
+          <Paper variant="outlined" sx={{ p: 2, gridColumn: "1 / -1" }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
+                <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
+                  {t("ADMIN.OPTIONS")}
+                </Typography>
+                <Button size="small" startIcon={<Add />} onClick={addOption}>
+                  {t("ADMIN.ADD_OPTION")}
+                </Button>
+              </Stack>
+              {form.options.map((option, index) => (
+                <Stack
+                  key={option.id ?? `new-${index}`}
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1.5}
+                  sx={{ alignItems: { sm: "center" } }}
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={option.is_correct}
+                        onChange={() => updateOption(index, { is_correct: true })}
+                      />
+                    }
+                    label={t("ADMIN.IS_CORRECT")}
+                    sx={{ minWidth: 120, ".MuiFormControlLabel-label": { fontSize: 12 } }}
+                  />
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label={`${t("ADMIN.OPTION_TEXT_EN")} ${index + 1}`}
+                    value={option.option_text_en}
+                    onChange={(e) => updateOption(index, { option_text_en: e.target.value })}
+                  />
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label={`${t("ADMIN.OPTION_TEXT_KH")} ${index + 1}`}
+                    value={option.option_text_kh}
+                    onChange={(e) => updateOption(index, { option_text_kh: e.target.value })}
+                  />
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => removeOption(index)}
+                    disabled={form.options.length <= 2}
                   >
-                    <Typography
-                      sx={{
-                        fontSize: AdminFontSizes.small,
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        color: "text.secondary",
-                      }}
-                    >
-                      {t("ADMIN.OPTIONS")}
-                    </Typography>
-                    <Button size="small" startIcon={<Add />} onClick={addOption}>
-                      {t("ADMIN.ADD_OPTION")}
-                    </Button>
-                  </Stack>
-                  {form.options.map((option, index) => (
-                    <Stack
-                      key={option.id ?? `new-${index}`}
-                      direction={{ xs: "column", sm: "row" }}
-                      spacing={1.5}
-                      sx={{ alignItems: { sm: "center" } }}
-                    >
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={option.is_correct}
-                            onChange={() => updateOption(index, { is_correct: true })}
-                          />
-                        }
-                        label={t("ADMIN.IS_CORRECT")}
-                        sx={{ minWidth: 120, ".MuiFormControlLabel-label": { fontSize: 12 } }}
-                      />
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label={`${t("ADMIN.OPTION_TEXT_EN")} ${index + 1}`}
-                        value={option.option_text_en}
-                        onChange={(e) =>
-                          updateOption(index, { option_text_en: e.target.value })
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label={`${t("ADMIN.OPTION_TEXT_KH")} ${index + 1}`}
-                        value={option.option_text_kh}
-                        onChange={(e) =>
-                          updateOption(index, { option_text_kh: e.target.value })
-                        }
-                      />
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => removeOption(index)}
-                        disabled={form.options.length <= 2}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  ))}
+                    <Delete fontSize="small" />
+                  </IconButton>
                 </Stack>
-              </Paper>
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={() => setFormOpen(false)} disabled={busy}  sx={{color: KslColors.muted, borderRadius: KslRadii.showCard} } >
-            {t("BUTTON.CANCEL")}
-          </Button>
-          <Button type="submit" form="exerciseForm" variant="contained" disabled={busy} sx={{borderRadious: KslRadii.showCard}}>
-            {t("ADMIN.SAVE_DRAFT")}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              ))}
+            </Stack>
+          </Paper>
+        )}
+      </FormDialog>
 
-      <PublishConfirmDialog
+      {/* Publish Confirmation */}
+      <ConfirmDialog
         open={publishTarget !== null}
-        entityLabel={t("ADMIN.EXERCISE")}
-        nameEn={publishTarget?.question_en ?? ""}
-        nameKh={publishTarget?.question_kh}
-        isActive={publishTarget?.is_active ?? true}
-        busy={busy}
         onClose={() => setPublishTarget(null)}
         onConfirm={handlePublish}
+        title={t("ADMIN.PUBLISH")}
+        message={quotedConfirmMessage(publishTarget?.question_en ?? "", "ADMIN.DELETE_CONFIRM_SUFFIX")}
+        confirmLabel={t("ADMIN.PUBLISH")}
+        loading={busy}
       />
 
-      <ConfirmActionDialog
+      {/* Delete Confirmation */}
+      <ConfirmDialog
         open={deleteTarget !== null}
-        title={`${entityActionLabel("BUTTON.DELETE", exerciseLabel)}?`}
-        message={quotedConfirmMessage(
-          deleteTarget?.question_en ?? "",
-          "ADMIN.DELETE_CONFIRM_SUFFIX",
-        )}
-        confirmLabel={t("BUTTON.DELETE")}
-        confirmColor="error"
-        busy={busy}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
+        title={`${entityActionLabel("BUTTON.DELETE", exerciseLabel)}?`}
+        message={quotedConfirmMessage(deleteTarget?.question_en ?? "", "ADMIN.DELETE_CONFIRM_SUFFIX")}
+        confirmLabel={t("BUTTON.DELETE")}
+        loading={busy}
       />
 
-      <ConfirmActionDialog
+      {/* Restore Confirmation */}
+      <ConfirmDialog
         open={restoreTarget !== null}
-        title={`${entityActionLabel("ADMIN.RESTORE", exerciseLabel)}?`}
-        message={quotedConfirmMessage(
-          restoreTarget?.question_en ?? "",
-          "ADMIN.RESTORE_CONFIRM_SUFFIX",
-        )}
-        confirmLabel={t("ADMIN.RESTORE")}
-        confirmColor="success"
-        busy={busy}
         onClose={() => setRestoreTarget(null)}
         onConfirm={handleRestore}
+        title={`${entityActionLabel("ADMIN.RESTORE", exerciseLabel)}?`}
+        message={quotedConfirmMessage(restoreTarget?.question_en ?? "", "ADMIN.RESTORE_CONFIRM_SUFFIX")}
+        confirmLabel={t("ADMIN.RESTORE")}
+        loading={busy}
       />
     </>
   );

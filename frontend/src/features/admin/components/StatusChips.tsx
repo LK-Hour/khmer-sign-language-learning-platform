@@ -4,13 +4,11 @@ import { Chip } from "@mui/material";
 
 import { useTranslation } from "@/i18n/useTranslation";
 
-import { AdminColors, AdminFontSizes } from "./adminTokens";
 import type { PublishStatus } from "../api/types";
-import { correctBorderRadius } from "framer-motion";
 
 const chipSx = (bg: string, color: string) => ({
   height: 22,
-  fontSize: AdminFontSizes.eyebrow,
+  fontSize: "0.625rem",
   fontWeight: 700,
   textTransform: "uppercase" as const,
   bgcolor: bg,
@@ -24,13 +22,13 @@ export function ActiveChip({ active }: { active: boolean }) {
     <Chip
       label={t("ADMIN.ACTIVE")}
       size="small"
-      sx={chipSx(AdminColors.activeBg, AdminColors.activeText)}
+      sx={chipSx("rgba(34, 197, 94, 0.12)", "#118D57")}
     />
   ) : (
     <Chip
       label={t("ADMIN.INACTIVE")}
       size="small"
-      sx={chipSx(AdminColors.inactiveBg, AdminColors.inactiveText)}
+      sx={chipSx("rgba(145, 158, 171, 0.12)", "#637381")}
     />
   );
 }
@@ -42,13 +40,13 @@ export function PublishChip({ status }: { status: PublishStatus }) {
     <Chip
       label={t("ADMIN.PUBLISHED")}
       size="small"
-      sx={chipSx(AdminColors.publishedBg, AdminColors.publishedText)}
+      sx={chipSx("rgba(34, 197, 94, 0.12)", "#118D57")}
     />
   ) : (
     <Chip
       label={t("ADMIN.DRAFT")}
       size="small"
-      sx={chipSx(AdminColors.draftBg, AdminColors.draftText)}
+      sx={chipSx("rgba(255, 171, 0, 0.12)", "#B76E00")}
     />
   );
 }

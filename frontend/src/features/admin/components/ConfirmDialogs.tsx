@@ -14,7 +14,6 @@ import {
 
 import { useTranslation } from "@/i18n/useTranslation";
 
-import { AdminColors, AdminFontSizes } from "./adminTokens";
 import { ActiveChip, PublishChip } from "./StatusChips";
 
 type ConfirmActionDialogProps = {
@@ -44,7 +43,7 @@ export function ConfirmActionDialog({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>{title}</DialogTitle>
       <DialogContent>
-        <Typography sx={{ fontSize: AdminFontSizes.body, color: "text.secondary" }}>
+        <Typography sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
           {message}
         </Typography>
       </DialogContent>
@@ -95,26 +94,26 @@ export function PublishConfirmDialog({
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2}>
-          <Typography sx={{ fontSize: AdminFontSizes.body, color: "text.secondary" }}>
+          <Typography sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
             {t("ADMIN.PUBLISH_CONFIRM_MESSAGE")}
           </Typography>
-          <Paper variant="outlined" sx={{ p: 1.5, bgcolor: AdminColors.page }}>
+          <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "background.default" }}>
             <Stack spacing={1}>
               <Typography
                 sx={{
-                  fontSize: AdminFontSizes.eyebrow,
+                  fontSize: "0.625rem",
                   fontWeight: 700,
                   textTransform: "uppercase",
-                  color: AdminColors.muted,
+                  color: "text.secondary",
                 }}
               >
                 {entityLabel}
               </Typography>
               <Typography
                 sx={{
-                  fontSize: AdminFontSizes.body,
+                  fontSize: "0.875rem",
                   fontWeight: 700,
-                  color: AdminColors.heading,
+                  color: "text.primary",
                 }}
               >
                 {nameEn}
@@ -123,7 +122,7 @@ export function PublishConfirmDialog({
               <Stack direction="row" spacing={1}>
                 <ActiveChip active={isActive} />
                 <PublishChip status="draft" />
-                <Typography sx={{ fontSize: AdminFontSizes.small, color: AdminColors.muted }}>
+                <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
                   →
                 </Typography>
                 <PublishChip status="published" />

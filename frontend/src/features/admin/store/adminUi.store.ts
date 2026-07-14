@@ -8,8 +8,18 @@ export type AdminEntityTab = "units" | "chapters" | "lessons";
 interface AdminUiState {
   track: AdminTrack;
   curriculumTab: AdminEntityTab;
+  sidebarCollapsed: boolean;
+  /** Set of nav node IDs that are currently expanded */
+  expandedNavIds: string[];
   setTrack: (track: AdminTrack) => void;
   setCurriculumTab: (tab: AdminEntityTab) => void;
+  toggleSidebar: () => void;
+  /** Toggle a single nav node's expanded state */
+  toggleNavNode: (id: string) => void;
+  /** Expand multiple nodes at once (for auto-expand on route match) */
+  expandNavNodes: (ids: string[]) => void;
+  /** Collapse all nav nodes */
+  collapseAllNav: () => void;
 }
 
 export const useAdminUiStore = create<AdminUiState>()(
@@ -17,8 +27,22 @@ export const useAdminUiStore = create<AdminUiState>()(
     (set) => ({
       track: "finger",
       curriculumTab: "units",
+      sidebarCollapsed: false,
+      expandedNavIds: [],
       setTrack: (track) => set({ track }),
       setCurriculumTab: (curriculumTab) => set({ curriculumTab }),
+      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      toggleNavNode: (id) =>
+        set((state) => ({
+          expandedNavIds: state.expandedNavIds.includes(id)
+            ? state.expandedNavIds.filter((nid) => nid !== id)
+            : [...state.expandedNavIds, id],
+        })),
+      expandNavNodes: (ids) =>
+        set((state) => ({
+          expandedNavIds: [...new Set([...state.expandedNavIds, ...ids])],
+        })),
+      collapseAllNav: () => set({ expandedNavIds: [] }),
     }),
     { name: "admin-ui-storage" },
   ),

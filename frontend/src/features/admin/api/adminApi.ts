@@ -125,9 +125,21 @@ export const publishLesson = (track: AdminTrack, id: number) =>
 
 // ── Exercises ────────────────────────────────────────────────────────────────
 
-export const listExercises = (track: AdminTrack, lessonId?: number) =>
+export const listExercises = (
+  track: AdminTrack,
+  params?: { lesson_id?: number; unit_id?: number },
+) =>
   apiFetch<AdminExercise[]>(
-    `${base(track)}/exercises${lessonId ? `?lesson_id=${lessonId}` : ""}`,
+    `${base(track)}/exercises${
+      params
+        ? "?" +
+          new URLSearchParams(
+            Object.entries(params)
+              .filter(([, v]) => v !== undefined)
+              .map(([k, v]) => [k, String(v)]),
+          ).toString()
+        : ""
+    }`,
   );
 
 export const createExercise = (track: AdminTrack, body: AdminExercisePayload) =>
