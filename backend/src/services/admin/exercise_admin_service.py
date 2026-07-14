@@ -63,12 +63,15 @@ class ExerciseAdminService:
         *,
         lesson_id: int | None = None,
         chapter_id: int | None = None,
+        unit_id: int | None = None,
         active_only: bool = False,
         status: str | None = None,
     ):
         stmt = select(self.config.exercise_model).options(
             selectinload(self.config.exercise_model.options)
         )
+        if unit_id is not None:
+            stmt = stmt.where(self.config.exercise_model.unit_id == unit_id)
         if chapter_id is not None:
             stmt = stmt.join(
                 self.config.lesson_model,

@@ -1,5 +1,11 @@
 """Admin content-management schemas (shared across learning tracks)."""
 
+from .analytics import (
+    LeaderboardEntry,
+    LessonDifficultyEntry,
+    OverviewStats,
+    TrackCompletionStats,
+)
 from .curriculum import (
     ChapterCreate,
     ChapterResponse,
@@ -21,6 +27,10 @@ from .exercise import (
 )
 
 __all__ = [
+    "LeaderboardEntry",
+    "LessonDifficultyEntry",
+    "OverviewStats",
+    "TrackCompletionStats",
     "UnitCreate",
     "UnitUpdate",
     "UnitResponse",

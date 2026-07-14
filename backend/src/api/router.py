@@ -6,8 +6,13 @@ individual modules so moving files does not change the public API.
 
 from fastapi import APIRouter
 
+from src.api.routes.admin.analytics import router as admin_analytics_router
+from src.api.routes.admin.contributions import router as admin_contributions_router
 from src.api.routes.admin.curriculum import router as admin_curriculum_router
+from src.api.routes.admin.dictionary import router as admin_dictionary_router
 from src.api.routes.admin.exercise import router as admin_exercise_router
+from src.api.routes.admin.feedback import router as admin_feedback_router
+from src.api.routes.admin.media import router as admin_media_router
 from src.api.routes.auth_session import router as auth_session_router
 from src.api.routes.curriculum import router as curriculum_router
 from src.api.routes.dictionary import router as dictionary_router
@@ -28,3 +33,8 @@ router.include_router(finger_spelling_router)
 router.include_router(word_detection_router)
 router.include_router(admin_curriculum_router)
 router.include_router(admin_exercise_router)
+router.include_router(admin_media_router)
+router.include_router(admin_analytics_router)
+router.include_router(admin_contributions_router)
+router.include_router(admin_dictionary_router)
+router.include_router(admin_feedback_router)
