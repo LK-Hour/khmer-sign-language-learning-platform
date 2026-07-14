@@ -19,7 +19,9 @@ REFRESH_TOKEN_BYTES = 32
 # If the same token is reused within this window, we treat it as a
 # benign race condition (e.g. two browser tabs refreshing simultaneously)
 # rather than a malicious replay attack.
-REUSE_GRACE_PERIOD_SECONDS = 30
+# Set to 120s to handle cases where the browser may not immediately store
+# the new Set-Cookie (e.g., concurrent tabs, slow cookie jar updates).
+REUSE_GRACE_PERIOD_SECONDS = 120
 
 
 def token_hash(token: str) -> str:
