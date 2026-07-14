@@ -72,7 +72,7 @@ class TestIntegration:
     """Integration tests for complete user workflows."""
 
     def test_complete_user_workflow(self, client, test_user_data, test_admin_data):
-        register_response = client.post("/users/", json=test_user_data)
+        register_response = client.post("/api/users/", json=test_user_data)
         assert register_response.status_code == 201
         user_id = register_response.json()["id"]
 
@@ -83,7 +83,7 @@ class TestIntegration:
         assert me_response.status_code == 200
         assert me_response.json()["email"] == test_user_data["email"]
 
-        client.post("/users/", json=test_admin_data)
+        client.post("/api/users/", json=test_admin_data)
         admin_token = _auth_token(client, test_admin_data)
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
         unit, chapter, lesson = _create_admin_curriculum(client, admin_headers)
@@ -101,38 +101,38 @@ class TestIntegration:
         assert any(l["id"] == lesson["id"] for l in lessons_response.json())
 
         update_data = {**test_user_data, "display_name": "Updated Integration User"}
-        update_response = client.put(f"/users/{user_id}", json=update_data, headers=headers)
+        update_response = client.put(f"/api/users/{user_id}", json=update_data, headers=headers)
         assert update_response.status_code == 200
         assert update_response.json()["display_name"] == "Updated Integration User"
 
-        delete_response = client.delete(f"/users/{user_id}", headers=headers)
+        delete_response = client.delete(f"/api/users/{user_id}", headers=headers)
         assert delete_response.status_code == 200
         assert delete_response.json()["is_active"] is False
 
     def test_admin_user_management_workflow(self, client, test_user_data, test_admin_data):
-        admin_register = client.post("/users/", json=test_admin_data)
+        admin_register = client.post("/api/users/", json=test_admin_data)
         assert admin_register.status_code == 201
         admin_token = _auth_token(client, test_admin_data)
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-        user_register = client.post("/users/", json=test_user_data)
+        user_register = client.post("/api/users/", json=test_user_data)
         user_id = user_register.json()["id"]
 
-        users_response = client.get("/users/", headers=admin_headers)
+        users_response = client.get("/api/users/", headers=admin_headers)
         assert users_response.status_code == 200
         assert any(u["id"] == user_id for u in users_response.json())
 
         update_data = {**test_user_data, "account_type": "admin"}
-        update_response = client.put(f"/users/{user_id}", json=update_data, headers=admin_headers)
+        update_response = client.put(f"/api/users/{user_id}", json=update_data, headers=admin_headers)
         assert update_response.status_code == 200
         assert update_response.json()["account_type"] == "admin"
 
-        delete_response = client.delete(f"/users/{user_id}", headers=admin_headers)
+        delete_response = client.delete(f"/api/users/{user_id}", headers=admin_headers)
         assert delete_response.status_code == 200
         assert delete_response.json()["is_active"] is False
 
     def test_finger_spelling_workflow(self, client, test_admin_data):
-        client.post("/users/", json=test_admin_data)
+        client.post("/api/users/", json=test_admin_data)
         admin_headers = {"Authorization": f"Bearer {_auth_token(client, test_admin_data)}"}
 
         unit, chapter, lesson = _create_admin_curriculum(client, admin_headers)
@@ -159,7 +159,7 @@ class TestIntegration:
         response = client.get("/api/auth/login/me", headers=invalid_headers)
         assert response.status_code == 401
 
-        register_response = client.post("/users/", json=test_user_data)
+        register_response = client.post("/api/users/", json=test_user_data)
         assert register_response.status_code == 201
 
         login_response = client.post(
@@ -168,7 +168,7 @@ class TestIntegration:
         )
         assert login_response.status_code == 401
 
-        response = client.get(f"/users/{uuid.uuid4()}")
+        response = client.get(f"/api/users/{uuid.uuid4()}")
         assert response.status_code == 401
 
         response = client.post(

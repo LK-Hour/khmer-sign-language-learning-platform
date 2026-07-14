@@ -138,7 +138,7 @@ def test_admin_data():
 def auth_headers(client, test_user_data):
     """Create authentication headers for test user"""
     # Create user first
-    response = client.post("/users/", json=test_user_data)
+    response = client.post("/api/users/", json=test_user_data)
     assert response.status_code == 201
 
     # Login to get token
@@ -156,7 +156,7 @@ def auth_headers(client, test_user_data):
 def admin_headers(client, test_admin_data):
     """Create authentication headers for test admin"""
     # Create admin first
-    response = client.post("/users/", json=test_admin_data)
+    response = client.post("/api/users/", json=test_admin_data)
     assert response.status_code == 201
 
     # Login to get token

@@ -13,7 +13,7 @@ class TestAuthAPI:
     def test_login_success(self, client, test_user_data):
         """Test successful login"""
         # Register user first
-        client.post("/users/", json=test_user_data)
+        client.post("/api/users/", json=test_user_data)
         
         # Login
         login_data = {
@@ -31,7 +31,7 @@ class TestAuthAPI:
         assert "refresh_token=" in response.headers.get("set-cookie", "")
 
     def test_refresh_rotates_token_and_logout_revokes(self, client, db, test_user_data):
-        client.post("/users/", json=test_user_data)
+        client.post("/api/users/", json=test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
@@ -72,7 +72,7 @@ class TestAuthAPI:
         """
         from unittest.mock import patch
 
-        client.post("/users/", json=test_user_data)
+        client.post("/api/users/", json=test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
@@ -99,7 +99,7 @@ class TestAuthAPI:
 
     def test_refresh_reuse_within_grace_period_is_tolerated(self, client, db, test_user_data):
         """Reuse within the grace period (race condition) returns 200 instead of revoking."""
-        client.post("/users/", json=test_user_data)
+        client.post("/api/users/", json=test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
@@ -126,7 +126,7 @@ class TestAuthAPI:
         assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() >= 1
 
     def test_admin_remember_me_uses_three_day_refresh_lifetime(self, client, db, test_admin_data):
-        client.post("/users/", json=test_admin_data)
+        client.post("/api/users/", json=test_admin_data)
         response = client.post(
             "/api/auth/login/email",
             json={
@@ -144,7 +144,7 @@ class TestAuthAPI:
     def test_login_invalid_credentials(self, client, test_user_data):
         """Test login with invalid credentials"""
         # Register user first
-        client.post("/users/", json=test_user_data)
+        client.post("/api/users/", json=test_user_data)
         
         # Try wrong password
         login_data = {
@@ -199,7 +199,7 @@ class TestAuthAPI:
     def test_token_expiry_simulation(self, client, test_user_data):
         """Test token expiry behavior (simulated)"""
         # Register and login
-        client.post("/users/", json=test_user_data)
+        client.post("/api/users/", json=test_user_data)
         
         login_data = {
             "email": test_user_data["email"],
@@ -217,7 +217,7 @@ class TestAuthAPI:
         # This test just verifies the token works initially
 
     def test_import_guest_progress_merges_and_validates_lessons(self, client, db, test_user_data):
-        client.post("/users/", json=test_user_data)
+        client.post("/api/users/", json=test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
