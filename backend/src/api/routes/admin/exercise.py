@@ -52,6 +52,7 @@ def list_exercises(
     track: str,
     lesson_id: int | None = Query(None),
     chapter_id: int | None = Query(None),
+    unit_id: int | None = Query(None),
     active_only: bool = Query(False),
     publish_status: str | None = Query(None, alias="status"),
     db: Session = Depends(get_db),
@@ -59,6 +60,7 @@ def list_exercises(
     return _svc(track, db).list_exercises(
         lesson_id=lesson_id,
         chapter_id=chapter_id,
+        unit_id=unit_id,
         active_only=active_only,
         status=publish_status,
     )
