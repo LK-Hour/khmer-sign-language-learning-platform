@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     )
     database_url: str = "postgresql://admin:admin@localhost:5432/khmer_sign_db"
     database_timezone: str = "Asia/Phnom_Penh"
+    redis_url: str = Field(default="redis://localhost:6379/0", validation_alias="REDIS_URL")
     jwt_secret_key: str = "dev-only-insecure-change-me"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30

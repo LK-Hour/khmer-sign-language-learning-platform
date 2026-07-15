@@ -21,6 +21,27 @@ services:
     networks:
       - khmer_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: khmer_sign_redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - khmer_network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: khmer_sign_pgadmin
@@ -31,12 +52,13 @@ services:
       - "8080:80"
     depends_on:
       postgres:
-        condition: service_healthy # Wait for postgres to pass healthcheck before starting pgadmin
+        condition: service_healthy
     networks:
       - khmer_network
   
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   khmer_network:
