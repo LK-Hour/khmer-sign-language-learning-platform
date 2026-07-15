@@ -46,6 +46,27 @@ export async function refreshAuthSession(): Promise<string | null> {
 
       if (!res.ok) {
         if (res.status === 401) {
+          // The refresh failed — possibly a stale cookie race condition.
+          // Wait briefly for the browser cookie jar to settle, then retry
+          // once before concluding the session is truly invalid.
+          await new Promise((r) => setTimeout(r, 500));
+          const retryRes = await fetch(`${baseURL}/api/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Cache-Control": "no-store",
+              "X-Requested-With": CSRF_HEADER_VALUE,
+            },
+          });
+          if (retryRes.ok) {
+            const retryToken = (await retryRes.json()) as {
+              access_token: string;
+              token_type: string;
+            };
+            store.setAccessToken(retryToken);
+            return retryToken?.access_token;
+          }
+          // Retry also failed — session is gone
           store.clear();
         }
         return null;

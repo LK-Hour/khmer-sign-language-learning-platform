@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from src.api.deps import get_current_user, get_db
 from src.core.config import settings
+from src.core.rate_limit import auth_rate_limiter
 from src.models.user import User
 from src.schemas.oauth import AccessTokenResponse, GuestProgressImportRequest, GuestProgressImportResponse
 from src.services.oauth_user_service import import_local_guest_progress
@@ -40,7 +41,7 @@ def _client_ip(request: Request) -> str | None:
     return request.client.host
 
 
-@router.post("/refresh", response_model=AccessTokenResponse)
+@router.post("/refresh", response_model=AccessTokenResponse, dependencies=[Depends(auth_rate_limiter)])
 def refresh_access_token(
     request: Request,
     response: Response,

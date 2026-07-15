@@ -103,7 +103,8 @@ def validate_refresh_token(db: Session, plain_token: str) -> RefreshToken:
             if latest_active is not None:
                 return latest_active
 
-        # Outside grace period — genuine reuse attack, revoke everything
+        # Outside grace period — genuine reuse attack or fully expired
+        # session. Revoke everything as a security measure.
         revoke_all_user_refresh_tokens(db, record.user_id)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
