@@ -150,3 +150,24 @@ export async function fetchFsTrackUnits(): Promise<FsTrackUnit[]> {
     })
   );
 }
+
+
+/**
+ * Fetch the full curriculum tree in a single request (aggregated endpoint).
+ * Eliminates 30+ sequential API calls by returning units → chapters → lessons
+ * in one response. The response shape matches FsTrackUnit[] directly.
+ */
+export async function fetchFsTree(): Promise<FsTrackUnit[]> {
+  const raw = await apiFetch<FsTrackUnit[]>("/api/finger_spelling/tree");
+  return raw
+    .map((unit) => ({
+      ...normalizeUnit(unit),
+      chapters: unit.chapters
+        .map((chapter) => ({
+          ...normalizeChapter(chapter),
+          lessons: chapter.lessons.map(normalizeLesson),
+        }))
+        .sort((a, b) => a.orderIndex - b.orderIndex),
+    }))
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+}

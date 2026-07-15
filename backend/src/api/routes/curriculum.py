@@ -12,7 +12,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
+import redis as redis_lib
+
 from src.api.deps import get_db
+from src.core.cache import cache_get, cache_set
+from src.core.redis import get_redis
 from src.schemas.finger_spelling import (
     ChapterResponse,
     LetterDataResponse,
@@ -88,9 +92,20 @@ def _build_letter_data_response(service: FingerCurriculumService, letter_kh: str
 
 
 @router.get("/letters/{letter_kh}", response_model=LetterDataResponse)
-def get_letter_data(letter_kh: str, db: Session = Depends(get_db)) -> LetterDataResponse:
+def get_letter_data(
+    letter_kh: str,
+    db: Session = Depends(get_db),
+    rc: redis_lib.Redis = Depends(get_redis),
+) -> LetterDataResponse:
+    cache_key = f"ksl:cache:public:letter:{letter_kh}"
+    cached = cache_get(rc, cache_key)
+    if cached is not None:
+        return LetterDataResponse(**cached)
+
     service = FingerCurriculumService(db)
-    return _build_letter_data_response(service, letter_kh)
+    result = _build_letter_data_response(service, letter_kh)
+    cache_set(rc, cache_key, result.model_dump(mode="json"), ttl=900)
+    return result
 
 
 @router.get("/letters/{letter_kh}/medias", response_model=LetterMediaListResponse)

@@ -12,7 +12,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+import redis as redis_lib
+
 from src.api.deps import get_admin_user, get_db
+from src.core.cache import cache_get, cache_set
+from src.core.redis import get_redis
 from src.models.finger_spelling import FingerLetter, FingerLetterMedia
 from src.models.user import User
 from src.models.word_detection import WordDetectionWord, WordDetectionWordMedia
@@ -30,8 +34,15 @@ def list_characters(
     search: str | None = Query(None),
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     """List finger letters with pagination and optional search."""
+    # Cache unfiltered paginated requests
+    cache_key = f"ksl:cache:dict:characters:p{page}:s{size}:q{search or ''}"
+    cached = cache_get(rc, cache_key)
+    if cached is not None:
+        return cached
+
     query = db.query(FingerLetter)
 
     if search:
@@ -64,13 +75,15 @@ def list_characters(
             }
         )
 
-    return {
+    result = {
         "items": items,
         "total": total,
         "page": page,
         "size": size,
         "pages": pages,
     }
+    cache_set(rc, cache_key, result, ttl=300)  # 5 min TTL
+    return result
 
 
 @router.get("/words")
@@ -80,8 +93,14 @@ def list_words(
     search: str | None = Query(None),
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     """List word detection words with pagination and optional search."""
+    cache_key = f"ksl:cache:dict:words:p{page}:s{size}:q{search or ''}"
+    cached = cache_get(rc, cache_key)
+    if cached is not None:
+        return cached
+
     query = db.query(WordDetectionWord)
 
     if search:
@@ -114,10 +133,12 @@ def list_words(
             }
         )
 
-    return {
+    result = {
         "items": items,
         "total": total,
         "page": page,
         "size": size,
         "pages": pages,
     }
+    cache_set(rc, cache_key, result, ttl=300)  # 5 min TTL
+    return result

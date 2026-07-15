@@ -20,7 +20,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
+import redis as redis_lib
+
 from src.api.deps import get_admin_user, get_db
+from src.core.cache import cache_get, cache_invalidate, cache_set
+from src.core.redis import get_redis
 from src.models.user import User
 from src.models.word_detection import (
     WordDetectionChapter,
@@ -86,7 +90,10 @@ def _build_contribution_detail(contribution: WordDetectionContribution) -> Contr
 
 
 @router.get("/tree", response_model=list[ContributionTreeNode])
-def get_contribution_tree(db: Session = Depends(get_db)):
+def get_contribution_tree(
+    db: Session = Depends(get_db),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
     """Return curriculum hierarchy (units → chapters → lessons) with pending counts.
 
     Builds a tree of units → chapters → lessons. For each lesson, counts the
@@ -94,6 +101,12 @@ def get_contribution_tree(db: Session = Depends(get_db)):
     Pending counts aggregate upward: chapter pending_count = sum of its lessons'
     pending counts, unit pending_count = sum of its chapters' pending counts.
     """
+    # Check cache first (short TTL since pending counts change on approve/reject)
+    cache_key = "ksl:cache:contributions:tree"
+    cached = cache_get(rc, cache_key)
+    if cached is not None:
+        return cached
+
     # Get pending contribution counts grouped by lesson_id
     pending_counts_query = (
         select(
@@ -184,6 +197,9 @@ def get_contribution_tree(db: Session = Depends(get_db)):
         )
         tree.append(node)
 
+    # Cache the tree for 60 seconds
+    serialized = [n.model_dump(mode="json") for n in tree]
+    cache_set(rc, cache_key, serialized, ttl=60)
     return tree
 
 
@@ -265,6 +281,7 @@ def approve_contribution(
     contribution_id: UUID,
     db: Session = Depends(get_db),
     admin: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     """Set contribution status to approved with reviewer info."""
     contribution = (
@@ -299,6 +316,7 @@ def approve_contribution(
     db.commit()
     db.refresh(contribution)
 
+    cache_invalidate(rc, "ksl:cache:contributions:tree")
     return _build_contribution_detail(contribution)
 
 
@@ -308,6 +326,7 @@ def reject_contribution(
     body: RejectContributionRequest,
     db: Session = Depends(get_db),
     admin: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     """Set contribution status to rejected with rejection reason."""
     contribution = (
@@ -343,4 +362,5 @@ def reject_contribution(
     db.commit()
     db.refresh(contribution)
 
+    cache_invalidate(rc, "ksl:cache:contributions:tree")
     return _build_contribution_detail(contribution)

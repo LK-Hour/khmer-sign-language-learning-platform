@@ -19,7 +19,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+import redis as redis_lib
+
 from src.api.deps import get_admin_user, get_db
+from src.core.cache import cache_get, cache_invalidate_pattern, cache_set
+from src.core.redis import get_redis
 from src.models.user import User
 from src.schemas.admin.curriculum import (
     ChapterCreate,
@@ -50,6 +54,18 @@ def _found(result, entity: str):
     return result
 
 
+def _invalidate_curriculum_cache(rc: redis_lib.Redis, track: str) -> None:
+    """Invalidate all curriculum cache for a given track (admin + public)."""
+    # Admin cache
+    cache_invalidate_pattern(rc, f"ksl:cache:curriculum:{track}:*")
+    # Public learner cache (guest units/chapters/lessons)
+    prefix = "fs" if track == "finger" else "wd"
+    cache_invalidate_pattern(rc, f"ksl:cache:public:{prefix}:*")
+    # Public dictionary & letter caches (letters are linked to curriculum)
+    cache_invalidate_pattern(rc, "ksl:cache:public:dict:*")
+    cache_invalidate_pattern(rc, "ksl:cache:public:letter:*")
+
+
 # ── Units ────────────────────────────────────────────────────────────────────
 
 
@@ -61,8 +77,25 @@ def list_units(
     q: str | None = Query(None),
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _svc(track, db).list_units(active_only=active_only, status=publish_status, q=q)
+    # Cache only unfiltered requests (most common from admin panel)
+    cache_key = None
+    if not active_only and not publish_status and not q:
+        cache_key = f"ksl:cache:curriculum:{track}:units"
+        cached = cache_get(rc, cache_key)
+        if cached is not None:
+            return cached
+
+    result = _svc(track, db).list_units(active_only=active_only, status=publish_status, q=q)
+
+    if cache_key and result is not None:
+        # Serialize Pydantic models for cache
+        serialized = [UnitResponse.model_validate(r).model_dump(mode="json") for r in result]
+        cache_set(rc, cache_key, serialized, ttl=600)
+        return serialized
+
+    return result
 
 
 @router.post("/units", response_model=UnitResponse, status_code=status.HTTP_201_CREATED)
@@ -71,8 +104,11 @@ def create_unit(
     body: UnitCreate,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _svc(track, db).create_unit(body)
+    result = _svc(track, db).create_unit(body)
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.get("/units/{unit_id}", response_model=UnitResponse)
@@ -92,8 +128,11 @@ def update_unit(
     body: UnitUpdate,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).update_unit(unit_id, body), "Unit")
+    result = _found(_svc(track, db).update_unit(unit_id, body), "Unit")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.delete("/units/{unit_id}", response_model=UnitResponse)
@@ -102,8 +141,11 @@ def soft_delete_unit(
     unit_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).soft_delete_unit(unit_id), "Unit")
+    result = _found(_svc(track, db).soft_delete_unit(unit_id), "Unit")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.post("/units/{unit_id}/restore", response_model=UnitResponse)
@@ -112,8 +154,11 @@ def restore_unit(
     unit_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).restore_unit(unit_id), "Unit")
+    result = _found(_svc(track, db).restore_unit(unit_id), "Unit")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.post("/units/{unit_id}/publish", response_model=UnitResponse)
@@ -122,9 +167,12 @@ def publish_unit(
     unit_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     try:
-        return _found(_svc(track, db).publish_unit(unit_id, user.id), "Unit")
+        result = _found(_svc(track, db).publish_unit(unit_id, user.id), "Unit")
+        _invalidate_curriculum_cache(rc, track)
+        return result
     except ValueError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
@@ -141,10 +189,25 @@ def list_chapters(
     q: str | None = Query(None),
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _svc(track, db).list_chapters(
+    cache_key = None
+    if not active_only and not publish_status and not q:
+        cache_key = f"ksl:cache:curriculum:{track}:chapters:{unit_id or 'all'}"
+        cached = cache_get(rc, cache_key)
+        if cached is not None:
+            return cached
+
+    result = _svc(track, db).list_chapters(
         unit_id=unit_id, active_only=active_only, status=publish_status, q=q
     )
+
+    if cache_key and result is not None:
+        serialized = [ChapterResponse.model_validate(r).model_dump(mode="json") for r in result]
+        cache_set(rc, cache_key, serialized, ttl=600)
+        return serialized
+
+    return result
 
 
 @router.post("/chapters", response_model=ChapterResponse, status_code=status.HTTP_201_CREATED)
@@ -153,8 +216,11 @@ def create_chapter(
     body: ChapterCreate,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).create_chapter(body), "Parent unit")
+    result = _found(_svc(track, db).create_chapter(body), "Parent unit")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.get("/chapters/{chapter_id}", response_model=ChapterResponse)
@@ -174,8 +240,11 @@ def update_chapter(
     body: ChapterUpdate,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).update_chapter(chapter_id, body), "Chapter")
+    result = _found(_svc(track, db).update_chapter(chapter_id, body), "Chapter")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.delete("/chapters/{chapter_id}", response_model=ChapterResponse)
@@ -184,8 +253,11 @@ def soft_delete_chapter(
     chapter_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).soft_delete_chapter(chapter_id), "Chapter")
+    result = _found(_svc(track, db).soft_delete_chapter(chapter_id), "Chapter")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.post("/chapters/{chapter_id}/restore", response_model=ChapterResponse)
@@ -194,8 +266,11 @@ def restore_chapter(
     chapter_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).restore_chapter(chapter_id), "Chapter")
+    result = _found(_svc(track, db).restore_chapter(chapter_id), "Chapter")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.post("/chapters/{chapter_id}/publish", response_model=ChapterResponse)
@@ -204,9 +279,12 @@ def publish_chapter(
     chapter_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     try:
-        return _found(_svc(track, db).publish_chapter(chapter_id, user.id), "Chapter")
+        result = _found(_svc(track, db).publish_chapter(chapter_id, user.id), "Chapter")
+        _invalidate_curriculum_cache(rc, track)
+        return result
     except ValueError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
@@ -223,10 +301,25 @@ def list_lessons(
     q: str | None = Query(None),
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _svc(track, db).list_lessons(
+    cache_key = None
+    if not active_only and not publish_status and not q:
+        cache_key = f"ksl:cache:curriculum:{track}:lessons:{chapter_id or 'all'}"
+        cached = cache_get(rc, cache_key)
+        if cached is not None:
+            return cached
+
+    result = _svc(track, db).list_lessons(
         chapter_id=chapter_id, active_only=active_only, status=publish_status, q=q
     )
+
+    if cache_key and result is not None:
+        serialized = [LessonResponse.model_validate(r).model_dump(mode="json") for r in result]
+        cache_set(rc, cache_key, serialized, ttl=600)
+        return serialized
+
+    return result
 
 
 @router.post("/lessons", response_model=LessonResponse, status_code=status.HTTP_201_CREATED)
@@ -235,8 +328,11 @@ def create_lesson(
     body: LessonCreate,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).create_lesson(body), "Parent chapter")
+    result = _found(_svc(track, db).create_lesson(body), "Parent chapter")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.get("/lessons/{lesson_id}", response_model=LessonResponse)
@@ -256,8 +352,11 @@ def update_lesson(
     body: LessonUpdate,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).update_lesson(lesson_id, body), "Lesson")
+    result = _found(_svc(track, db).update_lesson(lesson_id, body), "Lesson")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.delete("/lessons/{lesson_id}", response_model=LessonResponse)
@@ -266,8 +365,11 @@ def soft_delete_lesson(
     lesson_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).soft_delete_lesson(lesson_id), "Lesson")
+    result = _found(_svc(track, db).soft_delete_lesson(lesson_id), "Lesson")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.post("/lessons/{lesson_id}/restore", response_model=LessonResponse)
@@ -276,8 +378,11 @@ def restore_lesson(
     lesson_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
-    return _found(_svc(track, db).restore_lesson(lesson_id), "Lesson")
+    result = _found(_svc(track, db).restore_lesson(lesson_id), "Lesson")
+    _invalidate_curriculum_cache(rc, track)
+    return result
 
 
 @router.post("/lessons/{lesson_id}/publish", response_model=LessonResponse)
@@ -286,8 +391,11 @@ def publish_lesson(
     lesson_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     try:
-        return _found(_svc(track, db).publish_lesson(lesson_id, user.id), "Lesson")
+        result = _found(_svc(track, db).publish_lesson(lesson_id, user.id), "Lesson")
+        _invalidate_curriculum_cache(rc, track)
+        return result
     except ValueError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc

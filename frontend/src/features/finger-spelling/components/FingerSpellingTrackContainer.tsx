@@ -3,7 +3,7 @@
 import { Alert } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
-import { fetchFsTrackUnits } from "../api/curriculum";
+import { fetchFsTree } from "../api/curriculum";
 import { useFingerSpellingStore } from "../store";
 import { useGuestProgressStore } from "../store/guestProgress.store";
 import { useAuthStore } from "@/store/auth.store";
@@ -41,7 +41,7 @@ export default function FingerSpellingTrackContainer() {
 
     let ignore = false;
 
-    void fetchFsTrackUnits()
+    void fetchFsTree()
       .then((freshUnits) => {
         if (!ignore) {
           setUnits(freshUnits);

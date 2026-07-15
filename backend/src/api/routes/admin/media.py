@@ -21,8 +21,12 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+import redis as redis_lib
+
 from src.api.deps import get_admin_user, get_db
+from src.core.cache import cache_invalidate, cache_invalidate_pattern
 from src.core.config import settings
+from src.core.redis import get_redis
 from src.models.finger_spelling import FingerLetter, FingerLetterMedia
 from src.models.media import Media, MediaType
 from src.models.user import User
@@ -38,6 +42,23 @@ router = APIRouter(
     prefix="/api/admin/media",
     tags=["admin-media"],
 )
+
+
+def _invalidate_media_related_cache(rc: redis_lib.Redis) -> None:
+    """Invalidate public caches that embed media info (dictionary, letters,
+    and the finger-spelling / word-detection curriculum trees).
+
+    Media associations affect media_count / medias lists returned by the
+    public dictionary and letter-lookup endpoints, as well as the
+    image_url / video_url fields embedded in the cached finger-spelling and
+    word-detection tree structures, so any delete, associate, or
+    disassociate action must bust all of those caches.
+    """
+    cache_invalidate_pattern(rc, "ksl:cache:public:dict:*")
+    cache_invalidate_pattern(rc, "ksl:cache:public:letter:*")
+    cache_invalidate_pattern(rc, "ksl:cache:dict:*")
+    cache_invalidate(rc, "ksl:cache:public:fs:tree:structure")
+    cache_invalidate(rc, "ksl:cache:public:wd:tree:structure")
 
 # Allowed MIME types for media upload
 ALLOWED_MIME_TYPES = {
@@ -245,6 +266,7 @@ def delete_media(
     media_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     """Delete media record and associated file from disk."""
     media = db.get(Media, media_id)
@@ -279,6 +301,8 @@ def delete_media(
     db.delete(media)
     db.commit()
 
+    _invalidate_media_related_cache(rc)
+
 
 @router.post("/{media_id}/associate", response_model=MediaResponse)
 def associate_media(
@@ -286,6 +310,7 @@ def associate_media(
     body: AssociateMediaRequest,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     """Link media to a letter or word.
 
@@ -353,6 +378,7 @@ def associate_media(
         db.add(link)
 
     db.commit()
+    _invalidate_media_related_cache(rc)
 
     # Return updated media with associations
     associations = _get_associations(db, media.id)
@@ -371,6 +397,7 @@ def disassociate_media(
     body: AssociateMediaRequest,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
 ):
     """Unlink media from a letter or word.
 
@@ -417,6 +444,7 @@ def disassociate_media(
         db.delete(link)
 
     db.commit()
+    _invalidate_media_related_cache(rc)
 
     # Return updated media with remaining associations
     associations = _get_associations(db, media.id)

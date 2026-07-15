@@ -3,7 +3,7 @@
 import { Alert } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
-import { fetchWdTrackUnits } from "../api/curriculum";
+import { fetchWdTree } from "../api/curriculum";
 import { useWordDetectionStore } from "../store";
 import { useAuthStore } from "@/store/auth.store";
 import WordDetectionPageLoading from "./WordDetectionPageLoading";
@@ -38,7 +38,7 @@ export default function WordDetectionTrackContainer() {
 
     let ignore = false;
 
-    void fetchWdTrackUnits()
+    void fetchWdTree()
       .then((freshUnits) => {
         if (!ignore) {
           setUnits(freshUnits);
