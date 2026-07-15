@@ -21,12 +21,34 @@ function normalizeLabel(label: string | null | undefined): string | null {
   return normalized;
 }
 
+// Letters that are visually/gesturally indistinguishable by the hand-keypoint
+// model, so the model can only ever output one canonical label for the
+// group. Mirrors `LETTER_MATCH_ALIASES` in
+// backend/src/ml/letter_handshape_aliases.py — keep both in sync.
+//
+// ឣ (independent vowel, deprecated code point) has the same hand shape as
+// អ (main consonant); the model only ever predicts "អ". Without this
+// alias, a lesson targeting ឣ could never be marked correct.
+const LETTER_MATCH_ALIASES: Record<string, string> = {
+  "ឣ": "អ",
+};
+
+/**
+ * Resolve a normalized label to the canonical label used for comparison.
+ * Only used for the match check, never for the value shown back to the
+ * user, so the UI still displays the letter the lesson actually asked for.
+ */
+function resolveMatchAlias(label: string | null): string | null {
+  if (label === null) return null;
+  return LETTER_MATCH_ALIASES[label] ?? label;
+}
+
 export function labelsMatch(
   predictedLabel: string | null | undefined,
   targetLabel: string | null | undefined,
 ): boolean {
-  const predicted = normalizeLabel(predictedLabel);
-  const target = normalizeLabel(targetLabel);
+  const predicted = resolveMatchAlias(normalizeLabel(predictedLabel));
+  const target = resolveMatchAlias(normalizeLabel(targetLabel));
   return !!predicted && !!target && predicted === target;
 }
 

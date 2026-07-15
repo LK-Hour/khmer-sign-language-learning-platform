@@ -11,6 +11,7 @@ import h5py
 import numpy as np
 
 from src.core.config import settings
+from src.ml.letter_handshape_aliases import CANONICAL_LABEL_EXTRA_CATEGORIES
 
 MAIN_CONSONANT_LABELS = [
     "ក", "ខ", "គ", "ឃ", "ង", "ច", "ឆ", "ជ", "ឈ", "ញ", "ដ", "ឋ", "ឌ", "ឍ", "ណ", "ត",
@@ -312,7 +313,12 @@ class KhmerHandPredictor:
         """Zero out probabilities for labels not in *category* and re‑normalise.
 
         The ``None`` / ``No Action`` category is always kept so the model can
-        express "nothing detected".
+        express "nothing detected". A label is also kept if it is the
+        canonical model class for an alias letter that belongs to
+        *category* (see ``letter_handshape_aliases``), so a lesson for that
+        alias letter can still receive its canonical prediction even though
+        the label's own category (e.g. "Main Consonants") differs from the
+        lesson's category (e.g. "Independent Vowels").
         """
         allowed_categories = CATEGORY_ALIASES.get(category, {category})
         label_category_map = self._label_decoder.label_category_map()
@@ -320,10 +326,12 @@ class KhmerHandPredictor:
         for i, (display_label, label_category) in enumerate(label_category_map.items()):
             output_idx = i + self.CLASS_INDEX_OFFSET
             if 0 <= output_idx < len(probabilities):
+                extra_categories = CANONICAL_LABEL_EXTRA_CATEGORIES.get(display_label, set())
                 if (
                     label_category in allowed_categories
                     or label_category == "None"
                     or display_label == "No Action"
+                    or extra_categories & allowed_categories
                 ):
                     masked[output_idx] = probabilities[output_idx]
 
