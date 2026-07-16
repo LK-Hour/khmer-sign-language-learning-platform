@@ -10,10 +10,10 @@ from src.models.user import User
 class TestAuthAPI:
     """Test authentication endpoints"""
     
-    def test_login_success(self, client, test_user_data):
+    def test_login_success(self, client, test_user_data, seed_user):
         """Test successful login"""
         # Register user first
-        client.post("/api/users/", json=test_user_data)
+        seed_user(test_user_data)
         
         # Login
         login_data = {
@@ -30,8 +30,8 @@ class TestAuthAPI:
         assert "refresh_token" not in data
         assert "refresh_token=" in response.headers.get("set-cookie", "")
 
-    def test_refresh_rotates_token_and_logout_revokes(self, client, db, test_user_data):
-        client.post("/api/users/", json=test_user_data)
+    def test_refresh_rotates_token_and_logout_revokes(self, client, db, test_user_data, seed_user):
+        seed_user(test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
@@ -63,7 +63,7 @@ class TestAuthAPI:
         assert logout_response.status_code == 200
         assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 0
 
-    def test_refresh_reuse_detection_revokes_all_tokens(self, client, db, test_user_data):
+    def test_refresh_reuse_detection_revokes_all_tokens(self, client, db, test_user_data, seed_user):
         """Reuse outside the grace period revokes all sessions.
 
         Within the 10-second grace window a reused token is tolerated (race
@@ -72,7 +72,7 @@ class TestAuthAPI:
         """
         from unittest.mock import patch
 
-        client.post("/api/users/", json=test_user_data)
+        seed_user(test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
@@ -97,9 +97,9 @@ class TestAuthAPI:
         assert reuse_response.status_code == 401
         assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() == 0
 
-    def test_refresh_reuse_within_grace_period_is_tolerated(self, client, db, test_user_data):
+    def test_refresh_reuse_within_grace_period_is_tolerated(self, client, db, test_user_data, seed_user):
         """Reuse within the grace period (race condition) returns 200 instead of revoking."""
-        client.post("/api/users/", json=test_user_data)
+        seed_user(test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},
@@ -125,8 +125,8 @@ class TestAuthAPI:
         # At least one non-revoked token remains
         assert user_tokens.filter(RefreshToken.revoked.is_(False)).count() >= 1
 
-    def test_admin_remember_me_uses_three_day_refresh_lifetime(self, client, db, test_admin_data):
-        client.post("/api/users/", json=test_admin_data)
+    def test_admin_remember_me_uses_three_day_refresh_lifetime(self, client, db, test_admin_data, seed_user):
+        seed_user(test_admin_data)
         response = client.post(
             "/api/auth/login/email",
             json={
@@ -141,10 +141,10 @@ class TestAuthAPI:
         token = db.query(RefreshToken).filter(RefreshToken.user_id == user.id).one()
         assert token.lifetime_days == 3
     
-    def test_login_invalid_credentials(self, client, test_user_data):
+    def test_login_invalid_credentials(self, client, test_user_data, seed_user):
         """Test login with invalid credentials"""
         # Register user first
-        client.post("/api/users/", json=test_user_data)
+        seed_user(test_user_data)
         
         # Try wrong password
         login_data = {
@@ -196,10 +196,10 @@ class TestAuthAPI:
         response = client.get("/api/auth/login/me")
         assert response.status_code == 401
     
-    def test_token_expiry_simulation(self, client, test_user_data):
+    def test_token_expiry_simulation(self, client, test_user_data, seed_user):
         """Test token expiry behavior (simulated)"""
         # Register and login
-        client.post("/api/users/", json=test_user_data)
+        seed_user(test_user_data)
         
         login_data = {
             "email": test_user_data["email"],
@@ -216,8 +216,8 @@ class TestAuthAPI:
         # Note: Actual token expiry testing would require mocking JWT expiry
         # This test just verifies the token works initially
 
-    def test_import_guest_progress_merges_and_validates_lessons(self, client, db, test_user_data):
-        client.post("/api/users/", json=test_user_data)
+    def test_import_guest_progress_merges_and_validates_lessons(self, client, db, test_user_data, seed_user):
+        seed_user(test_user_data)
         login_response = client.post(
             "/api/auth/login/email",
             json={"email": test_user_data["email"], "password": test_user_data["password"]},

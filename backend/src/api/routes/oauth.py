@@ -4,22 +4,29 @@ Handles authentication endpoints for Google, Facebook, and Telegram
 """
 
 import json
+import secrets
 import uuid
+from datetime import datetime, timezone
 from urllib.parse import urlencode, urlparse
 
+import redis as redis_lib
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db
 from src.api.deps import get_current_user
 from src.core.config import settings
+from src.core.rate_limit import auth_rate_limiter
+from src.core.redis import get_redis
 from src.schemas.oauth import OAuthLoginRequest, AuthTokenResponse, EmailLoginRequest
 from src.schemas.user import UserResponse
 from src.services.google_oauth_service import google_oauth_service
 from src.services.facebook_oauth_service import facebook_oauth_service
 from src.services.telegram_oauth_service import telegram_oauth_service
 from src.services.oauth_user_service import find_or_create_oauth_user, migrate_guest_progress_to_user
+from src.services.user_service import UserService
 from src.models.user import User
 from src.utils.cookies import set_refresh_cookie
 from src.utils.jwt_utils import create_access_token, verify_token
@@ -29,6 +36,43 @@ from src.utils.refresh_tokens import create_refresh_token
 router = APIRouter(prefix="/api/auth/login", tags=["auth"])
 FRONTEND_URL = settings.frontend_url
 TELEGRAM_REDIRECT_PARAM = "redirect_to"
+
+# Short-lived, single-use exchange codes for the Telegram widget redirect flow.
+# Avoids putting the real access token in the URL (browser history, referrer
+# headers, server logs, etc). The code is opaque and expires quickly; the
+# frontend immediately exchanges it for the real token via POST.
+_TELEGRAM_EXCHANGE_PREFIX = "ksl:auth:telegram_exchange:"
+_TELEGRAM_EXCHANGE_TTL_SECONDS = 60
+
+
+class TelegramExchangeRequest(BaseModel):
+    code: str
+
+
+def _store_telegram_exchange_code(
+    rc: redis_lib.Redis, *, access_token: str, user: dict
+) -> str:
+    code = secrets.token_urlsafe(32)
+    payload = json.dumps({"access_token": access_token, "user": user})
+    rc.set(
+        f"{_TELEGRAM_EXCHANGE_PREFIX}{code}",
+        payload,
+        ex=_TELEGRAM_EXCHANGE_TTL_SECONDS,
+    )
+    return code
+
+
+def _consume_telegram_exchange_code(rc: redis_lib.Redis, code: str) -> dict | None:
+    """Fetch and immediately delete the exchange payload (single use)."""
+    key = f"{_TELEGRAM_EXCHANGE_PREFIX}{code}"
+    raw = rc.get(key)
+    if raw is None:
+        return None
+    rc.delete(key)
+    try:
+        return json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return None
 
 
 def _user_response(user) -> dict:
@@ -42,6 +86,8 @@ def _user_response(user) -> dict:
         "first_name": name_parts[0],
         "last_name": name_parts[1] if len(name_parts) > 1 else None,
         "picture": user.avatar_url,
+        "account_type": user.account_type,
+        "is_guest": user.is_guest,
     }
 
 
@@ -105,6 +151,7 @@ def _auth_response_for_user(
     request: Request,
     refresh_days: int | None = None,
 ) -> AuthTokenResponse:
+    user.last_login_at = datetime.now(timezone.utc)
     access_token = create_access_token(data={"sub": str(user.id), "provider": provider})
     refresh_token = create_refresh_token(
         db,
@@ -119,11 +166,17 @@ def _auth_response_for_user(
 
 
 @router.get("/telegram")
-def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
+def telegram_widget_redirect(
+    request: Request,
+    db: Session = Depends(get_db),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
     """
     Telegram Login Widget redirect endpoint.
     Telegram sends user data as query params with HMAC hash.
-    We verify, create/find user, mint JWT, and redirect to frontend.
+    We verify, create/find user, mint JWT, and redirect to frontend with a
+    short-lived one-time exchange code (never the raw access token) — the
+    frontend immediately exchanges it via POST /api/auth/login/telegram/exchange.
     """
     redirect_url = _telegram_redirect_url(request)
 
@@ -146,6 +199,7 @@ def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
             picture=user_info["picture"],
         )
 
+        user.last_login_at = datetime.now(timezone.utc)
         access_token = create_access_token(data={"sub": str(user.id), "provider": "telegram"})
         refresh_token = create_refresh_token(
             db,
@@ -155,10 +209,13 @@ def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
         )
         db.commit()
 
+        exchange_code = _store_telegram_exchange_code(
+            rc, access_token=access_token, user=_user_response(user)
+        )
+
         redirect_params = {
-            "token": access_token,
+            "exchange_code": exchange_code,
             "provider": "telegram",
-            "user": json.dumps(_user_response(user)),
         }
         response = _redirect_with_params(redirect_url, redirect_params)
         set_refresh_cookie(response, refresh_token, settings)
@@ -167,6 +224,28 @@ def telegram_widget_redirect(request: Request, db: Session = Depends(get_db)):
         return _redirect_with_params(redirect_url, {"error": str(e)})
     except Exception as e:
         return _redirect_with_params(redirect_url, {"error": f"Telegram login failed: {e}"})
+
+
+@router.post("/telegram/exchange", response_model=AuthTokenResponse)
+def telegram_exchange(
+    body: TelegramExchangeRequest,
+    rc: redis_lib.Redis = Depends(get_redis),
+):
+    """
+    Exchange a short-lived, single-use code (from the widget redirect) for the
+    real access token. Keeps the access token out of the URL/browser history.
+    """
+    payload = _consume_telegram_exchange_code(rc, body.code)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired exchange code",
+        )
+    return AuthTokenResponse(
+        access_token=payload["access_token"],
+        token_type="bearer",
+        user=payload["user"],
+    )
 
 
 @router.post("/google", response_model=AuthTokenResponse)
@@ -304,17 +383,8 @@ def telegram_login(
 @router.post("/guest", response_model=AuthTokenResponse)
 def guest_login(db: Session = Depends(get_db)):
     """Create a guest user and return JWT. Persisted in database."""
-    guest_id = str(uuid.uuid4())[:8]
-    user = User(
-        username=f"guest_{guest_id}",
-        display_name=f"Guest {guest_id}",
-        account_type="student",
-        auth_provider="guest",
-        is_guest=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    svc = UserService(db)
+    user = svc.create_guest()
 
     access_token = create_access_token(
         data={"sub": str(user.id), "provider": "guest"}
@@ -322,7 +392,7 @@ def guest_login(db: Session = Depends(get_db)):
     return AuthTokenResponse(access_token=access_token, token_type="bearer", user=_user_response(user))
 
 
-@router.post("/email", response_model=AuthTokenResponse)
+@router.post("/email", response_model=AuthTokenResponse, dependencies=[Depends(auth_rate_limiter)])
 def email_login(
     body: EmailLoginRequest,
     response: Response,
@@ -330,11 +400,8 @@ def email_login(
     db: Session = Depends(get_db),
 ):
     """Email/password login. Body: {"email": "...", "password": "..."}"""
-    user = (
-        db.query(User)
-        .filter(User.email == body.email, User.is_active.is_(True))
-        .first()
-    )
+    svc = UserService(db)
+    user = svc.get_by_email(body.email, active_only=True)
     if not user or not user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

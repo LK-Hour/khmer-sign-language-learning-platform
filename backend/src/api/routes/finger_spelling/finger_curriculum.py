@@ -55,10 +55,18 @@ def get_full_tree(
         for unit in curriculum.list_units():
             chapters_data = []
             for chapter in (curriculum.list_chapters_for_unit(unit.id) or []):
+                lessons = curriculum.list_lessons_for_chapter(chapter.id) or []
+                lesson_ids = [lesson.id for lesson in lessons]
+                # Batch-fetch primary letters and their medias for all lessons
+                # in this chapter (2 queries total instead of 2*N).
+                letters_by_lesson = curriculum.curriculum.get_primary_letters_for_lessons(lesson_ids)
+                letter_ids = [letter.id for letter in letters_by_lesson.values()]
+                medias_by_letter = curriculum.curriculum.list_medias_for_letters(letter_ids)
+
                 lessons_data = []
-                for lesson in (curriculum.list_lessons_for_chapter(chapter.id) or []):
-                    letter = curriculum.curriculum.get_primary_letter_for_lesson(lesson.id)
-                    medias = curriculum.curriculum.list_medias_for_letter(letter.id) if letter else []
+                for lesson in lessons:
+                    letter = letters_by_lesson.get(lesson.id)
+                    medias = medias_by_letter.get(letter.id, []) if letter else []
                     lessons_data.append({
                         "id": lesson.id,
                         "chapter_id": chapter.id,
@@ -363,10 +371,18 @@ def list_lessons(
 
     user_id = user.id if user else None
     progress = FingerProgressService(db)
+
+    # Batch-fetch primary letters and their medias for all lessons in this
+    # chapter (2 queries total instead of 2*N).
+    lesson_ids = [lesson.id for lesson in lessons]
+    letters_by_lesson = curriculum.curriculum.get_primary_letters_for_lessons(lesson_ids)
+    letter_ids = [letter.id for letter in letters_by_lesson.values()]
+    medias_by_letter = curriculum.curriculum.list_medias_for_letters(letter_ids)
+
     result: list[FsLessonResponse] = []
     for lesson in lessons:
-        letter = curriculum.curriculum.get_primary_letter_for_lesson(lesson.id)
-        medias = curriculum.curriculum.list_medias_for_letter(letter.id) if letter else []
+        letter = letters_by_lesson.get(lesson.id)
+        medias = medias_by_letter.get(letter.id, []) if letter else []
         result.append(
             to_fs_lesson(
                 lesson=lesson,

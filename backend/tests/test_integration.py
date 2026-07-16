@@ -71,10 +71,9 @@ def _create_admin_curriculum(client, headers):
 class TestIntegration:
     """Integration tests for complete user workflows."""
 
-    def test_complete_user_workflow(self, client, test_user_data, test_admin_data):
-        register_response = client.post("/api/users/", json=test_user_data)
-        assert register_response.status_code == 201
-        user_id = register_response.json()["id"]
+    def test_complete_user_workflow(self, client, test_user_data, test_admin_data, seed_user):
+        user = seed_user(test_user_data)
+        user_id = str(user.id)
 
         token = _auth_token(client, test_user_data)
         headers = {"Authorization": f"Bearer {token}"}
@@ -83,7 +82,7 @@ class TestIntegration:
         assert me_response.status_code == 200
         assert me_response.json()["email"] == test_user_data["email"]
 
-        client.post("/api/users/", json=test_admin_data)
+        seed_user(test_admin_data)
         admin_token = _auth_token(client, test_admin_data)
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
         unit, chapter, lesson = _create_admin_curriculum(client, admin_headers)
@@ -109,14 +108,13 @@ class TestIntegration:
         assert delete_response.status_code == 200
         assert delete_response.json()["is_active"] is False
 
-    def test_admin_user_management_workflow(self, client, test_user_data, test_admin_data):
-        admin_register = client.post("/api/users/", json=test_admin_data)
-        assert admin_register.status_code == 201
+    def test_admin_user_management_workflow(self, client, test_user_data, test_admin_data, seed_user):
+        seed_user(test_admin_data)
         admin_token = _auth_token(client, test_admin_data)
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-        user_register = client.post("/api/users/", json=test_user_data)
-        user_id = user_register.json()["id"]
+        user = seed_user(test_user_data)
+        user_id = str(user.id)
 
         users_response = client.get("/api/users/", headers=admin_headers)
         assert users_response.status_code == 200
@@ -131,8 +129,8 @@ class TestIntegration:
         assert delete_response.status_code == 200
         assert delete_response.json()["is_active"] is False
 
-    def test_finger_spelling_workflow(self, client, test_admin_data):
-        client.post("/api/users/", json=test_admin_data)
+    def test_finger_spelling_workflow(self, client, test_admin_data, seed_user):
+        seed_user(test_admin_data)
         admin_headers = {"Authorization": f"Bearer {_auth_token(client, test_admin_data)}"}
 
         unit, chapter, lesson = _create_admin_curriculum(client, admin_headers)
@@ -153,14 +151,13 @@ class TestIntegration:
         assert exercises_response.status_code == 200
         assert isinstance(exercises_response.json(), list)
 
-    def test_error_handling_workflow(self, client, test_user_data):
+    def test_error_handling_workflow(self, client, test_user_data, seed_user):
         invalid_headers = {"Authorization": "Bearer invalid_token"}
 
         response = client.get("/api/auth/login/me", headers=invalid_headers)
         assert response.status_code == 401
 
-        register_response = client.post("/api/users/", json=test_user_data)
-        assert register_response.status_code == 201
+        seed_user(test_user_data)
 
         login_response = client.post(
             "/api/auth/login/email",

@@ -297,6 +297,7 @@ class FingerUserLessonProgress(Base):
     is_completed: Mapped[bool] = mapped_column(Boolean, server_default="false")
     is_locked: Mapped[bool] = mapped_column(Boolean, server_default="true")
     attempts: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    predicted_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     last_practiced_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
@@ -310,6 +311,7 @@ class FingerUserLessonProgress(Base):
         UniqueConstraint("user_id", "finger_lesson_id", name="uq_finger_user_lesson_progress_user_lesson"),
         Index("ix_finger_user_lesson_progress_user_id", "user_id"),
         Index("ix_finger_user_lesson_progress_lesson_id", "finger_lesson_id"),
+        Index("ix_finger_user_lesson_progress_completed", "is_completed", "completed_at"),
     )
 
 
@@ -463,6 +465,7 @@ class FingerExerciseAttempt(Base):
     __table_args__ = (
         Index("ix_finger_exercise_attempts_user_id", "user_id"),
         Index("ix_finger_exercise_attempts_unit_id", "unit_id"),
+        Index("ix_finger_exercise_attempts_started_at", "started_at"),
     )
 
 

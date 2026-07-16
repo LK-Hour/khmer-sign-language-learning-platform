@@ -48,8 +48,23 @@ class BaseCrudRepository(Generic[ModelT]):
         self.db.flush()
         return obj
 
-    def update(self, obj: ModelT, data: dict[str, Any]) -> ModelT:
+    def update(
+        self,
+        obj: ModelT,
+        data: dict[str, Any],
+        *,
+        updatable_fields: set[str] | None = None,
+    ) -> ModelT:
+        """Apply ``data`` onto ``obj``.
+
+        If ``updatable_fields`` is given, only keys in that set are applied —
+        anything else is silently dropped. This guards against accidental
+        mass-assignment if a caller ever passes an unvalidated dict (e.g. raw
+        request JSON instead of a Pydantic-validated payload).
+        """
         for key, value in data.items():
+            if updatable_fields is not None and key not in updatable_fields:
+                continue
             setattr(obj, key, value)
         self.db.flush()
         return obj

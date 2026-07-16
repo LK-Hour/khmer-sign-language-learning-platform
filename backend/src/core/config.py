@@ -29,19 +29,11 @@ class Settings(BaseSettings):
     app_title: str = "Khmer Sign Language Platform"
     environment: str = Field(default="development", validation_alias="APP_ENV")
     frontend_url: str = "http://localhost:3000"
-    allowed_origins: list[str] = Field(
-        default_factory=lambda: [
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-            "http://localhost:8000",
-            "https://delicious-folk-recount.ngrok-free.dev",
-            "https://khmersignlanguage.share.zrok.io",
-        ]
-    )
+    allowed_origins: str | list[str] = Field(default="")
     database_url: str = "postgresql://admin:admin@localhost:5432/khmer_sign_db"
     database_timezone: str = "Asia/Phnom_Penh"
     redis_url: str = Field(default="redis://localhost:6379/0", validation_alias="REDIS_URL")
-    jwt_secret_key: str = "dev-only-insecure-change-me"
+    jwt_secret_key: str = Field(default="")
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = Field(default=7, validation_alias="REFRESH_TOKEN_EXPIRE_DAYS")
@@ -90,10 +82,12 @@ class Settings(BaseSettings):
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
-    def parse_allowed_origins(cls, value: object) -> object:
+    def parse_allowed_origins(cls, value: object) -> list[str]:
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
-        return value
+        if isinstance(value, list):
+            return value
+        return []
 
     @field_validator(
         "ml_model_path",
@@ -113,13 +107,23 @@ class Settings(BaseSettings):
         return path.resolve()
 
     def validate_runtime_security(self) -> None:
-        if self.environment.lower() in {"production", "prod"} and (
-            not self.jwt_secret_key
-            or self.jwt_secret_key == "dev-only-insecure-change-me"
-        ):
-            raise RuntimeError("JWT_SECRET_KEY must be configured in production")
+        """Validate security-critical settings at startup."""
+        is_prod = self.environment.lower() in {"production", "prod"}
 
-
+        if is_prod:
+            if len(self.jwt_secret_key) < 32:
+                raise RuntimeError(
+                    "JWT_SECRET_KEY must be at least 32 characters in production."
+                )
+            if self.cookie_samesite.lower() == "none" and not self.cookie_secure:
+                raise RuntimeError(
+                    "COOKIE_SECURE must be True when COOKIE_SAMESITE is 'none'. "
+                    "Browsers reject SameSite=None cookies without the Secure flag."
+                )
+            if not self.allowed_origins:
+                raise RuntimeError(
+                    "ALLOWED_ORIGINS must be set in production."
+                )
 @lru_cache
 def get_settings() -> Settings:
     settings = Settings()

@@ -39,6 +39,7 @@ class FingerProgressService:
         *,
         accuracy: float | None = None,
         passed: bool = False,
+        predicted_confidence: float | None = None,
     ) -> FingerUserLessonProgress | None:
         progress = self.progress.get_or_create_lesson_progress(user_id, lesson_id)
         self.update_last_practice_progress(progress)
@@ -49,6 +50,15 @@ class FingerProgressService:
             progress.is_completed = True
             if progress.completed_at is None:
                 progress.completed_at = progress.last_practiced_at
+
+            # Write predicted_confidence only when completing
+            if predicted_confidence is not None:
+                if progress.predicted_confidence is None:
+                    progress.predicted_confidence = predicted_confidence
+                else:
+                    progress.predicted_confidence = (
+                        progress.predicted_confidence + predicted_confidence
+                    ) / 2
 
         self.db.commit()
         self.db.refresh(progress)
@@ -62,12 +72,14 @@ class FingerProgressService:
         lesson_id: int,
         *,
         accuracy: float | None = None,
+        predicted_confidence: float | None = None,
     ) -> FingerUserLessonProgress | None:
         return self.record_practice_attempt(
             user_id,
             lesson_id,
             accuracy=accuracy,
             passed=True,
+            predicted_confidence=predicted_confidence,
         )
 
     def is_lesson_locked_by_id(

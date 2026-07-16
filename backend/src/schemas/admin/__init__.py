@@ -1,10 +1,17 @@
 """Admin content-management schemas (shared across learning tracks)."""
 
 from .analytics import (
+    DashboardAnalyticsResponse,
+    FeedbackDistribution,
+    KpiValue,
     LeaderboardEntry,
+    LearningProgressDonut,
     LessonDifficultyEntry,
+    LessonRankEntry,
+    MonthlyActiveUsers,
     OverviewStats,
     TrackCompletionStats,
+    TrackProgress,
 )
 from .curriculum import (
     ChapterCreate,
@@ -27,10 +34,17 @@ from .exercise import (
 )
 
 __all__ = [
+    "DashboardAnalyticsResponse",
+    "FeedbackDistribution",
+    "KpiValue",
     "LeaderboardEntry",
+    "LearningProgressDonut",
     "LessonDifficultyEntry",
+    "LessonRankEntry",
+    "MonthlyActiveUsers",
     "OverviewStats",
     "TrackCompletionStats",
+    "TrackProgress",
     "UnitCreate",
     "UnitUpdate",
     "UnitResponse",

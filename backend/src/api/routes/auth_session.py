@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_current_user, get_db
+from src.api.routes.oauth import _user_response
 from src.core.config import settings
 from src.core.rate_limit import auth_rate_limiter
 from src.models.user import User
@@ -68,6 +69,7 @@ def refresh_access_token(
             old_record.revoked = True
             logger.warning("REFRESH 401: Inactive user (user_id=%s)", old_record.user_id)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive user")
+        user.last_login_at = datetime.now(timezone.utc)
         old_record.revoked = True
         new_refresh_token = create_refresh_token(
             db,
@@ -79,7 +81,16 @@ def refresh_access_token(
         access_token = create_access_token(data={"sub": str(user.id), "provider": user.auth_provider})
         set_refresh_cookie(response, new_refresh_token, settings, max_age_days=old_record.lifetime_days)
         db.commit()
-        return AccessTokenResponse(access_token=access_token, token_type="bearer")
+
+        # Return user data so the frontend can update cached role/profile.
+        # Uses the same shape as the OAuth login responses (account_type,
+        # is_guest, etc.) so the frontend doesn't get stale/missing fields
+        # after a token refresh.
+        return AccessTokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user=_user_response(user),
+        )
     except HTTPException as exc:
         logger.warning("REFRESH 401: %s", exc.detail)
         db.commit()

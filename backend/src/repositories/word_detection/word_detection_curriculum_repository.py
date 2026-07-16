@@ -225,6 +225,25 @@ class WordDetectionCurriculumRepository:
         )
         return list(self.db.scalars(stmt).all())
 
+    def list_medias_for_words(self, word_ids: list[int]) -> dict[int, list[Media]]:
+        """Batch version of ``list_medias_for_word`` — one query instead of N.
+
+        Returns a dict keyed by word_id so callers building a tree can look
+        up each word's medias without an extra round-trip per word.
+        """
+        if not word_ids:
+            return {}
+        stmt = (
+            select(WordDetectionWordMedia.word_id, Media)
+            .join(Media, WordDetectionWordMedia.media_id == Media.id)
+            .where(WordDetectionWordMedia.word_id.in_(word_ids))
+            .order_by(WordDetectionWordMedia.word_id, WordDetectionWordMedia.id)
+        )
+        result: dict[int, list[Media]] = {word_id: [] for word_id in word_ids}
+        for word_id, media in self.db.execute(stmt).all():
+            result[word_id].append(media)
+        return result
+
     def get_primary_word_for_lesson(
         self, lesson_id: int, *, active_only: bool = True
     ) -> WordDetectionWord | None:
@@ -233,6 +252,29 @@ class WordDetectionCurriculumRepository:
         if not rows:
             return None
         return rows[0][1]
+
+    def get_primary_words_for_lessons(
+        self, lesson_ids: list[int], *, active_only: bool = True
+    ) -> dict[int, WordDetectionWord]:
+        """Batch version of ``get_primary_word_for_lesson`` — one query
+        instead of N. Returns a dict keyed by lesson_id (lessons with no
+        linked word are simply absent from the result)."""
+        if not lesson_ids:
+            return {}
+        stmt = (
+            select(WordDetectionLessonWord, WordDetectionWord)
+            .join(WordDetectionWord, WordDetectionLessonWord.word_id == WordDetectionWord.id)
+            .where(WordDetectionLessonWord.lesson_id.in_(lesson_ids))
+            .order_by(WordDetectionLessonWord.lesson_id, WordDetectionLessonWord.order_index)
+        )
+        if active_only:
+            stmt = stmt.where(WordDetectionWord.is_active.is_(True))
+        result: dict[int, WordDetectionWord] = {}
+        for junction, word in self.db.execute(stmt).all():
+            # First row per lesson_id wins (ordered by order_index above),
+            # matching get_primary_word_for_lesson's "first word" semantics.
+            result.setdefault(junction.lesson_id, word)
+        return result
 
     def get_word_by_kh(
         self, word_kh: str, *, active_only: bool = True

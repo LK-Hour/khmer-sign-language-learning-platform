@@ -16,7 +16,9 @@ class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     lifetime_days: Mapped[int] = mapped_column(Integer, nullable=False, default=7, server_default="7")
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -31,4 +33,5 @@ class RefreshToken(Base):
     __table_args__ = (
         Index("ix_refresh_tokens_token_hash", "token_hash"),
         Index("ix_refresh_tokens_user_id", "user_id"),
+        Index("ix_refresh_tokens_revoked_expires", "revoked", "expires_at"),
     )

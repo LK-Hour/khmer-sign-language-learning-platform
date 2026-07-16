@@ -1,9 +1,10 @@
 """Admin analytics routes.
 
 Provides aggregate reporting endpoints for the admin analytics dashboard:
-overview statistics, per-track completion rates, top learner leaderboard,
-and per-lesson difficulty metrics.
+unified dashboard data, overview statistics, per-track completion rates,
+top learner leaderboard, and per-lesson difficulty metrics.
 
+    /api/admin/analytics                     GET  (unified dashboard)
     /api/admin/analytics/overview            GET
     /api/admin/analytics/track-completion    GET
     /api/admin/analytics/leaderboard         GET
@@ -29,16 +30,28 @@ from src.models.word_detection import (
     WordDetectionUserLessonProgress,
 )
 from src.schemas.admin.analytics import (
+    DashboardAnalyticsResponse,
     LeaderboardEntry,
     LessonDifficultyEntry,
     OverviewStats,
     TrackCompletionStats,
 )
+from src.services.admin.analytics_service import AnalyticsService
 
 router = APIRouter(
     prefix="/api/admin/analytics",
     tags=["admin-analytics"],
 )
+
+
+@router.get("", response_model=DashboardAnalyticsResponse)
+def get_dashboard_analytics(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Unified analytics endpoint for the admin dashboard."""
+    service = AnalyticsService(db)
+    return service.get_dashboard_data()
 
 
 @router.get("/overview", response_model=OverviewStats)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 import uuid
 
 from src.models.media import Media
@@ -18,8 +19,9 @@ _PLACEHOLDER_VIDEO = "/word-detection/placeholder-sign.svg"
 
 
 def video_url(medias: list[Media]) -> str:
+    """Return a random video URL from the available medias for variety."""
     if medias:
-        return medias[0].file_url
+        return random.choice(medias).file_url
     return _PLACEHOLDER_VIDEO
 
 

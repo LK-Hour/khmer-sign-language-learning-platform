@@ -196,6 +196,25 @@ class FingerCurriculumRepository:
         )
         return list(self.db.scalars(stmt).all())
 
+    def list_medias_for_letters(self, letter_ids: list[int]) -> dict[int, list[Media]]:
+        """Batch version of ``list_medias_for_letter`` — one query instead of N.
+
+        Returns a dict keyed by letter_id so callers building a tree can look
+        up each letter's medias without an extra round-trip per letter.
+        """
+        if not letter_ids:
+            return {}
+        stmt = (
+            select(FingerLetterMedia.letter_id, Media)
+            .join(Media, FingerLetterMedia.media_id == Media.id)
+            .where(FingerLetterMedia.letter_id.in_(letter_ids))
+            .order_by(FingerLetterMedia.letter_id, FingerLetterMedia.id)
+        )
+        result: dict[int, list[Media]] = {letter_id: [] for letter_id in letter_ids}
+        for letter_id, media in self.db.execute(stmt).all():
+            result[letter_id].append(media)
+        return result
+
     def get_primary_letter_for_lesson(
         self, lesson_id: int, *, active_only: bool = True
     ) -> FingerLetter | None:
@@ -204,6 +223,29 @@ class FingerCurriculumRepository:
         if not rows:
             return None
         return rows[0][1]
+
+    def get_primary_letters_for_lessons(
+        self, lesson_ids: list[int], *, active_only: bool = True
+    ) -> dict[int, FingerLetter]:
+        """Batch version of ``get_primary_letter_for_lesson`` — one query
+        instead of N. Returns a dict keyed by lesson_id (lessons with no
+        linked letter are simply absent from the result)."""
+        if not lesson_ids:
+            return {}
+        stmt = (
+            select(FingerLessonLetter, FingerLetter)
+            .join(FingerLetter, FingerLessonLetter.letter_id == FingerLetter.id)
+            .where(FingerLessonLetter.lesson_id.in_(lesson_ids))
+            .order_by(FingerLessonLetter.lesson_id, FingerLessonLetter.order_index)
+        )
+        if active_only:
+            stmt = stmt.where(FingerLetter.is_active.is_(True))
+        result: dict[int, FingerLetter] = {}
+        for junction, letter in self.db.execute(stmt).all():
+            # First row per lesson_id wins (ordered by order_index above),
+            # matching get_primary_letter_for_lesson's "first letter" semantics.
+            result.setdefault(junction.lesson_id, letter)
+        return result
 
     def get_letter_by_kh(self, letter_kh: str, *, active_only: bool = True) -> FingerLetter | None:
         stmt = select(FingerLetter).where(FingerLetter.letter_kh == letter_kh)

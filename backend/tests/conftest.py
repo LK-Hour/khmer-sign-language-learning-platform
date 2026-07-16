@@ -92,6 +92,26 @@ def db(test_db):
     connection.close()
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limits():
+    """Clear rate-limit counters before each test.
+
+    Rate limiting keys (ksl:rate:*) live in the shared Redis instance and are
+    keyed by client IP + path, which is the same for every TestClient request.
+    Without this, tests that hit a rate-limited endpoint (e.g. /login/email)
+    many times across the suite would eventually trip the limiter.
+    """
+    from src.core.redis import get_redis_client
+
+    try:
+        rc = get_redis_client()
+        for key in rc.scan_iter(match="ksl:rate:*"):
+            rc.delete(key)
+    except Exception:
+        pass
+    yield
+
+
 @pytest.fixture
 def client(db):
     """Create test client with database session override."""
@@ -99,7 +119,12 @@ def client(db):
         yield db
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
+    # Use an https:// base_url so httpx's cookie jar accepts the backend's
+    # Secure refresh_token cookie (COOKIE_SECURE=true is required for
+    # SameSite=None cookies to be stored by any real browser — see
+    # backend/.env). TestClient never makes a real network call, so the
+    # scheme here has no effect on connectivity, only on cookie handling.
+    with TestClient(app, base_url="https://testserver") as c:
         yield c
     app.dependency_overrides.clear()
 
@@ -135,11 +160,23 @@ def test_admin_data():
 
 
 @pytest.fixture
-def auth_headers(client, test_user_data):
+def auth_headers(client, test_user_data, db):
     """Create authentication headers for test user"""
-    # Create user first
-    response = client.post("/api/users/", json=test_user_data)
-    assert response.status_code == 201
+    from src.models.user import User
+    from src.utils.password import hash_password
+
+    # Create user directly in DB (endpoint now requires admin auth)
+    user = User(
+        username=test_user_data["username"],
+        email=test_user_data["email"],
+        password_hash=hash_password(test_user_data["password"]),
+        display_name=test_user_data["display_name"],
+        account_type=test_user_data["account_type"],
+        auth_provider=test_user_data["auth_provider"],
+        is_guest=test_user_data["is_guest"],
+    )
+    db.add(user)
+    db.flush()
 
     # Login to get token
     login_data = {
@@ -153,11 +190,23 @@ def auth_headers(client, test_user_data):
 
 
 @pytest.fixture
-def admin_headers(client, test_admin_data):
+def admin_headers(client, test_admin_data, db):
     """Create authentication headers for test admin"""
-    # Create admin first
-    response = client.post("/api/users/", json=test_admin_data)
-    assert response.status_code == 201
+    from src.models.user import User
+    from src.utils.password import hash_password
+
+    # Create admin directly in DB (endpoint now requires admin auth)
+    user = User(
+        username=test_admin_data["username"],
+        email=test_admin_data["email"],
+        password_hash=hash_password(test_admin_data["password"]),
+        display_name=test_admin_data["display_name"],
+        account_type=test_admin_data["account_type"],
+        auth_provider=test_admin_data["auth_provider"],
+        is_guest=test_admin_data["is_guest"],
+    )
+    db.add(user)
+    db.flush()
 
     # Login to get token
     login_data = {
@@ -168,3 +217,27 @@ def admin_headers(client, test_admin_data):
     assert login_response.status_code == 200
     token = login_response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def seed_user(db):
+    """Create a user directly in the DB and return it. Useful for tests that
+    need a user to exist before calling auth endpoints."""
+    from src.models.user import User
+    from src.utils.password import hash_password
+
+    def _create(user_data: dict) -> User:
+        user = User(
+            username=user_data["username"],
+            email=user_data.get("email"),
+            password_hash=hash_password(user_data["password"]) if user_data.get("password") else None,
+            display_name=user_data["display_name"],
+            account_type=user_data.get("account_type", "student"),
+            auth_provider=user_data.get("auth_provider", "email"),
+            is_guest=user_data.get("is_guest", False),
+        )
+        db.add(user)
+        db.flush()
+        return user
+
+    return _create

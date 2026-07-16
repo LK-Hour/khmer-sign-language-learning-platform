@@ -61,10 +61,18 @@ def get_full_tree(
         for unit in curriculum.list_units():
             chapters_data = []
             for chapter in (curriculum.list_chapters_for_unit(unit.id) or []):
+                lessons = curriculum.list_lessons_for_chapter(chapter.id) or []
+                lesson_ids = [lesson.id for lesson in lessons]
+                # Batch-fetch primary words and their medias for all lessons
+                # in this chapter (2 queries total instead of 2*N).
+                words_by_lesson = curriculum.curriculum.get_primary_words_for_lessons(lesson_ids)
+                word_ids = [word.id for word in words_by_lesson.values()]
+                medias_by_word = curriculum.curriculum.list_medias_for_words(word_ids)
+
                 lessons_data = []
-                for lesson in (curriculum.list_lessons_for_chapter(chapter.id) or []):
-                    word = curriculum.curriculum.get_primary_word_for_lesson(lesson.id)
-                    medias = curriculum.curriculum.list_medias_for_word(word.id) if word else []
+                for lesson in lessons:
+                    word = words_by_lesson.get(lesson.id)
+                    medias = medias_by_word.get(word.id, []) if word else []
                     lessons_data.append({
                         "id": lesson.id,
                         "chapter_id": chapter.id,
@@ -351,10 +359,18 @@ def list_lessons(
 
     user_id = user.id if user else None
     progress = WordDetectionProgressService(db)
+
+    # Batch-fetch primary words and their medias for all lessons in this
+    # chapter (2 queries total instead of 2*N).
+    lesson_ids = [lesson.id for lesson in lessons]
+    words_by_lesson = curriculum.curriculum.get_primary_words_for_lessons(lesson_ids)
+    word_ids = [word.id for word in words_by_lesson.values()]
+    medias_by_word = curriculum.curriculum.list_medias_for_words(word_ids)
+
     result: list[WdLessonResponse] = []
     for lesson in lessons:
-        word = curriculum.curriculum.get_primary_word_for_lesson(lesson.id)
-        medias = curriculum.curriculum.list_medias_for_word(word.id) if word else []
+        word = words_by_lesson.get(lesson.id)
+        medias = medias_by_word.get(word.id, []) if word else []
         result.append(
             to_wd_lesson(
                 lesson=lesson,

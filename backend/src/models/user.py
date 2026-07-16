@@ -1,6 +1,6 @@
 import uuid
 from uuid_extensions import uuid7
-from sqlalchemy import String, Boolean, Text, func
+from sqlalchemy import Index, String, Boolean, Text, func
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +23,11 @@ class User(Base):
     last_login_at: Mapped[None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     created_at: Mapped[None] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[None] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_users_last_login_at", "last_login_at"),
+        Index("ix_users_is_guest_is_active", "is_guest", "is_active"),
+    )
 
     # Relationships
     oauth_providers = relationship("UserOAuthProvider", back_populates="user", cascade="all, delete-orphan")

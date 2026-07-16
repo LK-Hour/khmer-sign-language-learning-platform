@@ -28,6 +28,8 @@ class OAuthUserResponse(BaseModel):
     last_name: Optional[str] = None
     picture: Optional[str] = None
     provider: str
+    account_type: Optional[str] = None
+    is_guest: Optional[bool] = None
 
 
 class AuthTokenResponse(BaseModel):
@@ -40,6 +42,7 @@ class AuthTokenResponse(BaseModel):
 class AccessTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user: Optional[OAuthUserResponse] = None
 
 
 class GuestLessonProgressImport(BaseModel):

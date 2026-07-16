@@ -45,18 +45,6 @@ class FingerExerciseService:
         return lesson.chapter_id if lesson else None
 
     def list_chapter_exercises(
-        self, chapter_id: int, user_id: uuid.UUID | None, *, active_only: bool = True
-    ) -> list[FingerExercise] | None:
-        if self.curriculum.get_chapter_by_id(chapter_id, active_only=active_only) is None:
-            return None
-        if not self.is_chapter_exercise_unlocked(user_id, chapter_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Chapter exercises are locked until all lessons in the chapter are completed",
-            )
-        return self.exercises.list_with_options_by_chapter(chapter_id, active_only=active_only)
-
-    def list_chapter_exercises(
         self, chapter_id: int, *, active_only: bool = True
     ) -> list[FingerExercise] | None:
         """Get all exercises for all lessons in a chapter, grouped by lesson."""
