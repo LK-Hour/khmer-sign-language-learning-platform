@@ -44,16 +44,16 @@ def _configure_stdio_utf8() -> None:
 
 SEED_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SEED_DIR))
-import seed_curriculum  # noqa: E402
+import seed_fingert_spelling  # noqa: E402
 
-DEPENDENT_VOWELS = seed_curriculum.DEPENDENT_VOWELS
-DIACRITICS = seed_curriculum.DIACRITICS
-INDEPENDENT_VOWELS = seed_curriculum.INDEPENDENT_VOWELS
-MAIN_CONSONANTS = seed_curriculum.MAIN_CONSONANTS
-NUMBERS = seed_curriculum.NUMBERS
-SUB_CONSONANTS = seed_curriculum.SUB_CONSONANTS
-UNITS_META = seed_curriculum.UNITS_META
-_build_curriculum = seed_curriculum._build_curriculum
+DEPENDENT_VOWELS = seed_fingert_spelling.DEPENDENT_VOWELS
+DIACRITICS = seed_fingert_spelling.DIACRITICS
+INDEPENDENT_VOWELS = seed_fingert_spelling.INDEPENDENT_VOWELS
+MAIN_CONSONANTS = seed_fingert_spelling.MAIN_CONSONANTS
+NUMBERS = seed_fingert_spelling.NUMBERS
+SUB_CONSONANTS = seed_fingert_spelling.SUB_CONSONANTS
+UNITS_META = seed_fingert_spelling.UNITS_META
+_build_curriculum = seed_fingert_spelling._build_curriculum
 
 DISTRACTOR_OFFSETS = (1, 2, 3, 5, 7, 11, 13, 17)
 

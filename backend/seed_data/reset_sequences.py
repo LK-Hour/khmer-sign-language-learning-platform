@@ -37,17 +37,6 @@ def reset_all_sequences(db=None) -> list[str]:
     Returns:
         List of messages describing what was reset.
     """
-    query = text("""
-        SELECT
-            sequencename,
-            pg_get_serial_sequence(split_part(sequencename, '_id_seq', 1), 'id') AS full_seq,
-            split_part(sequencename, '_id_seq', 1) AS table_name
-        FROM pg_sequences
-        WHERE schemaname = 'public'
-          AND sequencename LIKE '%_id_seq'
-    """)
-
-    # More robust: query pg_class for all sequences and their owning columns
     robust_query = text("""
         SELECT
             t.relname AS table_name,

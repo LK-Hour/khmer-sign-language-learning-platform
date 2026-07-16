@@ -11,8 +11,8 @@ Run from the backend directory:
     python seed_data/seed_practices.py --dry-run
 
 Dataset locations:
-    - data_set/finger_spelling_practice/  (grouped by unit folder)
-    - data_set/word_detection_prtactice/  (flat, one folder per word)
+    - data_set/finger_spelling_practice/  (Category/letter structure)
+    - data_set/word_detection_practice/   (flat, one folder per word)
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ for _mod in pkgutil.iter_modules(src.models.__path__, src.models.__name__ + ".")
 
 # ── Dataset paths ──────────────────────────────────────────────────────────
 FINGER_PRACTICE_DIR = _project_root / "data_set" / "finger_spelling_practice"
-WORD_DETECTION_PRACTICE_DIR = _project_root / "data_set" / "word_detection_prtactice"
+WORD_DETECTION_PRACTICE_DIR = _project_root / "data_set" / "word_detection_practice"
 
 MAX_LESSON_COUNT = 5
 
@@ -52,39 +52,72 @@ def _discover_finger_practice_media() -> dict[str, list[Path]]:
     Discover finger spelling practice media.
     Returns: { letter_kh: [path_to_png, ...] }
     Maps dataset folder names to DB letter_kh values.
+
+    Folder structure:
+        finger_spelling_practice/
+          Consonants/{letter}/Main/*.png   -> letter_kh = letter
+          Consonants/{letter}/Sub/*.png    -> letter_kh = ្ + letter
+          Vowels/{vowel}/*.png             -> letter_kh = vowel
+          Independent vowels/{folder}/*.png -> letter_kh via NAME_MAP or folder
+          Diacritics/{folder}/*.png        -> letter_kh via NAME_MAP or folder
+          Number/{digit}/*.png             -> letter_kh = digit
     """
     # Mapping from dataset folder names to actual DB letter_kh values
     NAME_MAP = {
         "question": "?",
-        "អា": "ឤ",   # Dataset uses two chars (អ+ា), DB uses single codepoint ឤ (U+19A4)
-        "ឪ": "ឳ",    # Dataset uses ឪ (U+19AA), DB uses ឳ (U+19B3)
     }
-    # sub_X folders map to ្X (Unicode subscript prefix)
-    SUB_PREFIX = "sub_"
+    # Independent vowels have special folder → DB letter mappings
+    INDEPENDENT_VOWEL_NAME_MAP = {
+        "អ": "ឣ",    # Dataset folder "អ" maps to independent vowel ឣ (U+17A3)
+        "អា": "ឤ",   # Dataset uses two chars (អ+ា), DB uses single codepoint ឤ (U+17A4)
+    }
 
     result: dict[str, list[Path]] = {}
     if not FINGER_PRACTICE_DIR.exists():
         return result
-    for unit_dir in sorted(FINGER_PRACTICE_DIR.iterdir()):
-        if not unit_dir.is_dir():
+
+    consonants_dir = FINGER_PRACTICE_DIR / "Consonants"
+    vowels_dir = FINGER_PRACTICE_DIR / "Vowels"
+    independent_vowels_dir = FINGER_PRACTICE_DIR / "Independent vowels"
+    diacritics_dir = FINGER_PRACTICE_DIR / "Diacritics"
+    numbers_dir = FINGER_PRACTICE_DIR / "Number"
+
+    # Consonants: {letter}/Main/*.png and {letter}/Sub/*.png
+    if consonants_dir.exists():
+        for letter_dir in sorted(consonants_dir.iterdir()):
+            if not letter_dir.is_dir():
+                continue
+            letter_kh = letter_dir.name
+
+            main_dir = letter_dir / "Main"
+            if main_dir.exists():
+                pngs = sorted(main_dir.glob("*.png"))
+                if pngs:
+                    result.setdefault(letter_kh, []).extend(pngs)
+
+            sub_dir = letter_dir / "Sub"
+            if sub_dir.exists():
+                pngs = sorted(sub_dir.glob("*.png"))
+                if pngs:
+                    sub_letter = "្" + letter_kh
+                    result.setdefault(sub_letter, []).extend(pngs)
+
+    # Vowels, Independent vowels, Diacritics, Numbers: {folder}/*.png
+    for category_dir in (vowels_dir, independent_vowels_dir, diacritics_dir, numbers_dir):
+        if not category_dir.exists():
             continue
-        for letter_dir in sorted(unit_dir.iterdir()):
+        # Use the independent vowel map only for that category
+        name_map = INDEPENDENT_VOWEL_NAME_MAP if category_dir == independent_vowels_dir else NAME_MAP
+        for letter_dir in sorted(category_dir.iterdir()):
             if not letter_dir.is_dir():
                 continue
             folder_name = letter_dir.name
-
-            # Resolve to DB name
-            if folder_name in NAME_MAP:
-                letter_kh = NAME_MAP[folder_name]
-            elif folder_name.startswith(SUB_PREFIX):
-                # sub_ក -> ្ក
-                letter_kh = "្" + folder_name[len(SUB_PREFIX):]
-            else:
-                letter_kh = folder_name
+            letter_kh = name_map.get(folder_name, folder_name)
 
             pngs = sorted(letter_dir.glob("*.png"))
             if pngs:
                 result.setdefault(letter_kh, []).extend(pngs)
+
     return result
 
 
@@ -318,6 +351,7 @@ def seed_practices(wipe: bool = False, dry_run: bool = False) -> None:
                 WHERE media_type = 'image'
                 AND (
                     file_url LIKE '%finger_spelling_practice%'
+                    OR file_url LIKE '%word_detection_practice%'
                     OR file_url LIKE '%word_detection_prtactice%'
                 )
             """))

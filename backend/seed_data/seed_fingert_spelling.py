@@ -203,6 +203,7 @@ INDEPENDENT_VOWELS = [
     ("ឦ", "ei"),
     ("ឧ", "o"),
     ("ឩ", "ou"),
+    ("ឪ", "ov"),      # U+17AA — distinct from ឳ (combination of ឧ+វ)
     ("ឫ", "rue"),
     ("ឬ", "rueu"),
     ("ឭ", "lue"),
@@ -275,8 +276,8 @@ UNITS_META = [
         "id": 6,
         "name_en": "Independent Vowels",
         "name_kh": "ស្រៈពេញតួ",
-        "description_en": "Learn the 14 Khmer independent vowels",
-        "description_kh": "រៀនស្រៈពេញតួខ្មែរទាំង ១៤",
+        "description_en": "Learn the 15 Khmer independent vowels",
+        "description_kh": "រៀនស្រៈពេញតួខ្មែរទាំង ១៥",
         "order_index": 6,
         "letters": INDEPENDENT_VOWELS,
         "chapter_name_en": "Independent Vowels",
@@ -352,6 +353,7 @@ INDEPENDENT_VOWELS_FOLDER_MAP = {
     "ឦ": "ឦ",
     "ឧ": "ឧ",
     "ឩ": "ឩ",
+    "ឪ": "ឪ",
     "ឫ": "ឫ",
     "ឬ": "ឬ",
     "ឭ": "ឭ",
@@ -382,7 +384,7 @@ DIACRITICS_FOLDER_MAP = {
 }
 
 # Data directory paths
-DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "Fingerspelling data for development"
+DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "finger_spelling no bg"
 CONSONANTS_DIR = DATASET_DIR / "Consonants"
 VOWELS_DIR = DATASET_DIR / "Vowels"
 DIACRITICS_DIR = DATASET_DIR / "Diacritics"
