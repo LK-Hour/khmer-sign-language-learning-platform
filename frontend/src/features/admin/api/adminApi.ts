@@ -26,6 +26,9 @@ const base = (track: AdminTrack) => `/api/admin/${track}`;
 export const listUnits = (track: AdminTrack) =>
   apiFetch<AdminUnit[]>(`${base(track)}/units`);
 
+export const getUnit = (track: AdminTrack, id: number) =>
+  apiFetch<AdminUnit>(`${base(track)}/units/${id}`);
+
 export const createUnit = (track: AdminTrack, body: AdminUnitPayload) =>
   apiFetch<AdminUnit>(`${base(track)}/units`, {
     method: "POST",
@@ -57,6 +60,9 @@ export const listChapters = (track: AdminTrack, unitId?: number) =>
   apiFetch<AdminChapter[]>(
     `${base(track)}/chapters${unitId ? `?unit_id=${unitId}` : ""}`,
   );
+
+export const getChapter = (track: AdminTrack, id: number) =>
+  apiFetch<AdminChapter>(`${base(track)}/chapters/${id}`);
 
 export const createChapter = (track: AdminTrack, body: AdminChapterPayload) =>
   apiFetch<AdminChapter>(`${base(track)}/chapters`, {
@@ -93,6 +99,9 @@ export const listLessons = (track: AdminTrack, chapterId?: number) =>
   apiFetch<AdminLesson[]>(
     `${base(track)}/lessons${chapterId ? `?chapter_id=${chapterId}` : ""}`,
   );
+
+export const getLesson = (track: AdminTrack, id: number) =>
+  apiFetch<AdminLesson>(`${base(track)}/lessons/${id}`);
 
 export const createLesson = (track: AdminTrack, body: AdminLessonPayload) =>
   apiFetch<AdminLesson>(`${base(track)}/lessons`, {
@@ -141,6 +150,9 @@ export const listExercises = (
         : ""
     }`,
   );
+
+export const getExercise = (track: AdminTrack, id: number) =>
+  apiFetch<AdminExercise>(`${base(track)}/exercises/${id}`);
 
 export const createExercise = (track: AdminTrack, body: AdminExercisePayload) =>
   apiFetch<AdminExercise>(`${base(track)}/exercises`, {

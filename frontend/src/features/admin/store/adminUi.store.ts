@@ -39,8 +39,8 @@ export const useAdminUiStore = create<AdminUiState>()(
             : [...state.expandedNavIds, id],
         })),
       expandNavNodes: (ids) =>
-        set((state) => ({
-          expandedNavIds: [...new Set([...state.expandedNavIds, ...ids])],
+        set(() => ({
+          expandedNavIds: [...new Set(ids)],
         })),
       collapseAllNav: () => set({ expandedNavIds: [] }),
     }),

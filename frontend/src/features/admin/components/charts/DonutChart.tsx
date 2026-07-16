@@ -31,10 +31,18 @@ export default function DonutChart({
           size: "72%",
           labels: {
             show: true,
+            value: {
+              show: true,
+              formatter: (val: string) => `${parseFloat(val).toFixed(1)}%`,
+            },
             total: {
               show: true,
-              label: "Total",
+              label: "Completed",
               fontSize: "14px",
+              formatter: (w) => {
+                const total = w.globals.seriesTotals[0] ?? 0;
+                return `${total.toFixed(1)}%`;
+              },
             },
           },
         },
@@ -46,10 +54,17 @@ export default function DonutChart({
       fontWeight: 500,
       labels: { colors: "#637381" },
       itemMargin: { horizontal: 12 },
+      formatter: (legendName: string, opts) => {
+        const val = opts?.w?.globals?.series?.[opts.seriesIndex] ?? 0;
+        return `${legendName}: ${val.toFixed(1)}%`;
+      },
     },
     tooltip: {
       theme: "dark",
       style: { fontSize: "12px" },
+      y: {
+        formatter: (val: number) => `${val.toFixed(1)}%`,
+      },
     },
     stroke: { show: false },
     dataLabels: { enabled: false },

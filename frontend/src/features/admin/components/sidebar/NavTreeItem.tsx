@@ -79,13 +79,22 @@ export default function NavTreeItem({
   const handleClick = () => {
     if (isParent) {
       onToggle(node.id);
+      // If the parent has its own path, also navigate to it
+      if (node.path) {
+        onNavigate?.();
+      }
     } else if (isLeaf) {
       onNavigate?.();
     }
   };
 
   // For leaf nodes, wrap in next/link for client-side navigation
-  const linkProps = isLeaf ? { component: Link, href: node.path! } : {};
+  // For parent nodes with a path, also wrap in link so clicking navigates + expands
+  const linkProps = isLeaf
+    ? { component: Link, href: node.path! }
+    : isParent && node.path
+      ? { component: Link, href: node.path }
+      : {};
 
   return (
     // Outer container wraps BOTH this item's row and its expanded children,

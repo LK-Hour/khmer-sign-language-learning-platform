@@ -9,16 +9,15 @@ import {
   Alert,
   Button,
   IconButton,
-  MenuItem,
   Stack,
   Tab,
   Tabs,
-  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTranslation } from "@/i18n/useTranslation";
@@ -35,32 +34,12 @@ import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import type { DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
-import FormDialog from "../components/shared/FormDialog";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useAdminEntityTab, useAdminTrack } from "../store/adminUi.store";
 
-type FormState = {
-  name_en: string;
-  name_kh: string;
-  description_en: string;
-  description_kh: string;
-  order_index: number;
-  parent_id: number | "";
-  level: number;
-};
-
-const emptyForm = (orderIndex = 1): FormState => ({
-  name_en: "",
-  name_kh: "",
-  description_en: "",
-  description_kh: "",
-  order_index: orderIndex,
-  parent_id: "",
-  level: 0,
-});
-
 export default function AdminCurriculumManager() {
   const { t, entityActionLabel, quotedConfirmMessage } = useTranslation();
+  const router = useRouter();
 
   const [track, setTrack] = useAdminTrack();
   const [tab, setTab] = useAdminEntityTab();
@@ -77,9 +56,6 @@ export default function AdminCurriculumManager() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<AdminEntity | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm());
   const [busy, setBusy] = useState(false);
 
   const [publishTarget, setPublishTarget] = useState<AdminEntity | null>(null);
@@ -150,7 +126,6 @@ export default function AdminCurriculumManager() {
         : t("ADMIN.LESSON");
 
   const parentLabel = tab === "chapters" ? t("ADMIN.PARENT_UNIT") : t("ADMIN.PARENT_CHAPTER");
-  const parentOptions = tab === "chapters" ? units : chapters;
 
   const parentName = (row: AdminEntity): string => {
     if (tab === "chapters") {
@@ -164,29 +139,14 @@ export default function AdminCurriculumManager() {
     return "";
   };
 
+  const trackSlug = isWordDetection ? "word-detection" : "finger-spelling";
+
   const openCreate = () => {
-    setEditing(null);
-    setForm(emptyForm(rows.length + 1));
-    setFormOpen(true);
+    router.push(`/admin/learning/${trackSlug}/${tab}/create`);
   };
 
   const openEdit = (row: AdminEntity) => {
-    setEditing(row);
-    setForm({
-      name_en: row.name_en,
-      name_kh: row.name_kh,
-      description_en: row.description_en ?? "",
-      description_kh: row.description_kh ?? "",
-      order_index: row.order_index,
-      parent_id:
-        tab === "chapters"
-          ? (row as AdminChapter).unit_id
-          : tab === "lessons"
-            ? (row as AdminLesson).chapter_id
-            : "",
-      level: tab === "chapters" ? ((row as AdminChapter).level ?? 0) : 0,
-    });
-    setFormOpen(true);
+    router.push(`/admin/learning/${trackSlug}/${tab}/${row.id}/edit`);
   };
 
   const runAction = async (action: () => Promise<unknown>, successNotice: string) => {
@@ -203,41 +163,6 @@ export default function AdminCurriculumManager() {
     } finally {
       setBusy(false);
     }
-  };
-
-  const handleSave = async () => {
-    const base = {
-      name_en: form.name_en,
-      name_kh: form.name_kh,
-      description_en: form.description_en || null,
-      description_kh: form.description_kh || null,
-      order_index: form.order_index,
-    };
-
-    const save = async () => {
-      if (tab === "units") {
-        return editing
-          ? adminApi.updateUnit(track, editing.id, base)
-          : adminApi.createUnit(track, base);
-      }
-      if (tab === "chapters") {
-        const body = {
-          ...base,
-          unit_id: Number(form.parent_id),
-          ...(isWordDetection ? { level: form.level } : {}),
-        };
-        return editing
-          ? adminApi.updateChapter(track, editing.id, body)
-          : adminApi.createChapter(track, body);
-      }
-      const body = { ...base, chapter_id: Number(form.parent_id) };
-      return editing
-        ? adminApi.updateLesson(track, editing.id, body)
-        : adminApi.createLesson(track, body);
-    };
-
-    const ok = await runAction(save, t("ADMIN.SAVED_AS_DRAFT_NOTE"));
-    if (ok) setFormOpen(false);
   };
 
   const handlePublish = async () => {
@@ -448,88 +373,6 @@ export default function AdminCurriculumManager() {
           }}
         />
       </Stack>
-
-      {/* Create / Edit Form Dialog */}
-      <FormDialog
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        title={
-          editing
-            ? entityActionLabel("BUTTON.EDIT", entityLabel)
-            : entityActionLabel("ADMIN.ADD", entityLabel)
-        }
-        subtitle={t("ADMIN.DRAFT_WORKFLOW_NOTE")}
-        onSubmit={handleSave}
-        loading={busy}
-        submitLabel={t("ADMIN.SAVE_DRAFT")}
-        cancelLabel={t("BUTTON.CANCEL")}
-      >
-        {tab !== "units" && (
-          <TextField
-            select
-            required
-            fullWidth
-            label={parentLabel}
-            value={form.parent_id}
-            onChange={(e) => setForm({ ...form, parent_id: Number(e.target.value) })}
-            sx={{ gridColumn: "1 / -1" }}
-          >
-            {parentOptions.map((option) => (
-              <MenuItem key={option.id} value={option.id}>
-                {option.name_en} · {option.name_kh}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
-        <TextField
-          required
-          fullWidth
-          label={t("ADMIN.NAME_EN")}
-          value={form.name_en}
-          onChange={(e) => setForm({ ...form, name_en: e.target.value })}
-        />
-        <TextField
-          required
-          fullWidth
-          label={t("ADMIN.NAME_KH")}
-          value={form.name_kh}
-          onChange={(e) => setForm({ ...form, name_kh: e.target.value })}
-        />
-        <TextField
-          fullWidth
-          multiline
-          minRows={2}
-          label={t("ADMIN.DESCRIPTION_EN")}
-          value={form.description_en}
-          onChange={(e) => setForm({ ...form, description_en: e.target.value })}
-        />
-        <TextField
-          fullWidth
-          multiline
-          minRows={2}
-          label={t("ADMIN.DESCRIPTION_KH")}
-          value={form.description_kh}
-          onChange={(e) => setForm({ ...form, description_kh: e.target.value })}
-        />
-        <TextField
-          type="number"
-          label={t("ADMIN.SORT_ORDER")}
-          value={form.order_index}
-          onChange={(e) =>
-            setForm({ ...form, order_index: Number.parseInt(e.target.value, 10) || 0 })
-          }
-        />
-        {tab === "chapters" && isWordDetection && (
-          <TextField
-            type="number"
-            label={t("ADMIN.LEVEL")}
-            value={form.level}
-            onChange={(e) =>
-              setForm({ ...form, level: Number.parseInt(e.target.value, 10) || 0 })
-            }
-          />
-        )}
-      </FormDialog>
 
       {/* Publish Confirmation */}
       <ConfirmDialog

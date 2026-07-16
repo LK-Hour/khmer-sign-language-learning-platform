@@ -25,15 +25,18 @@ export default function NavSection({ section, onNavigate }: NavSectionProps) {
   // Convert string[] to Set<string> for efficient lookup by NavTreeItem
   const expandedIds = useMemo(() => new Set(expandedNavIds), [expandedNavIds]);
 
-  // Auto-expand ancestor nodes on mount to reveal the active leaf
+  // Auto-expand ancestor nodes on mount to reveal the active leaf.
+  // Merges into existing expanded state so other open branches stay open.
   useEffect(() => {
     // Collect all items across all sections for full tree traversal
     const allItems = NAV_CONFIG.flatMap((s) => s.items);
     const ancestors = findAncestorIds(allItems, pathname);
     if (ancestors.length > 0) {
-      expandNavNodes(ancestors);
+      // Merge: add ancestors to current expanded set without collapsing others
+      const current = useAdminUiStore.getState().expandedNavIds;
+      const merged = [...new Set([...current, ...ancestors])];
+      expandNavNodes(merged);
     }
-    // Only run on mount and pathname changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 

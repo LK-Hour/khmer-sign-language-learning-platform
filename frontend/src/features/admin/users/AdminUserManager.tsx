@@ -46,6 +46,7 @@ import {
 import PageHeader from "../components/shared/PageHeader";
 import Scrollbar from "../components/shared/Scrollbar";
 import StatusChip from "../components/shared/StatusChip";
+import { useTranslation } from "@/i18n/useTranslation";
 
 import UserDetailPanel from "./UserDetailPanel";
 
@@ -106,6 +107,7 @@ type StatusFilter = "all" | "active" | "inactive";
  * Accepts a roleFilter prop to show only users of a specific role.
  */
 export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) {
+  const { t } = useTranslation();
   // ── Auth ─────────────────────────────────────────────────────────────────
   const currentUser = useAuthStore((s) => s.user);
 
@@ -246,11 +248,13 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
 
   // ── Derive page title ────────────────────────────────────────────────────
   const pageTitle = roleFilter
-    ? `${roleFilter === "admin" ? "Admin" : "Student"} Users`
-    : "User Management";
+    ? `${roleFilter === "admin" ? t("PAGE.FILTER_ADMIN") : t("PAGE.FILTER_STUDENT")} ${t("PAGE.USERS")}`
+    : t("PAGE.USER_MANAGEMENT");
 
   const pageSubtitle = roleFilter
-    ? `Manage ${roleFilter} users and their permissions`
+    ? roleFilter === "admin"
+      ? t("PAGE.MANAGE_ADMIN")
+      : t("PAGE.MANAGE_STUDENT")
     : "Manage platform users and their permissions";
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -266,7 +270,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
             onClick={fetchUsers}
             disabled={loading}
           >
-            Refresh
+            {t("PAGE.REFRESH")}
           </Button>
         }
       />
@@ -281,7 +285,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
           size="small"
           value={searchQuery}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Search by name or email..."
+          placeholder={t("PAGE.SEARCH_BY_NAME_EMAIL")}
           sx={{ minWidth: { md: 280 }, bgcolor: "background.paper" }}
           slotProps={{
             input: {
@@ -295,15 +299,15 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
         />
 
         <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel>Status</InputLabel>
+          <InputLabel>{t("PAGE.FILTER_STATUS")}</InputLabel>
           <Select
             value={statusFilter}
             label="Status"
             onChange={handleStatusFilterChange}
           >
-            <MenuItem value="all">All</MenuItem>
-            <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="inactive">Inactive</MenuItem>
+            <MenuItem value="all">{t("PAGE.FILTER_ALL")}</MenuItem>
+            <MenuItem value="active">{t("PAGE.FILTER_ACTIVE")}</MenuItem>
+            <MenuItem value="inactive">{t("PAGE.FILTER_INACTIVE")}</MenuItem>
           </Select>
         </FormControl>
       </Stack>
@@ -314,7 +318,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
           severity="error"
           action={
             <Button color="inherit" size="small" onClick={fetchUsers}>
-              Retry
+              {t("PAGE.RETRY")}
             </Button>
           }
         >
@@ -348,21 +352,21 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
                     },
                   }}
                 >
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Provider</TableCell>
-                  <TableCell>Active</TableCell>
-                  <TableCell>Joined</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell>{t("PAGE.NAME")}</TableCell>
+                  <TableCell>{t("PAGE.EMAIL")}</TableCell>
+                  <TableCell>{t("PAGE.ROLE")}</TableCell>
+                  <TableCell>{t("PAGE.PROVIDER")}</TableCell>
+                  <TableCell>{t("PAGE.FILTER_ACTIVE")}</TableCell>
+                  <TableCell>{t("PAGE.JOINED")}</TableCell>
+                  <TableCell align="right">{t("PAGE.ACTIONS")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                      <Typography color="text.secondary">
-                        No users found
+                       <Typography color="text.secondary">
+                        {t("PAGE.NO_USERS_FOUND")}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -416,7 +420,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
                       </TableCell>
                       <TableCell align="right">
                         {isDestructiveActionDisabled(user) ? (
-                          <Tooltip title="Actions disabled for admin users">
+                          <Tooltip title={t("PAGE.ACTIONS_DISABLED_ADMIN")}>
                             <span>
                               <IconButton size="small" disabled>
                                 <MoreVert fontSize="small" />
@@ -469,7 +473,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
           <ListItemIcon>
             <PersonOff fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Deactivate</ListItemText>
+          <ListItemText>{t("PAGE.DEACTIVATE")}</ListItemText>
         </MenuItem>
         <MenuItem
           onClick={handleMenuClose}
@@ -479,7 +483,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
           <ListItemIcon>
             <Delete fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText>Delete</ListItemText>
+          <ListItemText>{t("BUTTON.DELETE")}</ListItemText>
         </MenuItem>
       </Menu>
 

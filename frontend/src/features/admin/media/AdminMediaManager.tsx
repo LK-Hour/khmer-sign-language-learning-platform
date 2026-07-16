@@ -20,6 +20,7 @@ import {
 import Delete from "@mui/icons-material/Delete";
 import Visibility from "@mui/icons-material/Visibility";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { useTranslation } from "@/i18n/useTranslation";
 import { ApiError } from "@/utils/api/client";
@@ -29,9 +30,8 @@ import type { MediaResponse, PaginatedMediaResponse } from "../api/mediaAdminApi
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import PageHeader from "../components/shared/PageHeader";
 
-import MediaUploadDialog from "./MediaUploadDialog";
-import MediaDetailPanel from "./MediaDetailPanel";
 import { filterMediaByType } from "./mediaFilterUtils";
+import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
 export type ViewMode = "grid" | "list";
 export type MediaTypeFilter = "all" | "image" | "video" | "gif";
@@ -61,6 +61,7 @@ function getAssociatedName(associations: MediaResponse["associations"]): string 
 export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   const { typeFilter } = props ?? {};
   const { t } = useTranslation();
+  const router = useRouter();
 
   // ── Pagination State ───────────────────────────────────────────────────────
   const [page, setPage] = useState(0);
@@ -70,9 +71,6 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   const [mediaData, setMediaData] = useState<PaginatedMediaResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // ── Upload Modal State ─────────────────────────────────────────────────────
-  const [uploadOpen, setUploadOpen] = useState(false);
 
   // ── Search State ───────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,9 +89,6 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
     }, 400);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  // ── Detail Panel State ─────────────────────────────────────────────────────
-  const [selectedMedia, setSelectedMedia] = useState<MediaResponse | null>(null);
 
   // ── Actions Menu State ─────────────────────────────────────────────────────
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -142,24 +137,6 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   const totalCount = mediaData?.total ?? 0;
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleUploadSuccess = () => {
-    setUploadOpen(false);
-    void loadMedia();
-  };
-
-  const handleMediaSelect = (media: MediaResponse) => {
-    setSelectedMedia(media);
-  };
-
-  const handleDetailClose = () => {
-    setSelectedMedia(null);
-  };
-
-  const handleMediaDeleted = () => {
-    setSelectedMedia(null);
-    void loadMedia();
-  };
-
   const handleRetry = () => {
     void loadMedia();
   };
@@ -175,7 +152,9 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   };
 
   const handleMenuView = () => {
-    if (menuMedia) handleMediaSelect(menuMedia);
+    if (menuMedia) {
+      router.push(`/admin/media/${menuMedia.id}/preview`);
+    }
     handleMenuClose();
   };
 
@@ -259,7 +238,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => setUploadOpen(true)}
+            onClick={() => router.push("/admin/media/upload")}
           >
             Upload
           </Button>
@@ -318,21 +297,6 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
         />
       </Stack>
 
-      {/* Upload Dialog */}
-      <MediaUploadDialog
-        open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
-        onSuccess={handleUploadSuccess}
-      />
-
-      {/* Detail Panel */}
-      <MediaDetailPanel
-        media={selectedMedia}
-        onClose={handleDetailClose}
-        onDeleted={handleMediaDeleted}
-        onUpdated={loadMedia}
-      />
-
       {/* Actions Menu (3-dot) */}
       <Menu
         anchorEl={menuAnchor}
@@ -355,6 +319,9 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
           <ListItemText>Delete</ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* Success notification from form submission */}
+      <SuccessSnackbar />
     </>
   );
 }

@@ -53,7 +53,7 @@ export default function Sidebar({ width, collapsed = false, onToggleCollapse, on
           {/* Logo + expand button row — button sits on the right border edge */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", py: 2, position: "relative" }}>
             <Box sx={{ width: 32, height: 32, position: "relative" }}>
-              <Image src="/assets/logo.png" alt="KSL" fill style={{ objectFit: "contain" }} />
+              <Image src="/assets/logo.png" alt="KSL" fill sizes="32px" style={{ objectFit: "contain" }} />
             </Box>
 
             {/* Expand button — bumps out of the right border */}

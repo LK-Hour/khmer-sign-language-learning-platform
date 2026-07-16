@@ -26,6 +26,7 @@ import type { StatusVariant } from "../components/shared/StatusChip";
 interface ContributionReviewCardProps {
   contribution: ContributionListItem;
   onReviewSuccess: () => void;
+  onReview?: (contributionId: string) => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -56,6 +57,7 @@ function formatDate(dateStr: string): string {
 export default function ContributionReviewCard({
   contribution,
   onReviewSuccess,
+  onReview,
 }: ContributionReviewCardProps) {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -217,6 +219,16 @@ export default function ContributionReviewCard({
         {/* Actions: only for pending contributions */}
         {contribution.status === "pending" && (
           <Stack spacing={1.5}>
+            {onReview && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => onReview(contribution.id)}
+                sx={{ textTransform: "none", fontWeight: 600, alignSelf: "flex-start" }}
+              >
+                Review Full Page
+              </Button>
+            )}
             {!showRejectInput ? (
               <Stack direction="row" spacing={1}>
                 <Button

@@ -28,7 +28,7 @@ export default function BarListChart({ items, danger = false }: BarListChartProp
             <Typography variant="body2" color="text.secondary">
               {item.label}
             </Typography>
-            <Typography variant="body2" fontWeight={600}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
               {item.value}%
             </Typography>
           </Box>

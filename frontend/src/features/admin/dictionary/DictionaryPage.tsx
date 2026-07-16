@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Box } from "@mui/material";
+import { useRouter } from "next/navigation";
+import Add from "@mui/icons-material/Add";
+import Edit from "@mui/icons-material/Edit";
+import { Alert, Box, Button, IconButton, Tooltip } from "@mui/material";
 import PageHeader from "../components/shared/PageHeader";
 import SearchInput from "../components/shared/SearchInput";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
@@ -13,6 +16,7 @@ import {
   type PaginatedDictionaryResponse,
 } from "../api/dictionaryAdminApi";
 import { ApiError } from "@/utils/api/client";
+import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,6 +31,7 @@ export interface DictionaryPageProps {
 // ---------------------------------------------------------------------------
 
 export default function DictionaryPage({ type }: DictionaryPageProps) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -37,6 +42,7 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
   const [error, setError] = useState<string | null>(null);
 
   const title = type === "characters" ? "Characters" : "Words";
+  const basePath = `/admin/dictionary/${type}`;
 
   // Debounce search input
   useEffect(() => {
@@ -94,6 +100,19 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
           ? new Date(row.created_at).toLocaleDateString()
           : "—",
     },
+    {
+      id: "actions",
+      label: "Actions",
+      width: 80,
+      sortable: false,
+      render: (row) => (
+        <Tooltip title="Edit">
+          <IconButton size="small" onClick={() => router.push(`${basePath}/${row.id}/edit`)}>
+            <Edit fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      ),
+    },
   ];
 
   return (
@@ -104,6 +123,15 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
           { label: "Dictionary" },
           { label: title },
         ]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => router.push(`${basePath}/create`)}
+          >
+            Create {type === "characters" ? "Character" : "Word"}
+          </Button>
+        }
       />
 
       {/* Search row */}
@@ -139,6 +167,9 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
           setPage(0);
         }}
       />
+
+      {/* Success notification from form submission */}
+      <SuccessSnackbar />
     </Box>
   );
 }

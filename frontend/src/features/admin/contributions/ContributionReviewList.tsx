@@ -25,6 +25,7 @@ interface ContributionReviewListProps {
   error: string | null;
   selectedWordId: number | null;
   onRetry: () => void;
+  onReview?: (contributionId: string) => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ export default function ContributionReviewList({
   error,
   selectedWordId,
   onRetry,
+  onReview,
 }: ContributionReviewListProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
 
@@ -183,6 +185,7 @@ export default function ContributionReviewList({
               key={contribution.id}
               contribution={contribution}
               onReviewSuccess={onRetry}
+              onReview={onReview}
             />
           ))}
         </Stack>

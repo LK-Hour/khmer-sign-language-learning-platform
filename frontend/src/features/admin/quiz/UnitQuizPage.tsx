@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Add from "@mui/icons-material/Add";
 import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
@@ -11,14 +12,12 @@ import {
   CircularProgress,
   IconButton,
   Stack,
-  TextField,
   Tooltip,
   Box,
 } from "@mui/material";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
-import FormDialog from "../components/shared/FormDialog";
 import { listExercises } from "../api/adminApi";
 import type { AdminExercise, AdminTrack, PublishStatus } from "../api/types";
 import { ApiError } from "@/utils/api/client";
@@ -87,7 +86,7 @@ function mapExercises(data: AdminExercise[]): QuizExercise[] {
 // ---------------------------------------------------------------------------
 
 export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const router = useRouter();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -95,10 +94,6 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
   const [exercises, setExercises] = useState<QuizExercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Form state for new exercise
-  const [formQuestion, setFormQuestion] = useState("");
-  const [formType, setFormType] = useState("multiple_choice");
 
   const fetchExercises = useCallback(async () => {
     setLoading(true);
@@ -124,20 +119,15 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
     [exercises, page, rowsPerPage],
   );
 
-  const handleOpenDialog = useCallback(() => {
-    setFormQuestion("");
-    setFormType("multiple_choice");
-    setDialogOpen(true);
-  }, []);
+  const trackSegment = track === "finger" ? "finger-spelling" : "word-detection";
 
-  const handleCloseDialog = useCallback(() => {
-    setDialogOpen(false);
-  }, []);
+  const handleCreate = useCallback(() => {
+    router.push(`/admin/learning/quiz/${trackSegment}/exercises/create`);
+  }, [router, trackSegment]);
 
-  const handleSubmit = useCallback(async () => {
-    // TODO: Wire to actual API call to create exercise for this unit
-    handleCloseDialog();
-  }, [handleCloseDialog]);
+  const handleEdit = useCallback((exerciseId: number) => {
+    router.push(`/admin/learning/quiz/${trackSegment}/exercises/${exerciseId}/edit`);
+  }, [router, trackSegment]);
 
   // Table columns: ID, Question, Type, Options count, Status, Actions
   const columns: DataTableColumn<QuizExercise>[] = useMemo(
@@ -183,10 +173,10 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
         label: "Actions",
         sortable: false,
         width: 100,
-        render: () => (
+        render: (row) => (
           <Stack direction="row" spacing={0.5}>
             <Tooltip title="Edit">
-              <IconButton size="small">
+              <IconButton size="small" onClick={() => handleEdit(row.id)}>
                 <Edit fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -270,7 +260,7 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={handleOpenDialog}
+            onClick={handleCreate}
           >
             Add Exercise
           </Button>
@@ -288,38 +278,6 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
         onPageChange={setPage}
         onRowsPerPageChange={setRowsPerPage}
       />
-
-      {/* Form Dialog for adding a new quiz exercise */}
-      <FormDialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        title="Add Exercise"
-        subtitle={`Create a new quiz exercise for Unit ${unitId}`}
-        onSubmit={handleSubmit}
-        submitLabel="Create"
-      >
-        <TextField
-          label="Question"
-          value={formQuestion}
-          onChange={(e) => setFormQuestion(e.target.value)}
-          fullWidth
-          required
-          sx={{ gridColumn: "1 / -1" }}
-        />
-        <TextField
-          select
-          label="Type"
-          value={formType}
-          onChange={(e) => setFormType(e.target.value)}
-          fullWidth
-          slotProps={{ select: { native: true } }}
-        >
-          <option value="multiple_choice">Multiple Choice</option>
-          <option value="image_select">Image Choice</option>
-          <option value="free_form">Text Input</option>
-          <option value="matching">Matching</option>
-        </TextField>
-      </FormDialog>
     </>
   );
 }

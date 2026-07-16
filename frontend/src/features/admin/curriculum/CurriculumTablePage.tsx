@@ -9,13 +9,12 @@ import {
   Alert,
   Button,
   IconButton,
-  MenuItem,
   Stack,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { ApiError } from "@/utils/api/client";
 
@@ -31,8 +30,20 @@ import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import type { DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
-import FormDialog from "../components/shared/FormDialog";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
+import SuccessSnackbar from "../components/shared/SuccessSnackbar";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getTrackPathSegment(track: AdminTrack): string {
+  return track === "finger" ? "finger-spelling" : "word-detection";
+}
+
+function getBasePath(track: AdminTrack, entity: "units" | "chapters" | "lessons"): string {
+  return `/admin/learning/${getTrackPathSegment(track)}/${entity}`;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,26 +54,6 @@ export interface CurriculumTablePageProps {
   entity: "units" | "chapters" | "lessons";
 }
 
-type FormState = {
-  name_en: string;
-  name_kh: string;
-  description_en: string;
-  description_kh: string;
-  order_index: number;
-  parent_id: number | "";
-  level: number;
-};
-
-const emptyForm = (orderIndex = 1): FormState => ({
-  name_en: "",
-  name_kh: "",
-  description_en: "",
-  description_kh: "",
-  order_index: orderIndex,
-  parent_id: "",
-  level: 0,
-});
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -71,6 +62,8 @@ export default function CurriculumTablePage({
   track,
   entity,
 }: CurriculumTablePageProps) {
+
+  const router = useRouter();
 
   const [units, setUnits] = useState<AdminUnit[]>([]);
   const [chapters, setChapters] = useState<AdminChapter[]>([]);
@@ -84,9 +77,6 @@ export default function CurriculumTablePage({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<AdminEntity | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm());
   const [busy, setBusy] = useState(false);
 
   const [publishTarget, setPublishTarget] = useState<AdminEntity | null>(null);
@@ -159,9 +149,6 @@ export default function CurriculumTablePage({
     entity === "units" ? "Units" : entity === "chapters" ? "Chapters" : "Lessons";
   const pageTitle = `${trackLabel} — ${entityLabel}`;
 
-  const parentLabel = entity === "chapters" ? "Unit" : "Chapter";
-  const parentOptions: AdminEntity[] =
-    entity === "chapters" ? units : entity === "lessons" ? chapters : [];
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -192,29 +179,14 @@ export default function CurriculumTablePage({
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
+  const basePath = getBasePath(track, entity);
+
   const openCreate = () => {
-    setEditing(null);
-    setForm(emptyForm(rows.length + 1));
-    setFormOpen(true);
+    router.push(`${basePath}/create`);
   };
 
   const openEdit = (row: AdminEntity) => {
-    setEditing(row);
-    setForm({
-      name_en: row.name_en,
-      name_kh: row.name_kh,
-      description_en: row.description_en ?? "",
-      description_kh: row.description_kh ?? "",
-      order_index: row.order_index,
-      parent_id:
-        entity === "chapters"
-          ? (row as AdminChapter).unit_id
-          : entity === "lessons"
-            ? (row as AdminLesson).chapter_id
-            : "",
-      level: entity === "chapters" ? ((row as AdminChapter).level ?? 0) : 0,
-    });
-    setFormOpen(true);
+    router.push(`${basePath}/${row.id}/edit`);
   };
 
   const runAction = async (action: () => Promise<unknown>, successNotice: string) => {
@@ -231,41 +203,6 @@ export default function CurriculumTablePage({
     } finally {
       setBusy(false);
     }
-  };
-
-  const handleSave = async () => {
-    const base = {
-      name_en: form.name_en,
-      name_kh: form.name_kh,
-      description_en: form.description_en || null,
-      description_kh: form.description_kh || null,
-      order_index: form.order_index,
-    };
-
-    const save = async () => {
-      if (entity === "units") {
-        return editing
-          ? adminApi.updateUnit(track, editing.id, base)
-          : adminApi.createUnit(track, base);
-      }
-      if (entity === "chapters") {
-        const body = {
-          ...base,
-          unit_id: Number(form.parent_id),
-          ...(isWordDetection ? { level: form.level } : {}),
-        };
-        return editing
-          ? adminApi.updateChapter(track, editing.id, body)
-          : adminApi.createChapter(track, body);
-      }
-      const body = { ...base, chapter_id: Number(form.parent_id) };
-      return editing
-        ? adminApi.updateLesson(track, editing.id, body)
-        : adminApi.createLesson(track, body);
-    };
-
-    const ok = await runAction(save, "Saved as draft successfully");
-    if (ok) setFormOpen(false);
   };
 
   const handlePublish = async () => {
@@ -523,84 +460,6 @@ export default function CurriculumTablePage({
         />
       </Stack>
 
-      {/* Create / Edit Form Dialog */}
-      <FormDialog
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        title={editing ? `Edit ${entityLabel.slice(0, -1)}` : `Create ${entityLabel.slice(0, -1)}`}
-        subtitle="New items are saved as drafts. Publish when ready."
-        onSubmit={handleSave}
-        loading={busy}
-        submitLabel="Save Draft"
-        cancelLabel="Cancel"
-      >
-        {entity !== "units" && (
-          <TextField
-            select
-            required
-            fullWidth
-            label={parentLabel}
-            value={form.parent_id}
-            onChange={(e) => setForm({ ...form, parent_id: Number(e.target.value) })}
-            sx={{ gridColumn: "1 / -1" }}
-          >
-            {parentOptions.map((option) => (
-              <MenuItem key={option.id} value={option.id}>
-                {option.name_en} · {option.name_kh}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
-        <TextField
-          required
-          fullWidth
-          label="Name (EN)"
-          value={form.name_en}
-          onChange={(e) => setForm({ ...form, name_en: e.target.value })}
-        />
-        <TextField
-          required
-          fullWidth
-          label="Name (KH)"
-          value={form.name_kh}
-          onChange={(e) => setForm({ ...form, name_kh: e.target.value })}
-        />
-        <TextField
-          fullWidth
-          multiline
-          minRows={2}
-          label="Description (EN)"
-          value={form.description_en}
-          onChange={(e) => setForm({ ...form, description_en: e.target.value })}
-        />
-        <TextField
-          fullWidth
-          multiline
-          minRows={2}
-          label="Description (KH)"
-          value={form.description_kh}
-          onChange={(e) => setForm({ ...form, description_kh: e.target.value })}
-        />
-        <TextField
-          type="number"
-          label="Sort Order"
-          value={form.order_index}
-          onChange={(e) =>
-            setForm({ ...form, order_index: Number.parseInt(e.target.value, 10) || 0 })
-          }
-        />
-        {entity === "chapters" && isWordDetection && (
-          <TextField
-            type="number"
-            label="Level"
-            value={form.level}
-            onChange={(e) =>
-              setForm({ ...form, level: Number.parseInt(e.target.value, 10) || 0 })
-            }
-          />
-        )}
-      </FormDialog>
-
       {/* Publish Confirmation */}
       <ConfirmDialog
         open={publishTarget !== null}
@@ -633,6 +492,9 @@ export default function CurriculumTablePage({
         confirmLabel="Restore"
         loading={busy}
       />
+
+      {/* Success notification from form submission */}
+      <SuccessSnackbar />
     </>
   );
 }

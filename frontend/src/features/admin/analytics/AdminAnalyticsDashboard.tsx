@@ -17,6 +17,12 @@ import { useCallback, useEffect, useState } from "react";
 import PageHeader from "@/features/admin/components/shared/PageHeader";
 import AreaChart from "@/features/admin/components/charts/AreaChart";
 import DonutChart from "@/features/admin/components/charts/DonutChart";
+import { useTranslation } from "@/i18n/useTranslation";
+
+import {
+  getDashboardAnalytics,
+  type DashboardAnalyticsResponse,
+} from "@/features/admin/api/analyticsAdminApi";
 
 import StatCards from "./StatCards";
 import type { KpiData } from "./StatCards";
@@ -44,12 +50,13 @@ function SectionError({
   error: string;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Alert
       severity="error"
       action={
         <Button color="inherit" size="small" onClick={onRetry}>
-          Retry
+          {t("PAGE.RETRY")}
         </Button>
       }
     >
@@ -93,77 +100,111 @@ function BarListSkeleton() {
   );
 }
 
-// ── Mock data ────────────────────────────────────────────────────────────────
+// ── Helper: format KPI value for display ─────────────────────────────────────
 
-const MOCK_KPIS: KpiData[] = [
-  { title: "Total Users", value: "2,847", change: 12 },
-  { title: "Active Users Today", value: "183", change: 8 },
-  { title: "Completed Lessons", value: "1,264", change: 15 },
-  { title: "Quiz Attempts", value: "3,891", change: 5 },
-  { title: "Average Quiz Score", value: "78%", change: 3 },
-  { title: "AI Recognition Accuracy", value: "92%", change: -2 },
-];
+function formatKpiValue(key: string, value: number): string {
+  if (key === "avg_quiz_score" || key === "ai_recognition_accuracy") {
+    return `${Math.round(value)}%`;
+  }
+  return value.toLocaleString();
+}
 
-// Active Users: show Jan → current month only.
-// "Active" = user has a valid (non-expired) 7-day refresh token.
-const ALL_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const ALL_ACTIVE_USERS_DATA = [120, 180, 150, 220, 280, 310, 290, 350, 380, 420, 390, 450];
-const CURRENT_MONTH_INDEX = new Date().getMonth(); // 0-based
-const ACTIVE_USERS_CATEGORIES = ALL_MONTHS.slice(0, CURRENT_MONTH_INDEX + 1);
-const ACTIVE_USERS_SERIES = [
-  {
-    name: "Active Users",
-    data: ALL_ACTIVE_USERS_DATA.slice(0, CURRENT_MONTH_INDEX + 1),
-  },
-];
+// ── Helper: map API response to KpiData[] ────────────────────────────────────
 
-const COMPLETION_RATE_SERIES = [72, 28]; // Completed, Remaining
-const COMPLETION_RATE_LABELS = ["Completed", "Remaining"];
+function mapKpis(
+  response: DashboardAnalyticsResponse,
+  t: ReturnType<typeof useTranslation>["t"],
+): KpiData[] {
+  const entries: { key: string; title: string }[] = [
+    { key: "total_users", title: t("ANALYTICS.TOTAL_USERS") },
+    { key: "active_users_today", title: t("ANALYTICS.ACTIVE_USERS_WEEK") },
+    { key: "completed_lessons", title: t("ANALYTICS.COMPLETED_LESSONS") },
+    { key: "quiz_attempts", title: t("ANALYTICS.QUIZ_ATTEMPTS") },
+    { key: "avg_quiz_score", title: t("ANALYTICS.AVG_QUIZ_SCORE") },
+    { key: "ai_recognition_accuracy", title: t("ANALYTICS.AI_RECOGNITION_ACCURACY") },
+  ];
 
-const LEARNING_PROGRESS_DATA: BarListItem[] = [
-  { label: "Finger Spelling", value: 78 },
-  { label: "Word Detection", value: 65 },
-  { label: "Grammar Basics", value: 52 },
-  { label: "Sentence Building", value: 40 },
-];
+  return entries.map(({ key, title }) => {
+    const kpi = response[key as keyof DashboardAnalyticsResponse] as {
+      value: number;
+      change: number;
+    };
+    return {
+      title,
+      value: formatKpiValue(key, kpi.value),
+      change: kpi.change,
+    };
+  });
+}
 
-const MOST_PRACTICED_DATA: BarListItem[] = [
-  { label: "Hello (សួស្ដី)", value: 95 },
-  { label: "Thank You (អរគុណ)", value: 88 },
-  { label: "Please (សូម)", value: 72 },
-  { label: "Sorry (សុំទោស)", value: 65 },
-];
+// ── Chart data types from API ────────────────────────────────────────────────
 
-const MOST_DIFFICULT_DATA: BarListItem[] = [
-  { label: "Complex Sentences", value: 28 },
-  { label: "Number Signs (11-20)", value: 35 },
-  { label: "Family Relations", value: 42 },
-  { label: "Time Expressions", value: 45 },
-];
+interface ChartsData {
+  activeUsersSeries: { name: string; data: number[] }[];
+  activeUsersCategories: string[];
+  donutSeries: number[];
+  donutLabels: string[];
+  trackProgress: BarListItem[];
+  mostPracticed: BarListItem[];
+  mostDifficult: BarListItem[];
+  feedbackDistribution: BarListItem[];
+}
 
-const FEEDBACK_DATA: BarListItem[] = [
-  { label: "Content Quality", value: 40 },
-  { label: "Recognition Accuracy", value: 30 },
-  { label: "Bug Reports", value: 18 },
-  { label: "General", value: 12 },
-];
+function mapCharts(
+  response: DashboardAnalyticsResponse,
+  t: ReturnType<typeof useTranslation>["t"],
+): ChartsData {
+  return {
+    activeUsersSeries: [
+      { name: "Active Users", data: response.monthly_active_users.series },
+    ],
+    activeUsersCategories: response.monthly_active_users.categories,
+    donutSeries: [
+      response.learning_progress_donut.completed,
+      response.learning_progress_donut.remaining,
+    ],
+    donutLabels: [t("ANALYTICS.COMPLETED"), t("ANALYTICS.REMAINING")],
+    trackProgress: response.track_progress.map((tp) => ({
+      label: tp.label,
+      value: tp.value,
+    })),
+    mostPracticed: response.most_practiced.map((mp) => ({
+      label: mp.label,
+      value: mp.value,
+    })),
+    mostDifficult: response.most_difficult.map((md) => ({
+      label: md.label,
+      value: md.value,
+    })),
+    feedbackDistribution: response.feedback_distribution.map((fd) => ({
+      label: fd.label,
+      value: fd.value,
+    })),
+  };
+}
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
 export default function AdminAnalyticsDashboard() {
+  const { t } = useTranslation();
   const [kpis, setKpis] = useState<SectionState<KpiData[]>>(initialSection());
-  const [charts, setCharts] = useState<SectionState<boolean>>(initialSection());
+  const [charts, setCharts] = useState<SectionState<ChartsData>>(initialSection());
 
   const fetchData = useCallback(async () => {
     setKpis({ data: null, loading: true, error: null });
     setCharts({ data: null, loading: true, error: null });
 
-    // Simulate loading delay for skeleton display
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    setKpis({ data: MOCK_KPIS, loading: false, error: null });
-    setCharts({ data: true, loading: false, error: null });
-  }, []);
+    try {
+      const response = await getDashboardAnalytics();
+      setKpis({ data: mapKpis(response, t), loading: false, error: null });
+      setCharts({ data: mapCharts(response, t), loading: false, error: null });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t("ANALYTICS.FAILED_TO_LOAD");
+      setKpis({ data: null, loading: false, error: message });
+      setCharts({ data: null, loading: false, error: message });
+    }
+  }, [t]);
 
   useEffect(() => {
     fetchData();
@@ -175,11 +216,11 @@ export default function AdminAnalyticsDashboard() {
     <Stack spacing={3}>
       {/* Page Header */}
       <PageHeader
-        title="Analytics"
-        subtitle="Monitor platform usage and learner progress"
+        title={t("ANALYTICS.TITLE")}
+        subtitle={t("ANALYTICS.SUBTITLE")}
         breadcrumbs={[
-          { label: "Admin", href: "/admin" },
-          { label: "Analytics" },
+          { label: t("PAGE.ANALYTICS"), href: "/admin" },
+          { label: t("ANALYTICS.TITLE") },
         ]}
         action={
           <Button
@@ -188,7 +229,7 @@ export default function AdminAnalyticsDashboard() {
             onClick={fetchData}
             disabled={isAnyLoading}
           >
-            Refresh
+            {t("PAGE.REFRESH")}
           </Button>
         }
       />
@@ -205,19 +246,21 @@ export default function AdminAnalyticsDashboard() {
       {/* Area Chart "Active Users" + DonutChart "Learning Progress" */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
-          {charts.loading ? (
+          {charts.error ? (
+            <SectionError error={charts.error} onRetry={fetchData} />
+          ) : charts.loading ? (
             <BarListSkeleton />
           ) : (
             <Card elevation={0} sx={{ height: "100%" }}>
               <CardHeader
-                title="Active Users"
-                subheader="Monthly active users (valid 7-day refresh token)"
+                title={t("ANALYTICS.ACTIVE_USERS")}
+                subheader={t("ANALYTICS.MONTHLY_ACTIVE_USERS")}
                 slotProps={{ title: { variant: "h6" }, subheader: { variant: "body2" } }}
               />
               <CardContent sx={{ pt: 0 }}>
                 <AreaChart
-                  series={ACTIVE_USERS_SERIES}
-                  categories={ACTIVE_USERS_CATEGORIES}
+                  series={charts.data!.activeUsersSeries}
+                  categories={charts.data!.activeUsersCategories}
                   height={300}
                 />
               </CardContent>
@@ -226,19 +269,21 @@ export default function AdminAnalyticsDashboard() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          {charts.loading ? (
+          {charts.error ? (
+            <SectionError error={charts.error} onRetry={fetchData} />
+          ) : charts.loading ? (
             <DonutChartSkeleton />
           ) : (
             <Card elevation={0} sx={{ height: "100%" }}>
               <CardHeader
-                title="Learning Progress"
-                subheader="Overall lesson completion percentage"
+                title={t("ANALYTICS.LEARNING_PROGRESS")}
+                subheader={t("ANALYTICS.OVERALL_COMPLETION")}
                 slotProps={{ title: { variant: "h6" }, subheader: { variant: "body2" } }}
               />
               <CardContent sx={{ pt: 0 }}>
                 <DonutChart
-                  series={COMPLETION_RATE_SERIES}
-                  labels={COMPLETION_RATE_LABELS}
+                  series={charts.data!.donutSeries}
+                  labels={charts.data!.donutLabels}
                   height={300}
                 />
               </CardContent>
@@ -250,34 +295,38 @@ export default function AdminAnalyticsDashboard() {
       {/* BarList "Learning Progress" + BarList "Most Practiced" */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
-          {charts.loading ? (
+          {charts.error ? (
+            <SectionError error={charts.error} onRetry={fetchData} />
+          ) : charts.loading ? (
             <BarListSkeleton />
           ) : (
             <Card elevation={0} sx={{ height: "100%" }}>
               <CardHeader
-                title="Learning Progress"
-                subheader="Progress by curriculum category"
+                title={t("ANALYTICS.LEARNING_PROGRESS")}
+                subheader={t("ANALYTICS.PROGRESS_BY_CATEGORY")}
                 slotProps={{ title: { variant: "h6" }, subheader: { variant: "body2" } }}
               />
               <CardContent sx={{ pt: 0 }}>
-                <BarListChart items={LEARNING_PROGRESS_DATA} />
+                <BarListChart items={charts.data!.trackProgress} />
               </CardContent>
             </Card>
           )}
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          {charts.loading ? (
+          {charts.error ? (
+            <SectionError error={charts.error} onRetry={fetchData} />
+          ) : charts.loading ? (
             <BarListSkeleton />
           ) : (
             <Card elevation={0} sx={{ height: "100%" }}>
               <CardHeader
-                title="Most Practiced"
-                subheader="Most frequently practiced signs"
+                title={t("ANALYTICS.MOST_PRACTICED")}
+                subheader={t("ANALYTICS.MOST_FREQUENTLY_PRACTICED")}
                 slotProps={{ title: { variant: "h6" }, subheader: { variant: "body2" } }}
               />
               <CardContent sx={{ pt: 0 }}>
-                <BarListChart items={MOST_PRACTICED_DATA} />
+                <BarListChart items={charts.data!.mostPracticed} />
               </CardContent>
             </Card>
           )}
@@ -287,34 +336,38 @@ export default function AdminAnalyticsDashboard() {
       {/* BarList "Most Difficult" + BarList "Feedback" */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
-          {charts.loading ? (
+          {charts.error ? (
+            <SectionError error={charts.error} onRetry={fetchData} />
+          ) : charts.loading ? (
             <BarListSkeleton />
           ) : (
             <Card elevation={0} sx={{ height: "100%" }}>
               <CardHeader
-                title="Most Difficult"
-                subheader="Lowest-scoring content items"
+                title={t("ANALYTICS.MOST_DIFFICULT")}
+                subheader={t("ANALYTICS.LOWEST_SCORING")}
                 slotProps={{ title: { variant: "h6" }, subheader: { variant: "body2" } }}
               />
               <CardContent sx={{ pt: 0 }}>
-                <BarListChart items={MOST_DIFFICULT_DATA} danger />
+                <BarListChart items={charts.data!.mostDifficult} danger />
               </CardContent>
             </Card>
           )}
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          {charts.loading ? (
+          {charts.error ? (
+            <SectionError error={charts.error} onRetry={fetchData} />
+          ) : charts.loading ? (
             <BarListSkeleton />
           ) : (
             <Card elevation={0} sx={{ height: "100%" }}>
               <CardHeader
-                title="Feedback"
-                subheader="Feedback breakdown by category"
+                title={t("ANALYTICS.FEEDBACK")}
+                subheader={t("ANALYTICS.FEEDBACK_BREAKDOWN")}
                 slotProps={{ title: { variant: "h6" }, subheader: { variant: "body2" } }}
               />
               <CardContent sx={{ pt: 0 }}>
-                <BarListChart items={FEEDBACK_DATA} />
+                <BarListChart items={charts.data!.feedbackDistribution} />
               </CardContent>
             </Card>
           )}

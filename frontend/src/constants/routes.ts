@@ -32,8 +32,7 @@ export const ROUTES = {
   admin: {
     root: "/admin",
     curriculum: "/admin/curriculum",
-    exercises: "/admin/exercises",
-    quiz: "/admin/quiz",
+    quiz: "/admin/learning/quiz",
     users: "/admin/users",
     media: "/admin/media",
     analytics: "/admin/analytics",

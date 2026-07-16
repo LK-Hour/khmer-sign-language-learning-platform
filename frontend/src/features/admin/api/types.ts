@@ -65,6 +65,13 @@ export interface AdminExerciseOption {
   order_index: number;
 }
 
+export interface AdminExerciseMedia {
+  id: number;
+  media_type: "video" | "gif" | "image";
+  file_url: string;
+  created_at: string;
+}
+
 export interface AdminExercise {
   id: number;
   lesson_id: number;
@@ -80,6 +87,7 @@ export interface AdminExercise {
   publish_status: PublishStatus;
   published_at: string | null;
   options: AdminExerciseOption[];
+  media: AdminExerciseMedia | null;
 }
 
 export interface AdminExerciseOptionPayload {

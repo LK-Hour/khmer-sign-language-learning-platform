@@ -9,6 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { useTranslation } from "@/i18n/useTranslation";
 import { ApiError } from "@/utils/api/client";
@@ -22,6 +23,7 @@ import PageHeader from "../components/shared/PageHeader";
 
 import ContributionTree from "./ContributionTree";
 import ContributionReviewList from "./ContributionReviewList";
+import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -40,6 +42,7 @@ function sumPendingCount(nodes: ContributionTreeNode[]): number {
 
 export default function AdminContributionsReview() {
   const { t } = useTranslation();
+  const router = useRouter();
 
   // Tree state
   const [tree, setTree] = useState<ContributionTreeNode[]>([]);
@@ -121,6 +124,10 @@ export default function AdminContributionsReview() {
     }
   }, [selectedWordId, fetchContributions]);
 
+  const handleReviewContribution = useCallback((contributionId: string) => {
+    router.push(`/admin/learning/contributions/${contributionId}/review`);
+  }, [router]);
+
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -198,9 +205,13 @@ export default function AdminContributionsReview() {
             error={contributionsError}
             selectedWordId={selectedWordId}
             onRetry={handleRetryContributions}
+            onReview={handleReviewContribution}
           />
         </Box>
       </Stack>
+
+      {/* Success notification from contribution review */}
+      <SuccessSnackbar />
     </>
   );
 }
