@@ -9,9 +9,9 @@ import PracticeCorrectOverlay from "@/features/shared/PracticeCorrectOverlay";
 import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 import type { RawHandDetection } from "@/features/finger-spelling/ml/useHandLandmarker";
 import type { FsPracticeItem } from "../../types";
-import LessonWebcamPanel from "../learning/LessonWebcamPanel";
-import { MetricCard, TipCard } from "../learning/PracticeInfoCards";
-import SignImageCard from "../learning/SignImageCard";
+import FingerSpellingCameraPanel from "../learning/FingerSpellingCameraPanel";
+import { MetricCard, TipCard } from "../learning/FingerSpellingPracticeInfoCards";
+import FingerSpellingSignImageCard from "../learning/FingerSpellingSignImageCard";
 
 const VISUAL_FRAME_SX = {
   position: "relative" as const,
@@ -207,7 +207,7 @@ export default function ChapterPracticeStep({
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack sx={VISUAL_FRAME_SX}>
-            <SignImageCard
+            <FingerSpellingSignImageCard
               src={item.practiceImageUrl}
               alt={`Character sign for ${letter}`}
             />
@@ -216,7 +216,7 @@ export default function ChapterPracticeStep({
 
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack sx={VISUAL_FRAME_SX}>
-            <LessonWebcamPanel
+            <FingerSpellingCameraPanel
               videoRef={videoRef}
               detectLandmarks={detectLandmarks}
               isLandmarkerReady={isLandmarkerReady}

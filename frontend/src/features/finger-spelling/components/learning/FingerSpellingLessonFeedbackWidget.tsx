@@ -8,7 +8,7 @@ import { submitLessonFeedback, type FeedbackMood, type FeedbackType } from "@/fe
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
-type LessonFeedbackWidgetProps = {
+type FingerSpellingLessonFeedbackWidgetProps = {
   type: FeedbackType;
   category: string;
   lessonId: number;
@@ -22,13 +22,13 @@ type MoodOption = {
   emoji: string;
 };
 
-export default function LessonFeedbackWidget({
+export default function FingerSpellingLessonFeedbackWidget({
   type,
   category,
   lessonId,
   characteristic,
   resultReady,
-}: LessonFeedbackWidgetProps) {
+}: FingerSpellingLessonFeedbackWidgetProps) {
   const { t } = useTranslation();
   const [hasShown, setHasShown] = useState(false);
   const [collapsed, setCollapsed] = useState(false);

@@ -40,7 +40,7 @@ export default function ExerciseTrueFalse({ question, selected, onSelect, review
       {question.media_url && (
         <ExerciseSignMedia url={question.media_url} alt="Sign" size={180} />
       )}
-      <Stack direction="row" spacing={2} justifyContent="center" sx={{ width: "100%" }}>
+      <Stack direction="row" spacing={2} sx={{ width: "100%", justifyContent: "center" }}>
         {question.options.map((opt) => {
           const state = optionState(opt.id);
           const style = styleMap[state];
@@ -75,7 +75,7 @@ export default function ExerciseTrueFalse({ question, selected, onSelect, review
               <Typography sx={{ fontSize: 28 }}>{isTrue ? "✓" : "✗"}</Typography>
               <Typography
                 sx={{
-                  fontFamily: locale === "kh" ? fontFamilies.kh : fontFamilies.english,
+                  fontFamily: locale === "kh" ? fontFamilies.khmer : fontFamilies.english,
                   fontWeight: 700,
                   fontSize: KslFontSizes.md,
                 }}

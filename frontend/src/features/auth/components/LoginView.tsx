@@ -25,6 +25,7 @@ import {
 import Iconify from '@/components/iconify';
 import { ROUTES } from '@/constants/routes';
 import {
+  exchangeTelegramCode,
   fetchCurrentUser,
   importGuestProgress,
   loginAsGuest,
@@ -32,7 +33,7 @@ import {
   loginWithFacebook,
   loginWithGoogle,
 } from '@/features/auth/api/auth';
-import type { AuthTokenResponse, AuthUser } from '@/store/auth.store';
+import type { AuthTokenResponse } from '@/store/auth.store';
 import { useLocaleStore } from '@/store/locale.store';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useAuthStore } from '@/store/auth.store';
@@ -186,9 +187,8 @@ export function LoginView() {
   );
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const exchangeCode = searchParams.get('exchange_code');
     const provider = searchParams.get('provider');
-    const user = searchParams.get('user');
     const error = searchParams.get('error');
 
     if (error) {
@@ -198,31 +198,22 @@ export function LoginView() {
       return;
     }
 
-    if (!token || provider !== 'telegram') return;
-    if (handledTelegramTokenRef.current === token) return;
+    if (!exchangeCode || provider !== 'telegram') return;
+    if (handledTelegramTokenRef.current === exchangeCode) return;
 
-    handledTelegramTokenRef.current = token;
+    handledTelegramTokenRef.current = exchangeCode;
 
-    try {
-      const parsedUser = user ? (JSON.parse(user) as AuthUser) : null;
-
-      if (!parsedUser) {
+    // The widget redirect only carries a short-lived, single-use exchange
+    // code (never the real access token) — exchange it via POST immediately.
+    void exchangeTelegramCode(exchangeCode)
+      .then((response) => {
+        void completeLearnerLogin(response);
+      })
+      .catch(() => {
         queueMicrotask(() => {
-          setAuthError(t("LOGIN.TELEGRAM_NO_USER"));
+          setAuthError(t("LOGIN.TELEGRAM_BAD_RESPONSE"));
         });
-        return;
-      }
-
-      void completeLearnerLogin({
-        access_token: token,
-        token_type: 'bearer',
-        user: parsedUser,
       });
-    } catch {
-      queueMicrotask(() => {
-        setAuthError(t("LOGIN.TELEGRAM_BAD_RESPONSE"));
-      });
-    }
   }, [completeLearnerLogin, searchParams, t]);
 
   useEffect(() => {

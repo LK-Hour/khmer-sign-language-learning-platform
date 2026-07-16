@@ -31,7 +31,7 @@ function landmarkKey(detection: WordDetectionLandmarks): string {
   return `${poseKey}::${handKey}`;
 }
 
-type WdCameraPanelProps = {
+type WordDetectionCameraPanelProps = {
   videoRef?: RefObject<HTMLVideoElement | null>;
   detectLandmarks: (video: HTMLVideoElement) => WordDetectionLandmarks;
   isLandmarkerReady: boolean;
@@ -39,13 +39,13 @@ type WdCameraPanelProps = {
   onRawStreamReady?: (stream: MediaStream | null) => void;
 };
 
-export default function WdCameraPanel({
+export default function WordDetectionCameraPanel({
   videoRef: externalVideoRef,
   detectLandmarks,
   isLandmarkerReady,
   onDetection,
   onRawStreamReady,
-}: WdCameraPanelProps) {
+}: WordDetectionCameraPanelProps) {
   const { t } = useTranslation();
   const internalVideoRef = useRef<HTMLVideoElement>(null);
   const videoRef = externalVideoRef ?? internalVideoRef;

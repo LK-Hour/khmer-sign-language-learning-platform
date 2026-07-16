@@ -6,7 +6,7 @@ import {
   fetchFsLessons,
   fetchFsUnit,
 } from "@/features/finger-spelling/api/curriculum";
-import { LessonLearningView } from "@/features/finger-spelling/components";
+import { FingerSpellingLessonLearningView } from "@/features/finger-spelling/components";
 import { getNextLessonInChapter } from "@/features/finger-spelling/utils/progress";
 
 type PageProps = {
@@ -34,7 +34,7 @@ export default async function LessonDetailPage({ params }: PageProps) {
 
   return (
     <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
-      <LessonLearningView
+      <FingerSpellingLessonLearningView
         lesson={lesson}
         unit={unit}
         chapter={chapter}

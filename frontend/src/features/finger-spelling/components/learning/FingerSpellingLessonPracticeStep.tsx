@@ -20,10 +20,10 @@ import type {
   RawHandDetection,
 } from "@/features/finger-spelling/ml/useHandLandmarker";
 import type { StabilityState } from "@/features/finger-spelling/ml/useStabilityDetector";
-import LessonWebcamPanel from "./LessonWebcamPanel";
-import PracticeFeedbackPanel from "./PracticeFeedbackPanel";
-import { MetricCard, TipCard } from "./PracticeInfoCards";
-import SignImageCard from "./SignImageCard";
+import FingerSpellingCameraPanel from "./FingerSpellingCameraPanel";
+import FingerSpellingPracticeFeedbackPanel from "./FingerSpellingPracticeFeedbackPanel";
+import { MetricCard, TipCard } from "./FingerSpellingPracticeInfoCards";
+import FingerSpellingSignImageCard from "./FingerSpellingSignImageCard";
 
 const VISUAL_FRAME_SX = {
   position: "relative" as const,
@@ -32,7 +32,7 @@ const VISUAL_FRAME_SX = {
   flexShrink: 0,
 };
 
-type LessonPracticeStepProps = {
+type FingerSpellingLessonPracticeStepProps = {
   letter: string;
   imageUrl: string;
   tip?: string | null;
@@ -67,7 +67,7 @@ type LessonPracticeStepProps = {
   predictorReady?: boolean;
 };
 
-export default function LessonPracticeStep({
+export default function FingerSpellingLessonPracticeStep({
   letter,
   imageUrl,
   tip,
@@ -95,7 +95,7 @@ export default function LessonPracticeStep({
   liveConfidence = 0,
   liveLabelMatches = null,
   predictorReady = false,
-}: LessonPracticeStepProps) {
+}: FingerSpellingLessonPracticeStepProps) {
   const { t } = useTranslation();
 
   const hasCapturedPrediction = !!capturedLabel && capturedConfidence != null;
@@ -169,7 +169,7 @@ export default function LessonPracticeStep({
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
-              <SignImageCard src={imageUrl} alt={`Sign for ${letter}`} />
+              <FingerSpellingSignImageCard src={imageUrl} alt={`This is sign for ${letter}`} />
             </Stack>
             <Typography
               sx={{
@@ -186,7 +186,7 @@ export default function LessonPracticeStep({
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
-              <LessonWebcamPanel
+              <FingerSpellingCameraPanel
                 resetKey={cameraResetKey}
                 videoRef={videoRef}
                 detectLandmarks={detectLandmarks}
@@ -258,7 +258,7 @@ export default function LessonPracticeStep({
         </Grid>
       </Grid>
 
-      <PracticeFeedbackPanel
+      <FingerSpellingPracticeFeedbackPanel
         title={t("FINGER_SPELLING.LESSON.CORRECTION_RESULT")}
         text={correctionText}
         continueLabel={continueLabel}

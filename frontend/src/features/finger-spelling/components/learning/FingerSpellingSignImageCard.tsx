@@ -8,7 +8,7 @@ type SignImageCardProps = {
   alt: string;
 };
 
-export default function SignImageCard({ src, alt }: SignImageCardProps) {
+export default function FingerSpellingSignImageCard({ src, alt }: SignImageCardProps) {
   return (
     <Stack
       sx={{
@@ -18,7 +18,7 @@ export default function SignImageCard({ src, alt }: SignImageCardProps) {
         borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
         boxShadow: KslShadows.drop,
-        bgcolor: KslColors.primaryLight,
+        bgcolor: KslColors.secondaryLight,
       }}
     >
       <Image

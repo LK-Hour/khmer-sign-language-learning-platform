@@ -6,12 +6,12 @@ import type { RefObject } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import { labelsMatch } from "@/features/shared/usePredictionRetry";
 import PracticeCorrectOverlay from "@/features/shared/PracticeCorrectOverlay";
-import SignImageCard from "@/features/finger-spelling/components/learning/SignImageCard";
-import { MetricCard, TipCard } from "@/features/finger-spelling/components/learning/PracticeInfoCards";
+import FingerSpellingSignImageCard from "@/features/finger-spelling/components/learning/FingerSpellingSignImageCard";
+import { MetricCard, TipCard } from "@/features/finger-spelling/components/learning/FingerSpellingPracticeInfoCards";
 import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 import type { WordDetectionLandmarks } from "../../ml/useWordDetectionLandmarker";
 import type { WdPracticeItem } from "../../types";
-import WdCameraPanel from "../learning/WordDetectionCameraPanel";
+import WordDetectionCameraPanel from "../learning/WordDetectionCameraPanel";
 
 const VISUAL_FRAME_SX = {
   position: "relative" as const,
@@ -32,7 +32,7 @@ type ChapterPracticeStepProps = {
   isLandmarkerReady?: boolean;
   recError?: string | null;
   videoRef?: RefObject<HTMLVideoElement | null>;
-  detectLandmarks: Parameters<typeof WdCameraPanel>[0]["detectLandmarks"];
+  detectLandmarks: Parameters<typeof WordDetectionCameraPanel>[0]["detectLandmarks"];
   onDetection?: (detection: WordDetectionLandmarks) => void;
   capturedLabel?: string | null;
   capturedConfidence?: number | null;
@@ -201,7 +201,7 @@ export default function ChapterPracticeStep({
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack sx={VISUAL_FRAME_SX}>
-            <SignImageCard
+            <FingerSpellingSignImageCard
               src={item.practiceImageUrl}
               alt={`Word sign for ${word}`}
             />
@@ -210,7 +210,7 @@ export default function ChapterPracticeStep({
 
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack sx={VISUAL_FRAME_SX}>
-            <WdCameraPanel
+            <WordDetectionCameraPanel
               videoRef={videoRef}
               detectLandmarks={detectLandmarks}
               isLandmarkerReady={isLandmarkerReady}

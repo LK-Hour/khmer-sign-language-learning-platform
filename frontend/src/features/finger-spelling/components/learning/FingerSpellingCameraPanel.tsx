@@ -5,9 +5,9 @@ import { Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type { RawHandDetection } from "@/features/finger-spelling/ml/useHandLandmarker";
 import { useTranslation } from "@/i18n/useTranslation";
-import { KslFontSizes, KslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslPalette, KslRadii } from "@/theme/theme";
 
-type LessonWebcamPanelProps = {
+type FingerSpellingCameraPanelProps = {
   resetKey?: number;
   videoRef?: RefObject<HTMLVideoElement | null>;
   detectLandmarks: (video: HTMLVideoElement) => RawHandDetection;
@@ -22,13 +22,13 @@ function stopStream(stream: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop());
 }
 
-export default function LessonWebcamPanel({
+export default function FingerSpellingCameraPanel({
   resetKey = 0,
   videoRef,
   detectLandmarks,
   isLandmarkerReady,
   onDetection,
-}: LessonWebcamPanelProps) {
+}: FingerSpellingCameraPanelProps) {
   const { t } = useTranslation();
   const internalVideoRef = useRef<HTMLVideoElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -167,7 +167,7 @@ export default function LessonWebcamPanel({
         height: "100%",
         borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
-        bgcolor: "grey.900",
+        bgcolor: KslColors.secondaryLight,
       }}
     >
       {!cameraError ? (

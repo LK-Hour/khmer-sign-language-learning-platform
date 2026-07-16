@@ -7,7 +7,7 @@ import {
   fetchWdUnit,
 } from "@/features/word-detection/api/curriculum";
 import { getNextLessonInChapter } from "@/features/word-detection/utils/progress";
-import WdLessonLearningView from "@/features/word-detection/components/learning/WordDetectionLessonLearningView";
+import { WordDetectionLessonLearningView } from "@/features/word-detection/components";
 
 type PageProps = {
   params: Promise<{ locale: string; lessonId: string }>;
@@ -34,7 +34,7 @@ export default async function WordDetectionLessonPage({ params }: PageProps) {
 
   return (
     <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
-      <WdLessonLearningView
+      <WordDetectionLessonLearningView
         lesson={lesson}
         unit={unit}
         chapter={chapter}

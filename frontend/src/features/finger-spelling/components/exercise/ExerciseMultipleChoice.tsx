@@ -66,7 +66,7 @@ export default function ExerciseMultipleChoice({ question, selected, onSelect, r
               >
                 <Typography
                   sx={{
-                    fontFamily: fontFamilies.kh,
+                    fontFamily: fontFamilies.khmer,
                     fontSize: KslFontSizes.xl,
                     fontWeight: 700,
                     lineHeight: 1.4,

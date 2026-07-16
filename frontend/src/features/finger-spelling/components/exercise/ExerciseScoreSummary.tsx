@@ -48,7 +48,7 @@ export default function ExerciseScoreSummary({ session, unitTitle, onBackToList 
       >
         <Typography
           sx={{
-            fontFamily: fontFamilies.display,
+            fontFamily: fontFamilies.sans,
             fontWeight: 900,
             fontSize: { xs: 56, md: 80 },
             lineHeight: 1,
@@ -81,7 +81,7 @@ export default function ExerciseScoreSummary({ session, unitTitle, onBackToList 
       {/* Review */}
       <Typography
         sx={{
-          fontFamily: fontFamilies.display,
+          fontFamily: fontFamilies.sans,
           fontWeight: 700,
           fontSize: KslFontSizes.xl,
           color: KslColors.textPrimary,

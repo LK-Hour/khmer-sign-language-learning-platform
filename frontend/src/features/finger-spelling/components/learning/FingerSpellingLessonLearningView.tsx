@@ -20,8 +20,8 @@ import {
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors } from "@/theme/theme";
 import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
-import LessonFeedbackWidget from "./LessonFeedbackWidget";
-import LessonPracticeStep from "./LessonPracticeStep";
+import FingerSpellingLessonFeedbackWidget from "./FingerSpellingLessonFeedbackWidget";
+import FingerSpellingLessonPracticeStep from "./FingerSpellingLessonPracticeStep";
 import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
 import { usePermissionStore } from "@/store/permission.store";
 import { PERMISSION_DIALOG_CONTENT } from "@/constants/permission-dialog";
@@ -48,19 +48,19 @@ const AUTO_RETRY_POLL_INTERVAL_MS = 300;
 
 // ─────────────────────────────────────────────────────────────────────────
 
-type LessonLearningViewProps = {
+type FingerSpellingLessonLearningViewProps = {
   lesson: FsLessonDetail;
   unit: FsUnit;
   chapter: FsChapter;
   nextLessonId?: number;
 };
 
-export default function LessonLearningView({
+export default function FingerSpellingLessonLearningView({
   lesson,
   unit,
   chapter,
   nextLessonId,
-}: LessonLearningViewProps) {
+}: FingerSpellingLessonLearningViewProps) {
   const router = useRouter();
   const { locale, t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -554,7 +554,7 @@ export default function LessonLearningView({
         </Typography>
       </Breadcrumbs>
 
-      <LessonPracticeStep
+      <FingerSpellingLessonPracticeStep
         letter={displayLetter}
         imageUrl={lesson?.imageUrl}
         tip={tip}
@@ -585,7 +585,7 @@ export default function LessonLearningView({
         onRetry={handleRetry}
         onContinue={handleContinue}
       />
-      <LessonFeedbackWidget
+      <FingerSpellingLessonFeedbackWidget
         key={lesson.id}
         type="finger_spelling"
         category={unit?.title || unit?.titleKh || ""}

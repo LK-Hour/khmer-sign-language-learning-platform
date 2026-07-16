@@ -5,8 +5,8 @@ import { type RefObject, useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
-import WdCameraPanel from "./WordDetectionCameraPanel";
-import WdWordCard from "./WordDetectionWordCard";
+import WordDetectionCameraPanel from "./WordDetectionCameraPanel";
+import WordDetectionWordCard from "./WordDetectionWordCard";
 
 const VISUAL_FRAME_SX = {
   position: "relative" as const,
@@ -39,13 +39,13 @@ type WordDetectionLessonPracticeStepProps = {
   onRetry?: () => void;
   onContinue: () => void | Promise<void>;
   videoRef?: RefObject<HTMLVideoElement | null>;
-  detectLandmarks: Parameters<typeof WdCameraPanel>[0]["detectLandmarks"];
+  detectLandmarks: Parameters<typeof WordDetectionCameraPanel>[0]["detectLandmarks"];
   isLandmarkerReady: boolean;
-  onDetection?: Parameters<typeof WdCameraPanel>[0]["onDetection"];
-  onRawStreamReady?: Parameters<typeof WdCameraPanel>[0]["onRawStreamReady"];
+  onDetection?: Parameters<typeof WordDetectionCameraPanel>[0]["onDetection"];
+  onRawStreamReady?: Parameters<typeof WordDetectionCameraPanel>[0]["onRawStreamReady"];
 };
 
-export default function WdLessonPracticeStep({
+export default function WordDetectionLessonPracticeStep({
   word,
   videoUrl,
   tip,
@@ -117,7 +117,7 @@ export default function WdLessonPracticeStep({
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
-              <WdWordCard videoUrl={sampleVideoUrl} />
+              <WordDetectionWordCard videoUrl={sampleVideoUrl} />
             </Stack>
             <Typography
               sx={{
@@ -134,7 +134,7 @@ export default function WdLessonPracticeStep({
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
-              <WdCameraPanel
+              <WordDetectionCameraPanel
                 videoRef={videoRef}
                 detectLandmarks={detectLandmarks}
                 isLandmarkerReady={isLandmarkerReady}

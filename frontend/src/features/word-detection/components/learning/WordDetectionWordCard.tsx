@@ -10,7 +10,7 @@ import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
-type WdWordCardProps = {
+type WordDetectionWordCardProps = {
   videoUrl?: string | null;
 };
 
@@ -85,7 +85,7 @@ function useVideoThumbnail(src: string) {
   return thumbnail;
 }
 
-export default function WdWordCard({ videoUrl }: WdWordCardProps) {
+export default function WordDetectionWordCard({ videoUrl }: WordDetectionWordCardProps) {
   const { t } = useTranslation();
   const rawSrc = videoUrl?.trim() ?? "";
   const src = useMemo(() => (rawSrc ? resolveApiAssetUrl(rawSrc) ?? rawSrc : ""), [rawSrc]);

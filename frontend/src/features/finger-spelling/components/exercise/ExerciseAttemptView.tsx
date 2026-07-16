@@ -168,7 +168,7 @@ export default function ExerciseAttemptView({
         <Box sx={{ flex: 1 }}>
           <Typography
             sx={{
-              fontFamily: fontFamilies.display,
+              fontFamily: fontFamilies.sans,
               fontWeight: 700,
               fontSize: KslFontSizes.xl,
               color: KslColors.textPrimary,

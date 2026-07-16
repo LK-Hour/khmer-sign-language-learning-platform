@@ -23,7 +23,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
 import { PERMISSION_DIALOG_CONTENT } from "@/constants/permission-dialog";
 import { usePermissionStore } from "@/store/permission.store";
-import WdLessonPracticeStep from "./WordDetectionLessonPracticeStep";
+import WordDetectionLessonPracticeStep from "./WordDetectionLessonPracticeStep";
 import WordRecordingPreview from "./WordRecordingPreview";
 
 const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 100;
@@ -48,19 +48,19 @@ const EMPTY_WORD_DETECTION: WordDetectionLandmarks = {
   sequenceFeatures: null,
 };
 
-type WdLessonLearningViewProps = {
+type WordDetectionLessonLearningViewProps = {
   lesson: WdLessonDetail;
   unit: WdUnit;
   chapter: WdChapter;
   nextLessonId?: number;
 };
 
-export default function WdLessonLearningView({
+export default function WordDetectionLessonLearningView({
   lesson,
   unit,
   chapter,
   nextLessonId,
-}: WdLessonLearningViewProps) {
+}: WordDetectionLessonLearningViewProps) {
   const { locale, t } = useTranslation();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -514,7 +514,7 @@ export default function WdLessonLearningView({
         </Typography>
       </Breadcrumbs>
       {/* ── Main practice layout ─────────────────────────────────────── */}
-      <WdLessonPracticeStep
+      <WordDetectionLessonPracticeStep
         word={lesson.word}
         videoUrl={lesson.videoUrl}
         tip={tip}

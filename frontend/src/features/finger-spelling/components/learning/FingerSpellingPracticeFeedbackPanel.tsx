@@ -19,7 +19,7 @@ type PracticeFeedbackPanelProps = {
   onContinue: () => void | Promise<void>;
 };
 
-export default function PracticeFeedbackPanel({
+export default function FingerSpellingPracticeFeedbackPanel({
   title,
   text,
   continueLabel,

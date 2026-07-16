@@ -86,7 +86,7 @@ export default function ExerciseMatching({ question, pairs, onSetPairs, reviewRe
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="flex-start">
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
         {/* Left: text labels */}
         <Stack spacing={1} sx={{ flex: 1 }}>
           {labelOptions.map((opt) => {
@@ -117,7 +117,7 @@ export default function ExerciseMatching({ question, pairs, onSetPairs, reviewRe
               >
                 <Typography
                   sx={{
-                    fontFamily: fontFamilies.kh,
+                    fontFamily: fontFamilies.khmer,
                     fontSize: KslFontSizes.xl,
                     fontWeight: 700,
                   }}

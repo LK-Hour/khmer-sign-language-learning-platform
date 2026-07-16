@@ -87,6 +87,18 @@ export function loginWithFacebook(code: string): Promise<AuthTokenResponse> {
   });
 }
 
+/**
+ * Exchanges the short-lived one-time code from the Telegram widget redirect
+ * for the real access token. Keeps the token out of the URL/browser history.
+ */
+export function exchangeTelegramCode(code: string): Promise<AuthTokenResponse> {
+  return apiFetch<AuthTokenResponse>('/api/auth/login/telegram/exchange', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+    skipAuth: true,
+  });
+}
+
 export function loginAsGuest(): Promise<AuthTokenResponse> {
   return Promise.resolve({
     access_token: '',
