@@ -62,6 +62,7 @@ export async function refreshAuthSession(): Promise<string | null> {
             const retryToken = (await retryRes.json()) as {
               access_token: string;
               token_type: string;
+              user?: { id: string; email: string | null; first_name: string; last_name: string | null; picture: string | null; provider: string; account_type?: string; is_guest?: boolean } | null;
             };
             store.setAccessToken(retryToken);
             return retryToken?.access_token;
@@ -75,6 +76,7 @@ export async function refreshAuthSession(): Promise<string | null> {
       const tokenResp = (await res.json()) as {
         access_token: string;
         token_type: string;
+        user?: { id: string; email: string | null; first_name: string; last_name: string | null; picture: string | null; provider: string; account_type?: string; is_guest?: boolean } | null;
       };
       store.setAccessToken(tokenResp);
       return tokenResp?.access_token;

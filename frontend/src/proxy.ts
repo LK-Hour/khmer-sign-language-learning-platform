@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { LOCALE_HEADER } from "@/lib/seo/config";
 
 const SUPPORTED_LOCALES = ["kh", "en"] as const;
 const DEFAULT_LOCALE = "kh";
 
 function isValidLocale(locale: string): boolean {
   return SUPPORTED_LOCALES.includes(locale as (typeof SUPPORTED_LOCALES)[number]);
+}
+
+function withLocaleHeader(request: NextRequest, locale: string) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(LOCALE_HEADER, locale);
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export function proxy(request: NextRequest) {
@@ -16,7 +23,8 @@ export function proxy(request: NextRequest) {
   );
 
   if (pathnameHasLocale) {
-    return NextResponse.next();
+    const locale = pathname.split("/")[1];
+    return withLocaleHeader(request, locale);
   }
 
   // Try to get locale from cookie

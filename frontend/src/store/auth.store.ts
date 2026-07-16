@@ -37,8 +37,8 @@ interface AuthState {
   /** Start a local-only guest session. */
   setGuestAuth: () => void;
 
-  /** Update only the access token after a background refresh. */
-  setAccessToken: (response: { access_token: string; token_type: string }) => void;
+  /** Update only the access token after a background refresh. Also updates user if present. */
+  setAccessToken: (response: { access_token: string; token_type: string; user?: AuthUser | null }) => void;
 
   setRefreshing: (isRefreshing: boolean) => void;
 
@@ -131,13 +131,18 @@ export const useAuthStore = create<AuthState>()(
       setAccessToken: (response) =>
         set((state) => {
           if (!state.user) return state;
+          // If the refresh response includes user data, merge it to pick up role changes
+          const updatedUser = response?.user
+            ? { ...state.user, ...response.user }
+            : state.user;
           return {
             token: response?.access_token,
             tokenExpiresAt: resolveTokenExpiresAt({
               access_token: response?.access_token,
               token_type: response?.token_type,
-              user: state.user,
+              user: updatedUser,
             }),
+            user: updatedUser,
             isAuthenticated: true,
           };
         }),
