@@ -172,6 +172,8 @@
     "LESSON_LETTERS": "Lesson Letters",
     "LESSON_WORDS": "Lesson Words",
     "ASSOCIATED_MEDIA": "Associated Media",
+    "MEDIA_PREVIEW": "Media Preview",
+    "NO_MEDIA_ASSOCIATED": "No media associated yet. Add media below.",
     "CHARACTER": "Character",
     "CHARACTERS": "Characters",
     "WORD": "Word",
