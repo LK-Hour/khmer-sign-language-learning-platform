@@ -22,7 +22,6 @@ def _utc_now_naive() -> datetime:
 
 
 class WordDetectionProgressService:
-    PRACTICE_PASS_ACCURACY = 50
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -52,24 +51,25 @@ class WordDetectionProgressService:
 
         progress.attempts = (progress.attempts or 0) + 1
 
-        if passed:
-            progress.is_completed = True
-            if progress.completed_at is None:
-                progress.completed_at = progress.last_practiced_at
+        # Always record predicted_confidence (running average across attempts)
+        if predicted_confidence is not None:
+            if progress.predicted_confidence is None:
+                progress.predicted_confidence = predicted_confidence
+            else:
+                progress.predicted_confidence = (
+                    progress.predicted_confidence + predicted_confidence
+                ) / 2
 
-            # Write predicted_confidence only when completing
-            if predicted_confidence is not None:
-                if progress.predicted_confidence is None:
-                    progress.predicted_confidence = predicted_confidence
-                else:
-                    progress.predicted_confidence = (
-                        progress.predicted_confidence + predicted_confidence
-                    ) / 2
+        # Always mark lesson as complete when user clicks Continue/Next.
+        # If label didn't match (max retry skip), predicted_confidence will be 0.
+        progress.is_completed = True
+        progress.is_locked = False
+        if progress.completed_at is None:
+            progress.completed_at = progress.last_practiced_at
 
         self.db.commit()
         self.db.refresh(progress)
-        if passed:
-            WordDetectionLockingService.clear_cache()
+        WordDetectionLockingService.clear_cache()
         return progress
 
     def complete_lesson(

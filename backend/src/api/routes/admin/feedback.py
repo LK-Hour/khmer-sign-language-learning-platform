@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_admin_user, get_db
@@ -69,3 +69,39 @@ def list_feedback(
         "size": size,
         "pages": pages,
     }
+
+
+@router.get("/{feedback_id}")
+def get_feedback(
+    feedback_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Get a single feedback entry by ID."""
+    fb = db.query(LessonFeedback).filter(LessonFeedback.id == feedback_id).first()
+    if not fb:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    return {
+        "id": fb.id,
+        "type": fb.type.value if fb.type else None,
+        "category": fb.category,
+        "lesson_id": fb.lesson_id,
+        "characteristic": fb.characteristic,
+        "mood": fb.mood.value if fb.mood else None,
+        "comment": fb.comment,
+        "created_at": fb.created_at.isoformat() if fb.created_at else None,
+    }
+
+
+@router.delete("/{feedback_id}", status_code=204)
+def delete_feedback(
+    feedback_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Delete a feedback entry."""
+    fb = db.query(LessonFeedback).filter(LessonFeedback.id == feedback_id).first()
+    if not fb:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    db.delete(fb)
+    db.commit()

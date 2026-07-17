@@ -38,9 +38,10 @@ class FingerPracticeService:
         user_id: uuid.UUID,
         lesson_id: int,
         accuracy: float | None,
+        label_matched: bool = False,
     ) -> PracticeAttemptResult | None:
         try:
-            logger.info(f"[record_attempt] user_id={user_id}, lesson_id={lesson_id}, accuracy={accuracy}")
+            logger.info(f"[record_attempt] user_id={user_id}, lesson_id={lesson_id}, accuracy={accuracy}, label_matched={label_matched}")
 
             lesson = self.curriculum.get_lesson_by_id(lesson_id, active_only=True)
             if lesson is None:
@@ -48,10 +49,10 @@ class FingerPracticeService:
                 return None
 
             normalized_accuracy = None if accuracy is None else round(float(accuracy), 2)
-            passed = (
-                normalized_accuracy is not None
-                and normalized_accuracy >= FingerProgressService.PRACTICE_PASS_ACCURACY
-            )
+            # Use explicit label_matched signal from the client instead of
+            # comparing accuracy to a threshold — this ensures max-retry skips
+            # never accidentally mark lessons complete.
+            passed = label_matched
             logger.info(f"[record_attempt] normalized_accuracy={normalized_accuracy}, passed={passed}")
 
             progress = self.progress.record_practice_attempt(
@@ -59,6 +60,7 @@ class FingerPracticeService:
                 lesson_id,
                 accuracy=normalized_accuracy,
                 passed=passed,
+                predicted_confidence=(normalized_accuracy / 100.0) if normalized_accuracy is not None else None,
             )
             if progress is None:
                 logger.warning(f"[record_attempt] record_practice_attempt returned None")

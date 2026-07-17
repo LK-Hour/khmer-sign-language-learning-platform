@@ -198,6 +198,7 @@ class ExerciseSubmitResponse(BaseModel):
 
 class PracticeAttemptRequest(BaseModel):
     accuracy: float | None = None
+    label_matched: bool = False
 
 
 class PracticeAttemptResponse(BaseModel):

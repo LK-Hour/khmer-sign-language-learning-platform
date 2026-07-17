@@ -399,3 +399,178 @@ def publish_lesson(
         return result
     except ValueError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+
+# ── Lesson Junction Endpoints (letters for finger, words for word_detection) ──
+
+
+@router.get("/lessons/{lesson_id}/letters")
+def get_lesson_letters(
+    track: str,
+    lesson_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Get letters associated with a finger-spelling lesson (junction table)."""
+    from src.models.finger_spelling import FingerLessonLetter, FingerLetter
+
+    rows = (
+        db.query(FingerLessonLetter)
+        .filter(FingerLessonLetter.lesson_id == lesson_id)
+        .order_by(FingerLessonLetter.order_index)
+        .all()
+    )
+    result = []
+    for row in rows:
+        letter = db.get(FingerLetter, row.letter_id)
+        result.append({
+            "id": row.id,
+            "lesson_id": row.lesson_id,
+            "letter_id": row.letter_id,
+            "order_index": row.order_index,
+            "letter": {
+                "id": letter.id,
+                "letter_en": letter.letter_en,
+                "letter_kh": letter.letter_kh,
+                "is_active": letter.is_active,
+            } if letter else None,
+        })
+    return result
+
+
+@router.post("/lessons/{lesson_id}/letters", status_code=201)
+def add_lesson_letter(
+    track: str,
+    lesson_id: int,
+    body: dict,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
+    """Add a letter to a finger-spelling lesson."""
+    from src.models.finger_spelling import FingerLessonLetter
+
+    link = FingerLessonLetter(
+        lesson_id=lesson_id,
+        letter_id=body["letter_id"],
+        order_index=body.get("order_index", 0),
+    )
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+    _invalidate_curriculum_cache(rc, track)
+    return {
+        "id": link.id,
+        "lesson_id": link.lesson_id,
+        "letter_id": link.letter_id,
+        "order_index": link.order_index,
+    }
+
+
+@router.delete("/lessons/{lesson_id}/letters/{letter_id}", status_code=204)
+def remove_lesson_letter(
+    track: str,
+    lesson_id: int,
+    letter_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
+    """Remove a letter from a finger-spelling lesson."""
+    from src.models.finger_spelling import FingerLessonLetter
+
+    link = (
+        db.query(FingerLessonLetter)
+        .filter(FingerLessonLetter.lesson_id == lesson_id, FingerLessonLetter.letter_id == letter_id)
+        .first()
+    )
+    if link:
+        db.delete(link)
+        db.commit()
+        _invalidate_curriculum_cache(rc, track)
+
+
+@router.get("/lessons/{lesson_id}/words")
+def get_lesson_words(
+    track: str,
+    lesson_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Get words associated with a word-detection lesson (junction table)."""
+    from src.models.word_detection import WordDetectionLessonWord, WordDetectionWord
+
+    rows = (
+        db.query(WordDetectionLessonWord)
+        .filter(WordDetectionLessonWord.lesson_id == lesson_id)
+        .order_by(WordDetectionLessonWord.order_index)
+        .all()
+    )
+    result = []
+    for row in rows:
+        word = db.get(WordDetectionWord, row.word_id)
+        result.append({
+            "id": row.id,
+            "lesson_id": row.lesson_id,
+            "word_id": row.word_id,
+            "order_index": row.order_index,
+            "word": {
+                "id": word.id,
+                "word_en": word.word_en,
+                "word_kh": word.word_kh,
+                "is_active": word.is_active,
+            } if word else None,
+        })
+    return result
+
+
+@router.post("/lessons/{lesson_id}/words", status_code=201)
+def add_lesson_word(
+    track: str,
+    lesson_id: int,
+    body: dict,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
+    """Add a word to a word-detection lesson."""
+    from src.models.word_detection import WordDetectionLessonWord
+
+    link = WordDetectionLessonWord(
+        lesson_id=lesson_id,
+        word_id=body["word_id"],
+        order_index=body.get("order_index", 0),
+    )
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+    _invalidate_curriculum_cache(rc, track)
+    return {
+        "id": link.id,
+        "lesson_id": link.lesson_id,
+        "word_id": link.word_id,
+        "order_index": link.order_index,
+    }
+
+
+@router.delete("/lessons/{lesson_id}/words/{word_id}", status_code=204)
+def remove_lesson_word(
+    track: str,
+    lesson_id: int,
+    word_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
+    """Remove a word from a word-detection lesson."""
+    from src.models.word_detection import WordDetectionLessonWord
+
+    link = (
+        db.query(WordDetectionLessonWord)
+        .filter(WordDetectionLessonWord.lesson_id == lesson_id, WordDetectionLessonWord.word_id == word_id)
+        .first()
+    )
+    if link:
+        db.delete(link)
+        db.commit()
+        _invalidate_curriculum_cache(rc, track)

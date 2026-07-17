@@ -28,6 +28,7 @@ def record_practice_attempt(
         user_id=user.id,
         lesson_id=lesson_id,
         accuracy=body.accuracy,
+        label_matched=body.label_matched,
     )
     if result is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")

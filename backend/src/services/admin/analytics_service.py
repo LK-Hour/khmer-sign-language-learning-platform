@@ -480,7 +480,7 @@ class AnalyticsService:
         ]
 
     def _most_practiced(self) -> list[LessonRankEntry]:
-        """Top 5 lessons by total attempts, joined with lesson name_en.
+        """Top 5 lessons by total attempts, joined with lesson name_kh.
 
         Includes lessons from BOTH progress tables.
         """
@@ -489,10 +489,10 @@ class AnalyticsService:
             self.db.query(
                 FingerUserLessonProgress.finger_lesson_id.label("lesson_id"),
                 func.sum(FingerUserLessonProgress.attempts).label("total_attempts"),
-                FingerLesson.name_en.label("name_en"),
+                FingerLesson.name_kh.label("name_kh"),
             )
             .join(FingerLesson, FingerLesson.id == FingerUserLessonProgress.finger_lesson_id)
-            .group_by(FingerUserLessonProgress.finger_lesson_id, FingerLesson.name_en)
+            .group_by(FingerUserLessonProgress.finger_lesson_id, FingerLesson.name_kh)
         )
 
         # Word detection lessons: group by lesson_id, sum attempts
@@ -500,7 +500,7 @@ class AnalyticsService:
             self.db.query(
                 WordDetectionUserLessonProgress.word_detection_lesson_id.label("lesson_id"),
                 func.sum(WordDetectionUserLessonProgress.attempts).label("total_attempts"),
-                WordDetectionLesson.name_en.label("name_en"),
+                WordDetectionLesson.name_kh.label("name_kh"),
             )
             .join(
                 WordDetectionLesson,
@@ -508,7 +508,7 @@ class AnalyticsService:
             )
             .group_by(
                 WordDetectionUserLessonProgress.word_detection_lesson_id,
-                WordDetectionLesson.name_en,
+                WordDetectionLesson.name_kh,
             )
         )
 
@@ -516,16 +516,16 @@ class AnalyticsService:
         finger_results = finger_query.all()
         word_results = word_query.all()
 
-        # Merge by name_en (since lessons from different tables can't share IDs,
+        # Merge by name_kh (since lessons from different tables can't share IDs,
         # we treat them as separate entries)
         all_lessons: dict[str, float] = {}
         for row in finger_results:
-            name = row.name_en
+            name = row.name_kh
             attempts = float(row.total_attempts or 0)
             all_lessons[name] = all_lessons.get(name, 0) + attempts
 
         for row in word_results:
-            name = row.name_en
+            name = row.name_kh
             attempts = float(row.total_attempts or 0)
             all_lessons[name] = all_lessons.get(name, 0) + attempts
 
@@ -541,18 +541,18 @@ class AnalyticsService:
         """Bottom 5 lessons by avg predicted_confidence (WHERE NOT NULL).
 
         Difficulty score = 100 - (avg_confidence * 100).
-        Joined with lesson name_en.
+        Joined with lesson name_kh.
         """
         # Finger lessons
         finger_query = (
             self.db.query(
                 FingerUserLessonProgress.finger_lesson_id.label("lesson_id"),
                 func.avg(FingerUserLessonProgress.predicted_confidence).label("avg_confidence"),
-                FingerLesson.name_en.label("name_en"),
+                FingerLesson.name_kh.label("name_kh"),
             )
             .join(FingerLesson, FingerLesson.id == FingerUserLessonProgress.finger_lesson_id)
             .filter(FingerUserLessonProgress.predicted_confidence.isnot(None))
-            .group_by(FingerUserLessonProgress.finger_lesson_id, FingerLesson.name_en)
+            .group_by(FingerUserLessonProgress.finger_lesson_id, FingerLesson.name_kh)
         )
 
         # Word detection lessons
@@ -560,7 +560,7 @@ class AnalyticsService:
             self.db.query(
                 WordDetectionUserLessonProgress.word_detection_lesson_id.label("lesson_id"),
                 func.avg(WordDetectionUserLessonProgress.predicted_confidence).label("avg_confidence"),
-                WordDetectionLesson.name_en.label("name_en"),
+                WordDetectionLesson.name_kh.label("name_kh"),
             )
             .join(
                 WordDetectionLesson,
@@ -569,7 +569,7 @@ class AnalyticsService:
             .filter(WordDetectionUserLessonProgress.predicted_confidence.isnot(None))
             .group_by(
                 WordDetectionUserLessonProgress.word_detection_lesson_id,
-                WordDetectionLesson.name_en,
+                WordDetectionLesson.name_kh,
             )
         )
 
@@ -581,12 +581,12 @@ class AnalyticsService:
         for row in finger_results:
             avg_conf = float(row.avg_confidence) if row.avg_confidence is not None else 0.0
             difficulty_score = round(100 - (avg_conf * 100), 1)
-            all_lessons.append((row.name_en, difficulty_score))
+            all_lessons.append((row.name_kh, difficulty_score))
 
         for row in word_results:
             avg_conf = float(row.avg_confidence) if row.avg_confidence is not None else 0.0
             difficulty_score = round(100 - (avg_conf * 100), 1)
-            all_lessons.append((row.name_en, difficulty_score))
+            all_lessons.append((row.name_kh, difficulty_score))
 
         # Sort by difficulty score descending (highest difficulty first = lowest confidence)
         sorted_lessons = sorted(all_lessons, key=lambda x: x[1], reverse=True)[:5]

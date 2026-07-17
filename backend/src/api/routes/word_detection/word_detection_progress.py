@@ -62,7 +62,12 @@ def record_practice_attempt(
     progress = WordDetectionProgressService(db)
     accuracy = body.accuracy
     passed = body.label_matched
-    progress.record_practice_attempt(user.id, lesson_id, accuracy=accuracy, passed=passed)
+    # Convert accuracy percentage (0-100) to a 0-1 confidence value for storage
+    predicted_confidence = (accuracy / 100.0) if accuracy is not None else None
+    progress.record_practice_attempt(
+        user.id, lesson_id, accuracy=accuracy, passed=passed,
+        predicted_confidence=predicted_confidence,
+    )
     return WdPracticeAttemptResponse(
         lesson_id=lesson_id,
         accuracy=accuracy,
