@@ -63,21 +63,22 @@ export function useFingerSpellingPracticeActions() {
    * Called when user clicks "Continue" after seeing their result.
    * Submits the attempt to the backend and marks lesson completed if threshold met.
    */
-  const completePractice = useCallback(async (): Promise<boolean> => {
+  const completePractice = useCallback(async (labelMatched: boolean): Promise<boolean> => {
     const { accuracy, practiceContext } =
       useFingerSpellingStore.getState();
     const lessonId = practiceContext?.lesson?.id;
     const authUser = useAuthStore.getState().user;
 
-    // debug logging removed for production
-
     if (lessonId == null) {
       return false;
     }
 
-    // Guests: record locally and mark completed (even if accuracy is low)
+    // Send confidence only when label matched; otherwise 0
+    const finalAccuracy = labelMatched ? (accuracy ?? 0) : 0;
+
+    // Guests: record locally and mark completed
     if (authUser?.is_guest) {
-      useGuestProgressStore.getState().recordLessonCompletion(lessonId, accuracy ?? undefined);
+      useGuestProgressStore.getState().recordLessonCompletion(lessonId, finalAccuracy);
       markLessonCompleted(lessonId);
       return true;
     }
@@ -90,15 +91,16 @@ export function useFingerSpellingPracticeActions() {
 
     // Submit attempt to backend
     try {
-      const result = await submitPracticeAttempt(lessonId, { accuracy });
-      // backend response handled below
+      const result = await submitPracticeAttempt(lessonId, {
+        accuracy: finalAccuracy,
+        label_matched: labelMatched,
+      });
       if (result?.lesson_completed) {
         markLessonCompleted(lessonId);
       }
-      // Always navigate forward — lesson stays uncompleted if accuracy < threshold
       return true;
-    } catch {
-      return false;
+    } catch (error) {
+      throw error;
     }
   }, [markLessonCompleted]);
 

@@ -14,5 +14,3 @@ export type PracticeContext = {
   chapter: FsChapter;
   nextLessonId?: number;
 };
-
-export const FS_PASS_THRESHOLD = 50;

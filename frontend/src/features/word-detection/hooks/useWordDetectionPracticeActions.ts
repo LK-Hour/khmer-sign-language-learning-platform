@@ -41,15 +41,14 @@ export function useWordDetectionPracticeActions() {
 
       // Submit attempt to backend
       try {
-        const response = await submitWdPracticeAttempt(lessonId, { 
+        await submitWdPracticeAttempt(lessonId, { 
           accuracy,
           label_matched: labelMatched 
         });
-        // Only navigate if lesson was actually completed (label matched)
-        return response.lesson_completed;
+        return true;
       } catch (error) {
         console.error("[wd completePractice] submit failed:", error);
-        return false;
+        throw error;
       }
     },
     []

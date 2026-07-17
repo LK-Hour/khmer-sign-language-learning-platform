@@ -1,5 +1,4 @@
 export {
-  FS_PASS_THRESHOLD,
   useFingerSpellingStore,
 } from "./fingerSpelling.store";
 export { selectCurrentUnit, selectResumeLesson } from "./selectors";

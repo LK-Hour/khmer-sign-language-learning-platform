@@ -10,7 +10,6 @@ export { CurriculumCard } from "./curriculum";
 
 export type { FsTrackChapter, FsTrackUnit } from "../store";
 export {
-  FS_PASS_THRESHOLD,
   useFingerSpellingStore,
 } from "../store";
 export { selectCurrentUnit, selectResumeLesson } from "../store";

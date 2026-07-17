@@ -1,5 +1,6 @@
 export interface PracticeAttemptRequest {
   accuracy?: number | null;
+  label_matched?: boolean;
 }
 
 export interface PracticeAttemptResponse {

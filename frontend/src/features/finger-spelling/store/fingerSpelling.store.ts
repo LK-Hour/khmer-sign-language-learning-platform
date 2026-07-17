@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  FS_PASS_THRESHOLD,
   type FsTrackUnit,
   type PracticeContext,
 } from "./types";
@@ -277,5 +276,3 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
     }
   )
 );
-
-export { FS_PASS_THRESHOLD };

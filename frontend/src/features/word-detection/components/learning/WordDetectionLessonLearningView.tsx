@@ -166,14 +166,19 @@ export default function WordDetectionLessonLearningView({
     if (isCompleting || isRecording || isUploading) return;
 
     setIsCompleting(true);
-    const accuracy = capturedPrediction?.confidence ?? null;
-    const completed = await completePractice(lesson, accuracy, labelMatches);
-    setIsCompleting(false);
+    // Send the actual confidence only when label matched; otherwise 0
+    const accuracy = labelMatches ? (capturedPrediction?.confidence ?? 0) : 0;
 
-    if (!completed) {
+    try {
+      await completePractice(lesson, accuracy, labelMatches);
+    } catch {
+      // If the API call itself fails (network error, 500, etc.), show error
+      setIsCompleting(false);
       setRecError(t("WORD_DETECTION.LESSON.PROGRESS_SYNC_FAILED"));
       return;
     }
+
+    setIsCompleting(false);
 
     if (nextLessonId != null) {
       router.push(`/${locale}${ROUTES.words.lesson(nextLessonId)}`);
@@ -183,6 +188,7 @@ export default function WordDetectionLessonLearningView({
   }, [
     capturedPrediction,
     completePractice,
+    continueEnabled,
     isCompleting,
     lesson,
     locale,

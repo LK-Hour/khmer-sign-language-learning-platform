@@ -120,6 +120,7 @@ export default function FingerSpellingLessonLearningView({
     continueEnabled,
     displayConfidence,
     displayLabel,
+    labelMatches,
     resetAttempts,
     resetForAutoRetry,
     shouldAutoRetry,
@@ -512,13 +513,16 @@ export default function FingerSpellingLessonLearningView({
     setCapturedPrediction(null);
     resetAttempts();
     setIsCompleting(true);
-    const completed = await completePractice();
-    setIsCompleting(false);
 
-    if (!completed) {
+    try {
+      await completePractice(labelMatches);
+    } catch {
+      setIsCompleting(false);
       setRecError(t("FINGER_SPELLING.LESSON.PROGRESS_SYNC_FAILED"));
       return;
     }
+
+    setIsCompleting(false);
 
     if (nextLessonId != null) {
       router.push(`/${locale}/finger-spelling/lessons/${nextLessonId}`);
