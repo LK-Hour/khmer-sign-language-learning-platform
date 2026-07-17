@@ -1,16 +1,12 @@
 "use client";
 
 import Add from "@mui/icons-material/Add";
-import Delete from "@mui/icons-material/Delete";
-import Edit from "@mui/icons-material/Edit";
 import Publish from "@mui/icons-material/Publish";
 import RestoreFromTrash from "@mui/icons-material/RestoreFromTrash";
 import {
   Alert,
   Button,
-  IconButton,
   Stack,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -32,6 +28,8 @@ import type { DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
+import RowActionsMenu from "../components/shared/RowActionsMenu";
+import PreviewDrawer from "../components/shared/PreviewDrawer";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -82,6 +80,7 @@ export default function CurriculumTablePage({
   const [publishTarget, setPublishTarget] = useState<AdminEntity | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminEntity | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<AdminEntity | null>(null);
+  const [previewItem, setPreviewItem] = useState<AdminEntity | null>(null);
 
   const isWordDetection = track === "word_detection";
 
@@ -368,35 +367,35 @@ export default function CurriculumTablePage({
       id: "actions",
       label: "Actions",
       sortable: false,
-      width: 140,
+      width: 80,
       render: (row) => (
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title="Edit">
-            <IconButton size="small" onClick={() => openEdit(row)}>
-              <Edit fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          {row.is_active && row.publish_status === "draft" && (
-            <Tooltip title="Publish">
-              <IconButton size="small" color="success" onClick={() => setPublishTarget(row)}>
-                <Publish fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-          {row.is_active ? (
-            <Tooltip title="Delete">
-              <IconButton size="small" color="error" onClick={() => setDeleteTarget(row)}>
-                <Delete fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <Tooltip title="Restore">
-              <IconButton size="small" color="success" onClick={() => setRestoreTarget(row)}>
-                <RestoreFromTrash fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Stack>
+        <RowActionsMenu
+          onPreview={() => setPreviewItem(row)}
+          onEdit={() => openEdit(row)}
+          onDelete={row.is_active ? () => setDeleteTarget(row) : undefined}
+          extraActions={[
+            ...(row.is_active && row.publish_status === "draft"
+              ? [
+                  {
+                    label: "Publish",
+                    icon: <Publish fontSize="small" />,
+                    color: "success.main",
+                    onClick: () => setPublishTarget(row),
+                  },
+                ]
+              : []),
+            ...(!row.is_active
+              ? [
+                  {
+                    label: "Restore",
+                    icon: <RestoreFromTrash fontSize="small" />,
+                    color: "success.main",
+                    onClick: () => setRestoreTarget(row),
+                  },
+                ]
+              : []),
+          ]}
+        />
       ),
     });
 
@@ -442,6 +441,7 @@ export default function CurriculumTablePage({
           columns={columns}
           rows={pagedRows}
           loading={loading}
+          onRowClick={(row) => openEdit(row)}
           searchValue={search}
           onSearchChange={setSearch}
           filterTabs={filterTabs}
@@ -495,6 +495,34 @@ export default function CurriculumTablePage({
 
       {/* Success notification from form submission */}
       <SuccessSnackbar />
+
+      {/* Preview drawer */}
+      <PreviewDrawer
+        open={previewItem !== null}
+        onClose={() => setPreviewItem(null)}
+        title={previewItem?.name_en ?? ""}
+        subtitle={previewItem?.name_kh ?? undefined}
+        fields={
+          previewItem
+            ? [
+                { label: "ID", value: previewItem.id },
+                { label: "Name (EN)", value: previewItem.name_en },
+                { label: "Name (KH)", value: previewItem.name_kh },
+                {
+                  label: "Status",
+                  value: (
+                    <StatusChip
+                      variant={
+                        previewItem.publish_status === "published" ? "published" : "draft"
+                      }
+                    />
+                  ),
+                },
+                { label: "Active", value: previewItem.is_active ? "Yes" : "No" },
+              ]
+            : []
+        }
+      />
     </>
   );
 }

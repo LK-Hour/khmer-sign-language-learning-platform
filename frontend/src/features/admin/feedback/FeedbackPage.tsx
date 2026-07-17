@@ -14,8 +14,13 @@ import DataTable, {
   type DataTableColumn,
 } from "../components/shared/DataTable";
 import PageHeader from "../components/shared/PageHeader";
+import RowActionsMenu from "../components/shared/RowActionsMenu";
+import PreviewDrawer from "../components/shared/PreviewDrawer";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
+import { ApiError } from "@/utils/api/client";
 import {
   listFeedback,
+  deleteFeedback,
   type FeedbackItem,
   type PaginatedFeedbackResponse,
 } from "../api/feedbackAdminApi";
@@ -79,6 +84,10 @@ export default function FeedbackPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [previewItem, setPreviewItem] = useState<FeedbackItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<FeedbackItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   // ── Debounce search ──────────────────────────────────────────────────────
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -94,12 +103,11 @@ export default function FeedbackPage() {
   }, [searchInput]);
 
   // ── Fetch data ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
+  const fetchFeedback = useCallback(() => {
     setLoading(true);
     setError(null);
 
-    listFeedback({
+    return listFeedback({
       page: page + 1, // API is 1-indexed
       size: rowsPerPage,
       mood: moodFilter !== "all" ? moodFilter : undefined,
@@ -107,22 +115,32 @@ export default function FeedbackPage() {
       search: debouncedSearch || undefined,
     })
       .then((res) => {
-        if (!cancelled) {
-          setData(res);
-          setLoading(false);
-        }
+        setData(res);
+        setLoading(false);
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err?.message ?? "Failed to load feedback");
-          setLoading(false);
-        }
+        setError(err?.message ?? "Failed to load feedback");
+        setLoading(false);
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [page, rowsPerPage, moodFilter, typeFilter, debouncedSearch]);
+
+  useEffect(() => {
+    void fetchFeedback();
+  }, [fetchFeedback]);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteFeedback(deleteTarget.id);
+      setDeleteTarget(null);
+      void fetchFeedback();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete feedback");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // ── Table columns ────────────────────────────────────────────────────────
   const columns: DataTableColumn<FeedbackItem>[] = useMemo(
@@ -221,6 +239,18 @@ export default function FeedbackPage() {
               })
             : "—",
       },
+      {
+        id: "actions",
+        label: "Actions",
+        width: 80,
+        sortable: false,
+        render: (row) => (
+          <RowActionsMenu
+            onPreview={() => setPreviewItem(row)}
+            onDelete={() => setDeleteTarget(row)}
+          />
+        ),
+      },
     ],
     [],
   );
@@ -302,6 +332,7 @@ export default function FeedbackPage() {
         columns={columns}
         rows={data?.items ?? []}
         loading={loading}
+        onRowClick={(row) => setPreviewItem(row)}
         pagination={{
           page,
           rowsPerPage,
@@ -309,6 +340,42 @@ export default function FeedbackPage() {
         }}
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
+      />
+
+      {/* Preview drawer */}
+      <PreviewDrawer
+        open={previewItem !== null}
+        onClose={() => setPreviewItem(null)}
+        title={`Feedback #${previewItem?.id ?? ""}`}
+        subtitle={previewItem?.category}
+        fields={
+          previewItem
+            ? [
+                { label: "Type", value: previewItem.type ? formatTypeLabel(previewItem.type) : "—" },
+                { label: "Category", value: previewItem.category },
+                { label: "Characteristic", value: previewItem.characteristic },
+                { label: "Mood", value: previewItem.mood ? formatMoodLabel(previewItem.mood) : "—" },
+                { label: "Comment", value: previewItem.comment ?? "—" },
+                {
+                  label: "Created At",
+                  value: previewItem.created_at
+                    ? new Date(previewItem.created_at).toLocaleString()
+                    : "—",
+                },
+              ]
+            : []
+        }
+      />
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete Feedback?"
+        message="Are you sure you want to delete this feedback entry? This action cannot be undone."
+        confirmLabel="Delete"
+        loading={deleting}
       />
     </Stack>
   );

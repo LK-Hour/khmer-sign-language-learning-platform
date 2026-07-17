@@ -3,22 +3,20 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Add from "@mui/icons-material/Add";
-import Edit from "@mui/icons-material/Edit";
-import Delete from "@mui/icons-material/Delete";
 import {
   Alert,
   Button,
   Chip,
   CircularProgress,
-  IconButton,
-  Stack,
-  Tooltip,
   Box,
 } from "@mui/material";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
-import { listExercises } from "../api/adminApi";
+import RowActionsMenu from "../components/shared/RowActionsMenu";
+import PreviewDrawer from "../components/shared/PreviewDrawer";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
+import { listExercises, deleteExercise } from "../api/adminApi";
 import type { AdminExercise, AdminTrack, PublishStatus } from "../api/types";
 import { ApiError } from "@/utils/api/client";
 
@@ -29,6 +27,7 @@ import { ApiError } from "@/utils/api/client";
 export interface QuizExercise {
   id: number;
   question: string;
+  question_kh: string;
   type: string;
   options_count: number;
   status: PublishStatus;
@@ -75,6 +74,7 @@ function mapExercises(data: AdminExercise[]): QuizExercise[] {
   return data.map((ex) => ({
     id: ex.id,
     question: ex.question_en || ex.question_kh,
+    question_kh: ex.question_kh,
     type: ex.exercise_type,
     options_count: ex.options?.length ?? 0,
     status: ex.publish_status,
@@ -94,6 +94,10 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
   const [exercises, setExercises] = useState<QuizExercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [previewItem, setPreviewItem] = useState<QuizExercise | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<QuizExercise | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchExercises = useCallback(async () => {
     setLoading(true);
@@ -128,6 +132,20 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
   const handleEdit = useCallback((exerciseId: number) => {
     router.push(`/admin/learning/quiz/${trackSegment}/exercises/${exerciseId}/edit`);
   }, [router, trackSegment]);
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteExercise(track, deleteTarget.id);
+      setDeleteTarget(null);
+      await fetchExercises();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete exercise");
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteTarget, track, fetchExercises]);
 
   // Table columns: ID, Question, Type, Options count, Status, Actions
   const columns: DataTableColumn<QuizExercise>[] = useMemo(
@@ -172,24 +190,17 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
         id: "actions",
         label: "Actions",
         sortable: false,
-        width: 100,
+        width: 80,
         render: (row) => (
-          <Stack direction="row" spacing={0.5}>
-            <Tooltip title="Edit">
-              <IconButton size="small" onClick={() => handleEdit(row.id)}>
-                <Edit fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete">
-              <IconButton size="small" color="error">
-                <Delete fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Stack>
+          <RowActionsMenu
+            onPreview={() => setPreviewItem(row)}
+            onEdit={() => handleEdit(row.id)}
+            onDelete={() => setDeleteTarget(row)}
+          />
         ),
       },
     ],
-    [],
+    [handleEdit],
   );
 
   const trackLabel = track === "finger" ? "Finger Spelling" : "Word Detection";
@@ -270,6 +281,7 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
       <DataTable<QuizExercise>
         columns={columns}
         rows={pagedRows}
+        onRowClick={(row) => handleEdit(row.id)}
         pagination={{
           page,
           rowsPerPage,
@@ -277,6 +289,38 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
         }}
         onPageChange={setPage}
         onRowsPerPageChange={setRowsPerPage}
+      />
+
+      {/* Preview drawer */}
+      <PreviewDrawer
+        open={previewItem !== null}
+        onClose={() => setPreviewItem(null)}
+        title={previewItem?.question ?? ""}
+        subtitle={previewItem?.question_kh}
+        fields={
+          previewItem
+            ? [
+                { label: "ID", value: previewItem.id },
+                { label: "Type", value: typeLabel(previewItem.type) },
+                { label: "Options", value: previewItem.options_count },
+                {
+                  label: "Status",
+                  value: <StatusChip variant={previewItem.status} />,
+                },
+              ]
+            : []
+        }
+      />
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete Exercise?"
+        message={`Are you sure you want to delete "${deleteTarget?.question ?? ""}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleting}
       />
     </>
   );

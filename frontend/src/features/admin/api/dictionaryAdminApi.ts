@@ -136,3 +136,15 @@ export const updateWord = (id: number, body: Partial<WordPayload>) =>
     method: "PUT",
     body: JSON.stringify(body),
   });
+
+/** Delete a letter. */
+export const deleteCharacter = (id: number) =>
+  apiFetch<void>(`/api/admin/dictionary/characters/${id}`, {
+    method: "DELETE",
+  });
+
+/** Delete a word. */
+export const deleteWord = (id: number) =>
+  apiFetch<void>(`/api/admin/dictionary/words/${id}`, {
+    method: "DELETE",
+  });

@@ -32,7 +32,11 @@ export interface EntityFormLayoutProps {
   onSave: () => void | Promise<void>; // Save action
   onCancel: () => void; // Cancel/back navigation
   children: ReactNode; // Main form content (left/primary area)
-  sidebar?: ReactNode; // Sidebar content (order_index, status, metadata)
+  /** Right-hand column content — media preview (image/video), takes priority over `sidebar`. */
+  previewPanel?: ReactNode;
+  sidebar?: ReactNode; // Sidebar content (order_index, metadata — no toggles)
+  /** Full-width section rendered below the main grid, above junctionSection — typically the publish/active toggle. */
+  statusSection?: ReactNode;
   junctionSection?: ReactNode; // Below-form section for junction editors
 }
 
@@ -78,8 +82,7 @@ function FormSkeleton() {
         <Card>
           <CardContent>
             <Stack spacing={2}>
-              <Skeleton variant="rounded" height={56} />
-              <Skeleton variant="rounded" height={56} />
+              <Skeleton variant="rounded" height={160} />
               <Skeleton variant="rounded" height={40} />
             </Stack>
           </CardContent>
@@ -100,11 +103,26 @@ export default function EntityFormLayout({
   onSave,
   onCancel,
   children,
+  previewPanel,
   sidebar,
+  statusSection,
   junctionSection,
 }: EntityFormLayoutProps) {
+  const rightColumn = previewPanel ?? sidebar;
+  const hasRightColumn = Boolean(previewPanel || sidebar);
+  // When both previewPanel and sidebar are provided, stack them in the right column.
+  const combinedRightColumn =
+    previewPanel && sidebar ? (
+      <Stack spacing={3}>
+        {previewPanel}
+        {sidebar}
+      </Stack>
+    ) : (
+      rightColumn
+    );
+
   return (
-    <Box sx={{ pb: 10 }}>
+    <Box>
       {/* ── Breadcrumbs ── */}
       <Breadcrumbs
         separator={<NavigateNextIcon fontSize="small" />}
@@ -150,11 +168,11 @@ export default function EntityFormLayout({
         <FormSkeleton />
       ) : (
         <>
-          {/* ── Two-Column Responsive Grid ── */}
+          {/* ── Two-Column Responsive Grid: form fields | media preview ── */}
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: sidebar
+              gridTemplateColumns: hasRightColumn
                 ? { xs: "1fr", md: "2fr 1fr" }
                 : "1fr",
               gap: 3,
@@ -165,13 +183,20 @@ export default function EntityFormLayout({
               <CardContent sx={{ p: 3 }}>{children}</CardContent>
             </Card>
 
-            {/* Optional Sidebar Card */}
-            {sidebar && (
-              <Card sx={{ height: "fit-content" }}>
-                <CardContent sx={{ p: 3 }}>{sidebar}</CardContent>
+            {/* Right column: media preview takes priority over generic sidebar */}
+            {hasRightColumn && (
+              <Card sx={{ height: "fit-content", position: { md: "sticky" }, top: { md: 24 } }}>
+                <CardContent sx={{ p: 3 }}>{combinedRightColumn}</CardContent>
               </Card>
             )}
           </Box>
+
+          {/* ── Status Section (publish/active toggle) — full width, below the grid ── */}
+          {statusSection && (
+            <Card sx={{ mt: 3 }}>
+              <CardContent sx={{ p: 3 }}>{statusSection}</CardContent>
+            </Card>
+          )}
 
           {/* ── Junction/Relationship Section ── */}
           {junctionSection && (
@@ -185,52 +210,41 @@ export default function EntityFormLayout({
               <CardContent sx={{ p: 3 }}>{junctionSection}</CardContent>
             </Card>
           )}
+
+          {/* ── Action Buttons — bottom-right of the form, in normal page flow ── */}
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ justifyContent: "flex-end", mt: 4 }}
+          >
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="large"
+              onClick={onCancel}
+              disabled={saving}
+              sx={{ minWidth: 140, minHeight: 48, fontSize: "0.9375rem" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={onSave}
+              disabled={saving}
+              startIcon={
+                saving ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : undefined
+              }
+              sx={{ minWidth: 160, minHeight: 48, fontSize: "0.9375rem" }}
+            >
+              {saving ? "Saving…" : "Save"}
+            </Button>
+          </Stack>
         </>
       )}
-
-      {/* ── Sticky Bottom Action Buttons ── */}
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: (theme) => theme.zIndex.appBar - 1,
-          bgcolor: "background.paper",
-          borderTop: "1px solid",
-          borderColor: "divider",
-          px: 3,
-          py: 2,
-        }}
-      >
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{ justifyContent: "flex-end", maxWidth: 1200, mx: "auto" }}
-        >
-          <Button
-            variant="text"
-            color="inherit"
-            onClick={onCancel}
-            disabled={saving}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={onSave}
-            disabled={saving || loading}
-            startIcon={
-              saving ? (
-                <CircularProgress size={18} color="inherit" />
-              ) : undefined
-            }
-          >
-            {saving ? "Saving…" : "Save"}
-          </Button>
-        </Stack>
-      </Box>
     </Box>
   );
 }

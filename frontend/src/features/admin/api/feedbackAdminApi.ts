@@ -43,3 +43,11 @@ export const listFeedback = (params: ListFeedbackParams = {}) =>
   apiFetch<PaginatedFeedbackResponse>(
     `/api/admin/feedback${buildQuery(params as Record<string, unknown>)}`,
   );
+
+/** Get a single feedback entry by ID. */
+export const getFeedback = (id: number) =>
+  apiFetch<FeedbackItem>(`/api/admin/feedback/${id}`);
+
+/** Delete a feedback entry. */
+export const deleteFeedback = (id: number) =>
+  apiFetch<void>(`/api/admin/feedback/${id}`, { method: "DELETE" });

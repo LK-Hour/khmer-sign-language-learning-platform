@@ -31,8 +31,8 @@ export default function StatsCard({
   sx,
 }: StatsCardProps) {
   return (
-    <Card elevation={0} sx={{ p: 0, ...sx }}>
-      <CardContent sx={{ p: 3 }}>
+    <Card elevation={0} sx={{ p: 0, width: "100%", height: "100%", ...sx }}>
+      <CardContent sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
           <Box sx={{ flex: 1 }}>
             <Typography variant="caption" sx={{ color: "text.secondary", mb: 1, display: "block" }}>

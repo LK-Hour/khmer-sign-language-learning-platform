@@ -1,24 +1,15 @@
 "use client";
 
 import Add from "@mui/icons-material/Add";
-import MoreVertRounded from "@mui/icons-material/MoreVertRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import {
   Alert,
   Button,
   Chip,
-  IconButton,
   InputAdornment,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
   Stack,
   TextField,
-  Tooltip,
 } from "@mui/material";
-import Delete from "@mui/icons-material/Delete";
-import Visibility from "@mui/icons-material/Visibility";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -29,6 +20,10 @@ import * as mediaApi from "../api/mediaAdminApi";
 import type { MediaResponse, PaginatedMediaResponse } from "../api/mediaAdminApi";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import PageHeader from "../components/shared/PageHeader";
+import RowActionsMenu from "../components/shared/RowActionsMenu";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
+import PreviewDrawer from "../components/shared/PreviewDrawer";
+import { MediaCarousel } from "../components/shared/MediaCarousel";
 
 import { filterMediaByType } from "./mediaFilterUtils";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
@@ -90,9 +85,12 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // ── Actions Menu State ─────────────────────────────────────────────────────
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-  const [menuMedia, setMenuMedia] = useState<MediaResponse | null>(null);
+  // ── Delete Confirmation State ──────────────────────────────────────────────
+  const [deleteTarget, setDeleteTarget] = useState<MediaResponse | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // ── Preview State ──────────────────────────────────────────────────────────
+  const [previewMedia, setPreviewMedia] = useState<MediaResponse | null>(null);
 
   // ── Data Fetching ──────────────────────────────────────────────────────────
   const loadMedia = useCallback(async () => {
@@ -141,33 +139,18 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
     void loadMedia();
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, media: MediaResponse) => {
-    setMenuAnchor(event.currentTarget);
-    setMenuMedia(media);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
-    setMenuMedia(null);
-  };
-
-  const handleMenuView = () => {
-    if (menuMedia) {
-      router.push(`/admin/media/${menuMedia.id}/preview`);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await mediaApi.deleteMedia(deleteTarget.id);
+      setDeleteTarget(null);
+      void loadMedia();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete media.");
+    } finally {
+      setDeleting(false);
     }
-    handleMenuClose();
-  };
-
-  const handleMenuDelete = async () => {
-    if (menuMedia) {
-      try {
-        await mediaApi.deleteMedia(menuMedia.id);
-        void loadMedia();
-      } catch (err) {
-        setError(err instanceof ApiError ? err.message : "Failed to delete media.");
-      }
-    }
-    handleMenuClose();
   };
 
   // ── Table Columns: ID, Name (letter/word), File URL, Type, Size, Actions ────
@@ -212,11 +195,10 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
         width: 70,
         sortable: false,
         render: (row) => (
-          <Tooltip title="Actions">
-            <IconButton size="small" onClick={(e) => handleMenuOpen(e, row)}>
-              <MoreVertRounded fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <RowActionsMenu
+            onPreview={() => setPreviewMedia(row)}
+            onDelete={() => setDeleteTarget(row)}
+          />
         ),
       },
     ],
@@ -284,6 +266,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
           columns={columns}
           rows={filteredItems}
           loading={loading}
+          onRowClick={(row) => router.push(`/admin/media/${row.id}/preview`)}
           pagination={{
             page,
             rowsPerPage,
@@ -297,28 +280,49 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
         />
       </Stack>
 
-      {/* Actions Menu (3-dot) */}
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={handleMenuClose}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        slotProps={{ paper: { sx: { minWidth: 140 } } }}
-      >
-        <MenuItem onClick={handleMenuView}>
-          <ListItemIcon>
-            <Visibility fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>View</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleMenuDelete} sx={{ color: "error.main" }}>
-          <ListItemIcon>
-            <Delete fontSize="small" sx={{ color: "error.main" }} />
-          </ListItemIcon>
-          <ListItemText>Delete</ListItemText>
-        </MenuItem>
-      </Menu>
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete Media?"
+        message="Are you sure you want to delete this media asset? This action cannot be undone and will remove it from any associated letters or words."
+        confirmLabel="Delete"
+        loading={deleting}
+      />
+
+      {/* Preview drawer */}
+      <PreviewDrawer
+        open={previewMedia !== null}
+        onClose={() => setPreviewMedia(null)}
+        title={`Media #${previewMedia?.id ?? ""}`}
+        subtitle={previewMedia?.file_url?.split("/").pop() ?? undefined}
+        media={
+          previewMedia ? (
+            <MediaCarousel medias={[previewMedia]} />
+          ) : undefined
+        }
+        fields={
+          previewMedia
+            ? [
+                { label: "ID", value: previewMedia.id },
+                { label: "Type", value: previewMedia.media_type },
+                {
+                  label: "Linked To",
+                  value: previewMedia.associations?.length
+                    ? previewMedia.associations.map((a) => a.target_name).join(", ")
+                    : "—",
+                },
+                {
+                  label: "Created At",
+                  value: previewMedia.created_at
+                    ? new Date(previewMedia.created_at).toLocaleString()
+                    : "—",
+                },
+              ]
+            : []
+        }
+      />
 
       {/* Success notification from form submission */}
       <SuccessSnackbar />

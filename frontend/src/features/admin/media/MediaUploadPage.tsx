@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CloudUpload from "@mui/icons-material/CloudUpload";
 import {
@@ -128,6 +128,20 @@ export default function MediaUploadPage() {
 
   const selectedFile = form.values.file as File | null;
 
+  // Generate a preview URL for the selected file
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(selectedFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [selectedFile]);
+
+  const isVideoFile = selectedFile?.type.startsWith("video/");
+
   return (
     <EntityFormLayout
       title="Upload Media"
@@ -140,6 +154,46 @@ export default function MediaUploadPage() {
       serverError={form.serverError}
       onSave={form.handleSubmit}
       onCancel={handleCancel}
+      previewPanel={
+        previewUrl ? (
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Preview
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 200,
+                borderRadius: 1,
+                overflow: "hidden",
+                bgcolor: "grey.100",
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              {isVideoFile ? (
+                <video
+                  controls
+                  src={previewUrl}
+                  style={{ maxWidth: "100%", maxHeight: 320 }}
+                />
+              ) : (
+                <Box
+                  component="img"
+                  src={previewUrl}
+                  alt="Upload preview"
+                  sx={{ maxWidth: "100%", maxHeight: 320, objectFit: "contain" }}
+                />
+              )}
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+              {selectedFile?.name} ({((selectedFile?.size ?? 0) / (1024 * 1024)).toFixed(2)} MB)
+            </Typography>
+          </Stack>
+        ) : undefined
+      }
     >
       <Stack spacing={3}>
         {/* File Upload Input */}

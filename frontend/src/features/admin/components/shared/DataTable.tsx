@@ -48,6 +48,8 @@ export interface DataTableProps<T> {
   filterTabs?: Array<{ label: string; count?: number }>;
   activeFilterIndex?: number;
   onFilterChange?: (index: number) => void;
+  /** Called when a row is clicked (anywhere except inside the actions column). */
+  onRowClick?: (row: T) => void;
   sx?: SxProps<Theme>;
 }
 
@@ -66,6 +68,7 @@ export default function DataTable<T extends { id: number }>({
   filterTabs,
   activeFilterIndex = 0,
   onFilterChange,
+  onRowClick,
   sx,
 }: DataTableProps<T>) {
   const theme = useTheme();
@@ -374,7 +377,9 @@ export default function DataTable<T extends { id: number }>({
                       key={row.id}
                       hover
                       selected={isSelected}
+                      onClick={() => onRowClick?.(row)}
                       sx={{
+                        cursor: onRowClick ? "pointer" : undefined,
                         "& .MuiTableCell-body": {
                           fontSize: "0.875rem",
                           borderBottomStyle: "dashed",

@@ -3,18 +3,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Add from "@mui/icons-material/Add";
-import Edit from "@mui/icons-material/Edit";
-import { Alert, Box, Button, IconButton, Tooltip } from "@mui/material";
+import { Alert, Box, Button } from "@mui/material";
 import PageHeader from "../components/shared/PageHeader";
 import SearchInput from "../components/shared/SearchInput";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
+import RowActionsMenu from "../components/shared/RowActionsMenu";
+import PreviewDrawer from "../components/shared/PreviewDrawer";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import {
   listCharacters,
   listWords,
+  getCharacter,
+  getWord,
+  deleteCharacter,
+  deleteWord,
   type DictionaryItem,
   type PaginatedDictionaryResponse,
 } from "../api/dictionaryAdminApi";
+import type { MediaResponse } from "../api/mediaAdminApi";
+import { MediaCarousel } from "../components/shared/MediaCarousel";
 import { ApiError } from "@/utils/api/client";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
@@ -41,8 +49,24 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [previewItem, setPreviewItem] = useState<DictionaryItem | null>(null);
+  const [previewMedias, setPreviewMedias] = useState<MediaResponse[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<DictionaryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const title = type === "characters" ? "Characters" : "Words";
   const basePath = `/admin/dictionary/${type}`;
+
+  const handlePreview = useCallback(async (row: DictionaryItem) => {
+    setPreviewItem(row);
+    setPreviewMedias([]);
+    try {
+      const detail = type === "characters"
+        ? await getCharacter(row.id)
+        : await getWord(row.id);
+      setPreviewMedias(detail.medias ?? []);
+    } catch { /* non-critical */ }
+  }, [type]);
 
   // Debounce search input
   useEffect(() => {
@@ -106,14 +130,32 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
       width: 80,
       sortable: false,
       render: (row) => (
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => router.push(`${basePath}/${row.id}/edit`)}>
-            <Edit fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        <RowActionsMenu
+          onPreview={() => handlePreview(row)}
+          onEdit={() => router.push(`${basePath}/${row.id}/edit`)}
+          onDelete={() => setDeleteTarget(row)}
+        />
       ),
     },
   ];
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      if (type === "characters") {
+        await deleteCharacter(deleteTarget.id);
+      } else {
+        await deleteWord(deleteTarget.id);
+      }
+      setDeleteTarget(null);
+      void loadData();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete item.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <Box>
@@ -156,6 +198,7 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
         columns={columns}
         rows={data?.items ?? []}
         loading={loading}
+        onRowClick={(row) => router.push(`${basePath}/${row.id}/edit`)}
         pagination={{
           page,
           rowsPerPage,
@@ -170,6 +213,48 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
 
       {/* Success notification from form submission */}
       <SuccessSnackbar />
+
+      {/* Preview drawer */}
+      <PreviewDrawer
+        open={previewItem !== null}
+        onClose={() => { setPreviewItem(null); setPreviewMedias([]); }}
+        title={previewItem?.name_kh ?? ""}
+        subtitle={previewItem?.name_en ?? undefined}
+        media={<MediaCarousel medias={previewMedias} emptyLabel="No media" />}
+        fields={
+          previewItem
+            ? [
+                { label: "ID", value: previewItem.id },
+                { label: "Name (KH)", value: previewItem.name_kh },
+                { label: "Name (EN)", value: previewItem.name_en ?? "—" },
+                { label: "Media Count", value: previewItem.media_count },
+                {
+                  label: "Status",
+                  value: (
+                    <StatusChip variant={previewItem.is_active ? "published" : "draft"} />
+                  ),
+                },
+                {
+                  label: "Created At",
+                  value: previewItem.created_at
+                    ? new Date(previewItem.created_at).toLocaleDateString()
+                    : "—",
+                },
+              ]
+            : []
+        }
+      />
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={`Delete ${type === "characters" ? "Character" : "Word"}?`}
+        message={`Are you sure you want to delete "${deleteTarget?.name_kh ?? ""}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleting}
+      />
     </Box>
   );
 }

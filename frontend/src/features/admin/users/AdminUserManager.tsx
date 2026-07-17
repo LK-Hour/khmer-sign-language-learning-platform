@@ -1,8 +1,5 @@
 "use client";
 
-import Delete from "@mui/icons-material/Delete";
-import MoreVert from "@mui/icons-material/MoreVert";
-import PersonOff from "@mui/icons-material/PersonOff";
 import Refresh from "@mui/icons-material/Refresh";
 import Search from "@mui/icons-material/Search";
 import {
@@ -12,12 +9,8 @@ import {
   Card,
   Chip,
   FormControl,
-  IconButton,
   InputAdornment,
   InputLabel,
-  ListItemIcon,
-  ListItemText,
-  Menu,
   MenuItem,
   Select,
   Skeleton,
@@ -30,7 +23,6 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Tooltip,
   Typography,
   type SelectChangeEvent,
 } from "@mui/material";
@@ -40,12 +32,16 @@ import { useAuthStore } from "@/store/auth.store";
 
 import {
   listUsers,
+  deactivateUser,
   type ListUsersParams,
   type UserResponse,
 } from "../api/userAdminApi";
+import { ApiError } from "@/utils/api/client";
 import PageHeader from "../components/shared/PageHeader";
 import Scrollbar from "../components/shared/Scrollbar";
 import StatusChip from "../components/shared/StatusChip";
+import RowActionsMenu from "../components/shared/RowActionsMenu";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useTranslation } from "@/i18n/useTranslation";
 
 import UserDetailPanel from "./UserDetailPanel";
@@ -129,9 +125,9 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  // ── Action menu state ────────────────────────────────────────────────────
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-  const [menuUser, setMenuUser] = useState<UserResponse | null>(null);
+  // ── Deactivate confirmation state ────────────────────────────────────────
+  const [deactivateTarget, setDeactivateTarget] = useState<UserResponse | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
 
   // ── Fetch users ──────────────────────────────────────────────────────────
   const fetchUsers = useCallback(async () => {
@@ -232,18 +228,18 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
     setDetailOpen(false);
   };
 
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    user: UserResponse
-  ) => {
-    event.stopPropagation();
-    setMenuAnchor(event.currentTarget);
-    setMenuUser(user);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
-    setMenuUser(null);
+  const handleDeactivate = async () => {
+    if (!deactivateTarget) return;
+    setDeactivating(true);
+    try {
+      await deactivateUser(deactivateTarget.id);
+      setDeactivateTarget(null);
+      void fetchUsers();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to deactivate user");
+    } finally {
+      setDeactivating(false);
+    }
   };
 
   // ── Derive page title ────────────────────────────────────────────────────
@@ -418,23 +414,21 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
                       <TableCell>
                         {new Date(user.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell align="right">
-                        {isDestructiveActionDisabled(user) ? (
-                          <Tooltip title={t("PAGE.ACTIONS_DISABLED_ADMIN")}>
-                            <span>
-                              <IconButton size="small" disabled>
-                                <MoreVert fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        ) : (
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleMenuOpen(e, user)}
-                          >
-                            <MoreVert fontSize="small" />
-                          </IconButton>
-                        )}
+                      <TableCell
+                        align="right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <RowActionsMenu
+                          onPreview={() => handleRowClick(user)}
+                          onDelete={
+                            isDestructiveActionDisabled(user)
+                              ? undefined
+                              : () => setDeactivateTarget(user)
+                          }
+                          disabled={isDestructiveActionDisabled(user)}
+                          disabledReason={t("PAGE.ACTIONS_DISABLED_ADMIN")}
+                          deleteLabel={t("PAGE.DEACTIVATE")}
+                        />
                       </TableCell>
                     </TableRow>
                   ))
@@ -458,34 +452,16 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
         </Card>
       )}
 
-      {/* Actions Menu */}
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={handleMenuClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <MenuItem
-          onClick={handleMenuClose}
-          disabled={menuUser ? isDestructiveActionDisabled(menuUser) : false}
-        >
-          <ListItemIcon>
-            <PersonOff fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>{t("PAGE.DEACTIVATE")}</ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={handleMenuClose}
-          disabled={menuUser ? isDestructiveActionDisabled(menuUser) : false}
-          sx={{ color: "error.main" }}
-        >
-          <ListItemIcon>
-            <Delete fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText>{t("BUTTON.DELETE")}</ListItemText>
-        </MenuItem>
-      </Menu>
+      {/* Deactivate confirmation */}
+      <ConfirmDialog
+        open={deactivateTarget !== null}
+        onClose={() => setDeactivateTarget(null)}
+        onConfirm={handleDeactivate}
+        title={t("PAGE.DEACTIVATE")}
+        message={`Are you sure you want to deactivate "${deactivateTarget?.display_name ?? ""}"?`}
+        confirmLabel={t("PAGE.DEACTIVATE")}
+        loading={deactivating}
+      />
 
       {/* Detail panel */}
       <UserDetailPanel

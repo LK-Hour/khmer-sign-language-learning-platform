@@ -37,7 +37,7 @@ export default function StatCards({ kpis, loading }: StatCardsProps) {
       <Grid container spacing={2}>
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
-            <Skeleton variant="rounded" height={140} sx={{ borderRadius: 3 }} />
+            <Skeleton variant="rounded" height={160} sx={{ borderRadius: 3 }} />
           </Grid>
         ))}
       </Grid>
@@ -45,9 +45,9 @@ export default function StatCards({ kpis, loading }: StatCardsProps) {
   }
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={2} sx={{ alignItems: "stretch" }}>
       {kpis.map((kpi, index) => (
-        <Grid key={kpi.title} size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid key={kpi.title} size={{ xs: 12, sm: 6, md: 4, lg: 2 }} sx={{ display: "flex" }}>
           <StatsCard
             title={kpi.title}
             value={kpi.value}

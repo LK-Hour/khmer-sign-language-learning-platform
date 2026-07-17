@@ -31,8 +31,12 @@ import {
 import {
   listCharacters,
   listWords,
+  getCharacter,
+  getWord,
   type DictionaryItem,
 } from "../api/dictionaryAdminApi";
+import type { MediaResponse } from "../api/mediaAdminApi";
+import { MediaCarousel } from "../components/shared/MediaCarousel";
 import type {
   AdminChapter,
   AdminLesson,
@@ -106,6 +110,7 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
   const [selectedChapter, setSelectedChapter] = useState<AdminChapter | null>(null);
   const [junctionItems, setJunctionItems] = useState<JunctionItem<DictionaryItem>[]>([]);
   const [initialJunctionIds, setInitialJunctionIds] = useState<Set<number>>(new Set());
+  const [previewMedias, setPreviewMedias] = useState<MediaResponse[]>([]);
 
   // Form hook
   const form = useEntityForm<LessonFormValues, AdminLesson>({
@@ -232,6 +237,16 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
             }));
             setJunctionItems(items);
             setInitialJunctionIds(new Set(letters.map((ll) => ll.letter_id)));
+
+            // Load first letter's media for preview
+            if (letters.length > 0) {
+              try {
+                const detail = await getCharacter(letters[0].letter_id);
+                if (detail.medias?.length > 0) {
+                  setPreviewMedias(detail.medias);
+                }
+              } catch { /* non-critical */ }
+            }
           } else {
             const words = await getLessonWords(track as AdminTrack, entityId);
             const items: JunctionItem<DictionaryItem>[] = words.map((lw) => ({
@@ -247,6 +262,16 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
             }));
             setJunctionItems(items);
             setInitialJunctionIds(new Set(words.map((lw) => lw.word_id)));
+
+            // Load first word's media for preview
+            if (words.length > 0) {
+              try {
+                const detail = await getWord(words[0].word_id);
+                if (detail.medias?.length > 0) {
+                  setPreviewMedias(detail.medias);
+                }
+              } catch { /* non-critical */ }
+            }
           }
         } catch {
           // Junction load failure is non-critical
@@ -345,6 +370,17 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
       serverError={form.serverError}
       onSave={form.handleSubmit}
       onCancel={() => router.push(listPath)}
+      previewPanel={
+        <Stack spacing={1.5}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {t("FORM.MEDIA_PREVIEW")}
+          </Typography>
+          <MediaCarousel
+            medias={previewMedias}
+            emptyLabel={t("FORM.NO_MEDIA_ASSOCIATED")}
+          />
+        </Stack>
+      }
       sidebar={
         <Stack spacing={3}>
           {/* Order Index */}
@@ -365,19 +401,6 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
             slotProps={{ htmlInput: { min: 1 } }}
           />
 
-          {/* Active Toggle */}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.values.is_active}
-                onChange={(e) =>
-                  form.setField("is_active", e.target.checked)
-                }
-              />
-            }
-            label={t("FORM.ACTIVE")}
-          />
-
           {/* Publish Status (read-only in edit mode) */}
           {isEdit && publishStatus && (
             <Box>
@@ -394,6 +417,28 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
               />
             </Box>
           )}
+        </Stack>
+      }
+      statusSection={
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{ alignItems: "center", justifyContent: "space-between" }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {t("FORM.STATUS")}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.values.is_active}
+                onChange={(e) =>
+                  form.setField("is_active", e.target.checked)
+                }
+              />
+            }
+            label={t("FORM.ACTIVE")}
+          />
         </Stack>
       }
       junctionSection={

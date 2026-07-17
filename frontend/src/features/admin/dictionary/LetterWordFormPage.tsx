@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 
 import EntityFormLayout from "../components/shared/EntityFormLayout";
+import { MediaCarousel } from "../components/shared/MediaCarousel";
 import JunctionFieldEditor, {
   type JunctionItem,
 } from "../components/shared/JunctionFieldEditor";
@@ -303,6 +304,9 @@ export default function LetterWordFormPage({
 
   const pageTitle = isEdit ? editLabel : createLabel;
 
+  // All associated medias for the carousel
+  const allMedias = mediaItems.map((mi) => mi.item);
+
   return (
     <EntityFormLayout
       title={pageTitle}
@@ -312,8 +316,23 @@ export default function LetterWordFormPage({
       serverError={form.serverError}
       onSave={form.handleSubmit}
       onCancel={() => router.push(labels.listPath)}
-      sidebar={
-        <Stack spacing={2}>
+      previewPanel={
+        <Stack spacing={1.5}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {t("FORM.MEDIA_PREVIEW")}
+          </Typography>
+          <MediaCarousel
+            medias={allMedias}
+            emptyLabel={t("FORM.NO_MEDIA_ASSOCIATED")}
+          />
+        </Stack>
+      }
+      statusSection={
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{ alignItems: "center", justifyContent: "space-between" }}
+        >
           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
             {t("FORM.STATUS")}
           </Typography>
