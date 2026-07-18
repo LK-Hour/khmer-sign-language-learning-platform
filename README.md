@@ -146,7 +146,6 @@ Developer-facing guides are available in [docs](docs):
 - [docs/feature-guides/word-detection.md](docs/feature-guides/word-detection.md) — backend, ML, and frontend ownership for word detection
 - [docs/feature-guides/ai-integration-overview.md](docs/feature-guides/ai-integration-overview.md) — how AI prediction is wired through the platform
 - [docs/feature-guides/frontend-ownership-map.md](docs/feature-guides/frontend-ownership-map.md) — where to edit frontend feature areas
-- [docs/feature-guides/prompt-template.md](docs/feature-guides/prompt-template.md) — reusable prompt for drafting or extending feature documentation
 
 ## Useful Commands
 
