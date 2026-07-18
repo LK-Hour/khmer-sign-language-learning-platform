@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import AppProviders from "@/providers/AppProviders";
 import { DEFAULT_LOCALE, isValidLocale } from "@/i18n/config";
 import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo/config";
-import { LOCALE_HEADER } from "@/lib/seo/config";
+import { LOCALE_HEADER, toLanguageTag } from "@/lib/seo/config";
 import "./globals.css";
 
 const DESCRIPTION =
@@ -50,7 +50,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const lang = isValidLocale(headerLocale) ? headerLocale : DEFAULT_LOCALE;
 
   return (
-    <html lang={lang} style={{ height: "100%" }}>
+    <html lang={toLanguageTag(lang)} style={{ height: "100%" }}>
       <body style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
         <AppProviders>{children}</AppProviders>
       </body>

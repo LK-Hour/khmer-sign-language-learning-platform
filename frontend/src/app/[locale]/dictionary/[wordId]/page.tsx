@@ -9,6 +9,8 @@ import { ROUTES } from "@/constants/routes";
 import { isValidLocale } from "@/i18n/config";
 import { t } from "@/i18n/translations";
 import { absoluteUrl, buildLanguageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo/config";
+import JsonLd from "@/lib/seo/JsonLd";
+import { dictionaryWordJsonLd } from "@/lib/seo/structuredData";
 
 type PageProps = {
   params: Promise<{ locale: string; wordId: string }>;
@@ -63,7 +65,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function DictionaryWordPage({ params }: PageProps) {
-  const { wordId } = await params;
+  const { locale: rawLocale, wordId } = await params;
+  const locale = isValidLocale(rawLocale) ? rawLocale : "kh";
   const id = Number(wordId);
   if (Number.isNaN(id)) notFound();
 
@@ -72,6 +75,7 @@ export default async function DictionaryWordPage({ params }: PageProps) {
 
   return (
     <DictionaryLayout showHero={false}>
+      <JsonLd data={dictionaryWordJsonLd(word, locale)} />
       <DictionaryWordDetail word={word} />
     </DictionaryLayout>
   );
