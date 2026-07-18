@@ -167,7 +167,8 @@ export default function FingerSpellingCameraPanel({
         height: "100%",
         borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
-        bgcolor: KslColors.secondaryLight,
+        border: `1px solid ${KslColors.border}`,
+        bgcolor: KslColors.primaryLighter,
       }}
     >
       {!cameraError ? (
@@ -180,7 +181,7 @@ export default function FingerSpellingCameraPanel({
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "contain",
+              objectFit: "cover",
               display: "block",
               transform: "scaleX(-1)",
             }}
@@ -193,7 +194,7 @@ export default function FingerSpellingCameraPanel({
               inset: 0,
               width: "100%",
               height: "100%",
-              objectFit: "contain",
+              objectFit: "cover",
               pointerEvents: "none",
               transform: "scaleX(-1)",
             }}

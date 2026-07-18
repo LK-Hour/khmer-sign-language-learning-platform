@@ -5,7 +5,7 @@ import { Stack, Typography } from "@mui/material";
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import type { WordDetectionLandmarks } from "@/features/word-detection/ml/useWordDetectionLandmarker";
 import { useTranslation } from "@/i18n/useTranslation";
-import { KslFontSizes, KslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
 const OVERLAY_DETECTION_INTERVAL_MS = 0;
 
@@ -180,9 +180,10 @@ export default function WordDetectionCameraPanel({
         position: "relative",
         width: "100%",
         height: "100%",
-        borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
-        bgcolor: "grey.900",
+        border: `1px solid ${KslColors.border}`,
+        borderRadius: `${KslRadii.signImage}px`,
+        bgcolor: KslColors.primaryLighter,
       }}
     >
       {!cameraError ? (

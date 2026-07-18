@@ -1,263 +1,181 @@
 # Khmer Sign Language Platform
 
-A comprehensive web platform for learning Khmer sign language with AI-powered real-time feedback through computer vision. This platform enables users to practice sign language gestures and receive instant accuracy assessments.
+A full-stack platform for learning Khmer sign language with learner-facing curriculum content, admin management workflows, and AI-assisted practice experiences.
 
----
+## Overview
 
-## Table of Contents
-- [Tech Stack](#tech-stack)
-- [System Requirements](#system-requirements)
-- [Project Structure](#project-structure)
-- [Installation & Setup](#installation--setup)
-- [Running the Application](#running-the-application)
-- [Database](#database)
-- [API Documentation](#api-documentation)
+This repository contains:
 
----
+- A Next.js frontend for the learner and admin experience
+- A FastAPI backend for curriculum, auth, media, and analytics workflows
+- PostgreSQL, Redis, and pgAdmin services for local development
+- Documentation and audit notes for product, admin, and engineering work
 
-## Tech Stack
+## Quick Start
 
-### **Frontend**
-| Component | Version | Notes |
-|-----------|---------|-------|
-| Next.js | 16.2.6 | Full-stack React framework |
-| React | 19.2.4 | UI library (used by Next.js) |
-| React DOM | 19.2.4 | DOM rendering for React |
-| TypeScript | 5.x | Type safety |
-| Material UI (MUI) | 9.0.1 | Component library |
-| Emotion | 11.14.0 & 11.14.1 | CSS-in-JS styling |
-| Zustand | 5.0.13 | State management |
-| Tailwind CSS | 4.x | Utility-first CSS |
-| ESLint | 9.x | Code linting |
+### 1. Clone and enter the repository
 
-### **Backend**
-| Component | Version |
-|-----------|---------|
-| Python | 3.10+ |
-| FastAPI | 0.104.1 |
-| Uvicorn | 0.24.0 |
-| SQLAlchemy | 2.0.23 |
-| Alembic | 1.12.1 |
-| Pydantic | 2.5.0 |
-| PyJWT | 2.8.0 |
-| python-dotenv | 1.0.0 |
-| bcrypt | 4.1.1 |
-| passlib | 1.7.4 |
-
-### **Database**
-| Component | Version |
-|-----------|---------|
-| PostgreSQL | 17-alpine (latest Alpine) |
-| Docker | Latest |
-| Docker Compose | Latest |
-
----
-
-## System Requirements
-
-### Required Software
-- **Docker & Docker Compose** - For PostgreSQL and pgAdmin only
-- **Node.js** - 18+ LTS
-- **Python** - 3.10+
-- **Git**
-
----
-
-## Project Structure
-
-```
-khmer-sign-language-platform/
-
-├── frontend/                   # Next.js Frontend
-│   ├── src/                   # Source code wrapper
-│   │   ├── app/               # Next.js App Router
-│   │   │   ├── layout.tsx     # Root layout
-│   │   │   ├── page.tsx       # Home page
-│   │   │   └── globals.css    # Global styles
-│   │   ├── components/        # Reusable React components
-│   │   ├── hooks/             # Custom React hooks
-│   │   ├── layouts/           # Layout components
-│   │   ├── contexts/          # React context providers
-│   │   ├── sections/          # Page sections
-│   │   ├── theme/             # MUI theme configuration
-│   │   ├── utils/             # Utility functions
-│   │   ├── constants/         # Application constants
-│   │   ├── auth/              # Authentication utilities
-│   │   ├── assets/            # Images, fonts, etc.
-│   │   └── zustand/           # Zustand store definitions
-│   ├── public/                # Static assets
-│   ├── package.json           # Node dependencies
-│   ├── next.config.ts         # Next.js configuration
-│   ├── tsconfig.json          # TypeScript configuration
-│   ├── postcss.config.mjs      # PostCSS configuration
-│   ├── eslint.config.mjs       # ESLint configuration
-│   └── .env.local             # Frontend environment variables
-│
-├── backend/                    # FastAPI Backend
-│   ├── src/                   # Source code wrapper
-│   │   ├── main.py            # Main FastAPI application
-│   │   ├── models/            # SQLAlchemy models
-│   │   ├── schemas/           # Pydantic schemas
-│   │   ├── routes/            # API route handlers
-│   │   ├── services/          # Business logic
-│   │   ├── dependencies/      # Dependency injection
-│   │   ├── utils/             # Utility functions
-│   │   ├── constants/         # Constants & enums
-│   │   ├── middleware/        # Custom middleware
-│   │   ├── config/            # Configuration files
-│   │   └── validators/        # Data validators
-│   ├── requirements.txt        # Python dependencies
-│   ├── .env                   # Environment variables
-│   ├── venv/                  # Python virtual environment
-│   └── test_db_connection.py  # Database connection tester
-│
-│
-├── docker-compose.yml          # Docker Compose configuration for PostgreSQL and pgAdmin
-├── start.sh                    # Automated startup script
-└── README.md                   # This file
-```
-
----
-
-## Installation & Setup
-
-### Step 1: Clone Repository
 ```bash
-cd /path/to/project
-git clone <repository-url>
+git clone https://github.com/LK-Hour/khmer-sign-language-learning-platform
 cd khmer-sign-language-platform
 ```
 
-### Step 2: Set Up Backend
+### 2. Start local services
+
+```bash
+docker compose up -d
+```
+
+### 3. Set up the backend
 
 ```bash
 cd backend
-
-# Create a virtual environment and activate it
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-
-cd ..
 ```
 
-### Step 3: Set Up Frontend
+Example backend environment variables:
+
+```env
+DATABASE_URL=postgresql://admin:admin@localhost:5432/khmer_sign_db
+SECRET_KEY=change-me
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+ENVIRONMENT=development
+```
+
+### 4. Set up the frontend
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-cd ..
 ```
 
-### Step 4: Start PostgreSQL (Docker)
+Example frontend environment variables:
 
-From the project root:
-```bash
-# Start PostgreSQL container
-docker compose up -d
-
-# Verify it's running
-docker compose ps
-
-# Test connection
-cd backend && source venv/bin/activate
-python test_db_connection.py
-cd ..
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-### Step 5: Apply Database Migrations
-When you pull backend changes that include schema updates, run:
+### 5. Run the app
+
+Backend:
+
 ```bash
 cd backend
-source venv/bin/activate
-alembic upgrade head
+source .venv/bin/activate
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-If you need to export or import shared data, use the seed utility:
-```bash
-python seed_data/seed_database.py --export --output seed_data/seed_data.json
-python seed_data/seed_database.py --output seed_data/seed_data.json --wipe
-```
+Frontend:
 
-**Database Credentials:**
-```
-Username: admin
-Password: admin
-Database: khmer_sign_db
-Host: localhost
-Port: 5432
-```
-
----
-
-## Running the Application
-
-### Terminal 1: Start Backend
-```bash
-cd backend
-source venv/bin/activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-**Backend URL:** http://localhost:8000
-
-### Terminal 2: Start Next.js Frontend
 ```bash
 cd frontend
 npm run dev
 ```
 
-This starts the **Next.js development server** with hot reload.
+### Local URLs
 
-**Frontend URL:** http://localhost:3000
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
+- API docs: http://localhost:8000/docs
+- pgAdmin: http://localhost:8080
 
-### Using the Start Script (Optional)
-```bash
-bash start.sh
+## Project Structure
+
+```text
+backend/           # FastAPI backend services and API
+frontend/          # Next.js frontend application
+frontend/src/app/  # App Router pages and layouts
+frontend/src/features/ # Domain-based frontend features
+frontend/src/components/ # Shared UI components
+docs/              # Developer and product documentation
+scripts/           # Repository helper scripts
 ```
 
----
+## Main Tech Stack
 
-## Database
+### Frontend
 
-### PostgreSQL Setup
-- **Image:** `postgres:17-alpine`
-- **Container:** `khmer_sign_postgres`
-- **Port:** 5432
-- **Credentials:** See Environment Variables
-- **Data Persistence:** Docker volume `postgres_data`
-- **Purpose:** local development database only
+- Next.js 16.2.6
+- React 19.2.4
+- TypeScript 5.x
+- Material UI 9.x
+- Zustand
+- Vitest
 
-### Database Commands
+### Backend
+
+- Python 3.10+
+- FastAPI
+- SQLAlchemy 2.x
+- Alembic
+- Pydantic 2.x
+- PostgreSQL
+
+## Development Workflow
+
+### Backend
 
 ```bash
-# Start PostgreSQL
+cd backend
+source .venv/bin/activate
+pytest
+alembic upgrade head
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run lint
+npm run typecheck
+npm test
+```
+
+## Documentation
+
+Developer-facing guides are available in [docs](docs):
+
+- [docs/developer-guide.md](docs/developer-guide.md) — onboarding and development workflow
+- [docs/admin-content-lifecycle.md](docs/admin-content-lifecycle.md) — admin publish and visibility lifecycle
+- [docs/admin-test-matrix.md](docs/admin-test-matrix.md) — admin feature test matrix
+- [docs/refactor-audit-report.md](docs/refactor-audit-report.md) — frontend refactor notes
+- [docs/feature-guides/finger-spelling.md](docs/feature-guides/finger-spelling.md) — backend, ML, and frontend ownership for finger spelling
+- [docs/feature-guides/word-detection.md](docs/feature-guides/word-detection.md) — backend, ML, and frontend ownership for word detection
+- [docs/feature-guides/ai-integration-overview.md](docs/feature-guides/ai-integration-overview.md) — how AI prediction is wired through the platform
+- [docs/feature-guides/frontend-ownership-map.md](docs/feature-guides/frontend-ownership-map.md) — where to edit frontend feature areas
+- [docs/feature-guides/prompt-template.md](docs/feature-guides/prompt-template.md) — reusable prompt for drafting or extending feature documentation
+
+## Useful Commands
+
+```bash
+# Start all local services
 docker compose up -d
 
-# Stop PostgreSQL
+# Stop all local services
 docker compose down
 
-# View logs
-docker compose logs -f postgres
+# Start the backend manually
+cd backend && source .venv/bin/activate && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
-# Connect to database CLI
-docker compose exec postgres psql -U admin -d khmer_sign_db
-
-# Stop and remove all data
-docker compose down -v
+# Start the frontend manually
+cd frontend && npm run dev
 ```
 
----
+## Contributing
 
-## Environment Variables
+Before opening a pull request:
+
+- Keep changes scoped and documented
+- Run relevant frontend or backend checks
+- Update documentation when workflow or architecture changes
+- Note any migration or seed-data changes clearly
+
+## Notes
+
+The repository includes a generated graph index under [graphify-out](graphify-out) and additional historical notes under [docs.local](docs.local).
 
 ### Backend `.env`
 ```

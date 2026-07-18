@@ -1,24 +1,25 @@
 import Image from "next/image";
 import { Stack } from "@mui/material";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
-import { KslColors, KslRadii, KslShadows } from "@/theme/theme";
+import { KslColors, KslRadii } from "@/theme/theme";
 
 type SignImageCardProps = {
   src: string;
   alt: string;
+  highlight?: boolean;
 };
 
-export default function FingerSpellingSignImageCard({ src, alt }: SignImageCardProps) {
+export default function FingerSpellingSignImageCard({ src, alt, highlight }: SignImageCardProps) {
   return (
     <Stack
       sx={{
         position: "relative",
         width: "100%",
         height: "100%",
+        border: `1px solid ${KslColors.border}`,
         borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
-        boxShadow: KslShadows.drop,
-        bgcolor: KslColors.secondaryLight,
+        bgcolor: KslColors.primaryLighter,
       }}
     >
       <Image

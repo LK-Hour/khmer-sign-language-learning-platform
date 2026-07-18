@@ -98,10 +98,10 @@ export default function WordDetectionWordCard({ videoUrl }: WordDetectionWordCar
         position: "relative",
         width: "100%",
         height: "100%",
-        borderRadius: `${KslRadii.signImage}px`,
         overflow: "hidden",
-        boxShadow: KslShadows.drop,
-        bgcolor: KslColors.primaryLight,
+        border: `1px solid ${KslColors.border}`,
+        borderRadius: `${KslRadii.signImage}px`,
+        bgcolor: KslColors.primaryLighter,
         "& video": {
           objectFit: "cover",
         },
