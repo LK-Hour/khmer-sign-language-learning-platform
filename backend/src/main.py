@@ -14,7 +14,15 @@ from .core.config import settings
 
 logger = logging.getLogger("ksl.timing")
 
-app = FastAPI(title=settings.app_title)
+# Disable interactive API docs (Swagger UI, ReDoc, OpenAPI schema) in production
+# to avoid exposing the full API surface to unauthenticated visitors.
+_is_prod = settings.environment.lower() in {"production", "prod"}
+app = FastAPI(
+    title=settings.app_title,
+    docs_url=None if _is_prod else "/docs",
+    redoc_url=None if _is_prod else "/redoc",
+    openapi_url=None if _is_prod else "/openapi.json",
+)
 
 
 @app.middleware("http")

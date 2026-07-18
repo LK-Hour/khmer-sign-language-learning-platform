@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+import secrets
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 _REPO_ROOT = _BACKEND_ROOT.parent
@@ -124,6 +128,19 @@ class Settings(BaseSettings):
                 raise RuntimeError(
                     "ALLOWED_ORIGINS must be set in production."
                 )
+        elif not self.jwt_secret_key:
+            # Outside production a missing/empty signing key would otherwise be
+            # accepted, and HS256 tokens signed with an empty key are trivially
+            # forgeable (anyone could mint admin JWTs). Fall back to a random
+            # ephemeral key so tokens cannot be forged; it is regenerated on
+            # every restart, which is acceptable for non-production use.
+            self.jwt_secret_key = secrets.token_urlsafe(48)
+            logger.warning(
+                "JWT_SECRET_KEY is not set; generated a random ephemeral key. "
+                "Set JWT_SECRET_KEY in the environment for stable tokens."
+            )
+
+
 @lru_cache
 def get_settings() -> Settings:
     settings = Settings()
