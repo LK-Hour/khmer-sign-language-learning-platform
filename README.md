@@ -1,5 +1,7 @@
 # Khmer Sign Language Platform
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LK-Hour/khmer-sign-language-learning-platform)
+
 A full-stack platform for learning Khmer sign language with learner-facing curriculum content, admin management workflows, and AI-assisted practice experiences.
 
 ## Overview
