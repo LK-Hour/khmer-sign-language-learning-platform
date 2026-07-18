@@ -27,6 +27,22 @@ export const DEFAULT_OG_IMAGE = "/assets/landing-hero-hand.png";
 /** Locales that should be exposed to search engines via hreflang + sitemap. */
 export const INDEXABLE_LOCALES = SUPPORTED_LOCALES;
 
+/**
+ * Maps internal URL locale slugs to valid BCP-47 / ISO 639-1 language codes
+ * for `hreflang` and `<html lang>`. The app uses "kh" as the URL slug for
+ * Khmer, but the correct language code is "km" ("kh" is Cambodia's country
+ * code). Search engines ignore invalid hreflang values, so emit "km".
+ */
+const HREFLANG_BY_LOCALE: Record<Locale, string> = {
+  kh: "km",
+  en: "en",
+};
+
+/** Resolve a URL locale slug to its standards-compliant language code. */
+export function toLanguageTag(locale: Locale): string {
+  return HREFLANG_BY_LOCALE[locale] ?? locale;
+}
+
 /** Build an absolute URL from a site-relative path. */
 export function absoluteUrl(path: string): string {
   const normalized = path.startsWith("/") ? path : `/${path}`;
@@ -43,7 +59,7 @@ export function buildLanguageAlternates(
 
   const languages: Record<string, string> = {};
   for (const locale of INDEXABLE_LOCALES) {
-    languages[locale] = absoluteUrl(`/${locale}${normalized}`);
+    languages[toLanguageTag(locale)] = absoluteUrl(`/${locale}${normalized}`);
   }
   // "x-default" tells crawlers which version to show when no locale matches.
   languages["x-default"] = absoluteUrl(`/${INDEXABLE_LOCALES[0]}${normalized}`);
