@@ -48,6 +48,7 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // ── Data fetching ────────────────────────────────────────────────────────
 
@@ -101,11 +102,16 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
 
   const handleApprove = useCallback(
     async (id: string) => {
+      setActionError(null);
       try {
         await contributionsApi.approveContribution(id);
         fetchContributions();
-      } catch {
-        // Error is shown via snackbar in a real app; for now silently retry
+      } catch (err) {
+        setActionError(
+          err instanceof ApiError
+            ? err.message
+            : "Failed to approve contribution",
+        );
       }
     },
     [fetchContributions],
@@ -113,11 +119,16 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
 
   const handleReject = useCallback(
     async (id: string) => {
+      setActionError(null);
       try {
         await contributionsApi.rejectContribution(id, "Rejected by admin");
         fetchContributions();
-      } catch {
-        // Error is shown via snackbar in a real app; for now silently retry
+      } catch (err) {
+        setActionError(
+          err instanceof ApiError
+            ? err.message
+            : "Failed to reject contribution",
+        );
       }
     },
     [fetchContributions],
@@ -188,6 +199,12 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
           </Select>
         </FormControl>
       </Stack>
+
+      {actionError && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setActionError(null)}>
+          {actionError}
+        </Alert>
+      )}
 
       {/* Contribution cards grid */}
       {filteredContributions.length === 0 ? (

@@ -4,6 +4,7 @@ Handles authentication endpoints for Google, Facebook, and Telegram
 """
 
 import json
+import logging
 import secrets
 import uuid
 from datetime import datetime, timezone
@@ -32,6 +33,8 @@ from src.utils.cookies import set_refresh_cookie
 from src.utils.jwt_utils import create_access_token, verify_token
 from src.utils.password import verify_password
 from src.utils.refresh_tokens import create_refresh_token
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth/login", tags=["auth"])
 FRONTEND_URL = settings.frontend_url
@@ -125,8 +128,8 @@ def _telegram_redirect_url(request: Request) -> str:
     try:
         if _origin(redirect_to) in allowed_origins:
             return redirect_to
-    except Exception:
-        pass
+    except ValueError:
+        logger.warning("Rejected malformed Telegram redirect_to: %r", redirect_to)
 
     return FRONTEND_URL
 

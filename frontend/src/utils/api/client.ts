@@ -9,11 +9,65 @@ export class ApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly path: string,
-    message = `API ${status}: ${path}`
+    message = `API ${status}: ${path}`,
+    public readonly detail?: unknown
   ) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+/**
+ * Extract a human-readable message from a failed response body.
+ *
+ * FastAPI reports errors as `{ "detail": ... }` where `detail` is either a
+ * string or, for validation failures, an array of `{ loc, msg, ... }` objects.
+ * The raw `detail` is preserved on {@link ApiError.detail} so callers can
+ * inspect it, while the derived string becomes the error message instead of
+ * being silently discarded.
+ */
+async function extractResponseError(
+  res: Response
+): Promise<{ message?: string; detail?: unknown }> {
+  let raw: string;
+  try {
+    raw = await res.text();
+  } catch {
+    return {};
+  }
+  if (!raw) return {};
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // Non-JSON body (e.g. an HTML error page) — surface it verbatim.
+    return { message: raw };
+  }
+
+  const detail =
+    parsed && typeof parsed === "object" && "detail" in parsed
+      ? (parsed as { detail: unknown }).detail
+      : parsed;
+
+  if (typeof detail === "string") {
+    return { message: detail, detail };
+  }
+
+  if (Array.isArray(detail)) {
+    const message = detail
+      .map((item) => {
+        if (item && typeof item === "object" && "msg" in item) {
+          return String((item as { msg: unknown }).msg);
+        }
+        return typeof item === "string" ? item : JSON.stringify(item);
+      })
+      .filter(Boolean)
+      .join("; ");
+    return { message: message || undefined, detail };
+  }
+
+  return { detail };
 }
 
 export type ApiFetchOptions = RequestInit & {
@@ -80,7 +134,10 @@ export async function refreshAuthSession(): Promise<string | null> {
       };
       store.setAccessToken(tokenResp);
       return tokenResp?.access_token;
-    } catch {
+    } catch (err) {
+      // Transient failure (e.g. the network is down). The caller treats a null
+      // result as "could not refresh"; log so the failure isn't invisible.
+      console.warn("Auth session refresh failed:", err);
       return null;
     } finally {
       store.setRefreshing(false);
@@ -150,7 +207,8 @@ export async function apiFetch<T>(
     // clearing auth on confirmed 401 (revoked token). Clearing here would
     // double-clear or incorrectly clear when refresh returned null due to a
     // transient error.
-    throw new ApiError(res.status, path);
+    const { message, detail } = await extractResponseError(res);
+    throw new ApiError(res.status, path, message, detail);
   }
 
   if (res.status === 204) {
