@@ -165,6 +165,28 @@ cd backend && source .venv/bin/activate && uvicorn src.main:app --reload --host 
 cd frontend && npm run dev
 ```
 
+## Production Docker Builds
+
+Build from repository root so each Dockerfile can copy the correct subproject:
+
+```bash
+# Backend image
+docker build -f backend/Dockerfile -t khmer-sign-backend:latest .
+
+# Frontend image
+docker build -f frontend/Dockerfile -t khmer-sign-frontend:latest .
+```
+
+Run locally:
+
+```bash
+# Backend
+docker run --rm -p 8000:8000 --env-file backend/.env khmer-sign-backend:latest
+
+# Frontend
+docker run --rm -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://localhost:8000 khmer-sign-frontend:latest
+```
+
 ## Contributing
 
 Before opening a pull request:
