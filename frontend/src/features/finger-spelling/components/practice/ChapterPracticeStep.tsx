@@ -146,7 +146,7 @@ export default function ChapterPracticeStep({
           component="span"
           sx={{
             color: KslColors.primary,
-            fontSize: { xs: KslFontSizes["2xl"], sm: KslFontSizes["3xl"] },
+            fontSize: { xs: KslFontSizes["2xl"], sm: 28 },
             fontWeight: 800,
             lineHeight: 1,
             letterSpacing: "-0.02em",
@@ -182,25 +182,6 @@ export default function ChapterPracticeStep({
       {recError ? (
         <Alert severity="warning" sx={{ borderRadius: `${KslRadii.card}px` }}>
           {recError}
-        </Alert>
-      ) : null}
-
-      {continueEnabled ? (
-        <Alert
-          severity="success"
-          sx={{
-            borderRadius: `${KslRadii.card}px`,
-            bgcolor: "rgba(31,159,111,0.12)",
-            border: `1px solid rgba(31,159,111,0.35)`,
-            "& .MuiAlert-message": { width: "100%" },
-          }}
-        >
-          <Typography sx={{ fontWeight: 800, color: KslColors.success }}>
-            {t("FINGER_SPELLING.PRACTICE.CORRECT_TITLE")}
-          </Typography>
-          <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary }}>
-            {t("FINGER_SPELLING.PRACTICE.CORRECT_NEXT")}
-          </Typography>
         </Alert>
       ) : null}
 

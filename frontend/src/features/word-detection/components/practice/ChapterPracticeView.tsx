@@ -7,6 +7,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ROUTES } from "@/constants/routes";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
 import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
+import {
+  clearChapterPracticeProgress,
+  loadChapterPracticeProgress,
+  saveChapterPracticeProgress,
+} from "@/features/shared/chapterPracticeSessionProgress";
 import PracticeCompleteCelebration from "@/features/shared/PracticeCompleteCelebration";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
@@ -22,6 +27,8 @@ import { useWordRealtimePredictor } from "../../ml/useWordRealtimePredictor";
 import { useWordDetectionStore } from "../../store";
 import type { WdChapterPractice, WdPracticeItem } from "../../types";
 import ChapterPracticeStep from "./ChapterPracticeStep";
+
+const PRACTICE_FEATURE = "word-detection" as const;
 
 const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 100;
 const WORD_PASS_STABLE_FRAMES = 6;
@@ -57,10 +64,21 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
   const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const perWordScoresRef = useRef<number[]>([]);
+  const savedProgressRef = useRef(
+    loadChapterPracticeProgress(
+      PRACTICE_FEATURE,
+      practice.chapterId,
+      practice.items.length
+    )
+  );
+  const perWordScoresRef = useRef<number[]>(
+    savedProgressRef.current?.scores ?? []
+  );
   const advancingRef = useRef(false);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(
+    () => savedProgressRef.current?.currentIndex ?? 0
+  );
   const [isComplete, setIsComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [finalAvgScore, setFinalAvgScore] = useState<number | null>(null);
@@ -163,6 +181,7 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
       }
 
       useWordDetectionStore.getState().markPracticeCompleted(practice.chapterId);
+      clearChapterPracticeProgress(PRACTICE_FEATURE, practice.chapterId);
       setIsComplete(true);
     },
     [practice.chapterId]
@@ -185,11 +204,22 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
         if (nextIdx >= items.length) {
           void finishSession(newScores);
         } else {
+          saveChapterPracticeProgress(PRACTICE_FEATURE, practice.chapterId, {
+            currentIndex: nextIdx,
+            scores: newScores,
+          });
           setCurrentIndex(nextIdx);
         }
       }, ADVANCE_DELAY_MS);
     },
-    [currentIndex, finishSession, items.length, resetAttempts, resetPredictionAttempt]
+    [
+      currentIndex,
+      finishSession,
+      items.length,
+      practice.chapterId,
+      resetAttempts,
+      resetPredictionAttempt,
+    ]
   );
 
   const handleAutoRetry = useCallback(() => {

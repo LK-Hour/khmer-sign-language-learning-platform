@@ -12,6 +12,11 @@ import {
 import { useRealtimePredictor } from "@/features/finger-spelling/ml/useRealtimePredictor";
 import { useFingerSpellingPracticeActions } from "@/features/finger-spelling/hooks/useFingerSpellingPracticeActions";
 import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
+import {
+  clearChapterPracticeProgress,
+  loadChapterPracticeProgress,
+  saveChapterPracticeProgress,
+} from "@/features/shared/chapterPracticeSessionProgress";
 import PracticeCompleteCelebration from "@/features/shared/PracticeCompleteCelebration";
 import { useFingerSpellingStore } from "@/features/finger-spelling/store";
 import { useTranslation } from "@/i18n/useTranslation";
@@ -21,6 +26,8 @@ import { resolveApiAssetUrl } from "../../api/config";
 import type { FsChapterPractice, FsPracticeItem } from "../../types";
 import { useAuthStore } from "@/store/auth.store";
 import ChapterPracticeStep from "./ChapterPracticeStep";
+
+const PRACTICE_FEATURE = "finger-spelling" as const;
 
 const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
 
@@ -51,10 +58,21 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryPendingRef = useRef(false);
-  const perLetterScoresRef = useRef<number[]>([]);
+  const savedProgressRef = useRef(
+    loadChapterPracticeProgress(
+      PRACTICE_FEATURE,
+      practice.chapterId,
+      practice.items.length
+    )
+  );
+  const perLetterScoresRef = useRef<number[]>(
+    savedProgressRef.current?.scores ?? []
+  );
   const advancingRef = useRef(false);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(
+    () => savedProgressRef.current?.currentIndex ?? 0
+  );
   const [isComplete, setIsComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [finalAvgScore, setFinalAvgScore] = useState<number | null>(null);
@@ -160,6 +178,7 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
       useFingerSpellingStore
         .getState()
         .markPracticeCompleted(practice.chapterId, avgScore);
+      clearChapterPracticeProgress(PRACTICE_FEATURE, practice.chapterId);
       setIsComplete(true);
     },
     [practice.chapterId]
@@ -182,11 +201,22 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
         if (nextIdx >= items.length) {
           void finishSession(newScores);
         } else {
+          saveChapterPracticeProgress(PRACTICE_FEATURE, practice.chapterId, {
+            currentIndex: nextIdx,
+            scores: newScores,
+          });
           setCurrentIndex(nextIdx);
         }
       }, ADVANCE_DELAY_MS);
     },
-    [currentIndex, finishSession, items.length, resetAttempts, resetPredictionAttempt]
+    [
+      currentIndex,
+      finishSession,
+      items.length,
+      practice.chapterId,
+      resetAttempts,
+      resetPredictionAttempt,
+    ]
   );
 
   const doCaptureFromPrediction = useCallback(async () => {
@@ -216,7 +246,6 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
 
       const extraction = extractFromVideo(video);
       if (!extraction.handDetected) {
-        setRecError(t("FINGER_SPELLING.LESSON.NO_HAND_DETECTED"));
         return;
       }
 

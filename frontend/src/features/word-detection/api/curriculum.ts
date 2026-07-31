@@ -101,42 +101,9 @@ export async function fetchWdChapterPractice(
 
 // ─── Track loader ────────────────────────────────────────────────────────────
 
-export async function fetchWdTrackUnits(): Promise<WdTrackUnit[]> {
-  const baseUnits = (await fetchWdUnits()).sort(
-    (a, b) => a?.orderIndex - b?.orderIndex
-  );
-
-  return Promise.all(
-    baseUnits.map(async (unit) => {
-      const chapters = (await fetchWdChapters(unit?.id)).sort(
-        (a, b) => a?.orderIndex - b?.orderIndex
-      );
-      const chaptersWithLessons = await Promise.all(
-        chapters.map(async (chapter) => {
-          const lessons = (await fetchWdLessons(chapter?.id)).sort(
-            (a, b) => a?.orderIndex - b?.orderIndex
-          );
-
-          return {
-            ...chapter,
-            lessons,
-          };
-        })
-      );
-
-      return {
-        ...unit,
-        chapters: chaptersWithLessons,
-      };
-    })
-  );
-}
-
-
 /**
  * Fetch the full curriculum tree in a single request (aggregated endpoint).
- * Eliminates 30+ sequential API calls by returning units → chapters → lessons
- * in one response. The response shape matches WdTrackUnit[] directly.
+ * Returns units → chapters → lessons in one response.
  */
 export async function fetchWdTree(): Promise<WdTrackUnit[]> {
   const raw = await apiFetch<WdTrackUnit[]>("/api/word_detection/tree");
@@ -151,4 +118,9 @@ export async function fetchWdTree(): Promise<WdTrackUnit[]> {
         .sort((a, b) => a.orderIndex - b.orderIndex),
     }))
     .sort((a, b) => a.orderIndex - b.orderIndex);
+}
+
+/** @deprecated Prefer fetchWdTree — same data, one request. */
+export async function fetchWdTrackUnits(): Promise<WdTrackUnit[]> {
+  return fetchWdTree();
 }
