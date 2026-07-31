@@ -2,12 +2,13 @@
 
 import { Box } from "@mui/material";
 import Image from "next/image";
-import { KslRadii, KslShadows } from "@/theme/theme";
+import { KslColors, KslRadii, KslShadows } from "@/theme/theme";
 import { resolveApiAssetUrl } from "../../api/config";
 
 type ExerciseSignMediaProps = {
   url: string | null;
   alt?: string;
+  /** Width in px. Height follows landscape aspect ratio. */
   size?: number;
   reviewState?: "correct" | "incorrect" | "neutral";
 };
@@ -22,9 +23,9 @@ export default function ExerciseSignMedia({
 
   const borderColor =
     reviewState === "correct"
-      ? "#1f9f6f"
+      ? KslColors.primary
       : reviewState === "incorrect"
-        ? "#FF4438"
+        ? KslColors.error
         : "transparent";
 
   return (
@@ -33,12 +34,12 @@ export default function ExerciseSignMedia({
         position: "relative",
         width: size,
         maxWidth: "100%",
-        aspectRatio: "1 / 1",
-        borderRadius: `${KslRadii.signImage}px`,
+        aspectRatio: "4 / 3",
+        borderRadius: `${KslRadii.wordCard}px`,
         overflow: "hidden",
         boxShadow: KslShadows.drop,
-        border: `3px solid ${borderColor}`,
-        bgcolor: "#f0f4f2",
+        border: `2px solid ${borderColor}`,
+        bgcolor: KslColors.primaryLighter,
         flexShrink: 0,
       }}
     >

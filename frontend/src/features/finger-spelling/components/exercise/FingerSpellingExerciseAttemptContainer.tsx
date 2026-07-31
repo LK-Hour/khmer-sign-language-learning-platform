@@ -11,7 +11,7 @@ import { useAuthStore } from "@/store/auth.store";
 import {
   fetchFsExerciseSession,
   fetchFsGuestExerciseSession,
-  fetchFsTrackUnits,
+  fetchFsTree,
   fetchFsUnits,
 } from "../../api/curriculum";
 import { useGuestProgressStore } from "../../store/guestProgress.store";
@@ -38,7 +38,7 @@ export default function FingerSpellingExerciseAttemptContainer({ unitId }: Props
     async function load() {
       try {
         if (isGuest) {
-          const trackUnits = applyGuestProgress(await fetchFsTrackUnits());
+          const trackUnits = applyGuestProgress(await fetchFsTree());
           const unit = trackUnits.find((u) => u.id === unitId);
           if (!unit?.isExerciseUnlocked) {
             if (!cancelled) {

@@ -9,7 +9,7 @@ import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 import { useAuthStore } from "@/store/auth.store";
-import { fetchFsTrackUnits } from "../../api/curriculum";
+import { fetchFsTree } from "../../api/curriculum";
 import { useGuestProgressStore } from "../../store/guestProgress.store";
 import type { FsUnit } from "../../types";
 import { formatBadgeStep, formatUnitBadge } from "../../utils/chapter";
@@ -37,7 +37,7 @@ export default function FingerSpellingExerciseListContainer() {
   const [loading, setLoading] = useState(true);
 
   const loadUnits = useCallback(async () => {
-    const trackUnits = await fetchFsTrackUnits();
+    const trackUnits = await fetchFsTree();
     const merged = isGuest ? applyGuestProgress(trackUnits) : trackUnits;
     setUnits(
       merged

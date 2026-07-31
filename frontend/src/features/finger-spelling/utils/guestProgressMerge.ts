@@ -17,6 +17,7 @@ export function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
   const completedChapterPractices = new Set(
     useGuestProgressStore.getState().completedChapterPracticeIds
   );
+  const unitExercises = useGuestProgressStore.getState().unitExercises;
   const orderedLessonIds = units
     .flatMap((unit) =>
       unit?.chapters.flatMap((chapter) =>
@@ -79,6 +80,7 @@ export function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
 
     const allLessons = chapters.flatMap((chapter) => chapter.lessons);
     const totalLessonCount = unit?.totalLessonCount ?? allLessons.length;
+    const unitExercise = unitExercises[unit.id];
 
     return {
       ...unit,
@@ -86,6 +88,10 @@ export function applyGuestProgress(units: FsTrackUnit[]): FsTrackUnit[] {
       chapters,
       completedLessonCount: Math.max(unit?.completedLessonCount, unitCompleted),
       isExerciseUnlocked: isUnitExerciseUnlocked(allLessons, totalLessonCount),
+      isExerciseCompleted:
+        unit?.isExerciseCompleted === true || unitExercise != null,
+      bestScore: unitExercise?.bestScore ?? unit?.bestScore ?? null,
+      maxScore: unitExercise?.maxScore ?? unit?.maxScore ?? null,
     };
   });
 }

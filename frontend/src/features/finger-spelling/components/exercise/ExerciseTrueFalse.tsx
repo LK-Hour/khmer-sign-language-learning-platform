@@ -1,11 +1,12 @@
 "use client";
 
-import { Box, Stack, Typography } from "@mui/material";
-import { motion } from "framer-motion";
-import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
-import { fontFamilies } from "@/theme/fonts";
-import { useTranslation } from "@/i18n/useTranslation";
+import { memo } from "react";
+import { Box, Stack } from "@mui/material";
+import { Icon } from "@iconify/react";
 import type { ExerciseQuestionData, ExerciseAnswerResultData } from "../../types/exercise";
+import ExerciseOptionCard, {
+  type ExerciseOptionVisualState,
+} from "./ExerciseOptionCard";
 import ExerciseSignMedia from "./ExerciseSignMedia";
 
 type Props = {
@@ -15,11 +16,15 @@ type Props = {
   reviewResult?: ExerciseAnswerResultData | null;
 };
 
-export default function ExerciseTrueFalse({ question, selected, onSelect, reviewResult }: Props) {
-  const { locale } = useTranslation();
+function ExerciseTrueFalse({
+  question,
+  selected,
+  onSelect,
+  reviewResult,
+}: Props) {
   const isReview = reviewResult != null;
 
-  function optionState(optId: number) {
+  function optionState(optId: number): ExerciseOptionVisualState {
     if (!isReview) return selected === optId ? "selected" : "neutral";
     const isCorrect = reviewResult!.correct_option_ids.includes(optId);
     const wasSelected = reviewResult!.selected_option_ids.includes(optId);
@@ -28,64 +33,38 @@ export default function ExerciseTrueFalse({ question, selected, onSelect, review
     return "neutral";
   }
 
-  const styleMap: Record<string, { bg: string; border: string; color: string }> = {
-    selected: { bg: "#e7f2ff", border: "#137FEC", color: KslColors.secondary },
-    correct: { bg: "#dff7ed", border: "#1f9f6f", color: KslColors.primary },
-    incorrect: { bg: "#fff0ef", border: "#FF4438", color: KslColors.error },
-    neutral: { bg: "#fff", border: KslColors.border, color: KslColors.textPrimary },
-  };
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
       {question.media_url && (
-        <ExerciseSignMedia url={question.media_url} alt="Sign" size={180} />
+        <ExerciseSignMedia url={question.media_url} alt="Sign" size={240} />
       )}
       <Stack direction="row" spacing={2} sx={{ width: "100%", justifyContent: "center" }}>
         {question.options.map((opt) => {
           const state = optionState(opt.id);
-          const style = styleMap[state];
           const isTrue = opt.option_text_en === "True";
-          const label =
-            locale === "kh"
-              ? opt.option_text_kh || opt.option_text_en
-              : opt.option_text_en || opt.option_text_kh;
           return (
-            <Box
+            <ExerciseOptionCard
               key={opt.id}
-              component={motion.button}
-              whileTap={!isReview ? { scale: 0.95 } : {}}
-              onClick={() => !isReview && onSelect(opt.id)}
+              state={state}
+              interactive={!isReview}
+              onClick={() => onSelect(opt.id)}
+              ariaLabel={isTrue ? "True" : "False"}
               sx={{
                 flex: 1,
                 maxWidth: 180,
-                py: 2,
-                borderRadius: `${KslRadii.card}px`,
-                border: `2px solid ${style.border}`,
-                bgcolor: style.bg,
-                color: style.color,
-                cursor: isReview ? "default" : "pointer",
-                textAlign: "center",
-                transition: "all 0.15s",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 0.5,
+                py: 2.5,
               }}
             >
-              <Typography sx={{ fontSize: 28 }}>{isTrue ? "✓" : "✗"}</Typography>
-              <Typography
-                sx={{
-                  fontFamily: locale === "kh" ? fontFamilies.khmer : fontFamilies.english,
-                  fontWeight: 700,
-                  fontSize: KslFontSizes.md,
-                }}
-              >
-                {label}
-              </Typography>
-            </Box>
+              <Icon
+                icon={isTrue ? "solar:check-circle-bold" : "solar:close-circle-bold"}
+                width={36}
+              />
+            </ExerciseOptionCard>
           );
         })}
       </Stack>
     </Box>
   );
 }
+
+export default memo(ExerciseTrueFalse);

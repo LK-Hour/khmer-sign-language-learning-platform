@@ -107,7 +107,7 @@ export async function submitFsExercise(
 
 export async function submitFsGuestExercise(
   unitId: number,
-  body: ExerciseSubmitRequest & { question_ids: number[] }
+  body: ExerciseSubmitRequest
 ): Promise<ExerciseSessionData> {
   return apiFetch<ExerciseSessionData>(
     `/api/finger_spelling/units/${unitId}/exercise/guest/grade`,
@@ -120,42 +120,9 @@ export async function submitFsGuestExercise(
   );
 }
 
-export async function fetchFsTrackUnits(): Promise<FsTrackUnit[]> {
-  const baseUnits = (await fetchFsUnits()).sort(
-    (a, b) => a?.orderIndex - b?.orderIndex
-  );
-
-  return Promise.all(
-    baseUnits.map(async (unit) => {
-      const chapters = (await fetchFsChapters(unit?.id)).sort(
-        (a, b) => a?.orderIndex - b?.orderIndex
-      );
-      const chaptersWithLessons = await Promise.all(
-        chapters.map(async (chapter) => {
-          const lessons = (await fetchFsLessons(chapter?.id)).sort(
-            (a, b) => a?.orderIndex - b?.orderIndex
-          );
-
-          return {
-            ...chapter,
-            lessons,
-          };
-        })
-      );
-
-      return {
-        ...unit,
-        chapters: chaptersWithLessons,
-      };
-    })
-  );
-}
-
-
 /**
  * Fetch the full curriculum tree in a single request (aggregated endpoint).
- * Eliminates 30+ sequential API calls by returning units → chapters → lessons
- * in one response. The response shape matches FsTrackUnit[] directly.
+ * Returns units → chapters → lessons in one response.
  */
 export async function fetchFsTree(): Promise<FsTrackUnit[]> {
   const raw = await apiFetch<FsTrackUnit[]>("/api/finger_spelling/tree");
@@ -170,4 +137,9 @@ export async function fetchFsTree(): Promise<FsTrackUnit[]> {
         .sort((a, b) => a.orderIndex - b.orderIndex),
     }))
     .sort((a, b) => a.orderIndex - b.orderIndex);
+}
+
+/** @deprecated Prefer fetchFsTree — same data, one request. */
+export async function fetchFsTrackUnits(): Promise<FsTrackUnit[]> {
+  return fetchFsTree();
 }

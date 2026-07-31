@@ -137,16 +137,20 @@ export const useGuestProgressStore = create<GuestProgressState>()(
         set((state) => {
           const existing = state.unitExercises[unitId];
           const timestamp = nowIso();
-          const bestScore = Math.max(existing?.bestScore ?? 0, score);
+          const nextPct = score / Math.max(maxScore, 1);
+          const prevPct =
+            (existing?.bestScore ?? 0) / Math.max(existing?.maxScore ?? 1, 1);
+          const isBetter = !existing || nextPct > prevPct;
           return {
             unitExercises: {
               ...state.unitExercises,
               [unitId]: {
                 unitId,
-                bestScore,
-                maxScore: existing?.maxScore ?? maxScore,
-                questionIds:
-                  bestScore === score ? questionIds : existing?.questionIds ?? questionIds,
+                bestScore: isBetter ? score : existing.bestScore,
+                maxScore: isBetter ? maxScore : existing.maxScore,
+                questionIds: isBetter
+                  ? questionIds
+                  : existing?.questionIds ?? questionIds,
                 attemptCount: (existing?.attemptCount ?? 0) + 1,
                 completedAt: existing?.completedAt ?? timestamp,
               },

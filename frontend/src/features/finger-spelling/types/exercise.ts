@@ -20,6 +20,8 @@ export interface ExerciseQuestionData {
   question_kh: string;
   media_url: string | null;
   options: ExerciseOptionData[];
+  /** For multiple_answer: how many options the learner must pick (does not reveal which). */
+  required_selection_count?: number | null;
 }
 
 export interface ExerciseAnswerResultData {
@@ -49,5 +51,6 @@ export interface ExerciseAnswerSubmit {
 
 export interface ExerciseSubmitRequest {
   attempt_id: string;
+  question_ids: number[];
   answers: ExerciseAnswerSubmit[];
 }
