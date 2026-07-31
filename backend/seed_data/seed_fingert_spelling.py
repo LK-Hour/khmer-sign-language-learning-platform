@@ -193,7 +193,7 @@ DIACRITICS = [
     ("?", "question mark"),
 ]
 
-# 14 independent vowels (ស្រៈពេញតួ)
+# 15 independent vowels (ស្រៈពេញតួ)
 # letter_en uses GD romanization per https://en.wikipedia.org/wiki/Khmer_script#Independent_vowels
 # U+17A3 ឣ and U+17A4 ឤ are deprecated code points (dataset folders "អ" / "អា")
 INDEPENDENT_VOWELS = [
@@ -278,6 +278,8 @@ UNITS_META = [
         "name_kh": "ស្រៈពេញតួ",
         "description_en": "Learn the 15 Khmer independent vowels",
         "description_kh": "រៀនស្រៈពេញតួខ្មែរទាំង ១៥",
+        "description_en": "Learn the 15 Khmer independent vowels",
+        "description_kh": "រៀនស្រៈពេញតួខ្មែរទាំង ១៥",
         "order_index": 6,
         "letters": INDEPENDENT_VOWELS,
         "chapter_name_en": "Independent Vowels",
@@ -354,6 +356,7 @@ INDEPENDENT_VOWELS_FOLDER_MAP = {
     "ឧ": "ឧ",
     "ឩ": "ឩ",
     "ឪ": "ឪ",
+    "ឪ": "ឪ",
     "ឫ": "ឫ",
     "ឬ": "ឬ",
     "ឭ": "ឭ",
@@ -384,7 +387,7 @@ DIACRITICS_FOLDER_MAP = {
 }
 
 # Data directory paths
-DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "finger_spelling no bg"
+DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "Fingerspelling data for development"
 CONSONANTS_DIR = DATASET_DIR / "Consonants"
 VOWELS_DIR = DATASET_DIR / "Vowels"
 DIACRITICS_DIR = DATASET_DIR / "Diacritics"

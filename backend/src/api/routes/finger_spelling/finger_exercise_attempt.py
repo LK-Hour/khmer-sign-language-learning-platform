@@ -43,6 +43,7 @@ def _session_to_response(session: ExerciseSession) -> ExerciseSessionResponse:
                 )
                 for o in q.options
             ],
+            required_selection_count=q.required_selection_count,
         )
         for q in session.questions
     ]
@@ -77,7 +78,7 @@ def start_or_resume_exercise(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ExerciseSessionResponse:
-    """Start a new exercise attempt or resume the current in-progress one."""
+    """Start a new ephemeral exercise session (not persisted until submit)."""
     service = FingerExerciseAttemptService(db)
     session = service.get_or_start_exercise(user.id, unit_id)
     return _session_to_response(session)
@@ -107,7 +108,7 @@ def submit_exercise(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ExerciseSessionResponse:
-    """Submit all answers, grade the exercise, return results with correct answers revealed."""
+    """Submit all answers, grade, persist score history, return one-time preview."""
     service = FingerExerciseAttemptService(db)
     raw_answers = [
         {
@@ -117,7 +118,13 @@ def submit_exercise(
         }
         for a in body.answers
     ]
-    session = service.submit_exercise(user.id, body.attempt_id, raw_answers)
+    session = service.submit_exercise(
+        user.id,
+        unit_id,
+        body.attempt_id,
+        body.question_ids,
+        raw_answers,
+    )
     return _session_to_response(session)
 
 

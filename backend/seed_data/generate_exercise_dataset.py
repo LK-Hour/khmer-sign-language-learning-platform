@@ -129,6 +129,22 @@ def _pick_distractor_indices(unit_size: int, target_index: int, count: int, salt
     return chosen
 
 
+def _load_letter_primary_media_from_db() -> dict[int, int]:
+    """Prefer live DB letter→media links so exercise media_ids match seeded medias."""
+    from sqlalchemy import text
+
+    from src.db.session import SessionLocal
+
+    mapping: dict[int, int] = {}
+    with SessionLocal() as db:
+        rows = db.execute(
+            text("SELECT letter_id, media_id FROM finger_letter_medias ORDER BY id")
+        ).fetchall()
+        for letter_id, media_id in rows:
+            mapping.setdefault(int(letter_id), int(media_id))
+    return mapping
+
+
 def build_curriculum_items() -> list[CurriculumItem]:
     data = _build_curriculum()
 
@@ -144,6 +160,12 @@ def build_curriculum_items() -> list[CurriculumItem]:
     letter_primary_media: dict[int, int | None] = {}
     for link in sorted(data["finger_letter_medias"], key=lambda row: row["id"]):
         letter_primary_media.setdefault(link["letter_id"], link["media_id"])
+
+    # Disk discovery can miss the dataset folder; DB links are the source of truth.
+    db_media = _load_letter_primary_media_from_db()
+    if db_media:
+        letter_primary_media = {**letter_primary_media, **db_media}
+        print(f"✓ Using {len(db_media)} letter→media links from database")
 
     unit_letter_order: dict[int, list[int]] = {unit["id"]: [] for unit in UNITS_META}
 
