@@ -14,10 +14,9 @@ from ..models.user import User
 from ..models.user_oauth_provider import UserOAuthProvider
 from ..models.finger_spelling import (
     FingerChapter,
-    FingerExerciseAttempt,
     FingerLesson,
-    FingerExerciseProgress,
     FingerUnit,
+    FingerUserExerciseProgress,
     FingerUserLessonProgress,
 )
 from ..repositories.finger_spelling.finger_chapter_practice_repository import (
@@ -167,10 +166,10 @@ def migrate_guest_progress_to_user(
         progress_id_remap[guest_progress.id] = existing_target.id
         db.delete(guest_progress)
 
-    # Repoint exercise results and normalize user ownership.
+    # Repoint unit exercise history and normalize user ownership.
     guest_results = (
-        db.query(FingerExerciseProgress)
-        .filter(FingerExerciseProgress.user_id == guest_user_id)
+        db.query(FingerUserExerciseProgress)
+        .filter(FingerUserExerciseProgress.user_id == guest_user_id)
         .all()
     )
     for result in guest_results:
@@ -303,17 +302,17 @@ def import_local_guest_progress(
         max_score = max(item.max_score, len(question_ids), 1)
         score = max(0, min(item.score, max_score))
         completed_at = _naive_datetime(item.completed_at) or datetime.utcnow()
-        attempt = FingerExerciseAttempt(
-            id=uuid4(),
-            user_id=target_user_id,
-            unit_id=item.unit_id,
-            question_ids=question_ids,
-            score=score,
-            max_score=max_score,
-            is_completed=True,
-            completed_at=completed_at,
+        db.add(
+            FingerUserExerciseProgress(
+                id=uuid4(),
+                user_id=target_user_id,
+                unit_id=item.unit_id,
+                score=score,
+                max_score=max_score,
+                is_completed=True,
+                completed_at=completed_at,
+            )
         )
-        db.add(attempt)
         imported_unit_exercises += 1
 
     db.commit()

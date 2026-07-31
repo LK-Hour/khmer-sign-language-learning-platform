@@ -21,14 +21,11 @@ from .finger_spelling import (
     FingerExerciseOption,
     # Progress
     FingerUserLessonProgress,
-    FingerExerciseProgress,
+    FingerUserExerciseProgress,
     # Practice
     FingerPractice,
     FingerUserPracticeProgress,
     FingerPracticeMedia,
-    # Unit exercise attempts
-    FingerExerciseAttempt,
-    FingerExerciseAttemptAnswer,
 )
 from .word_detection import (
     # Enums
@@ -76,12 +73,10 @@ __all__ = [
     "FingerExercise",
     "FingerExerciseOption",
     "FingerUserLessonProgress",
-    "FingerExerciseProgress",
+    "FingerUserExerciseProgress",
     "FingerPractice",
     "FingerUserPracticeProgress",
     "FingerPracticeMedia",
-    "FingerExerciseAttempt",
-    "FingerExerciseAttemptAnswer",
     "WordDetectionExerciseType",
     "WordDetectionUnit",
     "WordDetectionChapter",

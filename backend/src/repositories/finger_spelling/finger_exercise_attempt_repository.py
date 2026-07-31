@@ -1,18 +1,18 @@
-"""Data access for finger spelling unit exercise attempts."""
+"""Data access for finger spelling unit exercise progress history."""
 
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import case, cast, Float, select
 from sqlalchemy.orm import Session, selectinload
 
 from src.models.finger_spelling import (
     FingerExercise,
     FingerExerciseOption,
-    FingerExerciseAttempt,
-    FingerExerciseAttemptAnswer,
+    FingerUserExerciseProgress,
 )
 
 
@@ -20,72 +20,48 @@ class FingerExerciseAttemptRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    # ── Attempts ────────────────────────────────────────────────────────────
-
-    def get_latest_incomplete_attempt(
-        self, user_id: uuid.UUID, unit_id: int
-    ) -> FingerExerciseAttempt | None:
-        stmt = (
-            select(FingerExerciseAttempt)
-            .where(
-                FingerExerciseAttempt.user_id == user_id,
-                FingerExerciseAttempt.unit_id == unit_id,
-                FingerExerciseAttempt.is_completed.is_(False),
-            )
-            .order_by(FingerExerciseAttempt.started_at.desc())
-            .limit(1)
-        )
-        return self.db.scalars(stmt).first()
-
     def get_best_completed_attempt(
         self, user_id: uuid.UUID, unit_id: int
-    ) -> FingerExerciseAttempt | None:
+    ) -> FingerUserExerciseProgress | None:
+        """Best finished attempt by percent (score/max_score)."""
+        percent = case(
+            (FingerUserExerciseProgress.max_score > 0,
+             cast(FingerUserExerciseProgress.score, Float)
+             / cast(FingerUserExerciseProgress.max_score, Float)),
+            else_=0.0,
+        )
         stmt = (
-            select(FingerExerciseAttempt)
+            select(FingerUserExerciseProgress)
             .where(
-                FingerExerciseAttempt.user_id == user_id,
-                FingerExerciseAttempt.unit_id == unit_id,
-                FingerExerciseAttempt.is_completed.is_(True),
+                FingerUserExerciseProgress.user_id == user_id,
+                FingerUserExerciseProgress.unit_id == unit_id,
+                FingerUserExerciseProgress.is_completed.is_(True),
             )
-            .order_by(FingerExerciseAttempt.score.desc())
+            .order_by(percent.desc(), FingerUserExerciseProgress.score.desc())
             .limit(1)
         )
         return self.db.scalars(stmt).first()
 
-    def create_attempt(
+    def create_completed_attempt(
         self,
+        *,
         user_id: uuid.UUID,
         unit_id: int,
-        question_ids: list[int],
-    ) -> FingerExerciseAttempt:
-        attempt = FingerExerciseAttempt(
+        score: int,
+        max_score: int,
+    ) -> FingerUserExerciseProgress:
+        row = FingerUserExerciseProgress(
             id=uuid4(),
             user_id=user_id,
             unit_id=unit_id,
-            question_ids=question_ids,
-            max_score=len(question_ids),
+            score=score,
+            max_score=max_score,
+            is_completed=True,
+            completed_at=datetime.utcnow(),
         )
-        self.db.add(attempt)
+        self.db.add(row)
         self.db.flush()
-        return attempt
-
-    def complete_attempt(
-        self,
-        attempt: FingerExerciseAttempt,
-        score: int,
-        answers: list[FingerExerciseAttemptAnswer],
-    ) -> FingerExerciseAttempt:
-        from datetime import datetime
-
-        attempt.score = score
-        attempt.is_completed = True
-        attempt.completed_at = datetime.utcnow()
-        for ans in answers:
-            self.db.add(ans)
-        self.db.flush()
-        return attempt
-
-    # ── Exercises ───────────────────────────────────────────────────────────
+        return row
 
     def list_exercises_for_attempt(
         self, question_ids: list[int]

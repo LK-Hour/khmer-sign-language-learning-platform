@@ -316,6 +316,7 @@ class ExerciseSessionQuestionResponse(BaseModel):
     question_kh: str
     media_url: str | None = None
     options: List[ExerciseSessionOptionResponse] = []
+    required_selection_count: int | None = None
 
 
 class ExerciseSessionAnswerResultResponse(BaseModel):
@@ -345,6 +346,7 @@ class ExerciseSessionAnswerSubmit(BaseModel):
 
 class ExerciseSessionSubmitRequest(BaseModel):
     attempt_id: uuid.UUID
+    question_ids: List[int]
     answers: List[ExerciseSessionAnswerSubmit] = []
 
 

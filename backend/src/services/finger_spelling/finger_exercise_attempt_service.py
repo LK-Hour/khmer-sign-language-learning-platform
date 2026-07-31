@@ -13,8 +13,7 @@ from sqlalchemy.orm import Session
 from src.models.finger_spelling import (
     FingerExercise,
     FingerExerciseType,
-    FingerExerciseAttempt,
-    FingerExerciseAttemptAnswer,
+    FingerUserExerciseProgress,
 )
 from src.repositories.finger_spelling.finger_curriculum_repository import (
     FingerCurriculumRepository,
@@ -26,7 +25,8 @@ from src.repositories.finger_spelling.finger_exercise_attempt_repository import 
     FingerExerciseAttemptRepository,
 )
 
-EXERCISE_QUESTION_COUNT = 15
+MIN_QUESTIONS = 15
+MAX_QUESTIONS = 25
 
 
 @dataclass
@@ -47,6 +47,7 @@ class ExerciseSessionQuestionResult:
     question_kh: str
     media_url: str | None
     options: list[ExerciseSessionOptionResult]
+    required_selection_count: int | None = None
 
 
 @dataclass
@@ -91,7 +92,7 @@ class FingerExerciseAttemptService:
         completed = self.progress_repo.count_completed_lessons(user_id, lesson_ids)
         return completed >= len(lesson_ids)
 
-    # ── Session start / resume ───────────────────────────────────────────────
+    # ── Session start (ephemeral — no DB write) ──────────────────────────────
 
     def get_or_start_exercise(
         self, user_id: uuid.UUID, unit_id: int
@@ -101,100 +102,40 @@ class FingerExerciseAttemptService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unit exercise is locked. Complete all lessons in this unit first.",
             )
-
-        unit = self.curriculum.get_unit_by_id(unit_id)
-        if unit is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
-
-        attempt = self.attempt_repo.get_latest_incomplete_attempt(user_id, unit_id)
-
-        if attempt is None:
-            question_ids = self._pick_question_ids(unit_id)
-            attempt = self.attempt_repo.create_attempt(user_id, unit_id, question_ids)
-            self.db.commit()
-            self.db.refresh(attempt)
-
-        questions = self._build_questions(attempt.question_ids, reveal_correct=False)
-        return ExerciseSession(
-            attempt_id=attempt.id,
-            unit_id=unit_id,
-            questions=questions,
-            max_score=attempt.max_score,
-        )
+        return self._start_ephemeral_session(unit_id)
 
     # ── Submit and grade ─────────────────────────────────────────────────────
 
     def submit_exercise(
         self,
         user_id: uuid.UUID,
+        unit_id: int,
         attempt_id: uuid.UUID,
+        question_ids: list[int],
         raw_answers: list[dict],
     ) -> ExerciseSession:
-        """Grade all submitted answers; mark attempt complete; return session with results."""
-        attempt = self._get_owned_attempt(user_id, attempt_id)
-
-        if attempt.is_completed:
-            return self._build_completed_session(attempt)
-
-        exercises = self.attempt_repo.list_exercises_for_attempt(attempt.question_ids)
-        exercise_map: dict[int, FingerExercise] = {ex.id: ex for ex in exercises}
-
-        answers_by_exercise: dict[int, dict] = {
-            a["exercise_id"]: a for a in raw_answers
-        }
-
-        total_score = 0
-        answer_rows: list[FingerExerciseAttemptAnswer] = []
-        per_question_results: list[ExerciseSessionAnswerResult] = []
-
-        for ex_id in attempt.question_ids:
-            exercise = exercise_map.get(ex_id)
-            if exercise is None:
-                continue
-
-            submitted = answers_by_exercise.get(ex_id, {})
-            selected_ids: list[int] = submitted.get("selected_option_ids", [])
-            matching_pairs: dict[str, int] | None = submitted.get("matching_pairs")
-
-            is_correct, score = self._grade(exercise, selected_ids, matching_pairs)
-            total_score += score
-            correct_ids = [o.id for o in exercise.options if o.is_correct]
-
-            row = FingerExerciseAttemptAnswer(
-                id=uuid4(),
-                attempt_id=attempt.id,
-                exercise_id=ex_id,
-                selected_option_ids=selected_ids,
-                matching_pairs=matching_pairs,
-                is_correct=is_correct,
-                score=score,
-            )
-            answer_rows.append(row)
-            per_question_results.append(
-                ExerciseSessionAnswerResult(
-                    exercise_id=ex_id,
-                    is_correct=is_correct,
-                    score=score,
-                    selected_option_ids=selected_ids,
-                    correct_option_ids=correct_ids,
-                    matching_pairs=matching_pairs,
-                )
+        """Grade answers, persist finished attempt, return preview payload."""
+        if not self.is_unit_exercise_unlocked(user_id, unit_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Unit exercise is locked. Complete all lessons in this unit first.",
             )
 
-        self.attempt_repo.complete_attempt(attempt, total_score, answer_rows)
-        self.db.commit()
-        self.db.refresh(attempt)
-
-        questions = self._build_questions(attempt.question_ids, reveal_correct=True)
-        return ExerciseSession(
-            attempt_id=attempt.id,
-            unit_id=attempt.unit_id,
-            questions=questions,
-            is_completed=True,
-            score=total_score,
-            max_score=attempt.max_score,
-            per_question_results=per_question_results,
+        session = self._grade_session(
+            unit_id=unit_id,
+            attempt_id=attempt_id,
+            question_ids=question_ids,
+            raw_answers=raw_answers,
         )
+
+        self.attempt_repo.create_completed_attempt(
+            user_id=user_id,
+            unit_id=unit_id,
+            score=session.score,
+            max_score=session.max_score,
+        )
+        self.db.commit()
+        return session
 
     # ── Unit exercise status (for list page) ─────────────────────────────────
 
@@ -202,8 +143,8 @@ class FingerExerciseAttemptService:
         self, user_id: uuid.UUID | None, unit_id: int
     ) -> dict:
         unlocked = self.is_unit_exercise_unlocked(user_id, unit_id)
-        best: FingerExerciseAttempt | None = None
-        if user_id and unlocked:
+        best: FingerUserExerciseProgress | None = None
+        if user_id:
             best = self.attempt_repo.get_best_completed_attempt(user_id, unit_id)
         return {
             "isExerciseUnlocked": unlocked,
@@ -216,6 +157,26 @@ class FingerExerciseAttemptService:
 
     def start_guest_exercise(self, unit_id: int) -> ExerciseSession:
         """Pick questions for a guest session without persisting an attempt."""
+        return self._start_ephemeral_session(unit_id)
+
+    def grade_guest_exercise(
+        self,
+        unit_id: int,
+        attempt_id: uuid.UUID,
+        question_ids: list[int],
+        raw_answers: list[dict],
+    ) -> ExerciseSession:
+        """Grade guest answers in-memory and return results with correct answers revealed."""
+        return self._grade_session(
+            unit_id=unit_id,
+            attempt_id=attempt_id,
+            question_ids=question_ids,
+            raw_answers=raw_answers,
+        )
+
+    # ── Private helpers ──────────────────────────────────────────────────────
+
+    def _start_ephemeral_session(self, unit_id: int) -> ExerciseSession:
         unit = self.curriculum.get_unit_by_id(unit_id)
         if unit is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
@@ -229,14 +190,14 @@ class FingerExerciseAttemptService:
             max_score=len(question_ids),
         )
 
-    def grade_guest_exercise(
+    def _grade_session(
         self,
+        *,
         unit_id: int,
         attempt_id: uuid.UUID,
         question_ids: list[int],
         raw_answers: list[dict],
     ) -> ExerciseSession:
-        """Grade guest answers in-memory and return results with correct answers revealed."""
         unit = self.curriculum.get_unit_by_id(unit_id)
         if unit is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
@@ -299,15 +260,8 @@ class FingerExerciseAttemptService:
             per_question_results=per_question_results,
         )
 
-    # ── Private helpers ──────────────────────────────────────────────────────
-
     def _pick_question_ids(self, unit_id: int) -> list[int]:
-        """Pick a session that includes every available exercise type.
-
-        Guarantees at least one question of each type present in the unit
-        (multiple_choice, true_false, multiple_answer, matching), then fills
-        remaining slots randomly up to ``EXERCISE_QUESTION_COUNT``.
-        """
+        """Pick N questions (15–25 when pool allows), covering available types."""
         exercises = self.attempt_repo.list_exercises_for_unit(unit_id)
         if not exercises:
             raise HTTPException(
@@ -315,7 +269,12 @@ class FingerExerciseAttemptService:
                 detail="No exercise questions available for this unit.",
             )
 
-        count = min(EXERCISE_QUESTION_COUNT, len(exercises))
+        pool_size = len(exercises)
+        if pool_size >= MIN_QUESTIONS:
+            count = random.randint(MIN_QUESTIONS, min(MAX_QUESTIONS, pool_size))
+        else:
+            count = pool_size
+
         by_type: dict[str, list[FingerExercise]] = {}
         for ex in exercises:
             etype = ex.exercise_type
@@ -323,7 +282,6 @@ class FingerExerciseAttemptService:
                 etype = etype.value
             by_type.setdefault(str(etype), []).append(ex)
 
-        # Prefer the canonical type order so sessions feel consistent.
         preferred_order = [
             FingerExerciseType.MULTIPLE_CHOICE.value,
             FingerExerciseType.TRUE_FALSE.value,
@@ -338,7 +296,6 @@ class FingerExerciseAttemptService:
         picked: list[FingerExercise] = []
         picked_ids: set[int] = set()
 
-        # Round 1: one of each available type.
         for etype in type_keys:
             if len(picked) >= count:
                 break
@@ -349,7 +306,6 @@ class FingerExerciseAttemptService:
             picked.append(choice)
             picked_ids.add(choice.id)
 
-        # Round 2: fill remaining slots, still spreading across types when possible.
         while len(picked) < count:
             remaining_by_type = {
                 etype: [ex for ex in pool if ex.id not in picked_ids]
@@ -372,6 +328,11 @@ class FingerExerciseAttemptService:
         exercises = self.attempt_repo.list_exercises_for_attempt(question_ids)
         results: list[ExerciseSessionQuestionResult] = []
         for ex in exercises:
+            active_opts = [
+                opt
+                for opt in sorted(ex.options, key=lambda o: o.order_index)
+                if opt.is_active
+            ]
             opts = [
                 ExerciseSessionOptionResult(
                     id=opt.id,
@@ -381,80 +342,30 @@ class FingerExerciseAttemptService:
                     is_correct=opt.is_correct if reveal_correct else False,
                     order_index=opt.order_index,
                 )
-                for opt in sorted(ex.options, key=lambda o: o.order_index)
-                if opt.is_active
+                for opt in active_opts
             ]
+            etype = (
+                ex.exercise_type.value
+                if isinstance(ex.exercise_type, FingerExerciseType)
+                else str(ex.exercise_type)
+            )
+            required_selection_count = (
+                sum(1 for opt in active_opts if opt.is_correct)
+                if etype == FingerExerciseType.MULTIPLE_ANSWER.value
+                else None
+            )
             results.append(
                 ExerciseSessionQuestionResult(
                     exercise_id=ex.id,
-                    exercise_type=(
-                        ex.exercise_type.value
-                        if isinstance(ex.exercise_type, FingerExerciseType)
-                        else str(ex.exercise_type)
-                    ),
+                    exercise_type=etype,
                     question_en=ex.question_en,
                     question_kh=ex.question_kh,
                     media_url=ex.media.file_url if ex.media else None,
                     options=opts,
+                    required_selection_count=required_selection_count,
                 )
             )
         return results
-
-    def _get_owned_attempt(
-        self, user_id: uuid.UUID, attempt_id: uuid.UUID
-    ) -> FingerExerciseAttempt:
-        from sqlalchemy import select
-        from sqlalchemy.orm import selectinload
-
-        stmt = (
-            select(FingerExerciseAttempt)
-            .options(
-                selectinload(FingerExerciseAttempt.answers)
-            )
-            .where(
-                FingerExerciseAttempt.id == attempt_id,
-                FingerExerciseAttempt.user_id == user_id,
-            )
-        )
-        attempt = self.db.scalars(stmt).first()
-        if attempt is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Exercise attempt not found"
-            )
-        return attempt
-
-    def _build_completed_session(self, attempt: FingerExerciseAttempt) -> ExerciseSession:
-        questions = self._build_questions(attempt.question_ids, reveal_correct=True)
-        per_question_results: list[ExerciseSessionAnswerResult] = []
-        exercises = self.attempt_repo.list_exercises_for_attempt(attempt.question_ids)
-        exercise_map = {ex.id: ex for ex in exercises}
-        answer_map = {ans.exercise_id: ans for ans in attempt.answers}
-
-        for ex_id in attempt.question_ids:
-            exercise = exercise_map.get(ex_id)
-            ans = answer_map.get(ex_id)
-            if exercise is None:
-                continue
-            correct_ids = [o.id for o in exercise.options if o.is_correct]
-            per_question_results.append(
-                ExerciseSessionAnswerResult(
-                    exercise_id=ex_id,
-                    is_correct=ans.is_correct if ans else False,
-                    score=ans.score if ans else 0,
-                    selected_option_ids=ans.selected_option_ids if ans else [],
-                    correct_option_ids=correct_ids,
-                    matching_pairs=ans.matching_pairs if ans else None,
-                )
-            )
-        return ExerciseSession(
-            attempt_id=attempt.id,
-            unit_id=attempt.unit_id,
-            questions=questions,
-            is_completed=True,
-            score=attempt.score,
-            max_score=attempt.max_score,
-            per_question_results=per_question_results,
-        )
 
     @staticmethod
     def _grade(

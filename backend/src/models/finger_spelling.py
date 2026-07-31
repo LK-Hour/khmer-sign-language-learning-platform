@@ -23,7 +23,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.session import Base
@@ -59,7 +59,7 @@ class FingerUnit(PublishableMixin, Base):
     chapters: Mapped[List["FingerChapter"]] = relationship(
         back_populates="unit", cascade="all, delete-orphan"
     )
-    exercise_attempts: Mapped[List["FingerExerciseAttempt"]] = relationship(
+    exercise_progress: Mapped[List["FingerUserExerciseProgress"]] = relationship(
         back_populates="unit", cascade="all, delete-orphan"
     )
 
@@ -240,9 +240,6 @@ class FingerExercise(Base):
     options: Mapped[List["FingerExerciseOption"]] = relationship(
         back_populates="exercise", cascade="all, delete-orphan"
     )
-    user_results: Mapped[List["FingerExerciseProgress"]] = relationship(
-        back_populates="exercise", cascade="all, delete-orphan"
-    )
 
     __table_args__ = (
         UniqueConstraint("lesson_id", "order_index", name="uq_finger_exercises_lesson_order"),
@@ -272,9 +269,6 @@ class FingerExerciseOption(Base):
     exercise: Mapped["FingerExercise"] = relationship(back_populates="options")
     media: Mapped[Optional["Media"]] = relationship(
         back_populates="finger_exercise_options", foreign_keys=[media_id]
-    )
-    user_results: Mapped[List["FingerExerciseProgress"]] = relationship(
-        back_populates="selected_option", cascade="all, delete-orphan"
     )
 
     __table_args__ = (
@@ -315,31 +309,35 @@ class FingerUserLessonProgress(Base):
     )
 
 
-class FingerExerciseProgress(Base):
-    """Per-user exercise progress tracking."""
-    __tablename__ = "finger_exercise_progress"
+class FingerUserExerciseProgress(Base):
+    """One finished unit-quiz attempt (history row for analysis + best score)."""
+    __tablename__ = "finger_user_exercise_progress"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    finger_exercise_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_exercises.id"), nullable=False)
-    selected_answer_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("finger_exercise_options.id"))
-    selected_answer: Mapped[Optional[str]] = mapped_column(Text)
-    is_correct: Mapped[bool] = mapped_column(Boolean, server_default="false")
-    attempts: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
-    score: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    unit_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_units.id"), nullable=False)
+    score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    max_score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    exercise: Mapped["FingerExercise"] = relationship(back_populates="user_results")
-    user: Mapped[User] = relationship(back_populates="exercise_results", foreign_keys=[user_id])
-    selected_option: Mapped[Optional["FingerExerciseOption"]] = relationship(
-        back_populates="user_results", foreign_keys=[selected_answer_id]
-    )
+    user: Mapped[User] = relationship(back_populates="exercise_progress", foreign_keys=[user_id])
+    unit: Mapped["FingerUnit"] = relationship(back_populates="exercise_progress")
 
     __table_args__ = (
-        Index("ix_finger_exercise_progress_user_id", "user_id"),
-        Index("ix_finger_exercise_progress_exercise_id", "finger_exercise_id"),
+        Index("ix_finger_user_exercise_progress_user_id", "user_id"),
+        Index("ix_finger_user_exercise_progress_unit_id", "unit_id"),
+        Index("ix_finger_user_exercise_progress_user_unit", "user_id", "unit_id"),
+        Index(
+            "ix_finger_user_exercise_progress_user_unit_completed",
+            "user_id",
+            "unit_id",
+            "is_completed",
+        ),
+        Index("ix_finger_user_exercise_progress_completed_at", "completed_at"),
     )
 
 
@@ -437,61 +435,3 @@ class FingerPracticeMedia(Base):
     )
 
 
-# ==================== QUIZ ATTEMPTS ====================
-
-class FingerExerciseAttempt(Base):
-    """Unit-level exercise session (15 random questions drawn from the unit pool)."""
-    __tablename__ = "finger_exercise_attempts"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
-    )
-    unit_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("finger_units.id"), nullable=False)
-    question_ids: Mapped[list] = mapped_column(JSONB, nullable=False)
-    score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    max_score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-
-    # Relationships
-    user: Mapped["User"] = relationship(back_populates="exercise_attempts", foreign_keys=[user_id])
-    unit: Mapped["FingerUnit"] = relationship(back_populates="exercise_attempts")
-    answers: Mapped[List["FingerExerciseAttemptAnswer"]] = relationship(
-        back_populates="attempt", cascade="all, delete-orphan"
-    )
-
-    __table_args__ = (
-        Index("ix_finger_exercise_attempts_user_id", "user_id"),
-        Index("ix_finger_exercise_attempts_unit_id", "unit_id"),
-        Index("ix_finger_exercise_attempts_started_at", "started_at"),
-    )
-
-
-class FingerExerciseAttemptAnswer(Base):
-    """Per-question answer within a unit exercise attempt."""
-    __tablename__ = "finger_exercise_attempt_answers"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    attempt_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("finger_exercise_attempts.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    exercise_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("finger_exercises.id"), nullable=False
-    )
-    selected_option_ids: Mapped[list] = mapped_column(JSONB, nullable=False, server_default="[]")
-    matching_pairs: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-    score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-
-    # Relationships
-    attempt: Mapped["FingerExerciseAttempt"] = relationship(back_populates="answers")
-    exercise: Mapped["FingerExercise"] = relationship()
-
-    __table_args__ = (
-        Index("ix_finger_exercise_attempt_answers_attempt_id", "attempt_id"),
-        Index("ix_finger_exercise_attempt_answers_exercise_id", "exercise_id"),
-    )

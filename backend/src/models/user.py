@@ -36,8 +36,7 @@ class User(Base):
     
     # Finger spelling progress tracking
     lesson_progress = relationship("FingerUserLessonProgress", back_populates="user", cascade="all, delete-orphan")
-    exercise_results = relationship("FingerExerciseProgress", back_populates="user", cascade="all, delete-orphan")
-    exercise_attempts = relationship("FingerExerciseAttempt", back_populates="user", cascade="all, delete-orphan", foreign_keys="FingerExerciseAttempt.user_id")
+    exercise_progress = relationship("FingerUserExerciseProgress", back_populates="user", cascade="all, delete-orphan")
 
     # Word detection progress tracking
     word_detection_lesson_progress = relationship(

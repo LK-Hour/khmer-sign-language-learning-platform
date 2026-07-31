@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 
 from src.models.feedback import LessonFeedback
 from src.models.finger_spelling import (
-    FingerExerciseAttempt,
     FingerLesson,
+    FingerUserExerciseProgress,
     FingerUserLessonProgress,
 )
 from src.models.refresh_token import RefreshToken
@@ -202,24 +202,27 @@ class AnalyticsService:
         )
 
     def _quiz_attempts(self) -> KpiValue:
-        """Count of finger_exercise_attempts rows, with month-over-month change."""
+        """Count of finger_user_exercise_progress rows, with month-over-month change."""
         now = datetime.now(timezone.utc)
         current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         previous_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
 
-        # Current month attempts
+        # Current month attempts (use completed_at; fall back to created_at)
+        ts = func.coalesce(
+            FingerUserExerciseProgress.completed_at,
+            FingerUserExerciseProgress.created_at,
+        )
         current_count = (
-            self.db.query(func.count(FingerExerciseAttempt.id))
-            .filter(FingerExerciseAttempt.started_at >= current_month_start)
+            self.db.query(func.count(FingerUserExerciseProgress.id))
+            .filter(ts >= current_month_start)
             .scalar()
         ) or 0
 
-        # Previous month attempts
         previous_count = (
-            self.db.query(func.count(FingerExerciseAttempt.id))
+            self.db.query(func.count(FingerUserExerciseProgress.id))
             .filter(
-                FingerExerciseAttempt.started_at >= previous_month_start,
-                FingerExerciseAttempt.started_at < current_month_start,
+                ts >= previous_month_start,
+                ts < current_month_start,
             )
             .scalar()
         ) or 0
@@ -236,32 +239,34 @@ class AnalyticsService:
         previous_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
 
         base_filter = and_(
-            FingerExerciseAttempt.is_completed == True,  # noqa: E712
-            FingerExerciseAttempt.max_score > 0,
+            FingerUserExerciseProgress.is_completed == True,  # noqa: E712
+            FingerUserExerciseProgress.max_score > 0,
         )
 
         score_expr = (
-            cast(FingerExerciseAttempt.score, SAFloat)
-            / cast(FingerExerciseAttempt.max_score, SAFloat)
+            cast(FingerUserExerciseProgress.score, SAFloat)
+            / cast(FingerUserExerciseProgress.max_score, SAFloat)
             * 100
         )
+        ts = func.coalesce(
+            FingerUserExerciseProgress.completed_at,
+            FingerUserExerciseProgress.created_at,
+        )
 
-        # Current month average
         current_avg = (
             self.db.query(func.avg(score_expr))
             .filter(base_filter)
-            .filter(FingerExerciseAttempt.started_at >= current_month_start)
+            .filter(ts >= current_month_start)
             .scalar()
         )
         current_avg = float(current_avg) if current_avg is not None else 0.0
 
-        # Previous month average
         previous_avg = (
             self.db.query(func.avg(score_expr))
             .filter(base_filter)
             .filter(
-                FingerExerciseAttempt.started_at >= previous_month_start,
-                FingerExerciseAttempt.started_at < current_month_start,
+                ts >= previous_month_start,
+                ts < current_month_start,
             )
             .scalar()
         )

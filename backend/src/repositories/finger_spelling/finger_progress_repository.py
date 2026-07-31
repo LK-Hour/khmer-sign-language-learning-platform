@@ -1,4 +1,4 @@
-"""Data access for finger spelling user progress and exercise results."""
+"""Data access for finger spelling user lesson progress."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from src.models.finger_spelling import FingerExerciseProgress, FingerUserLessonProgress
+from src.models.finger_spelling import FingerUserLessonProgress
 
 
 class FingerProgressRepository:
@@ -94,35 +94,3 @@ class FingerProgressRepository:
             )
         )
         return int(self.db.scalar(stmt) or 0)
-
-    def next_exercise_attempt_number(self, user_id: uuid.UUID, exercise_id: int) -> int:
-        stmt = (
-            select(func.coalesce(func.max(FingerExerciseProgress.attempts), 0))
-            .where(
-                FingerExerciseProgress.user_id == user_id,
-                FingerExerciseProgress.finger_exercise_id == exercise_id,
-            )
-        )
-        return int(self.db.scalar(stmt) or 0) + 1
-
-    def add_exercise_result(
-        self,
-        *,
-        user_id: uuid.UUID,
-        exercise_id: int,
-        is_correct: bool,
-        attempts: int,
-        selected_answer_id: int | None = None,
-        selected_answer: str | None = None,
-    ) -> FingerExerciseProgress:
-        result = FingerExerciseProgress(
-            user_id=user_id,
-            finger_exercise_id=exercise_id,
-            selected_answer_id=selected_answer_id,
-            selected_answer=selected_answer,
-            is_correct=is_correct,
-            attempts=attempts,
-        )
-        self.db.add(result)
-        self.db.flush()
-        return result
