@@ -50,12 +50,12 @@ export default function ConfirmDialog({
         },
       }}
     >
-      <DialogTitle>
-        <Typography variant="h6">{title}</Typography>
+      <DialogTitle component="h2" sx={{ typography: "h6" }}>
+        {title}
       </DialogTitle>
 
       <DialogContent>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" component="p">
           {message}
         </Typography>
       </DialogContent>
