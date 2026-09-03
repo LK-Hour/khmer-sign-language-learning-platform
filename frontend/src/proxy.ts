@@ -30,18 +30,6 @@ export function proxy(request: NextRequest) {
   // Try to get locale from cookie
   let locale = request.cookies.get("NEXT_LOCALE")?.value;
 
-  // Fallback to accept-language header
-  if (!locale) {
-    const acceptLanguage = request.headers.get("accept-language");
-    if (acceptLanguage) {
-      const preferredLocale = acceptLanguage
-        .split(",")[0]
-        .split("-")[0]
-        .toLowerCase();
-      locale = isValidLocale(preferredLocale) ? preferredLocale : undefined;
-    }
-  }
-
   // Default to Khmer
   locale = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
 

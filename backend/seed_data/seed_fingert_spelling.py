@@ -387,7 +387,7 @@ DIACRITICS_FOLDER_MAP = {
 }
 
 # Data directory paths
-DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "Fingerspelling data for development"
+DATASET_DIR = Path(__file__).resolve().parents[2] / "data_set" / "finger_spelling_no_bg"
 CONSONANTS_DIR = DATASET_DIR / "Consonants"
 VOWELS_DIR = DATASET_DIR / "Vowels"
 DIACRITICS_DIR = DATASET_DIR / "Diacritics"
