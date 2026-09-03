@@ -18,11 +18,12 @@ import { PERMISSION_DIALOG_CONTENT } from "@/constants/permission-dialog";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { usePermissionStore } from "@/store/permission.store";
-import { KslColors, KslFontSizes, KslLineHeights, KslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslLineHeights, KslPalette, KslRadii } from "@/theme/theme";
 
 import { useFingerSpellingProgressStat } from "./hooks/useFingerSpellingProgressStat";
 import { useWordDetectionProgressStat } from "./hooks/useWordDetectionProgressStat";
 import LearningModeCard from "./LearningModeCard";
+import Footer from "./FooterCard";
 
 const HERO_IMAGE = "/assets/landing-hero-hand.png";
 
@@ -62,8 +63,10 @@ export default function LandingPage() {
   };
 
   return (
-    <PageContainer>
-      <Stack spacing={{ xs: 3, md: 4 }}>
+    <>
+      <Stack sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <PageContainer>
+          <Stack spacing={{ xs: 3, md: 4 }}>
         <Grid
           container
           spacing={{ xs: 2, md: 3 }}
@@ -206,6 +209,10 @@ export default function LandingPage() {
             />
           </Grid>
         </Grid>
+
+        </Stack>
+        </PageContainer>
+        <Footer />
       </Stack>
 
       <PermissionRequestDialog
@@ -219,6 +226,6 @@ export default function LandingPage() {
         onSkip={handlePermissionSkip}
         onAgree={handlePermissionAgree}
       />
-    </PageContainer>
+    </>
   );
 }
