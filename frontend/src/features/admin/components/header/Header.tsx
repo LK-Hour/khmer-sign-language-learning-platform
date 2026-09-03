@@ -9,8 +9,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
 import { useAdminThemeStore } from "../../store/adminTheme.store";
-import SearchTrigger from "./SearchTrigger";
-import NotificationBell from "./NotificationBell";
 import UserAvatarMenu from "./UserAvatarMenu";
 import LocaleSwitcherButton from "./LocaleSwitcherButton";
 
@@ -50,8 +48,6 @@ export default function Header({ onMenuClick, showMenuButton }: HeaderProps) {
 
         {/* Right-side actions */}
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <SearchTrigger />
-
           <IconButton size="small" onClick={toggleMode} aria-label="Toggle dark mode">
             {mode === "light" ? (
               <DarkModeOutlined sx={{ fontSize: 20 }} />
@@ -59,8 +55,6 @@ export default function Header({ onMenuClick, showMenuButton }: HeaderProps) {
               <LightModeOutlined sx={{ fontSize: 20 }} />
             )}
           </IconButton>
-
-          <NotificationBell count={3} />
 
           <LocaleSwitcherButton />
 
