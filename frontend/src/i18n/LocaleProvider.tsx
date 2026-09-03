@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo } from "react";
+import { ReactNode, useEffect, useMemo, useRef } from "react";
 
 import { useLocaleStore } from "@/store/locale.store";
 
@@ -20,6 +20,11 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     [initialLocale],
   );
 
+  // Tracks whether the store has been synced to the current route yet. Until then,
+  // the store's in-memory default ('kh') isn't trustworthy for the first paint —
+  // only the route (known synchronously from the server-rendered URL segment) is.
+  const hasSyncedRef = useRef(false);
+
   // Sync route → store only when the URL locale segment actually changes (Next.js
   // navigation). Intentionally excludes storeLocale from deps so that a user-initiated
   // locale switch (which updates the store but NOT the route prop) does NOT trigger
@@ -28,6 +33,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     if (routeLocale) {
       setLocale(routeLocale);
     }
+    hasSyncedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeLocale]);
 
@@ -35,10 +41,13 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     document.documentElement.lang = storeLocale;
   }, [storeLocale]);
 
-  // Store is the source of truth for the context value so that a locale switch via
-  // the UI button is reflected immediately without a page navigation/re-fetch.
-  // The effect above keeps the store in sync with the URL on navigation.
+  // Before the sync effect has run (SSR + first paint), trust the route so the page
+  // renders in the correct locale immediately instead of flashing the store's default.
+  // After that, the store is the source of truth so a locale switch via the UI button
+  // (which updates the store but not the route prop) is reflected immediately.
+  const value = hasSyncedRef.current ? storeLocale : routeLocale ?? storeLocale;
+
   return (
-    <LocaleContextProvider value={storeLocale}>{children}</LocaleContextProvider>
+    <LocaleContextProvider value={value}>{children}</LocaleContextProvider>
   );
 }
