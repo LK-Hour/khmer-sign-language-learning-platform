@@ -41,35 +41,22 @@ class WordDetectionExerciseService:
         self.progress = WordDetectionProgressRepository(db)
         self.curriculum_service = WordDetectionCurriculumService(db)
 
-    def is_chapter_exercise_unlocked(
-        self, user_id: uuid.UUID | None, chapter_id: int
+    def is_unit_exercise_unlocked(
+        self, user_id: uuid.UUID | None, unit_id: int, *, is_admin: bool = False
     ) -> bool:
-        return self.curriculum_service.is_chapter_exercise_unlocked(user_id, chapter_id)
+        return self.curriculum_service.is_unit_exercise_unlocked(
+            user_id, unit_id, is_admin=is_admin
+        )
 
-    def _chapter_id_for_exercise(self, exercise: WordDetectionExercise) -> int | None:
-        lesson = self.curriculum.get_lesson_by_id(exercise.lesson_id, active_only=False)
-        return lesson.chapter_id if lesson else None
-
-    def list_chapter_exercises(
-        self, chapter_id: int, *, active_only: bool = True
+    def list_unit_exercises(
+        self, unit_id: int, *, active_only: bool = True
     ) -> list[WordDetectionExercise] | None:
-        """Get all exercises for all lessons in a chapter."""
-        chapter = self.curriculum.get_chapter_by_id(chapter_id, active_only=active_only)
-        if chapter is None:
+        """Get all exercises belonging to a unit."""
+        unit = self.curriculum.get_unit_by_id(unit_id, active_only=active_only)
+        if unit is None:
             return None
 
-        lessons = self.curriculum.list_lessons_by_chapter(chapter_id, active_only=active_only)
-        if not lessons:
-            return []
-
-        all_exercises: list[WordDetectionExercise] = []
-        for lesson in lessons:
-            exercises = self.exercises.list_with_options_by_lesson(
-                lesson.id, active_only=active_only
-            )
-            all_exercises.extend(exercises)
-
-        return all_exercises
+        return self.exercises.list_with_options_by_unit(unit_id, active_only=active_only)
 
     def get_exercise(
         self, exercise_id: int, *, active_only: bool = True
@@ -84,18 +71,16 @@ class WordDetectionExerciseService:
         selected_option_id: int | None = None,
         selected_answer: str | None = None,
         time_taken: int = 0,
+        is_admin: bool = False,
     ) -> WdExerciseSubmitResult | None:
         exercise = self.exercises.get_with_options(exercise_id, active_only=True)
         if exercise is None:
             return None
 
-        chapter_id = self._chapter_id_for_exercise(exercise)
-        if chapter_id is None:
-            return None
-        if not self.is_chapter_exercise_unlocked(user_id, chapter_id):
+        if not self.is_unit_exercise_unlocked(user_id, exercise.unit_id, is_admin=is_admin):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Chapter exercises are locked until all lessons in the chapter are completed",
+                detail="Unit exercise is locked until all lessons in the unit are completed",
             )
 
         lesson_progress = self.progress.get_or_create_lesson_progress(
@@ -126,8 +111,8 @@ class WordDetectionExerciseService:
             attempt_number=attempt_number,
             lesson_id=exercise.lesson_id,
             progress_id=lesson_progress.id,
-            explanation_en=exercise.explanation_en,
-            explanation_kh=exercise.explanation_kh,
+            explanation_en=exercise.description_en,
+            explanation_kh=exercise.description_kh,
         )
 
     def _grade_exercise(

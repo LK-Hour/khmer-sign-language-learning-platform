@@ -1,4 +1,4 @@
-"""Word detection chapter exercise routes."""
+"""Word detection unit exercise routes."""
 
 from __future__ import annotations
 
@@ -21,15 +21,15 @@ router = APIRouter(
 )
 
 
-@router.get("/chapters/{chapter_id}", response_model=list[WdExerciseResponse])
-def list_chapter_exercises(
-    chapter_id: int,
+@router.get("/units/{unit_id}", response_model=list[WdExerciseResponse])
+def list_unit_exercises(
+    unit_id: int,
     db: Session = Depends(get_db),
 ) -> list[WdExerciseResponse]:
-    """Get all exercises for all lessons in a chapter."""
-    exercises = WordDetectionExerciseService(db).list_chapter_exercises(chapter_id)
+    """Get all exercises belonging to a unit."""
+    exercises = WordDetectionExerciseService(db).list_unit_exercises(unit_id)
     if exercises is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
     return [WdExerciseResponse.model_validate(ex) for ex in exercises]
 
 
@@ -46,6 +46,7 @@ def submit_exercise(
         selected_option_id=body.selected_option_id,
         selected_answer=body.selected_answer,
         time_taken=body.time_taken,
+        is_admin=user.account_type == "admin",
     )
     if result is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exercise not found")

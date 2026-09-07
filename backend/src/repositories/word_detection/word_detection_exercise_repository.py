@@ -52,6 +52,29 @@ class WordDetectionExerciseRepository:
             stmt = stmt.where(live(WordDetectionExercise))
         return list(self.db.scalars(stmt).unique().all())
 
+    def list_with_options_by_unit(
+        self, unit_id: int, *, active_only: bool = True
+    ) -> list[WordDetectionExercise]:
+        load_options = selectinload(WordDetectionExercise.options)
+        stmt = select(WordDetectionExercise).options(
+            load_options,
+            joinedload(WordDetectionExercise.media),
+        )
+        if active_only:
+            stmt = stmt.options(
+                with_loader_criteria(
+                    WordDetectionExerciseOption,
+                    WordDetectionExerciseOption.is_active.is_(True),
+                    include_aliases=True,
+                )
+            )
+        stmt = stmt.where(WordDetectionExercise.unit_id == unit_id).order_by(
+            WordDetectionExercise.order_index
+        )
+        if active_only:
+            stmt = stmt.where(live(WordDetectionExercise))
+        return list(self.db.scalars(stmt).unique().all())
+
     def list_with_options_by_chapter(
         self, chapter_id: int, *, active_only: bool = True
     ) -> list[WordDetectionExercise]:

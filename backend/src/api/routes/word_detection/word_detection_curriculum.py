@@ -106,9 +106,11 @@ def get_full_tree(
 
     # Overlay per-user progress
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress = WordDetectionProgressService(db) if user_id else None
     locking = WordDetectionLockingService(db) if user_id else None
     practice_svc = WordDetectionChapterPracticeService(db) if user_id else None
+    curriculum_svc = WordDetectionCurriculumService(db)
 
     units_result = []
     for unit_s in structure:
@@ -128,7 +130,7 @@ def get_full_tree(
                     "wordEn": l_s["word_en"],
                     "videoUrl": l_s["video_url"],
                     "orderIndex": l_s["order_index"],
-                    "isLocked": progress.is_lesson_locked_by_id(user_id, l_s["id"]) if progress else False,
+                    "isLocked": progress.is_lesson_locked_by_id(user_id, l_s["id"], is_admin=is_admin) if progress else False,
                     "progressStatus": progress.progress_status_for_lesson(user_id, l_s["id"]) if progress else "NOT_STARTED",
                 })
 
@@ -143,8 +145,8 @@ def get_full_tree(
                 "level": ch_s["level"],
                 "lessonCount": len(ch_lesson_ids),
                 "completedLessonCount": ch_completed,
-                "isLocked": locking.is_chapter_locked(ch_s["id"], user_id) if locking else False,
-                "isPracticeUnlocked": practice_svc.is_practice_unlocked(user_id, ch_s["id"]) if practice_svc else False,
+                "isLocked": locking.is_chapter_locked(ch_s["id"], user_id, is_admin=is_admin) if locking else False,
+                "isPracticeUnlocked": practice_svc.is_practice_unlocked(user_id, ch_s["id"], is_admin=is_admin) if practice_svc else False,
                 "isPracticeComplete": practice_svc.is_practice_complete(user_id, ch_s["id"]) if practice_svc else False,
                 "lessons": lessons_result,
             })
@@ -157,7 +159,8 @@ def get_full_tree(
             "chapterCount": len(unit_s["chapters"]),
             "completedLessonCount": progress.progress.count_completed_lessons(user_id, all_lesson_ids) if progress else 0,
             "totalLessonCount": len(all_lesson_ids),
-            "isLocked": locking.is_unit_locked(unit_s["id"], user_id) if locking else False,
+            "isLocked": locking.is_unit_locked(unit_s["id"], user_id, is_admin=is_admin) if locking else False,
+            "isExerciseUnlocked": curriculum_svc.is_unit_exercise_unlocked(user_id, unit_s["id"], is_admin=is_admin),
             "chapters": chapters_result,
         })
 
@@ -194,8 +197,10 @@ def list_units(
 
     # Overlay per-user fields (cheap)
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress = WordDetectionProgressService(db) if user_id else None
     locking = WordDetectionLockingService(db) if user_id else None
+    curriculum_svc = WordDetectionCurriculumService(db)
 
     result: list[WdUnitResponse] = []
     for s in structure:
@@ -212,7 +217,8 @@ def list_units(
                 chapterCount=s["chapterCount"],
                 completedLessonCount=completed,
                 totalLessonCount=s["totalLessonCount"],
-                isLocked=locking.is_unit_locked(s["id"], user_id) if locking else False,
+                isLocked=locking.is_unit_locked(s["id"], user_id, is_admin=is_admin) if locking else False,
+                isExerciseUnlocked=curriculum_svc.is_unit_exercise_unlocked(user_id, s["id"], is_admin=is_admin),
             )
         )
     return result
@@ -230,6 +236,7 @@ def get_unit(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     locking = WordDetectionLockingService(db)
     progress = WordDetectionProgressService(db)
     lesson_ids = curriculum.curriculum.list_lesson_ids_for_unit(unit.id)
@@ -242,7 +249,8 @@ def get_unit(
         chapterCount=curriculum.count_chapters(unit.id),
         completedLessonCount=completed,
         totalLessonCount=len(lesson_ids),
-        isLocked=locking.is_unit_locked(unit.id, user_id),
+        isLocked=locking.is_unit_locked(unit.id, user_id, is_admin=is_admin),
+        isExerciseUnlocked=curriculum.is_unit_exercise_unlocked(user_id, unit.id, is_admin=is_admin),
     )
 
 
@@ -267,6 +275,7 @@ def list_chapters(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress_svc = WordDetectionProgressService(db)
     locking = WordDetectionLockingService(db)
     practice_svc = WordDetectionChapterPracticeService(db)
@@ -290,8 +299,8 @@ def list_chapters(
                 level=chapter.level,
                 lessonCount=len(lesson_ids),
                 completedLessonCount=completed,
-                isLocked=locking.is_chapter_locked(chapter.id, user_id),
-                isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+                isLocked=locking.is_chapter_locked(chapter.id, user_id, is_admin=is_admin),
+                isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id, is_admin=is_admin),
                 isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
             )
         )
@@ -313,6 +322,7 @@ def get_chapter(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     locking = WordDetectionLockingService(db)
     progress_svc = WordDetectionProgressService(db)
     practice_svc = WordDetectionChapterPracticeService(db)
@@ -331,8 +341,8 @@ def get_chapter(
         level=chapter.level,
         lessonCount=len(lesson_ids),
         completedLessonCount=completed,
-        isLocked=locking.is_chapter_locked(chapter.id, user_id),
-        isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+        isLocked=locking.is_chapter_locked(chapter.id, user_id, is_admin=is_admin),
+        isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id, is_admin=is_admin),
         isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
     )
 
@@ -358,6 +368,7 @@ def list_lessons(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress = WordDetectionProgressService(db)
 
     # Batch-fetch primary words and their medias for all lessons in this
@@ -381,6 +392,7 @@ def list_lessons(
                 user_id=user_id,
                 progress=progress,
                 medias=medias,
+                is_admin=is_admin,
             )
         )
 
@@ -401,4 +413,7 @@ def get_lesson(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
 
     user_id = user.id if user else None
-    return lesson_detail_to_response(bundle, user_id, WordDetectionProgressService(db))
+    is_admin = bool(user and user.account_type == "admin")
+    return lesson_detail_to_response(
+        bundle, user_id, WordDetectionProgressService(db), is_admin=is_admin
+    )

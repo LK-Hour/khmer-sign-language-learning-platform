@@ -124,15 +124,20 @@ class WordDetectionCurriculumService:
             return 0
         return self.progress.count_completed_lessons(user_id, lesson_ids)
 
-    def is_chapter_exercise_unlocked(
-        self, user_id: uuid.UUID | None, chapter_id: int, *, active_only: bool = True
+    def is_unit_exercise_unlocked(
+        self,
+        user_id: uuid.UUID | None,
+        unit_id: int,
+        *,
+        is_admin: bool = False,
     ) -> bool:
-        """All lessons in the chapter must be completed before chapter exercises unlock."""
+        """All lessons in the unit must be completed before the unit exercise unlocks."""
+        if is_admin:
+            return True
         if user_id is None:
             return False
-        lessons = self.curriculum.list_lessons_by_chapter(chapter_id, active_only=active_only)
-        if not lessons:
+        lesson_ids = self.curriculum.list_lesson_ids_for_unit(unit_id)
+        if not lesson_ids:
             return False
-        lesson_ids = [lesson.id for lesson in lessons]
         completed = self.progress.count_completed_lessons(user_id, lesson_ids)
         return completed >= len(lesson_ids)

@@ -80,8 +80,10 @@ class WordDetectionChapterPracticeService:
         self.practice_repo = WordDetectionChapterPracticeRepository(db)
 
     def is_practice_unlocked(
-        self, user_id: uuid.UUID | None, chapter_id: int
+        self, user_id: uuid.UUID | None, chapter_id: int, *, is_admin: bool = False
     ) -> bool:
+        if is_admin:
+            return True
         if user_id is None:
             return False
         lesson_ids = self.curriculum.list_lesson_ids_for_chapter(chapter_id)
@@ -98,7 +100,7 @@ class WordDetectionChapterPracticeService:
         return self.practice_repo.is_practice_complete(user_id, chapter_id)
 
     def get_practice_session(
-        self, user_id: uuid.UUID | None, chapter_id: int
+        self, user_id: uuid.UUID | None, chapter_id: int, *, is_admin: bool = False
     ) -> WdChapterPracticeSession | None:
         chapter = self.curriculum.get_chapter_by_id(chapter_id)
         if chapter is None:
@@ -108,7 +110,7 @@ class WordDetectionChapterPracticeService:
         if unit is None:
             return None
 
-        is_unlocked = self.is_practice_unlocked(user_id, chapter_id)
+        is_unlocked = self.is_practice_unlocked(user_id, chapter_id, is_admin=is_admin)
 
         lessons = self.curriculum.list_lessons_by_chapter(chapter_id)
         practice = self.practice_repo.get_practice_by_chapter(chapter_id)

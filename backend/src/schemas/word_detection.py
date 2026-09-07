@@ -115,6 +115,7 @@ class WdUnitResponse(BaseModel):
     completedLessonCount: int
     totalLessonCount: int
     isLocked: bool = False
+    isExerciseUnlocked: bool = False
 
 
 class WdChapterResponse(BaseModel):

@@ -36,11 +36,12 @@ def get_lesson_progress(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
 
     progress = WordDetectionProgressService(db)
+    is_admin = user.account_type == "admin"
     row = progress.get_lesson_progress(user.id, lesson_id)
     return WdLessonProgressResponse(
         lessonId=lesson_id,
         progressStatus=progress.progress_status_for_lesson(user.id, lesson_id),
-        isLocked=progress.is_lesson_locked_by_id(user.id, lesson_id),
+        isLocked=progress.is_lesson_locked_by_id(user.id, lesson_id, is_admin=is_admin),
         attemptCount=(row.attempts if row and row.attempts is not None else 0),
         lastPracticedAt=(row.last_practiced_at if row else None),
         completedAt=(row.completed_at if row else None),
@@ -87,6 +88,7 @@ def get_chapter_progress(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
 
     progress = WordDetectionProgressService(db)
+    is_admin = user.account_type == "admin"
     lesson_ids = [lesson.id for lesson in lessons]
     completed = curriculum.count_completed_lessons(user.id, lesson_ids)
     return WdChapterProgressResponse(
@@ -98,7 +100,7 @@ def get_chapter_progress(
                 lessonId=lesson.id,
                 orderIndex=lesson.order_index,
                 progressStatus=progress.progress_status_for_lesson(user.id, lesson.id),
-                isLocked=progress.is_lesson_locked_by_id(user.id, lesson.id),
+                isLocked=progress.is_lesson_locked_by_id(user.id, lesson.id, is_admin=is_admin),
             )
             for lesson in lessons
         ],

@@ -35,6 +35,7 @@ def to_wd_lesson(
     user_id: uuid.UUID | None,
     progress: WordDetectionProgressService,
     medias: list[Media] | None = None,
+    is_admin: bool = False,
 ) -> WdLessonResponse:
     return WdLessonResponse(
         id=lesson.id,
@@ -43,7 +44,7 @@ def to_wd_lesson(
         wordEn=word_en,
         videoUrl=video_url(medias or []),
         orderIndex=order_index,
-        isLocked=progress.is_lesson_locked_by_id(user_id, lesson.id),
+        isLocked=progress.is_lesson_locked_by_id(user_id, lesson.id, is_admin=is_admin),
         progressStatus=progress.progress_status_for_lesson(user_id, lesson.id),
     )
 
@@ -52,6 +53,7 @@ def lesson_detail_to_response(
     bundle: WdLessonDetailBundle,
     user_id: uuid.UUID | None,
     progress: WordDetectionProgressService,
+    is_admin: bool = False,
 ) -> WdLessonDetailResponse:
     primary = bundle.words[0] if bundle.words else None
     word = primary.word if primary else None
@@ -68,6 +70,7 @@ def lesson_detail_to_response(
         user_id=user_id,
         progress=progress,
         medias=medias,
+        is_admin=is_admin,
     )
     return WdLessonDetailResponse(
         **base.model_dump(),
