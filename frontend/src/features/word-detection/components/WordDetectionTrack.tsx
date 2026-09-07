@@ -17,6 +17,7 @@ import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
+import { useAuthStore } from "@/store/auth.store";
 
 import type { WdLesson } from "../types";
 import {
@@ -107,6 +108,9 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
     : t("WORD_DETECTION.TRACK.FALLBACK_UNIT_TITLE");
   const currentUnitCompleted = currentUnit?.completedLessonCount ?? 0;
   const currentUnitTotal = currentUnit?.totalLessonCount ?? 0;
+  const exerciseUnitsUnlocked =
+    units?.filter((unit) => unit?.isExerciseUnlocked).length ?? 0;
+  const exerciseUnitsTotal = units?.length ?? 0;
 
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ width: "100%" }}>
@@ -183,11 +187,13 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
         <Grid size={{ xs: 12, md: 6 }}>
           <TrackSummaryCard
             step={formatBadgeStep(2, locale)}
-            title={t("WORD_DETECTION.TRACK.QUIZ_TITLE")}
-            description={t("WORD_DETECTION.TRACK.QUIZ_DESCRIPTION")}
-            completedCount={0}
-            totalCount={units.reduce((s, u) => s + u?.chapterCount, 0)}
-            countLabel={t("WORD_DETECTION.LABELS.CHAPTER")}
+            title={t("WORD_DETECTION.EXERCISE_LIST.EXERCISE_LABEL")}
+            description={t("WORD_DETECTION.TRACK.EXERCISE_DESCRIPTION")}
+            completedCount={exerciseUnitsUnlocked}
+            totalCount={exerciseUnitsTotal}
+            countLabel={t("WORD_DETECTION.LABELS.UNIT")}
+            ctaHref={`/${locale}${ROUTES.words.exercises}`}
+            ctaLabel={t("BUTTON.TAKE_EXERCISE")}
           />
         </Grid>
       </Grid>
@@ -220,6 +226,8 @@ function TrackSummaryCard({
   totalCount,
   countLabel,
   active = false,
+  ctaHref,
+  ctaLabel,
 }: {
   step: string;
   title: string;
@@ -228,6 +236,8 @@ function TrackSummaryCard({
   totalCount: number;
   countLabel: string;
   active?: boolean;
+  ctaHref?: string;
+  ctaLabel?: string;
 }) {
   const { t, locale } = useTranslation();
 
@@ -242,7 +252,7 @@ function TrackSummaryCard({
         p: { xs: 2.25, md: 3 },
       }}
     >
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ height: "100%" }}>
         <Stack
           direction="row"
           spacing={2}
@@ -264,7 +274,7 @@ function TrackSummaryCard({
           </Typography>
         </Stack>
 
-        <Stack spacing={0.75}>
+        <Stack spacing={0.75} sx={{ flex: 1 }}>
           <Typography
             sx={{
               color: KslColors.textPrimary,
@@ -275,16 +285,46 @@ function TrackSummaryCard({
           >
             {title}
           </Typography>
-          <Typography
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
             sx={{
-              color: KslColors.textSecondary,
-              fontSize: KslFontSizes.sm,
-              lineHeight: 1.45,
-              maxWidth: 380,
+              alignItems: { xs: "stretch", sm: "flex-end" },
+              justifyContent: "space-between",
+              gap: 2,
             }}
           >
-            {description}
-          </Typography>
+            <Typography
+              sx={{
+                color: KslColors.textSecondary,
+                fontSize: KslFontSizes.sm,
+                lineHeight: 1.45,
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {description}
+            </Typography>
+            {ctaHref && ctaLabel && (
+              <Button
+                component={Link}
+                href={ctaHref}
+                variant="outlined"
+                size="small"
+                sx={{
+                  flexShrink: 0,
+                  alignSelf: { xs: "flex-end", sm: "auto" },
+                  borderColor: KslColors.primary,
+                  color: KslColors.primary,
+                  fontWeight: 700,
+                  borderRadius: "8px",
+                  "&:hover": { bgcolor: KslColors.primaryLight },
+                }}
+              >
+                {ctaLabel}
+              </Button>
+            )}
+          </Stack>
         </Stack>
       </Stack>
     </Paper>
@@ -458,9 +498,10 @@ function ChapterTrackSection({
     (s) => chapter?.isLocked !== true && s.expandedChapterIds[chapter?.id] === true
   );
   const toggleChapterExpanded = useWordDetectionStore((s) => s.toggleChapterExpanded);
+  const isAdmin = useAuthStore((s) => s.user?.account_type === "admin");
   const lessonStates = useMemo(
-    () => resolveLessonStates(chapter?.lessons),
-    [chapter?.lessons]
+    () => resolveLessonStates(chapter?.lessons, isAdmin),
+    [chapter?.lessons, isAdmin]
   );
   const { t } = useTranslation();
   const chapterTitle = locale === "kh" ? chapter?.titleKh || chapter?.title : chapter?.title;

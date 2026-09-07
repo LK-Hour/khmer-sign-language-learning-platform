@@ -17,3 +17,12 @@ export type {
   WdChapterPracticeResultRequest,
   WdChapterPracticeResultResponse,
 } from "./chapterPractice";
+
+export type {
+  WdExerciseType,
+  WdExerciseMediaData,
+  WdExerciseOptionData,
+  WdExerciseQuestionData,
+  WdExerciseSubmitRequest,
+  WdExerciseSubmitResult,
+} from "./exercise";

@@ -26,7 +26,8 @@ export function getLessonProgressPercent(lesson: WdLesson): number {
 
 /** Resolve done / now / lock for each lesson in chapter order. */
 export function resolveLessonStates(
-  lessons: WdLesson[]
+  lessons: WdLesson[],
+  isAdmin: boolean = false
 ): Map<number, LessonDisplayState> {
   const sorted = [...lessons].sort((a, b) => a?.orderIndex - b?.orderIndex);
   const states = new Map<number, LessonDisplayState>();
@@ -41,7 +42,9 @@ export function resolveLessonStates(
       states.set(lesson?.id, "lock");
       continue;
     }
-    if (!foundCurrent) {
+    // Admins bypass locking entirely: every unlocked lesson is reachable,
+    // not just the single "current" one in the normal one-at-a-time flow.
+    if (isAdmin || !foundCurrent) {
       states.set(lesson?.id, "now");
       foundCurrent = true;
       continue;

@@ -20,6 +20,7 @@ export function normalizeUnit(unit: WdUnit): WdUnit {
     completedLessonCount: unit?.completedLessonCount,
     totalLessonCount: unit?.totalLessonCount,
     isLocked: unit?.isLocked ?? false,
+    isExerciseUnlocked: unit?.isExerciseUnlocked ?? false,
   };
 }
 

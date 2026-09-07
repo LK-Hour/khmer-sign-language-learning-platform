@@ -11,6 +11,7 @@ export interface WdUnit {
   completedLessonCount: number;
   totalLessonCount: number;
   isLocked?: boolean;
+  isExerciseUnlocked?: boolean;
 }
 
 export interface WdChapter {
