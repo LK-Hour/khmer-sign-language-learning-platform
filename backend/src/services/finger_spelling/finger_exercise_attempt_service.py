@@ -81,9 +81,11 @@ class FingerExerciseAttemptService:
     # ── Unlock check ────────────────────────────────────────────────────────
 
     def is_unit_exercise_unlocked(
-        self, user_id: uuid.UUID | None, unit_id: int
+        self, user_id: uuid.UUID | None, unit_id: int, *, is_admin: bool = False
     ) -> bool:
         """All active lessons in the unit must be completed."""
+        if is_admin:
+            return True
         if user_id is None:
             return False
         lesson_ids = self.curriculum.list_lesson_ids_for_unit(unit_id)
@@ -95,9 +97,9 @@ class FingerExerciseAttemptService:
     # ── Session start (ephemeral — no DB write) ──────────────────────────────
 
     def get_or_start_exercise(
-        self, user_id: uuid.UUID, unit_id: int
+        self, user_id: uuid.UUID, unit_id: int, *, is_admin: bool = False
     ) -> ExerciseSession:
-        if not self.is_unit_exercise_unlocked(user_id, unit_id):
+        if not self.is_unit_exercise_unlocked(user_id, unit_id, is_admin=is_admin):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unit exercise is locked. Complete all lessons in this unit first.",
@@ -113,9 +115,11 @@ class FingerExerciseAttemptService:
         attempt_id: uuid.UUID,
         question_ids: list[int],
         raw_answers: list[dict],
+        *,
+        is_admin: bool = False,
     ) -> ExerciseSession:
         """Grade answers, persist finished attempt, return preview payload."""
-        if not self.is_unit_exercise_unlocked(user_id, unit_id):
+        if not self.is_unit_exercise_unlocked(user_id, unit_id, is_admin=is_admin):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unit exercise is locked. Complete all lessons in this unit first.",
@@ -140,9 +144,9 @@ class FingerExerciseAttemptService:
     # ── Unit exercise status (for list page) ─────────────────────────────────
 
     def get_unit_exercise_status(
-        self, user_id: uuid.UUID | None, unit_id: int
+        self, user_id: uuid.UUID | None, unit_id: int, *, is_admin: bool = False
     ) -> dict:
-        unlocked = self.is_unit_exercise_unlocked(user_id, unit_id)
+        unlocked = self.is_unit_exercise_unlocked(user_id, unit_id, is_admin=is_admin)
         best: FingerUserExerciseProgress | None = None
         if user_id:
             best = self.attempt_repo.get_best_completed_attempt(user_id, unit_id)

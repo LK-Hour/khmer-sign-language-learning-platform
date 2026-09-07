@@ -31,6 +31,7 @@ def to_fs_lesson(
     order_index: int,
     user_id: uuid.UUID | None,
     progress: FingerProgressService,
+    is_admin: bool = False,
 ) -> FsLessonResponse:
     return FsLessonResponse(
         id=lesson.id,
@@ -42,7 +43,7 @@ def to_fs_lesson(
         letterNameKh=letter_kh,
         imageUrl=image_url(medias),
         orderIndex=order_index,
-        isLocked=progress.is_lesson_locked_by_id(user_id, lesson.id),
+        isLocked=progress.is_lesson_locked_by_id(user_id, lesson.id, is_admin=is_admin),
         progressStatus=progress.progress_status_for_lesson(user_id, lesson.id),
     )
 
@@ -51,6 +52,7 @@ def lesson_detail_to_response(
     bundle: LessonDetailBundle,
     user_id: uuid.UUID | None,
     progress: FingerProgressService,
+    is_admin: bool = False,
 ) -> FsLessonDetailResponse:
     primary = bundle.letters[0] if bundle.letters else None
     letter = primary.letter if primary else None
@@ -68,6 +70,7 @@ def lesson_detail_to_response(
         order_index=bundle.lesson.order_index,
         user_id=user_id,
         progress=progress,
+        is_admin=is_admin,
     )
     return FsLessonDetailResponse(
         **base.model_dump(),

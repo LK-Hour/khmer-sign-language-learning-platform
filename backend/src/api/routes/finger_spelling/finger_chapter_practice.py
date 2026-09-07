@@ -42,7 +42,8 @@ def get_chapter_practice(
 ) -> FsChapterPracticeResponse:
     svc = FingerChapterPracticeService(db)
     user_id = user.id if user else None
-    session = svc.get_practice_session(user_id, chapter_id)
+    is_admin = bool(user and user.account_type == "admin")
+    session = svc.get_practice_session(user_id, chapter_id, is_admin=is_admin)
     if session is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

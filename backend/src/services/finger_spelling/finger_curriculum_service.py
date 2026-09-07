@@ -153,9 +153,16 @@ class FingerCurriculumService:
         return self.progress.count_completed_lessons(user_id, lesson_ids)
 
     def is_chapter_exercise_unlocked(
-        self, user_id: uuid.UUID | None, chapter_id: int, *, active_only: bool = True
+        self,
+        user_id: uuid.UUID | None,
+        chapter_id: int,
+        *,
+        active_only: bool = True,
+        is_admin: bool = False,
     ) -> bool:
         """All lessons in the chapter must be completed before chapter exercises unlock."""
+        if is_admin:
+            return True
         if user_id is None:
             return False
         lessons = self.curriculum.list_lessons_by_chapter(chapter_id, active_only=active_only)

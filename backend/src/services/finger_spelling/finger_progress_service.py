@@ -88,9 +88,12 @@ class FingerProgressService:
         lesson_id: int,
         *,
         active_only: bool = True,
+        is_admin: bool = False,
     ) -> bool:
         """Linear unlock: only the first curriculum lesson is free; each next needs the prior completed."""
-        return FingerLockingService(self.db).is_lesson_locked(lesson_id, user_id)
+        return FingerLockingService(self.db).is_lesson_locked(
+            lesson_id, user_id, is_admin=is_admin
+        )
 
     def progress_status_for_lesson(
         self, user_id: uuid.UUID | None, lesson_id: int

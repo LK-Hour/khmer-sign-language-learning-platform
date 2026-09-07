@@ -80,7 +80,9 @@ def start_or_resume_exercise(
 ) -> ExerciseSessionResponse:
     """Start a new ephemeral exercise session (not persisted until submit)."""
     service = FingerExerciseAttemptService(db)
-    session = service.get_or_start_exercise(user.id, unit_id)
+    session = service.get_or_start_exercise(
+        user.id, unit_id, is_admin=user.account_type == "admin"
+    )
     return _session_to_response(session)
 
 
@@ -124,6 +126,7 @@ def submit_exercise(
         body.attempt_id,
         body.question_ids,
         raw_answers,
+        is_admin=user.account_type == "admin",
     )
     return _session_to_response(session)
 
@@ -165,6 +168,8 @@ def get_exercise_status(
     """Return unlock + completion state for the unit exercise (used by exercise list page)."""
     service = FingerExerciseAttemptService(db)
     exercise_status = service.get_unit_exercise_status(
-        user.id if user else None, unit_id
+        user.id if user else None,
+        unit_id,
+        is_admin=bool(user and user.account_type == "admin"),
     )
     return UnitExerciseStatusResponse(unit_id=unit_id, **exercise_status)

@@ -135,7 +135,12 @@ class LinearLockingService:
         prior_progress = self.progress.get_lesson_progress(user_id, prior.id)
         return prior_progress is None or not prior_progress.is_completed
 
-    def is_lesson_locked(self, lesson_id: int, user_id: uuid.UUID | None) -> bool:
+    def is_lesson_locked(
+        self, lesson_id: int, user_id: uuid.UUID | None, is_admin: bool = False
+    ) -> bool:
+        if is_admin:
+            return False
+
         cache_key = (user_id, lesson_id)
         cached = self._get_cached(self._lesson_cache, cache_key)
         if cached is not None:
@@ -145,7 +150,12 @@ class LinearLockingService:
         self._set_cached(self._lesson_cache, cache_key, is_locked)
         return is_locked
 
-    def is_chapter_locked(self, chapter_id: int, user_id: uuid.UUID | None) -> bool:
+    def is_chapter_locked(
+        self, chapter_id: int, user_id: uuid.UUID | None, is_admin: bool = False
+    ) -> bool:
+        if is_admin:
+            return False
+
         cache_key = (user_id, chapter_id)
         cached = self._get_cached(self._chapter_cache, cache_key)
         if cached is not None:
@@ -162,7 +172,12 @@ class LinearLockingService:
         self._set_cached(self._chapter_cache, cache_key, is_locked)
         return is_locked
 
-    def is_unit_locked(self, unit_id: int, user_id: uuid.UUID | None) -> bool:
+    def is_unit_locked(
+        self, unit_id: int, user_id: uuid.UUID | None, is_admin: bool = False
+    ) -> bool:
+        if is_admin:
+            return False
+
         cache_key = (user_id, unit_id)
         cached = self._get_cached(self._unit_cache, cache_key)
         if cached is not None:

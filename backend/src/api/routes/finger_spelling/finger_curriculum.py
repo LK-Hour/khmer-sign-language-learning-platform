@@ -100,6 +100,7 @@ def get_full_tree(
 
     # Overlay per-user progress
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress = FingerProgressService(db) if user_id else None
     locking = FingerLockingService(db) if user_id else None
     exercise_svc = FingerExerciseAttemptService(db) if user_id else None
@@ -127,7 +128,7 @@ def get_full_tree(
                     "letterNameKh": l_s["letter_kh"],
                     "imageUrl": l_s["image_url"],
                     "orderIndex": l_s["order_index"],
-                    "isLocked": progress.is_lesson_locked_by_id(user_id, l_s["id"]) if progress else False,
+                    "isLocked": progress.is_lesson_locked_by_id(user_id, l_s["id"], is_admin=is_admin) if progress else False,
                     "progressStatus": progress.progress_status_for_lesson(user_id, l_s["id"]) if progress else "NOT_STARTED",
                 })
 
@@ -141,14 +142,14 @@ def get_full_tree(
                 "orderIndex": ch_s["order_index"],
                 "lessonCount": len(ch_lesson_ids),
                 "completedLessonCount": ch_completed,
-                "isExerciseUnlocked": curriculum_svc.is_chapter_exercise_unlocked(user_id, ch_s["id"]),
-                "isPracticeUnlocked": practice_svc.is_practice_unlocked(user_id, ch_s["id"]) if practice_svc else False,
+                "isExerciseUnlocked": curriculum_svc.is_chapter_exercise_unlocked(user_id, ch_s["id"], is_admin=is_admin),
+                "isPracticeUnlocked": practice_svc.is_practice_unlocked(user_id, ch_s["id"], is_admin=is_admin) if practice_svc else False,
                 "isPracticeComplete": practice_svc.is_practice_complete(user_id, ch_s["id"]) if practice_svc else False,
-                "isLocked": locking.is_chapter_locked(ch_s["id"], user_id) if locking else False,
+                "isLocked": locking.is_chapter_locked(ch_s["id"], user_id, is_admin=is_admin) if locking else False,
                 "lessons": lessons_result,
             })
 
-        exercise_status = exercise_svc.get_unit_exercise_status(user_id, unit_s["id"]) if exercise_svc else {
+        exercise_status = exercise_svc.get_unit_exercise_status(user_id, unit_s["id"], is_admin=is_admin) if exercise_svc else {
             "isExerciseUnlocked": False, "isExerciseCompleted": False, "bestScore": 0, "maxScore": 0
         }
         units_result.append({
@@ -159,7 +160,7 @@ def get_full_tree(
             "chapterCount": len(unit_s["chapters"]),
             "completedLessonCount": progress.progress.count_completed_lessons(user_id, all_lesson_ids) if progress else 0,
             "totalLessonCount": len(all_lesson_ids),
-            "isLocked": locking.is_unit_locked(unit_s["id"], user_id) if locking else False,
+            "isLocked": locking.is_unit_locked(unit_s["id"], user_id, is_admin=is_admin) if locking else False,
             "isExerciseUnlocked": exercise_status["isExerciseUnlocked"],
             "isExerciseCompleted": exercise_status["isExerciseCompleted"],
             "bestScore": exercise_status["bestScore"],
@@ -201,6 +202,7 @@ def list_units(
 
     # CHEAP: overlay per-user fields
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress = FingerProgressService(db) if user_id else None
     locking = FingerLockingService(db) if user_id else None
     exercise_svc = FingerExerciseAttemptService(db) if user_id else None
@@ -209,7 +211,7 @@ def list_units(
     for s in structure:
         lesson_ids = s["lessonIds"]
         completed = progress.progress.count_completed_lessons(user_id, lesson_ids) if progress else 0
-        exercise_status = exercise_svc.get_unit_exercise_status(user_id, s["id"]) if exercise_svc else {
+        exercise_status = exercise_svc.get_unit_exercise_status(user_id, s["id"], is_admin=is_admin) if exercise_svc else {
             "isExerciseUnlocked": False, "isExerciseCompleted": False, "bestScore": 0, "maxScore": 0
         }
         result.append(
@@ -222,7 +224,7 @@ def list_units(
                 chapterCount=s["chapterCount"],
                 completedLessonCount=completed,
                 totalLessonCount=s["totalLessonCount"],
-                isLocked=locking.is_unit_locked(s["id"], user_id) if locking else False,
+                isLocked=locking.is_unit_locked(s["id"], user_id, is_admin=is_admin) if locking else False,
                 isExerciseUnlocked=exercise_status["isExerciseUnlocked"],
                 isExerciseCompleted=exercise_status["isExerciseCompleted"],
                 bestScore=exercise_status["bestScore"],
@@ -244,13 +246,14 @@ def get_unit(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     locking = FingerLockingService(db)
     exercise_svc = FingerExerciseAttemptService(db)
     lesson_ids = curriculum.curriculum.list_lesson_ids_for_unit(unit.id)
     completed = (
         FingerProgressService(db).progress.count_completed_lessons(user_id, lesson_ids) if user_id else 0
     )
-    exercise_status = exercise_svc.get_unit_exercise_status(user_id, unit_id)
+    exercise_status = exercise_svc.get_unit_exercise_status(user_id, unit_id, is_admin=is_admin)
     return FsUnitResponse(
         id=unit.id,
         title=unit.name_en,
@@ -259,7 +262,7 @@ def get_unit(
         chapterCount=curriculum.count_chapters(unit.id),
         completedLessonCount=completed,
         totalLessonCount=len(lesson_ids),
-        isLocked=locking.is_unit_locked(unit.id, user_id),
+        isLocked=locking.is_unit_locked(unit.id, user_id, is_admin=is_admin),
         isExerciseUnlocked=exercise_status["isExerciseUnlocked"],
         isExerciseCompleted=exercise_status["isExerciseCompleted"],
         bestScore=exercise_status["bestScore"],
@@ -286,6 +289,7 @@ def list_chapters(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unit not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress_svc = FingerProgressService(db)
     locking = FingerLockingService(db)
     practice_svc = FingerChapterPracticeService(db)
@@ -304,10 +308,10 @@ def list_chapters(
                 orderIndex=chapter.order_index,
                 lessonCount=len(lesson_ids),
                 completedLessonCount=completed,
-                isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id),
-                isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+                isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id, is_admin=is_admin),
+                isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id, is_admin=is_admin),
                 isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
-                isLocked=locking.is_chapter_locked(chapter.id, user_id),
+                isLocked=locking.is_chapter_locked(chapter.id, user_id, is_admin=is_admin),
             )
         )
 
@@ -328,6 +332,7 @@ def get_chapter(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     locking = FingerLockingService(db)
     practice_svc = FingerChapterPracticeService(db)
     lesson_ids = curriculum.curriculum.list_lesson_ids_for_chapter(chapter.id)
@@ -344,10 +349,10 @@ def get_chapter(
         orderIndex=chapter.order_index,
         lessonCount=len(lesson_ids),
         completedLessonCount=completed,
-        isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id),
-        isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id),
+        isExerciseUnlocked=curriculum.is_chapter_exercise_unlocked(user_id, chapter.id, is_admin=is_admin),
+        isPracticeUnlocked=practice_svc.is_practice_unlocked(user_id, chapter.id, is_admin=is_admin),
         isPracticeComplete=practice_svc.is_practice_complete(user_id, chapter.id),
-        isLocked=locking.is_chapter_locked(chapter.id, user_id),
+        isLocked=locking.is_chapter_locked(chapter.id, user_id, is_admin=is_admin),
     )
 
 
@@ -370,6 +375,7 @@ def list_lessons(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
 
     user_id = user.id if user else None
+    is_admin = bool(user and user.account_type == "admin")
     progress = FingerProgressService(db)
 
     # Batch-fetch primary letters and their medias for all lessons in this
@@ -394,6 +400,7 @@ def list_lessons(
                 order_index=lesson.order_index,
                 user_id=user_id,
                 progress=progress,
+                is_admin=is_admin,
             )
         )
 
@@ -414,5 +421,8 @@ def get_lesson(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
 
     user_id = user.id if user else None
-    return lesson_detail_to_response(bundle, user_id, FingerProgressService(db))
+    is_admin = bool(user and user.account_type == "admin")
+    return lesson_detail_to_response(
+        bundle, user_id, FingerProgressService(db), is_admin=is_admin
+    )
 

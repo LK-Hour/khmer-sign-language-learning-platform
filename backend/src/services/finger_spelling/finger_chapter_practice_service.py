@@ -81,9 +81,11 @@ class FingerChapterPracticeService:
     # ── Unlock check ──────────────────────────────────────────────────────────
 
     def is_practice_unlocked(
-        self, user_id: uuid.UUID | None, chapter_id: int
+        self, user_id: uuid.UUID | None, chapter_id: int, *, is_admin: bool = False
     ) -> bool:
         """Practice unlocks when every lesson in the chapter is completed."""
+        if is_admin:
+            return True
         if user_id is None:
             return False
         lesson_ids = self.curriculum.list_lesson_ids_for_chapter(chapter_id)
@@ -102,7 +104,7 @@ class FingerChapterPracticeService:
     # ── Session data ──────────────────────────────────────────────────────────
 
     def get_practice_session(
-        self, user_id: uuid.UUID | None, chapter_id: int
+        self, user_id: uuid.UUID | None, chapter_id: int, *, is_admin: bool = False
     ) -> FsChapterPracticeSession | None:
         """Return full session data for a chapter practice.
 
@@ -116,7 +118,7 @@ class FingerChapterPracticeService:
         if unit is None:
             return None
 
-        is_unlocked = self.is_practice_unlocked(user_id, chapter_id)
+        is_unlocked = self.is_practice_unlocked(user_id, chapter_id, is_admin=is_admin)
 
         # Resolve items (even when locked, so the page can show the count)
         lessons = self.curriculum.list_lessons_by_chapter(chapter_id)

@@ -22,9 +22,11 @@ class FingerExerciseService:
         self.curriculum_service = FingerCurriculumService(db)
 
     def is_chapter_exercise_unlocked(
-        self, user_id: uuid.UUID | None, chapter_id: int
+        self, user_id: uuid.UUID | None, chapter_id: int, *, is_admin: bool = False
     ) -> bool:
-        return self.curriculum_service.is_chapter_exercise_unlocked(user_id, chapter_id)
+        return self.curriculum_service.is_chapter_exercise_unlocked(
+            user_id, chapter_id, is_admin=is_admin
+        )
 
     def list_chapter_exercises(
         self, chapter_id: int, *, active_only: bool = True
