@@ -3,75 +3,70 @@ import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useTranslation } from "@/i18n/useTranslation";
-import { KslColors, KslFontSizes, KslLineHeights, KslPalette } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslLineHeights } from "@/theme/theme";
 
 export default function Footer() {
   const { t } = useTranslation();
+  const year = new Date().getFullYear();
   return (
     <Card
       sx={{
         width: "100%",
-        height: 120,
         borderRadius: "0px",
         overflow: "hidden",
-        bgcolor: KslPalette.primary.main,
+        boxShadow: "none",
         isolation: "isolate",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: 1,
         py: 2,
       }}
     >
-      <Stack
-        spacing={1.8}
+      <Box
+        component="img"
+        src="/assets/cadt_footer.png"
+        alt={t("BRAND.CADT_ALT")}
         sx={{
+          height: 60,
+          width: "auto",
+          objectFit: "contain",
+        }}
+      />
+
+      <Stack
+        direction="row"
+        sx={{
+          position: "relative",
+          width: "100%",
           alignItems: "center",
           justifyContent: "center",
-          color: KslColors.surface,
-          flexShrink: 0,
+          px: { xs: 2, sm: 3 },
         }}
       >
-        <Stack
-          direction="row"
+        <Typography
           sx={{
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2.5,
-            color: KslColors.surface,
-            flexShrink: 0,
+            position: "absolute",
+            left: { xs: 16, sm: 24 },
+            fontSize: KslFontSizes.md,
+            lineHeight: KslLineHeights.sm,
+            fontWeight: 500,
+            color: KslColors.primary,
           }}
         >
-          <Typography
-            sx={{
-              fontSize: KslFontSizes.md,
-              lineHeight: KslLineHeights.sm,
-              fontWeight: 500,
-              color: KslColors.surface,
-            }}
-          >
-            {t("LOGIN.POWERED_BY")}
-          </Typography>
+          ©{year} {t("BRAND.NAME")}
+        </Typography>
 
-          <Box
-            component="img"
-            src="/assets/cadt_footer.png"
-            alt={t("BRAND.CADT_ALT")}
-            sx={{
-              height: 60,
-              width: "auto",
-              objectFit: "contain",
-            }}
-          />
-        </Stack>
         <Typography
           sx={{
             fontSize: KslFontSizes.md,
             lineHeight: KslLineHeights.sm,
             fontWeight: 500,
-            color: KslColors.surface,
+            color: KslColors.primary,
           }}
         >
-          @2026
+          {t("LOGIN.POWERED_BY")}
         </Typography>
       </Stack>
     </Card>

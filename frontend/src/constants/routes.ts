@@ -27,6 +27,17 @@ export const ROUTES = {
     lesson: (lessonId: string | number) => `/words/lessons/${lessonId}`,
     practice: (chapterId: string | number) =>
       `/words/chapters/${chapterId}/practice`,
+    exercises: "/words/exercises",
+    exercise: (unitId: string | number) =>
+      `/words/units/${unitId}/exercise`,
+  },
+
+  sentenceSpelling: {
+    root: "/sentence-spelling",
+    sample: "/sentence-spelling/sample",
+    custom: "/sentence-spelling/custom",
+    practice: (params: { text: string; source: "sample" | "custom" }) =>
+      `/sentence-spelling/practice?source=${params.source}&text=${encodeURIComponent(params.text)}`,
   },
 
   admin: {

@@ -35,6 +35,7 @@ export default function LandingPage() {
 
   const fingerSpellingHref = `/${locale}${ROUTES.fingerSpelling.root}`;
   const wordDetectionHref = `/${locale}${ROUTES.words.root}`;
+  const sentenceSpellingHref = `/${locale}${ROUTES.sentenceSpelling.root}`;
 
   useEffect(() => {
     const { hasSeenLandingDialog } = usePermissionStore.getState();
@@ -206,6 +207,16 @@ export default function LandingPage() {
               title={t("NAV.WORD_DETECTION")}
               description={t("HOME.WORD_DETECTION_DESC")}
               stat={wordDetectionStat}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <LearningModeCard
+              href={sentenceSpellingHref}
+              modeLabel={t("HOME.MODE_03")}
+              title={t("NAV.SENTENCE_SPELLING")}
+              description={t("HOME.SENTENCE_SPELLING_DESC")}
+              stat=""
             />
           </Grid>
         </Grid>

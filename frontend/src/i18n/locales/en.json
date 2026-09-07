@@ -3,6 +3,7 @@
     "ANSWER": "Answer:",
     "CHAPTER": "chapter",
     "CHAPTER_EXERCISES": "chapter exercises",
+    "CHARACTERS": "characters",
     "CHOICE": "Choice",
     "COMPLETED": "Completed",
     "ERROR_ID": "Error ID:",
@@ -214,7 +215,6 @@
     "USER_MANAGEMENT": "User Management",
     "USERS": "Users",
     "ANALYTICS": "Analytics",
-    "REFRESH": "Refresh",
     "RETRY": "Retry",
     "NO_USERS_FOUND": "No users found",
     "ACTIONS_DISABLED_ADMIN": "Actions disabled for admin users",
@@ -279,7 +279,8 @@
   "BRAND": {
     "CADT_ALT": "CADT",
     "LOGO_ALT": "Smart Khmer logo",
-    "LOGO_KSL_ALT": "KSL Logo"
+    "LOGO_KSL_ALT": "KSL Logo",
+    "NAME": "Smart Khmer Sign Language"
   },
   "BUTTON": {
     "CANCEL": "Cancel",
@@ -533,11 +534,10 @@
     "TRACK": {
       "CHAPTER_LOCKED_UNTIL": "Locked until Chapter",
       "CONTINUE": "Continue",
+      "EXERCISE_DESCRIPTION": "Complete unit exercises to track learner progress after all chapters.",
       "EYEBROW": "Finger Spelling Track",
       "FALLBACK_UNIT_TITLE": "Khmer Finger Spelling Basics",
       "LOAD_ERROR": "Lost connection to the database",
-      "QUIZ_DESCRIPTION": "Complete unit exercises to track learner progress after all chapters.",
-      "QUIZ_TITLE": "Character Exercise",
       "RETRY": "Retry",
       "SUMMARY_DESCRIPTION": "Sample image, hand Keypoints, live matching, and probability correction.",
       "TITLE": "Learn Khmer characters step by step",
@@ -553,8 +553,11 @@
     "LIVE_BADGE": "LIVE",
     "MODE_01": "Mode 01",
     "MODE_02": "Mode 02",
+    "MODE_03": "Mode 03",
+    "SENTENCE_SPELLING_CTA": "Learn Sentence Spelling",
+    "SENTENCE_SPELLING_DESC": "Combine characters into words and sentences with guided spelling practice.",
     "SUBTITLE": "Choose Finger Spelling or Word Detection, then continue through units, chapters, lessons, practice, and quizzes in order",
-    "TITLE": "Continue your Khmer Sign Language journey",
+    "TITLE": "Continue Your Khmer Sign Language Journey",
     "WORD_DETECTION_CTA": "Learn Word Detection",
     "WORD_DETECTION_DESC": "Learn Khmer Word signs with video samples and live AI prediction with probability.",
     "WORD_DETECTION_STAT": "20 starter classes",
@@ -633,10 +636,32 @@
     "LOGOUT_CONFIRM_TITLE": "Log out?",
     "MENU": "Menu",
     "PROFILE": "Profile",
+    "SENTENCE_SPELLING": "Character to Sentence Spelling",
+    "SENTENCE_SPELLING_DESC": "Combine characters into words and sentences",
     "WORD_DETECTION": "Word Detection",
     "WORD_DETECTION_DESC": "Start from 20 word classes with video samples"
   },
   "WORD_DETECTION": {
+    "EXERCISE_ATTEMPT": {
+      "BACK": "Back to Exercises",
+      "COMPLETE_TITLE": "Great Job!!",
+      "CORRECT": "Correct!",
+      "INCORRECT": "Incorrect",
+      "KEEP_PRACTICING": "Keep practicing!",
+      "LOCKED_TITLE": "Exercise Locked",
+      "REVIEW_ANSWERS": "Review answers",
+      "SCORE_LABEL": "Score: {{score}}/{{total}}",
+      "SEE_RESULT": "See result",
+      "YOUR_SCORE": "Your score"
+    },
+    "EXERCISE_LIST": {
+      "BACK": "Back to Learning Track",
+      "DESCRIPTION": "Test your word-detection knowledge. Each unit's exercise unlocks after completing all its chapters.",
+      "EXERCISE_LABEL": "Word Exercise",
+      "LOCKED_HINT": "Complete all lessons to unlock · {{completed}}/{{total}} done",
+      "READY_HINT": "Ready to attempt",
+      "UNLOCKED": "unlocked"
+    },
     "LABELS": {
       "CHAPTER": "Chapter",
       "LESSON": "Lesson",
@@ -661,11 +686,10 @@
     },
     "TRACK": {
       "CONTINUE": "Continue",
+      "EXERCISE_DESCRIPTION": "Complete unit exercises to track learner progress after all chapters.",
       "EYEBROW": "Word Detection Track",
       "FALLBACK_UNIT_TITLE": "Khmer Sign Language Word Basics",
       "LOAD_ERROR": "Lost connection to the database",
-      "QUIZ_DESCRIPTION": "Word-level quizzes unlock after completing every lesson in a chapter.",
-      "QUIZ_TITLE": "Word Quiz",
       "SUMMARY_DESCRIPTION": "Video samples, pose Key-points, and live word-level sign matching.",
       "TITLE": "Learn Khmer words step by step"
     },
@@ -688,6 +712,38 @@
       "PASSED": "Correct! Moving to next word...",
       "PROGRESS": "Word",
       "RETURN_TO_TRACK": "Return to Track"
+    }
+  },
+  "SENTENCE_SPELLING": {
+    "BACK": "Back",
+    "TRACK": {
+      "EYEBROW": "Sentence Spelling Track",
+      "TITLE": "Spell characters into full sentences"
+    },
+    "SAMPLE": {
+      "EYEBROW": "Guided Practice",
+      "TITLE": "Practice with a sample sentence",
+      "DESCRIPTION": "Pick one of the sample sentences below and spell it out character by character.",
+      "EXPLORE": "View Sample Sentences",
+      "CTA": "Start Practice"
+    },
+    "CUSTOM": {
+      "EYEBROW": "Your Own Sentence",
+      "TITLE": "Write your own sentence",
+      "DESCRIPTION": "Type a short sentence of your own, then practice spelling it out.",
+      "PLACEHOLDER": "Type a short Khmer sentence...",
+      "EXPLORE": "Write a Sentence",
+      "CTA": "Start Practice",
+      "HISTORY_TITLE": "Recent Sentences",
+      "HISTORY_HINT": "Tap a sentence to reuse it, or practice it again right away.",
+      "HISTORY_PRACTICE_AGAIN": "Practice Again"
+    },
+    "PRACTICE": {
+      "EYEBROW": "Sentence Spelling Practice",
+      "NEXT": "Next Character",
+      "COMPLETE": "Great job! You spelled the whole sentence.",
+      "RESTART": "Practice Again",
+      "EMPTY": "No sentence to practice yet."
     }
   },
   "QUIZ": {

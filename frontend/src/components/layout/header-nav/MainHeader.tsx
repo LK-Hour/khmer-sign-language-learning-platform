@@ -43,6 +43,7 @@ import {
 import { useLocale, useSetLocale } from "@/i18n";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
+import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes } from "@/theme/theme";
 
 import MainHeaderSkeleton, { MAIN_HEADER_HEIGHT } from "./MainHeaderSkeleton";
@@ -75,7 +76,7 @@ const navItemBase = {
   borderRadius: "8px",
   border: "none",
   fontSize: 16,
-  fontFamily: "niradei",
+  fontFamily: fontFamilies.sans,
   cursor: "pointer",
   textDecoration: "none",
   transition: "background-color 0.15s, color 0.15s",
@@ -193,7 +194,7 @@ function ProfileLogoutBlock({
                   alignItems: "center",
                   justifyContent: "space-between",
                   width: "100%",
-                  fontFamily: "niradei",
+                  fontFamily: fontFamilies.sans,
                   transition: "opacity 0.1s",
                   "&:hover": { opacity: 0.7 },
                 }}
@@ -336,7 +337,8 @@ export default function MainHeader() {
   const isDictionaryActive = pathname.includes(ROUTES.dictionary);
   const isModesActive =
     pathname.includes(ROUTES.fingerSpelling.root) ||
-    pathname.includes(ROUTES.words.root);
+    pathname.includes(ROUTES.words.root) ||
+    pathname.includes(ROUTES.sentenceSpelling.root);
 
   const routeLocaleSegment = pathname.split("/")[1];
   const flagLocale: Locale = isValidLocale(routeLocaleSegment)
@@ -346,6 +348,7 @@ export default function MainHeader() {
   const learningModes = [
     { label: t("NAV.FINGER_SPELLING"), href: ROUTES.fingerSpelling.root },
     { label: t("NAV.WORD_DETECTION"), href: ROUTES.words.root },
+    { label: t("NAV.SENTENCE_SPELLING"), href: ROUTES.sentenceSpelling.root },
   ];
 
   const handleLogout = async () => {
