@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { useMemo } from "react";
 import { ROUTES } from "@/constants/routes";
+import { useAuthStore } from "@/store/auth.store";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
@@ -189,8 +190,8 @@ export default function FingerSpellingTrack({
         <Grid size={{ xs: 12, md: 6 }}>
           <TrackSummaryCard
             step={formatBadgeStep(2, locale)}
-            title={t("FINGER_SPELLING.TRACK.QUIZ_TITLE")}
-            description={t("FINGER_SPELLING.TRACK.QUIZ_DESCRIPTION")}
+            title={t("FINGER_SPELLING.EXERCISE_LIST.EXERCISE_LABEL")}
+            description={t("FINGER_SPELLING.TRACK.EXERCISE_DESCRIPTION")}
             completedCount={exerciseUnitsUnlocked}
             totalCount={exerciseUnitsTotal}
             countLabel={t("FINGER_SPELLING.LABELS.UNIT")}
@@ -508,9 +509,10 @@ function ChapterTrackSection({
   const toggleChapterExpanded = useFingerSpellingStore(
     (state) => state.toggleChapterExpanded
   );
+  const isAdmin = useAuthStore((state) => state.user?.account_type === "admin");
   const lessonStates = useMemo(
-    () => resolveLessonStates(chapter?.lessons),
-    [chapter?.lessons]
+    () => resolveLessonStates(chapter?.lessons, isAdmin),
+    [chapter?.lessons, isAdmin]
   );
   const { t } = useTranslation();
   const chapterTitle =

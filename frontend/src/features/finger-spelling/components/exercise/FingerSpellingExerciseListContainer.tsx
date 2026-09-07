@@ -95,7 +95,7 @@ export default function FingerSpellingExerciseListContainer() {
               lineHeight: 1.05,
             }}
           >
-            {t("FINGER_SPELLING.TRACK.QUIZ_TITLE")}
+            {t("FINGER_SPELLING.EXERCISE_LIST.EXERCISE_LABEL")}
           </Typography>
         </Stack>
 
@@ -175,7 +175,7 @@ function ExerciseSummaryCard({
               lineHeight: 1.25,
             }}
           >
-            {t("FINGER_SPELLING.TRACK.QUIZ_TITLE")}
+            {t("FINGER_SPELLING.EXERCISE_LIST.EXERCISE_LABEL")}
           </Typography>
           <Typography
             sx={{
