@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import { ApiError } from "@/utils/api/client";
 
 import * as contributionsApi from "../api/contributionsAdminApi";
@@ -43,6 +44,7 @@ function sumPendingCount(nodes: ContributionTreeNode[]): number {
 export default function AdminContributionsReview() {
   const { t } = useTranslation();
   const router = useRouter();
+  const locale = useLocale();
 
   // Tree state
   const [tree, setTree] = useState<ContributionTreeNode[]>([]);
@@ -125,8 +127,8 @@ export default function AdminContributionsReview() {
   }, [selectedWordId, fetchContributions]);
 
   const handleReviewContribution = useCallback((contributionId: string) => {
-    router.push(`/admin/learning/contributions/${contributionId}/review`);
-  }, [router]);
+    router.push(`/${locale}/admin/learning/contributions/${contributionId}/review`);
+  }, [router, locale]);
 
   // ── Render ───────────────────────────────────────────────────────────────
 

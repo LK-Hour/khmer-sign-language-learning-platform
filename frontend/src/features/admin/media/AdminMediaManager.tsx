@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import { ApiError } from "@/utils/api/client";
 
 import * as mediaApi from "../api/mediaAdminApi";
@@ -57,6 +58,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   const { typeFilter } = props ?? {};
   const { t } = useTranslation();
   const router = useRouter();
+  const locale = useLocale();
 
   // ── Pagination State ───────────────────────────────────────────────────────
   const [page, setPage] = useState(0);
@@ -220,7 +222,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => router.push("/admin/media/upload")}
+            onClick={() => router.push(`/${locale}/admin/media/upload`)}
           >
             Upload
           </Button>
@@ -266,7 +268,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
           columns={columns}
           rows={filteredItems}
           loading={loading}
-          onRowClick={(row) => router.push(`/admin/media/${row.id}/preview`)}
+          onRowClick={(row) => router.push(`/${locale}/admin/media/${row.id}/preview`)}
           pagination={{
             page,
             rowsPerPage,

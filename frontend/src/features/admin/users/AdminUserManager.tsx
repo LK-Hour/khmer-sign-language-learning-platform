@@ -1,6 +1,5 @@
 "use client";
 
-import Refresh from "@mui/icons-material/Refresh";
 import Search from "@mui/icons-material/Search";
 import {
   Alert,
@@ -43,6 +42,7 @@ import StatusChip from "../components/shared/StatusChip";
 import RowActionsMenu from "../components/shared/RowActionsMenu";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useAutoRefresh } from "../hooks/useAutoRefresh";
 
 import UserDetailPanel from "./UserDetailPanel";
 
@@ -130,9 +130,14 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
   const [deactivating, setDeactivating] = useState(false);
 
   // ── Fetch users ──────────────────────────────────────────────────────────
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // `silent` skips the loading/error state changes so background auto-refresh
+  // (see useAutoRefresh below) doesn't flash a skeleton over the table.
+  const fetchUsers = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const params: ListUsersParams = {
@@ -165,15 +170,19 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
           : (page + 1) * pageSize + 1
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch users");
+      if (!silent) {
+        setError(err instanceof Error ? err.message : "Failed to fetch users");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [page, pageSize, roleFilter, searchQuery, statusFilter]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useAutoRefresh(() => fetchUsers({ silent: true }));
 
   // ── Client-side filtering (for additional safety) ────────────────────────
   const filteredUsers = useMemo(() => {
@@ -256,20 +265,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <Stack spacing={2}>
-      <PageHeader
-        title={pageTitle}
-        subtitle={pageSubtitle}
-        action={
-          <Button
-            variant="outlined"
-            startIcon={<Refresh />}
-            onClick={fetchUsers}
-            disabled={loading}
-          >
-            {t("PAGE.REFRESH")}
-          </Button>
-        }
-      />
+      <PageHeader title={pageTitle} subtitle={pageSubtitle} />
 
       {/* Search and Status Filters */}
       <Stack
@@ -313,7 +309,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
         <Alert
           severity="error"
           action={
-            <Button color="inherit" size="small" onClick={fetchUsers}>
+            <Button color="inherit" size="small" onClick={() => fetchUsers()}>
               {t("PAGE.RETRY")}
             </Button>
           }

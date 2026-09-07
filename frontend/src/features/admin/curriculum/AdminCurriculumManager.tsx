@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import { ApiError } from "@/utils/api/client";
 
 import * as adminApi from "../api/adminApi";
@@ -40,6 +41,7 @@ import { useAdminEntityTab, useAdminTrack } from "../store/adminUi.store";
 export default function AdminCurriculumManager() {
   const { t, entityActionLabel, quotedConfirmMessage } = useTranslation();
   const router = useRouter();
+  const locale = useLocale();
 
   const [track, setTrack] = useAdminTrack();
   const [tab, setTab] = useAdminEntityTab();
@@ -142,11 +144,11 @@ export default function AdminCurriculumManager() {
   const trackSlug = isWordDetection ? "word-detection" : "finger-spelling";
 
   const openCreate = () => {
-    router.push(`/admin/learning/${trackSlug}/${tab}/create`);
+    router.push(`/${locale}/admin/learning/${trackSlug}/${tab}/create`);
   };
 
   const openEdit = (row: AdminEntity) => {
-    router.push(`/admin/learning/${trackSlug}/${tab}/${row.id}/edit`);
+    router.push(`/${locale}/admin/learning/${trackSlug}/${tab}/${row.id}/edit`);
   };
 
   const runAction = async (action: () => Promise<unknown>, successNotice: string) => {

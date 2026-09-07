@@ -14,6 +14,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import type { NavTreeNodeConfig } from "./navTypes";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 
 import DynamicContributionNav from "./DynamicContributionNav";
 import DynamicQuizNav from "./DynamicQuizNav";
@@ -57,11 +58,13 @@ export default function NavTreeItem({
 }: NavTreeItemProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const locale = useLocale();
 
   const isLeaf = Boolean(node.path) && !node.children && !node.dynamic;
   const isParent = Boolean(node.children) || Boolean(node.dynamic);
   const isExpanded = expandedIds.has(node.id);
-  const isActive = isLeaf && pathname === node.path;
+  const localizedPath = node.path ? `/${locale}${node.path}` : undefined;
+  const isActive = isLeaf && pathname === localizedPath;
 
   const Icon = node.icon;
   const translatedTitle = t(node.title as Parameters<typeof t>[0]);
@@ -91,9 +94,9 @@ export default function NavTreeItem({
   // For leaf nodes, wrap in next/link for client-side navigation
   // For parent nodes with a path, also wrap in link so clicking navigates + expands
   const linkProps = isLeaf
-    ? { component: Link, href: node.path! }
-    : isParent && node.path
-      ? { component: Link, href: node.path }
+    ? { component: Link, href: localizedPath! }
+    : isParent && localizedPath
+      ? { component: Link, href: localizedPath }
       : {};
 
   return (

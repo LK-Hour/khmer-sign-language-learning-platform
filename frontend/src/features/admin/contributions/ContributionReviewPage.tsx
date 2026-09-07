@@ -22,6 +22,7 @@ import Close from "@mui/icons-material/Close";
 
 import { ApiError } from "@/utils/api/client";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
+import { useLocale } from "@/i18n/locale-context";
 
 import type { ContributionDetail } from "../api/contributionsAdminApi";
 import * as contributionsApi from "../api/contributionsAdminApi";
@@ -65,6 +66,7 @@ export default function ContributionReviewPage({
   contributionId,
 }: ContributionReviewPageProps) {
   const router = useRouter();
+  const locale = useLocale();
 
   // Data state
   const [contribution, setContribution] = useState<ContributionDetail | null>(null);
@@ -108,7 +110,7 @@ export default function ContributionReviewPage({
   // ── Handlers ─────────────────────────────────────────────────────────────
 
   const handleBack = () => {
-    router.push("/admin/contributions");
+    router.push(`/${locale}/admin/contributions`);
   };
 
   const handleApprove = async () => {
@@ -116,7 +118,7 @@ export default function ContributionReviewPage({
     setActionError(null);
     try {
       await contributionsApi.approveContribution(contributionId);
-      router.push("/admin/contributions?success=approved");
+      router.push(`/${locale}/admin/contributions?success=approved`);
     } catch (err) {
       setActionError(
         err instanceof ApiError
@@ -140,7 +142,7 @@ export default function ContributionReviewPage({
         contributionId,
         rejectionReason.trim(),
       );
-      router.push("/admin/contributions?success=rejected");
+      router.push(`/${locale}/admin/contributions?success=rejected`);
     } catch (err) {
       setActionError(
         err instanceof ApiError

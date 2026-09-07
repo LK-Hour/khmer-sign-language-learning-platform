@@ -19,6 +19,7 @@ import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { listExercises, deleteExercise } from "../api/adminApi";
 import type { AdminExercise, AdminTrack, PublishStatus } from "../api/types";
 import { ApiError } from "@/utils/api/client";
+import { useLocale } from "@/i18n/locale-context";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -87,6 +88,7 @@ function mapExercises(data: AdminExercise[]): QuizExercise[] {
 
 export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -126,12 +128,12 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
   const trackSegment = track === "finger" ? "finger-spelling" : "word-detection";
 
   const handleCreate = useCallback(() => {
-    router.push(`/admin/learning/quiz/${trackSegment}/exercises/create`);
-  }, [router, trackSegment]);
+    router.push(`/${locale}/admin/learning/quiz/${trackSegment}/exercises/create`);
+  }, [router, locale, trackSegment]);
 
   const handleEdit = useCallback((exerciseId: number) => {
-    router.push(`/admin/learning/quiz/${trackSegment}/exercises/${exerciseId}/edit`);
-  }, [router, trackSegment]);
+    router.push(`/${locale}/admin/learning/quiz/${trackSegment}/exercises/${exerciseId}/edit`);
+  }, [router, locale, trackSegment]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;

@@ -19,6 +19,7 @@ import JunctionFieldEditor, {
 } from "../components/shared/JunctionFieldEditor";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import * as adminApi from "../api/adminApi";
 import {
   getLessonLetters,
@@ -101,8 +102,9 @@ function validate(values: LessonFormValues): Record<string, string> {
 
 export default function LessonFormPage({ track, entityId }: LessonFormPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const isEdit = entityId !== undefined;
-  const listPath = getListPath(track);
+  const listPath = `/${locale}${getListPath(track)}`;
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(isEdit);

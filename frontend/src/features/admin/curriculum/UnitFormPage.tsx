@@ -15,6 +15,7 @@ import {
 import EntityFormLayout from "../components/shared/EntityFormLayout";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import * as adminApi from "../api/adminApi";
 import type { AdminTrack, AdminUnit, PublishStatus } from "../api/types";
 
@@ -70,8 +71,9 @@ function validate(values: UnitFormValues): Record<string, string> {
 
 export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const isEdit = entityId !== undefined;
-  const listPath = getListPath(track);
+  const listPath = `/${locale}${getListPath(track)}`;
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(isEdit);

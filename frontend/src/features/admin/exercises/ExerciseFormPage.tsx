@@ -17,6 +17,7 @@ import OptionsEditor from "./OptionsEditor";
 import type { ExerciseOptionFormState } from "./OptionsEditor";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import * as adminApi from "../api/adminApi";
 import { listMedia } from "../api/mediaAdminApi";
 import type { MediaResponse } from "../api/mediaAdminApi";
@@ -125,11 +126,12 @@ function getMediaKey(media: MediaResponse): number {
 
 export default function ExerciseFormPage({ entityId, track }: ExerciseFormPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const isEdit = entityId !== undefined;
   const { t } = useTranslation();
 
   const trackSegment = track === "finger" ? "finger-spelling" : "word-detection";
-  const backPath = `/admin/learning/quiz/${trackSegment}`;
+  const backPath = `/${locale}/admin/learning/quiz/${trackSegment}`;
 
   const [loading, setLoading] = useState(isEdit);
   const [removedOptionIds, setRemovedOptionIds] = useState<number[]>([]);

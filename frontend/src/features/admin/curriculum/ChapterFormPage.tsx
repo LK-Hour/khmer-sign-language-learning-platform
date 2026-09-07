@@ -16,6 +16,7 @@ import EntityFormLayout from "../components/shared/EntityFormLayout";
 import SearchableDropdown from "../components/shared/SearchableDropdown";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import * as adminApi from "../api/adminApi";
 import type { AdminChapter, AdminChapterPayload, AdminTrack, AdminUnit, PublishStatus } from "../api/types";
 
@@ -76,8 +77,9 @@ function validate(values: ChapterFormValues): Record<string, string> {
 
 export default function ChapterFormPage({ track, entityId }: ChapterFormPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const isEdit = entityId !== undefined;
-  const listPath = getListPath(track);
+  const listPath = `/${locale}${getListPath(track)}`;
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(isEdit);

@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ApiError } from "@/utils/api/client";
+import { useLocale } from "@/i18n/locale-context";
 
 import * as adminApi from "../api/adminApi";
 import type {
@@ -62,6 +63,7 @@ export default function CurriculumTablePage({
 }: CurriculumTablePageProps) {
 
   const router = useRouter();
+  const locale = useLocale();
 
   const [units, setUnits] = useState<AdminUnit[]>([]);
   const [chapters, setChapters] = useState<AdminChapter[]>([]);
@@ -178,7 +180,7 @@ export default function CurriculumTablePage({
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  const basePath = getBasePath(track, entity);
+  const basePath = `/${locale}${getBasePath(track, entity)}`;
 
   const openCreate = () => {
     router.push(`${basePath}/create`);

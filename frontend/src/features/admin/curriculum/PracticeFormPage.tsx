@@ -16,6 +16,7 @@ import JunctionFieldEditor, {
   type JunctionItem,
 } from "../components/shared/JunctionFieldEditor";
 import { useEntityForm } from "../hooks/useEntityForm";
+import { useLocale } from "@/i18n/locale-context";
 import * as adminApi from "../api/adminApi";
 import {
   getPractice,
@@ -83,9 +84,10 @@ export default function PracticeFormPage({
   entityId,
 }: PracticeFormPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const isEdit = entityId !== undefined;
   const trackLabel = getTrackLabel(track);
-  const listPath = getListPath(track);
+  const listPath = `/${locale}${getListPath(track)}`;
 
   const [loading, setLoading] = useState(isEdit);
   const [selectedChapter, setSelectedChapter] = useState<AdminChapter | null>(

@@ -16,6 +16,7 @@ import {
 import { useEntityForm } from "../hooks/useEntityForm";
 import EntityFormLayout from "../components/shared/EntityFormLayout";
 import * as mediaApi from "../api/mediaAdminApi";
+import { useLocale } from "@/i18n/locale-context";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ function validate(values: MediaUploadFormPayload): Record<string, string> {
 
 export default function MediaUploadPage() {
   const router = useRouter();
+  const locale = useLocale();
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
 
@@ -89,7 +91,7 @@ export default function MediaUploadPage() {
     },
     onSuccess: () => {
       // Navigate back to media library with a success indicator
-      router.push("/admin/media?success=upload");
+      router.push(`/${locale}/admin/media?success=upload`);
     },
   });
 
@@ -123,7 +125,7 @@ export default function MediaUploadPage() {
   };
 
   const handleCancel = () => {
-    router.push("/admin/media");
+    router.push(`/${locale}/admin/media`);
   };
 
   const selectedFile = form.values.file as File | null;
@@ -146,8 +148,8 @@ export default function MediaUploadPage() {
     <EntityFormLayout
       title="Upload Media"
       breadcrumbs={[
-        { label: "Admin", href: "/admin" },
-        { label: "Media Library", href: "/admin/media" },
+        { label: "Admin", href: `/${locale}/admin` },
+        { label: "Media Library", href: `/${locale}/admin/media` },
         { label: "Upload" },
       ]}
       saving={form.isSubmitting || uploading}

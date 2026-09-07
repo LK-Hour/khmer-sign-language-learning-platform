@@ -24,6 +24,7 @@ import {
 import type { MediaResponse } from "../api/mediaAdminApi";
 import { MediaCarousel } from "../components/shared/MediaCarousel";
 import { ApiError } from "@/utils/api/client";
+import { useLocale } from "@/i18n/locale-context";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,7 @@ export interface DictionaryPageProps {
 
 export default function DictionaryPage({ type }: DictionaryPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -55,7 +57,7 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
   const [deleting, setDeleting] = useState(false);
 
   const title = type === "characters" ? "Characters" : "Words";
-  const basePath = `/admin/dictionary/${type}`;
+  const basePath = `/${locale}/admin/dictionary/${type}`;
 
   const handlePreview = useCallback(async (row: DictionaryItem) => {
     setPreviewItem(row);

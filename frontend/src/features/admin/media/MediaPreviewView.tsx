@@ -16,6 +16,7 @@ import {
 import NextLink from "next/link";
 
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
+import { useLocale } from "@/i18n/locale-context";
 
 import type { MediaAssociation, MediaResponse } from "../api/mediaAdminApi";
 
@@ -28,12 +29,12 @@ export interface MediaPreviewViewProps {
 
 // ── Helper: build edit link for an association ───────────────────────────────
 
-function getAssociationEditLink(assoc: MediaAssociation): string {
+function getAssociationEditLink(assoc: MediaAssociation, locale: string): string {
   switch (assoc.target_type) {
     case "letter":
-      return `/admin/dictionary/characters/${assoc.target_id}/edit`;
+      return `/${locale}/admin/dictionary/characters/${assoc.target_id}/edit`;
     case "word":
-      return `/admin/dictionary/words/${assoc.target_id}/edit`;
+      return `/${locale}/admin/dictionary/words/${assoc.target_id}/edit`;
     default:
       return "#";
   }
@@ -73,13 +74,14 @@ export default function MediaPreviewView({
   associations,
 }: MediaPreviewViewProps) {
   const resolvedUrl = resolveApiAssetUrl(media.file_url) ?? media.file_url;
+  const locale = useLocale();
 
   return (
     <Box>
       {/* Back button */}
       <Button
         component={NextLink}
-        href="/admin/media"
+        href={`/${locale}/admin/media`}
         startIcon={<ArrowBack />}
         sx={{ mb: 3 }}
       >
@@ -247,7 +249,7 @@ export default function MediaPreviewView({
                       </Stack>
                       <MuiLink
                         component={NextLink}
-                        href={getAssociationEditLink(assoc)}
+                        href={getAssociationEditLink(assoc, locale)}
                         underline="hover"
                         sx={{ fontSize: "0.8125rem" }}
                       >

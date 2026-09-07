@@ -4,15 +4,17 @@ import Link from "next/link";
 import { Box, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 
 export default function SidebarFooter() {
   const { t } = useTranslation();
+  const locale = useLocale();
 
   return (
     <Box sx={{ px: 2.5, py: 2, borderTop: (theme) => `1px dashed ${theme.palette.divider}` }}>
       <Box
         component={Link}
-        href="/"
+        href={`/${locale}`}
         sx={{
           display: "flex",
           alignItems: "center",

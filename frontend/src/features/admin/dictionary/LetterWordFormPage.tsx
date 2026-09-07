@@ -18,6 +18,7 @@ import JunctionFieldEditor, {
 } from "../components/shared/JunctionFieldEditor";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 import {
   getCharacter,
   createCharacter,
@@ -55,13 +56,13 @@ interface LetterWordFormValues {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function getLabels(entityType: EntityType) {
+function getLabels(entityType: EntityType, locale: string) {
   if (entityType === "letter") {
     return {
       entityName: "Character",
       nameEnLabel: "Letter (EN)",
       nameKhLabel: "Letter (KH)",
-      listPath: "/admin/dictionary/characters",
+      listPath: `/${locale}/admin/dictionary/characters`,
       junctionLabel: "Associated Media",
     };
   }
@@ -69,7 +70,7 @@ function getLabels(entityType: EntityType) {
     entityName: "Word",
     nameEnLabel: "Word (EN)",
     nameKhLabel: "Word (KH)",
-    listPath: "/admin/dictionary/words",
+    listPath: `/${locale}/admin/dictionary/words`,
     junctionLabel: "Associated Media",
   };
 }
@@ -103,8 +104,9 @@ export default function LetterWordFormPage({
   entityId,
 }: LetterWordFormPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const isEdit = entityId !== undefined;
-  const labels = getLabels(entityType);
+  const labels = getLabels(entityType, locale);
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(isEdit);

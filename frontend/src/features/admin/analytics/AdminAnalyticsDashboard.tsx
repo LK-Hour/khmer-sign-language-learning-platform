@@ -1,6 +1,5 @@
 "use client";
 
-import Refresh from "@mui/icons-material/Refresh";
 import {
   Alert,
   Box,
@@ -18,6 +17,8 @@ import PageHeader from "@/features/admin/components/shared/PageHeader";
 import AreaChart from "@/features/admin/components/charts/AreaChart";
 import DonutChart from "@/features/admin/components/charts/DonutChart";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
+import { useAutoRefresh } from "@/features/admin/hooks/useAutoRefresh";
 
 import {
   getDashboardAnalytics,
@@ -187,22 +188,30 @@ function mapCharts(
 
 export default function AdminAnalyticsDashboard() {
   const { t } = useTranslation();
+  const locale = useLocale();
   const [kpis, setKpis] = useState<SectionState<KpiData[]>>(initialSection());
   const [charts, setCharts] = useState<SectionState<ChartsData>>(initialSection());
 
-  const fetchData = useCallback(async () => {
-    setKpis({ data: null, loading: true, error: null });
-    setCharts({ data: null, loading: true, error: null });
+  // `silent` skips the loading/error state changes so background auto-refresh
+  // (see useAutoRefresh below) doesn't flash skeletons over rendered charts.
+  const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    if (!silent) {
+      setKpis({ data: null, loading: true, error: null });
+      setCharts({ data: null, loading: true, error: null });
+    }
 
     try {
       const response = await getDashboardAnalytics();
       setKpis({ data: mapKpis(response, t), loading: false, error: null });
       setCharts({ data: mapCharts(response, t), loading: false, error: null });
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t("ANALYTICS.FAILED_TO_LOAD");
-      setKpis({ data: null, loading: false, error: message });
-      setCharts({ data: null, loading: false, error: message });
+      if (!silent) {
+        const message =
+          err instanceof Error ? err.message : t("ANALYTICS.FAILED_TO_LOAD");
+        setKpis({ data: null, loading: false, error: message });
+        setCharts({ data: null, loading: false, error: message });
+      }
     }
   }, [t]);
 
@@ -210,7 +219,7 @@ export default function AdminAnalyticsDashboard() {
     fetchData();
   }, [fetchData]);
 
-  const isAnyLoading = kpis.loading || charts.loading;
+  useAutoRefresh(() => fetchData({ silent: true }));
 
   return (
     <Stack spacing={3}>
@@ -219,19 +228,9 @@ export default function AdminAnalyticsDashboard() {
         title={t("ANALYTICS.TITLE")}
         subtitle={t("ANALYTICS.SUBTITLE")}
         breadcrumbs={[
-          { label: t("PAGE.ANALYTICS"), href: "/admin" },
+          { label: t("PAGE.ANALYTICS"), href: `/${locale}/admin` },
           { label: t("ANALYTICS.TITLE") },
         ]}
-        action={
-          <Button
-            variant="contained"
-            startIcon={<Refresh />}
-            onClick={fetchData}
-            disabled={isAnyLoading}
-          >
-            {t("PAGE.REFRESH")}
-          </Button>
-        }
       />
 
       {/* KPI Stat Cards — 6 cards (3 cols desktop, 2 tablet, 1 mobile) */}

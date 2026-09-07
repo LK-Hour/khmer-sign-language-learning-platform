@@ -15,6 +15,7 @@ import NavSection from "./NavSection";
 import SidebarFooter from "./SidebarFooter";
 import { NAV_CONFIG } from "./navConfig";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useLocale } from "@/i18n/locale-context";
 
 interface SidebarProps {
   width: number;
@@ -26,6 +27,7 @@ interface SidebarProps {
 export default function Sidebar({ width, collapsed = false, onToggleCollapse, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const locale = useLocale();
 
   // Gather all top-level items that have icons (for collapsed view)
   const iconItems = NAV_CONFIG.flatMap((section) =>
@@ -86,19 +88,20 @@ export default function Sidebar({ width, collapsed = false, onToggleCollapse, on
             <List disablePadding sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5, px: 1 }}>
               {iconItems.map((item) => {
                 const Icon = item.icon!;
-                const isActive = item.path
-                  ? pathname === item.path || pathname.startsWith(item.path + "/")
+                const localizedItemPath = item.path ? `/${locale}${item.path}` : undefined;
+                const isActive = localizedItemPath
+                  ? pathname === localizedItemPath || pathname.startsWith(localizedItemPath + "/")
                   : false;
                 // For parent items, check if any child path matches
                 const isParentActive = !item.path && item.children?.some((child) =>
-                  child.path ? pathname.startsWith(child.path) : false,
+                  child.path ? pathname.startsWith(`/${locale}${child.path}`) : false,
                 );
 
                 return (
                   <Tooltip key={item.id} title={t(item.title as Parameters<typeof t>[0])} placement="right">
                     <ListItemButton
-                      component={item.path ? Link : "div"}
-                      href={item.path || undefined}
+                      component={localizedItemPath ? Link : "div"}
+                      href={localizedItemPath || undefined}
                       onClick={onToggleCollapse}
                       sx={{
                         minHeight: 40,
@@ -124,7 +127,7 @@ export default function Sidebar({ width, collapsed = false, onToggleCollapse, on
           {/* Back to site icon */}
           <Box sx={{ display: "flex", justifyContent: "center", py: 2, borderTop: (theme) => `1px dashed ${theme.palette.divider}` }}>
             <Tooltip title="Back to site" placement="right">
-              <IconButton component={Link} href="/" size="small" sx={{ color: "text.secondary" }}>
+              <IconButton component={Link} href={`/${locale}`} size="small" sx={{ color: "text.secondary" }}>
                 <ArrowBackRoundedIcon sx={{ fontSize: 20 }} />
               </IconButton>
             </Tooltip>
