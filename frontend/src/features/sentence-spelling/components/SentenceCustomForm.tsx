@@ -83,6 +83,7 @@ export default function SentenceCustomForm() {
               fontWeight: 700,
               letterSpacing: "-0.04em",
               lineHeight: 1.1,
+              textTransform: "capitalize",
             }}
           >
             {t("SENTENCE_SPELLING.CUSTOM.TITLE")}
@@ -97,6 +98,7 @@ export default function SentenceCustomForm() {
         <Button
           component={Link}
           href={`/${locale}${ROUTES.sentenceSpelling.root}`}
+          startIcon={<Iconify icon="akar-icons:arrow-back-thick-fill" sx={{ width: 16, height: 16 }} />}
           variant="outlined"
           sx={{
             borderColor: KslColors.border,
@@ -133,7 +135,7 @@ export default function SentenceCustomForm() {
               slotProps={{
                 input: {
                   sx: {
-                    fontFamily: fontFamilies.khmer,
+                    fontFamily: fontFamilies,
                     fontSize: KslFontSizes.md,
                     borderRadius: `${KslRadii.wordCard}px`,
                     "& fieldset": { borderColor: KslColors.border },
@@ -159,7 +161,7 @@ export default function SentenceCustomForm() {
             onClick={handleStart}
             startIcon={<Iconify icon="solar:play-bold" sx={{ width: 18, height: 18 }} />}
             sx={{
-              alignSelf: "flex-start",
+              alignSelf: "flex-end",
               borderRadius: `${KslRadii.button}px`,
               boxShadow: KslShadows.button,
               fontWeight: 700,

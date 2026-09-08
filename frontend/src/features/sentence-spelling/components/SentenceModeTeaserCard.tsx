@@ -9,18 +9,22 @@ import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 type SentenceModeTeaserCardProps = {
   href: string;
   icon: string;
+  tag: string;
   eyebrow: string;
   title: string;
   description: string;
+  features: string[];
   ctaLabel: string;
 };
 
 export default function SentenceModeTeaserCard({
   href,
   icon,
+  tag,
   eyebrow,
   title,
   description,
+  features,
   ctaLabel,
 }: SentenceModeTeaserCardProps) {
   return (
@@ -34,21 +38,41 @@ export default function SentenceModeTeaserCard({
       }}
     >
       <Stack spacing={2} sx={{ height: "100%" }}>
-        <Stack
-          sx={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: 48,
-            height: 48,
-            borderRadius: "50%",
-            bgcolor: KslColors.primaryLighter,
-            color: KslColors.primaryDark,
-          }}
-        >
-          <Iconify icon={icon} sx={{ width: 24, height: 24 }} />
+        <Stack direction="row" sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
+          <Stack
+            sx={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              bgcolor: KslColors.primaryLighter,
+              color: KslColors.primaryDark,
+            }}
+          >
+            <Iconify icon={icon} sx={{ width: 24, height: 24 }} />
+          </Stack>
+
+          <Stack
+            component="span"
+            sx={{
+              alignItems: "center",
+              bgcolor: KslColors.primaryLighter,
+              borderRadius: 999,
+              color: KslColors.primaryDark,
+              fontSize: KslFontSizes.xs,
+              fontWeight: 700,
+              letterSpacing: "0.04em",
+              px: 1.5,
+              py: 0.5,
+              textTransform: "uppercase",
+            }}
+          >
+            {tag}
+          </Stack>
         </Stack>
 
-        <Stack spacing={0.5} sx={{ flex: 1 }}>
+        <Stack spacing={0.5}>
           <Typography
             sx={{
               color: KslColors.primaryDark,
@@ -66,6 +90,7 @@ export default function SentenceModeTeaserCard({
               fontSize: { xs: KslFontSizes.md, md: KslFontSizes.lg },
               fontWeight: 700,
               lineHeight: 1.25,
+              textTransform: "capitalize",
             }}
           >
             {title}
@@ -75,6 +100,22 @@ export default function SentenceModeTeaserCard({
           >
             {description}
           </Typography>
+        </Stack>
+
+        <Stack spacing={0.75} sx={{ flex: 1 }}>
+          {features.map((feature) => (
+            <Stack key={feature} direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
+              <Iconify
+                icon="solar:check-circle-bold"
+                sx={{ width: 18, height: 18, color: KslColors.success, flexShrink: 0, mt: "1px" }}
+              />
+              <Typography
+                sx={{ color: KslColors.textSecondary, fontSize: KslFontSizes.sm, lineHeight: 1.45 }}
+              >
+                {feature}
+              </Typography>
+            </Stack>
+          ))}
         </Stack>
 
         <Button

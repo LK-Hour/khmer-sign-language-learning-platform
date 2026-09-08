@@ -28,6 +28,7 @@ export default function SentenceSpellingHeader() {
         sx={{
           color: KslColors.textPrimary,
           fontFamily: fontFamilies.sans,
+          textTransform: "capitalize",
           fontSize: { xs: 30, md: 42 },
           fontWeight: 700,
           letterSpacing: "-0.04em",
@@ -35,6 +36,16 @@ export default function SentenceSpellingHeader() {
         }}
       >
         {t("SENTENCE_SPELLING.TRACK.TITLE")}
+      </Typography>
+      <Typography
+        sx={{
+          color: KslColors.textSecondary,
+          fontSize: { xs: KslFontSizes.sm, md: KslFontSizes.md },
+          lineHeight: 1.5,
+          maxWidth: 680,
+        }}
+      >
+        {t("SENTENCE_SPELLING.TRACK.SUBTITLE")}
       </Typography>
     </Stack>
   );

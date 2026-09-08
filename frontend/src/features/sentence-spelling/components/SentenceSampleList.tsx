@@ -59,6 +59,7 @@ export default function SentenceSampleList() {
               fontWeight: 700,
               letterSpacing: "-0.04em",
               lineHeight: 1.1,
+              textTransform: "capitalize",
             }}
           >
             {t("SENTENCE_SPELLING.SAMPLE.TITLE")}
@@ -73,6 +74,7 @@ export default function SentenceSampleList() {
         <Button
           component={Link}
           href={`/${locale}${ROUTES.sentenceSpelling.root}`}
+          startIcon={<Iconify icon="akar-icons:arrow-back-thick-fill" sx={{ width: 16, height: 16 }} />}
           variant="outlined"
           sx={{
             borderColor: KslColors.border,
@@ -160,13 +162,15 @@ export default function SentenceSampleList() {
             })}
           </Stack>
 
+          <Box sx={{ mt: 0 }} />
+          
           <Button
             variant="contained"
             disabled={!selected}
             onClick={handleStart}
             startIcon={<Iconify icon="solar:play-bold" sx={{ width: 18, height: 18 }} />}
             sx={{
-              alignSelf: "flex-start",
+              alignSelf: "flex-end",
               borderRadius: `${KslRadii.button}px`,
               boxShadow: KslShadows.button,
               fontWeight: 700,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button, Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
@@ -10,6 +10,8 @@ import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
+
+import { saveLastPractice } from "../utils/recentProgress";
 
 type SentenceSpellingPracticeViewProps = {
   text: string;
@@ -31,6 +33,11 @@ export default function SentenceSpellingPracticeView({
 
   const handleNext = () => setCurrentIndex((index) => Math.min(index + 1, characters.length));
   const handleRestart = () => setCurrentIndex(0);
+
+  useEffect(() => {
+    if (!isComplete) return;
+    saveLastPractice({ text, source });
+  }, [isComplete, text, source]);
 
   if (characters.length === 0) {
     return (
@@ -85,7 +92,7 @@ export default function SentenceSpellingPracticeView({
               color: KslColors.textPrimary,
               fontFamily: fontFamilies.khmer,
               fontSize: { xs: 22, md: 30 },
-              fontWeight: 700,
+              fontWeight: 600,
               lineHeight: 1.3,
             }}
           >
@@ -96,6 +103,7 @@ export default function SentenceSpellingPracticeView({
         <Button
           component={Link}
           href={`/${locale}${backHref}`}
+          startIcon={<Iconify icon="akar-icons:arrow-back-thick-fill" sx={{ width: 16, height: 16 }} />}
           variant="outlined"
           sx={{
             borderColor: KslColors.border,
@@ -121,7 +129,7 @@ export default function SentenceSpellingPracticeView({
       >
         <Stack spacing={3} sx={{ alignItems: "center" }}>
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", justifyContent: "center" }}>
-            {characters.map((char, index) => {
+            {characters?.map((char, index) => {
               const state =
                 index < currentIndex ? "done" : index === currentIndex ? "now" : "upcoming";
               return (
@@ -130,12 +138,12 @@ export default function SentenceSpellingPracticeView({
                   sx={{
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 40,
-                    height: 40,
+                    width: 52,
+                    height: 52,
                     borderRadius: `${KslRadii.wordCard}px`,
                     fontFamily: fontFamilies.khmer,
-                    fontSize: KslFontSizes.md,
-                    fontWeight: 700,
+                    fontSize: KslFontSizes.lg,
+                    fontWeight: 600,
                     border: `1px solid ${
                       state === "now" ? KslColors.primary : KslColors.border
                     }`,
@@ -171,7 +179,7 @@ export default function SentenceSpellingPracticeView({
                 <Typography
                   sx={{
                     fontFamily: fontFamilies.khmer,
-                    fontSize: { xs: 56, md: 72 },
+                    fontSize: { xs: 56, md: 72, lg: 80 },
                     fontWeight: 700,
                     color: KslColors.primaryDark,
                   }}
