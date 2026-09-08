@@ -35,9 +35,9 @@ export default function SentenceSpellingPracticeView({
   const handleRestart = () => setCurrentIndex(0);
 
   useEffect(() => {
-    if (!isComplete) return;
+    if (characters.length === 0) return;
     saveLastPractice({ text, source });
-  }, [isComplete, text, source]);
+  }, [text, source, characters.length]);
 
   if (characters.length === 0) {
     return (
