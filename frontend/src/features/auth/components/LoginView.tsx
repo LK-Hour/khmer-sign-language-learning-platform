@@ -1238,36 +1238,36 @@ function PoweredBy() {
   const { t } = useTranslation();
   return (
     <Stack
-      direction="row"
+      direction="column"
       sx={{
         alignItems: 'center',
-        gap: 1.5,
         color: colors.white,
         flexShrink: 0,
       }}
     >
+      <Box
+        component="img"
+        src="/assets/cadt_bgrm.png"
+        alt={t("BRAND.CADT_ALT")}
+        sx={{
+          height: { xs: 24, sm: 28, md: 32, lg: 40, xl: 60 },
+          width: 'auto',
+          borderRadius: `${KslRadii.wordCard}px`,
+          objectFit: 'contain',
+        }}
+      />
+
       <Typography
         sx={{
           fontSize: KslFontSizes.sm,
           lineHeight: KslLineHeights.sm,
           fontWeight: 500,
           color: colors.white,
+          textTransform: 'capitalize',
         }}
       >
         {t("LOGIN.POWERED_BY")}
       </Typography>
-
-      <Box
-        component="img"
-        src="/assets/cadt.png"
-        alt={t("BRAND.CADT_ALT")}
-        sx={{
-          height: 28,
-          width: 'auto',
-          borderRadius: `${KslRadii.wordCard}px`,
-          objectFit: 'contain',
-        }}
-      />
     </Stack>
   );
 }

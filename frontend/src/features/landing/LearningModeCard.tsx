@@ -93,6 +93,7 @@ export default function LearningModeCard({
           fontSize: KslFontSizes.sm,
           lineHeight: KslLineHeights.sm,
           color: KslColors.textSecondary,
+          textTransform: "capitalize",
         }}
       >
         {description}

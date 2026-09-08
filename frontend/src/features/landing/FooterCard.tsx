@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useTranslation } from "@/i18n/useTranslation";
@@ -9,19 +8,17 @@ export default function Footer() {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
   return (
-    <Card
+    <Stack
       sx={{
         width: "100%",
         borderRadius: "0px",
         overflow: "hidden",
-        boxShadow: "none",
         isolation: "isolate",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         gap: 1,
-        py: 2,
       }}
     >
       <Box
@@ -48,27 +45,28 @@ export default function Footer() {
         <Typography
           sx={{
             position: "absolute",
-            left: { xs: 16, sm: 24 },
-            fontSize: KslFontSizes.md,
+            left: { xs: 12, sm: 16 },
+            fontSize: KslFontSizes.xs,
             lineHeight: KslLineHeights.sm,
             fontWeight: 500,
-            color: KslColors.primary,
+            color: KslColors.textPrimary,
           }}
         >
-          ©{year} {t("BRAND.NAME")}
+          ©<strong>{year}</strong> {t("BRAND.NAME")}
         </Typography>
 
         <Typography
           sx={{
-            fontSize: KslFontSizes.md,
+            fontSize: KslFontSizes.xs,
             lineHeight: KslLineHeights.sm,
             fontWeight: 500,
-            color: KslColors.primary,
+            color: KslColors.textPrimary,
+            textTransform: 'capitalize',
           }}
         >
           {t("LOGIN.POWERED_BY")}
         </Typography>
       </Stack>
-    </Card>
+    </Stack>
   );
 }

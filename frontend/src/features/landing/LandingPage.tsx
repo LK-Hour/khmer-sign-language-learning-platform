@@ -108,6 +108,7 @@ export default function LandingPage() {
                   fontSize: KslFontSizes.md,
                   lineHeight: KslLineHeights.md,
                   color: KslColors.textSecondary,
+                  textTransform: "capitalize",
                 }}
               >
                 {t("HOME.SUBTITLE")}
@@ -220,10 +221,12 @@ export default function LandingPage() {
             />
           </Grid>
         </Grid>
-
+        </Stack>
+        <Stack sx={{ pt: 8, mb: -4 }}>
+          <Footer />
         </Stack>
         </PageContainer>
-        <Footer />
+        
       </Stack>
 
       <PermissionRequestDialog
