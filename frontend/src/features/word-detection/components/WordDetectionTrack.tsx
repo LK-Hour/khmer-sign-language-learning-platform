@@ -140,6 +140,7 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
             sx={{
               color: KslColors.textPrimary,
               fontFamily: fontFamilies.english,
+              textTransform: "capitalize",
               fontSize: { xs: 30, md: 42 },
               fontWeight: 700,
               letterSpacing: "-0.04em",
