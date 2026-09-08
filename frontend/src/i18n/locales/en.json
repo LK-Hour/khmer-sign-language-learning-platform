@@ -620,7 +620,7 @@
     "TELEGRAM_LOAD_ERROR": "Telegram login could not be loaded. Please try again.",
     "TELEGRAM_NO_USER": "Telegram login did not return user information.",
     "USERNAME_LABEL": "Username",
-    "WELCOME_DESC": "Learn and practice Khmer Sign Language with AI-powered recognition and real-time feedback, helping bridge the communication gap between Deaf and hearing communities",
+    "WELCOME_DESC": "Learn and Pactice Khmer Sign Language with our AI-powered Recognition and Real Time Feedback feedback, helping bridge the communication gap between Deaf and hearing communities",
     "WELCOME_SUBTITLE": "Learning & Recognition Platform",
     "WELCOME_TITLE": "Welcome to KSL"
   },
@@ -636,7 +636,7 @@
     "LOGOUT_CONFIRM_TITLE": "Log out?",
     "MENU": "Menu",
     "PROFILE": "Profile",
-    "SENTENCE_SPELLING": "Character to Sentence Spelling",
+    "SENTENCE_SPELLING": "Character → Sentence Spelling",
     "SENTENCE_SPELLING_DESC": "Combine characters into words and sentences",
     "WORD_DETECTION": "Word Detection",
     "WORD_DETECTION_DESC": "Start from 20 word classes with video samples"
@@ -718,20 +718,38 @@
     "BACK": "Back",
     "TRACK": {
       "EYEBROW": "Sentence Spelling Track",
-      "TITLE": "Spell characters into full sentences"
+      "TITLE": "Spell Characters → Full Sentences",
+      "SUBTITLE": "Bridge individual fingerspelling gestures into natural Khmer sentences. Choose a curated sample sentence or write your own phrase to practice."
+    },
+    "RECENT": {
+      "EYEBROW": "Recent Progress",
+      "LAST_LABEL": "Last practiced sentence:",
+      "CONTINUE": "Continue Practice"
     },
     "SAMPLE": {
+      "TAG": "Guided Track",
       "EYEBROW": "Guided Practice",
       "TITLE": "Practice with a sample sentence",
       "DESCRIPTION": "Pick one of the sample sentences below and spell it out character by character.",
+      "FEATURES": [
+        "Step-by-step character breakdown for every sentence",
+        "Curated library of everyday Khmer phrases & greetings",
+        "Track your progress as you complete each sentence"
+      ],
       "EXPLORE": "View Sample Sentences",
       "CTA": "Start Practice"
     },
     "CUSTOM": {
+      "TAG": "Creative Mode",
       "EYEBROW": "Your Own Sentence",
       "TITLE": "Write your own sentence",
       "DESCRIPTION": "Type a short sentence of your own, then practice spelling it out.",
-      "PLACEHOLDER": "Type a short Khmer sentence...",
+      "PLACEHOLDER": "Type a short Khmer sentence ...",
+      "FEATURES": [
+        "Type any Khmer sentence for an instant fingerspelling breakdown",
+        "Save and revisit your recently practiced sentences",
+        "Practice at your own pace, character by character"
+      ],
       "EXPLORE": "Write a Sentence",
       "CTA": "Start Practice",
       "HISTORY_TITLE": "Recent Sentences",
