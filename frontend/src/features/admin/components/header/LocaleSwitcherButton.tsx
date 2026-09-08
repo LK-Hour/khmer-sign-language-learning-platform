@@ -58,7 +58,7 @@ export default function LocaleSwitcherButton() {
             aria-haspopup="true"
             aria-expanded={open}
           >
-            <LocaleFlag locale={locale} size={20} />
+            <LocaleFlag locale={locale} size={28} />
           </IconButton>
         </Tooltip>
 

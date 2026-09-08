@@ -11,7 +11,7 @@ type LocaleFlagProps = {
   size?: number;
 };
 
-export default function LocaleFlag({ locale, size = 22 }: LocaleFlagProps) {
+export default function LocaleFlag({ locale, size = 28 }: LocaleFlagProps) {
   return (
     <Image
       src={LOCALE_FLAG_SRC[locale]}

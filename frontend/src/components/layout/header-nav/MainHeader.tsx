@@ -466,8 +466,8 @@ export default function MainHeader() {
                     <Iconify
                       icon="eva:chevron-down-fill"
                       sx={{
-                        width: 16,
-                        height: 16,
+                        width: 20,
+                        height: 20,
                         transition: "transform 0.2s",
                         transform: modesOpen ? "rotate(180deg)" : "none",
                       }}
@@ -518,12 +518,14 @@ export default function MainHeader() {
 
                 {/* Language — click + hover dropdown */}
                 <Stack
+                  direction="row"
                   ref={langRef}
                   sx={{ position: "relative" }}
                   onMouseEnter={openLang}
                   onMouseLeave={() => setLangOpen(false)}
                 >
                   <Stack
+                    direction="row"
                     component="button"
                     type="button"
                     aria-label={t("COMMON.LANGUAGE")}
@@ -538,9 +540,20 @@ export default function MainHeader() {
                       p: 0.75,
                       minWidth: 32,
                       minHeight: 32,
+                      gap: 0.5,
                     }}
                   >
-                    <LocaleFlag locale={flagLocale} size={20} />
+                    <LocaleFlag locale={flagLocale} size={28} />
+
+                    <Iconify
+                      icon="eva:chevron-down-fill"
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        transition: "transform 0.2s",
+                        transform: langOpen ? "rotate(180deg)" : "none",
+                      }}
+                    />
                   </Stack>
 
                   {langOpen && (
