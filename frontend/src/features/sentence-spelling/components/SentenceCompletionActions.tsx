@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Paper } from "@mui/material";
+import { Button, Paper, Stack } from "@mui/material";
 import Link from "next/link";
 
 import Iconify from "@/components/iconify";
@@ -9,13 +9,13 @@ import { KslColors, KslRadii, KslShadows } from "@/theme/theme";
 
 type SentenceCompletionActionsProps = {
   onRestart: () => void;
-  /** Where "Back" goes when there is no next sentence to offer. */
+  /** Where "Back" goes: the sample list or the custom page. */
   backHref: string;
-  /** The sentence to continue with; `null` for custom or last-in-list sentences. */
+  /** The sentence to continue with; `null` for custom or last-in-list sentences (Back only). */
   next: { href: string; label: string } | null;
 };
 
-// Corner size of both buttons. Keep the "px" — a bare number in `sx.borderRadius`
+// Corner size of both buttons. Keep the "px"-a bare number in `sx.borderRadius`
 // is multiplied by the theme's `shape.borderRadius` (16), so `8` would render as 128px.
 const BUTTON_RADIUS = `${KslRadii.button}px`;
 
@@ -57,25 +57,8 @@ export default function SentenceCompletionActions({
         {t("SENTENCE_SPELLING.PRACTICE.RESTART")}
       </Button>
 
-      {next ? (
-        <Button
-          component={Link}
-          href={next.href}
-          variant="contained"
-          title={next.label}
-          aria-label={`${t("SENTENCE_SPELLING.PRACTICE.NEXT_SENTENCE")}: ${next.label}`}
-          endIcon={<Iconify icon="solar:arrow-right-linear" sx={{ width: 18, height: 18 }} />}
-          sx={{
-            borderRadius: BUTTON_RADIUS,
-            boxShadow: KslShadows.button,
-            fontWeight: 700,
-            px: 3,
-            py: 1,
-          }}
-        >
-          {t("SENTENCE_SPELLING.PRACTICE.NEXT_SENTENCE")}
-        </Button>
-      ) : (
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+        {/* Always offered — the header's Back button is hidden on this screen. */}
         <Button
           component={Link}
           href={backHref}
@@ -92,7 +75,27 @@ export default function SentenceCompletionActions({
         >
           {t("SENTENCE_SPELLING.BACK")}
         </Button>
-      )}
+
+        {next ? (
+          <Button
+            component={Link}
+            href={next.href}
+            variant="contained"
+            title={next.label}
+            aria-label={`${t("SENTENCE_SPELLING.PRACTICE.NEXT_SENTENCE")}: ${next.label}`}
+            endIcon={<Iconify icon="solar:arrow-right-linear" sx={{ width: 18, height: 18 }} />}
+            sx={{
+              borderRadius: BUTTON_RADIUS,
+              boxShadow: KslShadows.button,
+              fontWeight: 700,
+              px: 3,
+              py: 1,
+            }}
+          >
+            {t("SENTENCE_SPELLING.PRACTICE.NEXT_SENTENCE")}
+          </Button>
+        ) : null}
+      </Stack>
     </Paper>
   );
 }

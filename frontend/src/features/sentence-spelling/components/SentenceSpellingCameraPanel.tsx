@@ -5,18 +5,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DrawingUtils, HandLandmarker } from "@mediapipe/tasks-vision";
 import { Stack, Typography } from "@mui/material";
 
+import { buildModelFeatures } from "@/features/finger-spelling/ml/handKeypoints";
 import { useHandLandmarker } from "@/features/finger-spelling/ml/useHandLandmarker";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
-import { buildSentenceModelFeatures } from "../ml/sentenceKeypoints";
+import { createMismatchDetector } from "../ml/mismatchDetector";
 import { useSentenceRealtimePredictor } from "../ml/useSentenceRealtimePredictor";
 
 const SAMPLE_INTERVAL_MS = 100;
 /** Consecutive frames the live prediction must match the target character
- * before it's confirmed — mirrors the `hold_frames` debounce in the
+ * before it's confirmed-mirrors the `hold_frames` debounce in the
  * reference `LetterConfirmer` (khmer_realtime_word.py). */
 const HOLD_FRAMES_TO_CONFIRM = 6;
+
+/** When a wrong sign counts as a fail (drives the fail sound). Tune here. */
+const MISMATCH_CONFIG = {
+  /** ~0.8 s of a steady wrong sign at the 100 ms sampling rate. */
+  holdFrames: 8,
+  /** Ignore low-confidence guesses, typically a hand moving between shapes. */
+  minConfidence: 60,
+  /** At most one fail every 2.5 s, even if the wrong sign is held. */
+  cooldownMs: 2500,
+  /** Quiet time after a new character appears, while the last sign is released. */
+  graceMs: 2000,
+};
 
 function stopStream(stream: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop());
@@ -28,14 +41,17 @@ type SentenceSpellingCameraPanelProps = {
   /** Fired once the camera confirms a correct, held match for `targetLabel`. */
   onConfirm: (confidence: number) => void;
   /** Fired once the camera is playing and both the hand landmarker and the
-   * prediction socket are ready — i.e. the learner can actually start signing. */
+   * prediction socket are ready-i.e. the learner can actually start signing. */
   onReady?: () => void;
+  /** Fired when the learner keeps showing a real sign that isn't `targetLabel`. */
+  onMismatch?: () => void;
 };
 
 export default function SentenceSpellingCameraPanel({
   targetLabel,
   onConfirm,
   onReady,
+  onMismatch,
 }: SentenceSpellingCameraPanelProps) {
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -51,6 +67,8 @@ export default function SentenceSpellingCameraPanel({
     useSentenceRealtimePredictor();
 
   const matchStreakRef = useRef(0);
+  // Whether the most recently sampled frame had a hand in it.
+  const handDetectedRef = useRef(false);
   const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onConfirmRef = useRef(onConfirm);
   useEffect(() => {
@@ -61,6 +79,13 @@ export default function SentenceSpellingCameraPanel({
   useEffect(() => {
     onReadyRef.current = onReady;
   }, [onReady]);
+
+  const onMismatchRef = useRef(onMismatch);
+  useEffect(() => {
+    onMismatchRef.current = onMismatch;
+  }, [onMismatch]);
+
+  const [mismatchDetector] = useState(() => createMismatchDetector(MISMATCH_CONFIG));
 
   const startCamera = useCallback(async () => {
     setCameraError(null);
@@ -94,7 +119,7 @@ export default function SentenceSpellingCameraPanel({
     // Deferred to a macrotask so React Strict Mode's mount -> immediate
     // cleanup -> remount cycle (dev only) cancels the first, never-started
     // attempt via clearTimeout instead of racing two real getUserMedia calls
-    // against each other — same workaround as FingerSpellingCameraPanel.
+    // against each other-same workaround as FingerSpellingCameraPanel.
     const timer = window.setTimeout(() => {
       void startCamera();
     }, 0);
@@ -120,7 +145,10 @@ export default function SentenceSpellingCameraPanel({
   // previous character can't immediately confirm the next one.
   useEffect(() => {
     matchStreakRef.current = 0;
-  }, [targetLabel]);
+    // Also gives a grace period, so still holding the previous character's
+    // sign (which no longer matches) isn't reported as a fail.
+    mismatchDetector.reset(performance.now());
+  }, [targetLabel, mismatchDetector]);
 
   useEffect(() => {
     if (!isLandmarkerReady || connectionState !== "ready" || cameraError) {
@@ -140,10 +168,11 @@ export default function SentenceSpellingCameraPanel({
       if (!video || video.videoWidth <= 0 || video.videoHeight <= 0) return;
 
       const detection = detectLandmarks(video);
-      const { features, handedness } = buildSentenceModelFeatures(
+      const { features, handedness, handDetected } = buildModelFeatures(
         detection.landmarks,
         detection.handednesses
       );
+      handDetectedRef.current = handDetected;
       sendFeatures(features, handedness, targetLabel);
 
       if (canvas && ctx && drawingUtils) {
@@ -186,8 +215,20 @@ export default function SentenceSpellingCameraPanel({
     if (matchStreakRef.current >= HOLD_FRAMES_TO_CONFIRM) {
       matchStreakRef.current = 0;
       onConfirmRef.current(livePrediction.confidence);
+      return;
     }
-  }, [livePrediction]);
+
+    const isFail = mismatchDetector.update(
+      {
+        label: livePrediction.label,
+        confidence: livePrediction.confidence,
+        labelMatches: livePrediction.labelMatches,
+        handDetected: handDetectedRef.current,
+      },
+      performance.now()
+    );
+    if (isFail) onMismatchRef.current?.();
+  }, [livePrediction, mismatchDetector]);
 
   return (
     <Stack

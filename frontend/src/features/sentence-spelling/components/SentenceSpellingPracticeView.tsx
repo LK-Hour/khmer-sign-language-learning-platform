@@ -15,6 +15,7 @@ import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
 import { fetchLetterMedia } from "../api/media";
 import { submitPracticeAttempt } from "../api/practice";
+import { usePracticeSounds } from "../hooks/usePracticeSounds";
 import { usePracticeTimer } from "../hooks/usePracticeTimer";
 import { tokenizeKhmerSentence } from "../ml/tokenizeSentence";
 import { computeAverageAccuracy } from "../utils/practiceStats";
@@ -57,6 +58,7 @@ export default function SentenceSpellingPracticeView({
   const [accuracyPercent, setAccuracyPercent] = useState(0);
   const [accuracyByIndex, setAccuracyByIndex] = useState<ReadonlyMap<number, number>>(new Map());
   const { elapsedMs, start: startTimer, stop: stopTimer, reset: resetTimer } = usePracticeTimer();
+  const { playSuccess, playFail } = usePracticeSounds();
 
   const backHref =
     source === "custom" ? ROUTES.sentenceSpelling.custom : ROUTES.sentenceSpelling.sample;
@@ -78,7 +80,7 @@ export default function SentenceSpellingPracticeView({
         if (!cancelled) setLetterImages(map);
       })
       .catch(() => {
-        // Best-effort — falls back to showing the glyph when the lookup fails.
+        // Best-effort-falls back to showing the glyph when the lookup fails.
       });
     return () => {
       cancelled = true;
@@ -110,10 +112,12 @@ export default function SentenceSpellingPracticeView({
       });
       finishIfLast();
       advance();
+      playSuccess();
     },
-    [advance, currentIndex, finishIfLast]
+    [advance, currentIndex, finishIfLast, playSuccess]
   );
 
+  // Skipping deliberately makes no sound.
   const handleSkip = () => {
     confidenceByIndexRef.current.set(currentIndex, 0);
     setSkippedIndices((prev) => new Set(prev).add(currentIndex));
@@ -165,7 +169,7 @@ export default function SentenceSpellingPracticeView({
       characterCount: characters.length,
       accuracyPercent: computeAverageAccuracy(confidenceByIndexRef.current, characters.length),
     }).catch(() => {
-      // Best-effort — a failed submission shouldn't block the completion screen.
+      // Best-effort-a failed submission shouldn't block the completion screen.
     });
   }, [isComplete, source, sentenceId, text, characters.length]);
 
@@ -230,23 +234,26 @@ export default function SentenceSpellingPracticeView({
           </Typography>
         </Stack>
 
-        <Button
-          component={Link}
-          href={`/${locale}${backHref}`}
-          startIcon={<Iconify icon="akar-icons:arrow-back-thick-fill" sx={{ width: 16, height: 16 }} />}
-          variant="outlined"
-          sx={{
-            borderColor: KslColors.border,
-            borderRadius: `${KslRadii.button}px`,
-            color: KslColors.primaryDark,
-            fontWeight: 700,
-            px: 2.5,
-            py: 1.25,
-            flexShrink: 0,
-          }}
-        >
-          {t("SENTENCE_SPELLING.BACK")}
-        </Button>
+        {/* On the completion screen Back lives in the actions bar instead. */}
+        {!isComplete ? (
+          <Button
+            component={Link}
+            href={`/${locale}${backHref}`}
+            startIcon={<Iconify icon="akar-icons:arrow-back-thick-fill" sx={{ width: 16, height: 16 }} />}
+            variant="outlined"
+            sx={{
+              borderColor: KslColors.border,
+              borderRadius: `${KslRadii.button}px`,
+              color: KslColors.primaryDark,
+              fontWeight: 700,
+              px: 2.5,
+              py: 1.25,
+              flexShrink: 0,
+            }}
+          >
+            {t("SENTENCE_SPELLING.BACK")}
+          </Button>
+        ) : null}
       </Stack>
 
       <Paper
@@ -272,7 +279,7 @@ export default function SentenceSpellingPracticeView({
                       ? "skipped"
                       : "upcoming";
               // Reachable = already attempted (confirmed or skipped) at some
-              // point, not just "before wherever we currently are" — so
+              // point, not just "before wherever we currently are"-so
               // navigating back to an earlier character doesn't lock out
               // characters already passed further ahead. Locked once the
               // sentence is finished.
@@ -408,6 +415,7 @@ export default function SentenceSpellingPracticeView({
                       <SentenceSpellingCameraPanel
                         targetLabel={currentChar ?? ""}
                         onConfirm={handleConfirm}
+                        onMismatch={playFail}
                         onReady={startTimer}
                       />
                     </Stack>
