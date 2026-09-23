@@ -1,6 +1,7 @@
 "use client";
 
 import { Box } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import type { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 
@@ -17,11 +18,12 @@ export default function DonutChart({
   labels = ["Published", "Draft", "Inactive"],
   height = 364,
 }: DonutChartProps) {
+  const { text } = useTheme().palette;
   const options: ApexOptions = {
     chart: {
       type: "donut",
       fontFamily: "'DM Sans Variable', sans-serif",
-      foreColor: "#637381",
+      foreColor: text.secondary,
     },
     labels,
     colors: ["#22C55E", "#FFAB00", "#919EAB"],
@@ -31,14 +33,17 @@ export default function DonutChart({
           size: "72%",
           labels: {
             show: true,
+            name: { color: text.secondary },
             value: {
               show: true,
+              color: text.primary,
               formatter: (val: string) => `${parseFloat(val).toFixed(1)}%`,
             },
             total: {
               show: true,
               label: "Completed",
               fontSize: "14px",
+              color: text.secondary,
               formatter: (w) => {
                 const total = w.globals.seriesTotals[0] ?? 0;
                 return `${total.toFixed(1)}%`;
@@ -52,7 +57,7 @@ export default function DonutChart({
       position: "bottom",
       fontSize: "13px",
       fontWeight: 500,
-      labels: { colors: "#637381" },
+      labels: { colors: text.secondary },
       itemMargin: { horizontal: 12 },
       formatter: (legendName: string, opts) => {
         const val = opts?.w?.globals?.series?.[opts.seriesIndex] ?? 0;

@@ -33,10 +33,12 @@ export default function FilterTabs({
               px: 1.5,
               py: 0.5,
               minWidth: "auto",
-              bgcolor: isActive ? "primary.main" : "grey.200",
+              // background.neutral / action.selected follow the theme mode; grey.* does not
+              // (it stays light in dark mode, which made the inactive labels unreadable).
+              bgcolor: isActive ? "primary.main" : "background.neutral",
               color: isActive ? "primary.contrastText" : "text.secondary",
               "&:hover": {
-                bgcolor: isActive ? "primary.dark" : "grey.300",
+                bgcolor: isActive ? "primary.dark" : "action.selected",
               },
             }}
           >

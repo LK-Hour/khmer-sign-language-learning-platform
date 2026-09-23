@@ -14,6 +14,8 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import type { NavItemConfig } from "./navConfig";
+import type { Theme } from "@mui/material/styles";
+import { primaryTint } from "../../theme/tones";
 
 interface NavItemProps {
   item: NavItemConfig;
@@ -22,10 +24,10 @@ interface NavItemProps {
 }
 
 const activeStyles = {
-  bgcolor: "rgba(12, 68, 174, 0.08)",
+  bgcolor: (theme: Theme) => primaryTint(theme),
   color: "primary.main",
   fontWeight: 700,
-  "&:hover": { bgcolor: "rgba(12, 68, 174, 0.12)" },
+  "&:hover": { bgcolor: (theme: Theme) => primaryTint(theme, "hover") },
 };
 
 const inactiveStyles = {

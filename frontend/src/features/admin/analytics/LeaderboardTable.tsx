@@ -44,7 +44,7 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
     <TableContainer component={Paper} variant="outlined">
       <Table>
         <TableHead>
-          <TableRow sx={{ bgcolor: "grey.200" }}>
+          <TableRow sx={{ bgcolor: "background.neutral" }}>
             <TableCell align="center" sx={{ width: 64, ...tableHeaderSx }}>
               Rank
             </TableCell>

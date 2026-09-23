@@ -40,7 +40,10 @@ export default function ConfirmDialog({
       slotProps={{
         backdrop: {
           sx: {
-            backgroundColor: "rgba(28, 37, 46, 0.5)",
+            // The light-mode tint equals the dark paper color, so in dark mode the dialog
+            // would blend into its own backdrop; use a neutral black scrim there instead.
+            backgroundColor: (theme) =>
+              theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.6)" : "rgba(28, 37, 46, 0.5)",
           },
         },
         paper: {

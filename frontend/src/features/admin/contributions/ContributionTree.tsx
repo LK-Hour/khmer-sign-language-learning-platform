@@ -33,7 +33,7 @@ export default function ContributionTree({
         <Typography
           sx={{
             fontSize: "0.875rem",
-            color: "grey.400",
+            color: "text.secondary",
             px: 0.5,
           }}
         >

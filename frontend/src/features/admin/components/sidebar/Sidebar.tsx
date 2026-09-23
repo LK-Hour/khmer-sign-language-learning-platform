@@ -14,6 +14,7 @@ import SidebarHeader from "./SidebarHeader";
 import NavSection from "./NavSection";
 import SidebarFooter from "./SidebarFooter";
 import { NAV_CONFIG } from "./navConfig";
+import { primaryTint } from "../../theme/tones";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
 
@@ -110,7 +111,7 @@ export default function Sidebar({ width, collapsed = false, onToggleCollapse, on
                         justifyContent: "center",
                         px: 0,
                         color: isActive || isParentActive ? "primary.main" : "text.secondary",
-                        bgcolor: isActive || isParentActive ? "rgba(12, 68, 174, 0.08)" : "transparent",
+                        bgcolor: isActive || isParentActive ? (theme) => primaryTint(theme) : "transparent",
                         "&:hover": { bgcolor: "action.hover" },
                       }}
                     >

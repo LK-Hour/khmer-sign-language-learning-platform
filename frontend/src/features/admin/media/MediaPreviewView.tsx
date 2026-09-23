@@ -109,7 +109,7 @@ export default function MediaPreviewView({
               alignItems: "center",
               p: 3,
               minHeight: 300,
-              bgcolor: "grey.50",
+              bgcolor: "background.neutral",
             }}
           >
             {media.media_type === "video" ? (

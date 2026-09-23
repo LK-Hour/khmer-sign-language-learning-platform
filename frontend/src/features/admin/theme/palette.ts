@@ -62,22 +62,27 @@ export const lightPalette: AdminPalette = {
   },
 };
 
+// The light-mode brand blue (#0C44AE) is only 1.8:1 against the dark surfaces, so
+// anything that uses primary as text/icon/outline (nav, links, focus rings) vanishes.
+// Dark mode therefore uses a lighter blue paired with a dark contrastText, which keeps
+// both text-on-surface (5.7:1) and label-on-button (6.3:1) above WCAG AA.
 export const darkPalette: AdminPalette = {
   primary: {
-    main: "#0C44AE",
-    light: "#3B6FD4",
-    dark: "#082F7A",
-    contrastText: "#FFFFFF",
+    main: "#6B9BFA",
+    light: "#9BBBFF",
+    dark: "#5B8DEF",
+    contrastText: "#0A1A3D",
   },
   warning: {
     main: "#FFAB00",
     light: "#FFD666",
     dark: "#B76E00",
   },
+  // #B71D18 is 2.4:1 on dark surfaces; error is used as text (delete actions, field errors).
   error: {
-    main: "#B71D18",
+    main: "#FF6B4A",
     light: "#FFAC82",
-    dark: "#7A0916",
+    dark: "#B71D18",
   },
   info: {
     main: "#00B8D9",

@@ -69,7 +69,7 @@ export default function UserTable({
                   fontWeight: 700,
                   textTransform: "uppercase",
                   color: "text.secondary",
-                  backgroundColor: "#F4F6F8",
+                  bgcolor: "background.neutral",
                   whiteSpace: "nowrap",
                 },
               }}

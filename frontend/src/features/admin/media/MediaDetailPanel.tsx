@@ -67,7 +67,7 @@ export default function MediaDetailPanel({
               maxHeight: 240,
               objectFit: "contain",
               borderRadius: 1,
-              bgcolor: "grey.200",
+              bgcolor: "background.neutral",
             }}
           />
         )}

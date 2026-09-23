@@ -92,7 +92,7 @@ function MediaThumbnail({
         height,
         objectFit: "cover",
         borderRadius: "12px 12px 0 0",
-        bgcolor: "grey.200",
+        bgcolor: "background.neutral",
       }}
     />
   );
@@ -123,7 +123,7 @@ export default function MediaGrid({ items, viewMode, onSelect }: MediaGridProps)
                     fontWeight: 700,
                     textTransform: "uppercase",
                     color: "text.secondary",
-                    backgroundColor: "#F4F6F8",
+                    bgcolor: "background.neutral",
                   },
                 }}
               >

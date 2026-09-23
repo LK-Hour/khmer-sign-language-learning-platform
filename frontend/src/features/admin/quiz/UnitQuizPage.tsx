@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Add from "@mui/icons-material/Add";
+import { alpha, type Theme } from "@mui/material/styles";
 import {
   Alert,
   Button,
@@ -58,17 +59,24 @@ function typeLabel(type: string): string {
   }
 }
 
-function typeChipColor(type: string) {
+// [base color, lighter text shade used in dark mode where the base is < 4.5:1 on the surface]
+function typeChipColors(type: string): [string, string] {
   switch (type) {
     case "multiple_choice":
-      return { bgcolor: "rgba(79, 70, 229, 0.08)", color: "#4f46e5" };
+      return ["#4f46e5", "#a5b4fc"];
     case "image_select":
-      return { bgcolor: "rgba(217, 119, 6, 0.08)", color: "#d97706" };
+      return ["#d97706", "#fcd34d"];
     case "matching":
-      return { bgcolor: "rgba(236, 72, 153, 0.08)", color: "#ec4899" };
+      return ["#ec4899", "#f9a8d4"];
     default:
-      return { bgcolor: "rgba(5, 150, 105, 0.08)", color: "#059669" };
+      return ["#059669", "#6ee7b7"];
   }
+}
+
+function typeChipColor(theme: Theme, type: string) {
+  const dark = theme.palette.mode === "dark";
+  const [base, darkText] = typeChipColors(type);
+  return { bgcolor: alpha(base, dark ? 0.16 : 0.08), color: dark ? darkText : base };
 }
 
 function mapExercises(data: AdminExercise[]): QuizExercise[] {
@@ -166,13 +174,13 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
           <Chip
             label={typeLabel(row.type)}
             size="small"
-            sx={{
-              ...typeChipColor(row.type),
+            sx={(theme) => ({
+              ...typeChipColor(theme, row.type),
               height: 22,
               fontSize: "0.6875rem",
               fontWeight: 700,
               textTransform: "uppercase",
-            }}
+            })}
           />
         ),
       },

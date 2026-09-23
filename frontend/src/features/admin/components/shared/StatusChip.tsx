@@ -3,6 +3,8 @@
 import { Chip } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 
+import { statusTone, type StatusTone } from "../../theme/tones";
+
 export type StatusVariant = "published" | "draft" | "active" | "inactive" | "pending";
 
 export interface StatusChipProps {
@@ -11,12 +13,12 @@ export interface StatusChipProps {
   sx?: SxProps<Theme>;
 }
 
-const STATUS_COLORS: Record<StatusVariant, { bg: string; text: string }> = {
-  published: { bg: "rgba(34, 197, 94, 0.12)", text: "#118D57" },
-  draft: { bg: "rgba(255, 171, 0, 0.12)", text: "#B76E00" },
-  active: { bg: "rgba(34, 197, 94, 0.12)", text: "#118D57" },
-  inactive: { bg: "rgba(145, 158, 171, 0.12)", text: "#637381" },
-  pending: { bg: "rgba(0, 184, 217, 0.12)", text: "#006C9C" },
+const STATUS_TONES: Record<StatusVariant, StatusTone> = {
+  published: "success",
+  draft: "warning",
+  active: "success",
+  inactive: "neutral",
+  pending: "info",
 };
 
 const DEFAULT_LABELS: Record<StatusVariant, string> = {
@@ -28,21 +30,20 @@ const DEFAULT_LABELS: Record<StatusVariant, string> = {
 };
 
 export default function StatusChip({ variant, label, sx }: StatusChipProps) {
-  const colors = STATUS_COLORS[variant];
-
   return (
     <Chip
       label={label ?? DEFAULT_LABELS[variant]}
       size="small"
-      sx={{
-        bgcolor: colors.bg,
-        color: colors.text,
-        borderRadius: "6px",
-        fontWeight: 700,
-        fontSize: "0.75rem",
-        height: 24,
-        ...sx,
-      }}
+      sx={[
+        (theme) => ({
+          ...statusTone(theme, STATUS_TONES[variant]),
+          borderRadius: "6px",
+          fontWeight: 700,
+          fontSize: "0.75rem",
+          height: 24,
+        }),
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     />
   );
 }

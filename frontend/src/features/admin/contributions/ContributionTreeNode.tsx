@@ -6,6 +6,7 @@ import { Badge, Box, Collapse, IconButton, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 
 import type { ContributionTreeNode as TreeNode } from "../api/contributionsAdminApi";
+import { primaryTint } from "../theme/tones";
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ export default function ContributionTreeNodeComponent({
             top: 0,
             bottom: 0,
             width: "1px",
-            bgcolor: "rgba(255,255,255,0.1)",
+            bgcolor: "divider",
           }}
         />
       )}
@@ -70,11 +71,9 @@ export default function ContributionTreeNodeComponent({
           py: 0.5,
           cursor: "pointer",
           borderRadius: 1,
-          bgcolor: isSelected ? "rgba(12, 68, 174, 0.15)" : "transparent",
+          bgcolor: isSelected ? (theme) => primaryTint(theme) : "transparent",
           "&:hover": {
-            bgcolor: isSelected
-              ? "rgba(12, 68, 174, 0.22)"
-              : "rgba(255,255,255,0.05)",
+            bgcolor: isSelected ? (theme) => primaryTint(theme, "hover") : "action.hover",
           },
           transition: "background-color 0.15s ease",
         }}
@@ -91,7 +90,7 @@ export default function ContributionTreeNodeComponent({
               width: 24,
               height: 24,
               mr: 0.5,
-              color: "grey.400",
+              color: "text.secondary",
             }}
           >
             {expanded ? (
@@ -110,7 +109,7 @@ export default function ContributionTreeNodeComponent({
             flex: 1,
             fontSize: "0.875rem",
             fontWeight: isLeaf ? 400 : 600,
-            color: isSelected ? "primary.light" : isLeaf ? "common.white" : "common.white",
+            color: isSelected ? "primary.main" : "text.primary",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",

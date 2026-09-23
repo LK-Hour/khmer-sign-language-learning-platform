@@ -1,9 +1,10 @@
 "use client";
 
 import { Box } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import type { ApexOptions, ApexAxisChartSeries } from "apexcharts";
 import dynamic from "next/dynamic";
-import { BASE_CHART_OPTIONS } from "./ChartWrapper";
+import { getBaseChartOptions } from "./ChartWrapper";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -14,10 +15,12 @@ export interface AreaChartProps {
 }
 
 export default function AreaChart({ series, categories, height = 364 }: AreaChartProps) {
+  const theme = useTheme();
+  const base = getBaseChartOptions(theme);
   const options: ApexOptions = {
-    ...BASE_CHART_OPTIONS,
+    ...base,
     chart: {
-      ...BASE_CHART_OPTIONS.chart,
+      ...base.chart,
       type: "area",
     },
     fill: {
@@ -30,7 +33,7 @@ export default function AreaChart({ series, categories, height = 364 }: AreaChar
       },
     },
     xaxis: {
-      ...BASE_CHART_OPTIONS.xaxis,
+      ...base.xaxis,
       categories,
     },
   };

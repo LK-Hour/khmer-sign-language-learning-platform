@@ -14,6 +14,7 @@ import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { useAdminUiStore } from "../../store/adminUi.store";
 import { useTranslation } from "@/i18n/useTranslation";
 import type { AdminTrack } from "../../api/types";
+import { primaryTint } from "../../theme/tones";
 
 interface TrackOption {
   id: AdminTrack;
@@ -22,8 +23,8 @@ interface TrackOption {
 }
 
 const TRACK_OPTIONS: TrackOption[] = [
-  { id: "finger", labelKey: "ADMIN.TRACK_FINGER", color: "#0C44AE" },
-  { id: "word_detection", labelKey: "ADMIN.TRACK_WORD_DETECTION", color: "#22C55E" },
+  { id: "finger", labelKey: "ADMIN.TRACK_FINGER", color: "primary.main" },
+  { id: "word_detection", labelKey: "ADMIN.TRACK_WORD_DETECTION", color: "success.main" },
 ];
 
 export default function WorkspaceSelector() {
@@ -106,8 +107,8 @@ export default function WorkspaceSelector() {
                 borderRadius: 1,
                 mx: 0.5,
                 "&.Mui-selected": {
-                  bgcolor: "rgba(12, 68, 174, 0.08)",
-                  "&:hover": { bgcolor: "rgba(12, 68, 174, 0.12)" },
+                  bgcolor: (theme) => primaryTint(theme),
+                  "&:hover": { bgcolor: (theme) => primaryTint(theme, "hover") },
                 },
               }}
             >

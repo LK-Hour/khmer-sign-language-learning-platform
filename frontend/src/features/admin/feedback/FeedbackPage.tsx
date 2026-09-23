@@ -17,6 +17,7 @@ import PageHeader from "../components/shared/PageHeader";
 import RowActionsMenu from "../components/shared/RowActionsMenu";
 import PreviewDrawer from "../components/shared/PreviewDrawer";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
+import { statusTone, type StatusTone } from "../theme/tones";
 import { ApiError } from "@/utils/api/client";
 import {
   listFeedback,
@@ -32,17 +33,17 @@ type TypeFilter = "all" | "finger_spelling" | "words";
 
 // ── Mood chip color mapping ──────────────────────────────────────────────────
 
-const MOOD_CHIP_COLORS: Record<string, { bg: string; text: string }> = {
-  very_bad: { bg: "rgba(255, 86, 48, 0.12)", text: "#B71D18" },
-  bad: { bg: "rgba(255, 171, 0, 0.12)", text: "#B76E00" },
-  okay: { bg: "rgba(255, 214, 102, 0.12)", text: "#B78103" },
-  good: { bg: "rgba(34, 197, 94, 0.12)", text: "#118D57" },
-  excellent: { bg: "rgba(0, 184, 217, 0.12)", text: "#006C9C" },
+const MOOD_CHIP_TONES: Record<string, StatusTone> = {
+  very_bad: "error",
+  bad: "warning",
+  okay: "warning",
+  good: "success",
+  excellent: "info",
 };
 
-const TYPE_CHIP_COLORS: Record<string, { bg: string; text: string }> = {
-  finger_spelling: { bg: "rgba(0, 184, 217, 0.12)", text: "#006C9C" },
-  words: { bg: "rgba(145, 158, 171, 0.12)", text: "#637381" },
+const TYPE_CHIP_TONES: Record<string, StatusTone> = {
+  finger_spelling: "info",
+  words: "neutral",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -157,19 +158,18 @@ export default function FeedbackPage() {
         width: 140,
         render: (row) => {
           if (!row.type) return "—";
-          const colors = TYPE_CHIP_COLORS[row.type] ?? TYPE_CHIP_COLORS.words;
+          const tone = TYPE_CHIP_TONES[row.type] ?? TYPE_CHIP_TONES.words;
           return (
             <Chip
               label={formatTypeLabel(row.type)}
               size="small"
-              sx={{
-                bgcolor: colors.bg,
-                color: colors.text,
+              sx={(theme) => ({
+                ...statusTone(theme, tone),
                 borderRadius: "6px",
                 fontWeight: 700,
                 fontSize: "0.75rem",
                 height: 24,
-              }}
+              })}
             />
           );
         },
@@ -192,19 +192,18 @@ export default function FeedbackPage() {
         width: 120,
         render: (row) => {
           if (!row.mood) return "—";
-          const colors = MOOD_CHIP_COLORS[row.mood] ?? MOOD_CHIP_COLORS.okay;
+          const tone = MOOD_CHIP_TONES[row.mood] ?? MOOD_CHIP_TONES.okay;
           return (
             <Chip
               label={formatMoodLabel(row.mood)}
               size="small"
-              sx={{
-                bgcolor: colors.bg,
-                color: colors.text,
+              sx={(theme) => ({
+                ...statusTone(theme, tone),
                 borderRadius: "6px",
                 fontWeight: 700,
                 fontSize: "0.75rem",
                 height: 24,
-              }}
+              })}
             />
           );
         },

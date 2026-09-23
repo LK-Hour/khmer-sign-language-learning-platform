@@ -6,6 +6,8 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 
+import { statusTone } from "../../theme/tones";
+
 export interface StatsCardProps {
   title: string;
   value: string | number;
@@ -48,16 +50,15 @@ export default function StatsCard({
                 size="small"
                 icon={change >= 0 ? <TrendingUpIcon sx={{ fontSize: 16 }} /> : <TrendingDownIcon sx={{ fontSize: 16 }} />}
                 label={`${change >= 0 ? "+" : ""}${change}%`}
-                sx={{
-                  bgcolor: change >= 0 ? "rgba(34, 197, 94, 0.12)" : "rgba(183, 29, 24, 0.12)",
-                  color: change >= 0 ? "success.dark" : "error.main",
+                sx={(theme) => ({
+                  ...statusTone(theme, change >= 0 ? "success" : "error"),
                   fontWeight: 700,
                   fontSize: "0.75rem",
                   borderRadius: "6px",
                   "& .MuiChip-icon": {
                     color: "inherit",
                   },
-                }}
+                })}
               />
             )}
           </Box>

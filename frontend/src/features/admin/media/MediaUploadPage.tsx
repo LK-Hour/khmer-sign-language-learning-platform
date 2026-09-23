@@ -170,7 +170,7 @@ export default function MediaUploadPage() {
                 minHeight: 200,
                 borderRadius: 1,
                 overflow: "hidden",
-                bgcolor: "grey.100",
+                bgcolor: "background.neutral",
                 border: "1px solid",
                 borderColor: "divider",
               }}

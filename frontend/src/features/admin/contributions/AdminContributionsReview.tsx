@@ -23,6 +23,7 @@ import type {
 import PageHeader from "../components/shared/PageHeader";
 
 import ContributionTree from "./ContributionTree";
+import { statusTone } from "../theme/tones";
 import ContributionReviewList from "./ContributionReviewList";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
@@ -141,12 +142,11 @@ export default function AdminContributionsReview() {
           <Chip
             label={`${totalPendingCount} pending`}
             size="small"
-            sx={{
+            sx={(theme) => ({
               fontWeight: 700,
               fontSize: "0.75rem",
-              bgcolor: totalPendingCount > 0 ? "rgba(255, 171, 0, 0.12)" : "rgba(34, 197, 94, 0.12)",
-              color: totalPendingCount > 0 ? "#B76E00" : "#118D57",
-            }}
+              ...statusTone(theme, totalPendingCount > 0 ? "warning" : "success"),
+            })}
           />
         }
       />

@@ -46,7 +46,7 @@ export default function TrackCompletionChart({ data }: TrackCompletionChartProps
               sx={{
                 height: 12,
                 borderRadius: 6,
-                bgcolor: "grey.200",
+                bgcolor: "background.neutral",
                 "& .MuiLinearProgress-bar": {
                   bgcolor: "primary.main",
                   borderRadius: 6,

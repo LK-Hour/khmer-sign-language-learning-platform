@@ -48,7 +48,7 @@ export function MediaCarousel({
           justifyContent: "center",
           minHeight: 160,
           borderRadius: 1,
-          bgcolor: "grey.100",
+          bgcolor: "background.neutral",
           border: "1px dashed",
           borderColor: "divider",
         }}
@@ -73,7 +73,7 @@ export function MediaCarousel({
           maxHeight,
           borderRadius: 1,
           overflow: "hidden",
-          bgcolor: "grey.100",
+          bgcolor: "background.neutral",
           border: "1px solid",
           borderColor: "divider",
         }}
@@ -89,7 +89,9 @@ export function MediaCarousel({
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 2,
+              // Light overlay in both modes, so the icon must not inherit the (light) dark-mode action color.
               bgcolor: "rgba(255,255,255,0.85)",
+              color: "grey.800",
               "&:hover": { bgcolor: "rgba(255,255,255,1)" },
               boxShadow: 1,
             }}
@@ -129,7 +131,9 @@ export function MediaCarousel({
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 2,
+              // Light overlay in both modes, so the icon must not inherit the (light) dark-mode action color.
               bgcolor: "rgba(255,255,255,0.85)",
+              color: "grey.800",
               "&:hover": { bgcolor: "rgba(255,255,255,1)" },
               boxShadow: 1,
             }}

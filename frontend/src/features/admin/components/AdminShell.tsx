@@ -18,7 +18,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100dvh", bgcolor: "background.default" }}>
+    // color is set explicitly: globals.css sets a navy body color that otherwise wins over
+    // the MUI theme and turns un-styled text (page titles, card headers) unreadable in dark mode.
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100dvh",
+        bgcolor: "background.default",
+        color: "text.primary",
+      }}
+    >
       {/* Desktop: persistent sidebar */}
       {isDesktop ? (
         <Sidebar

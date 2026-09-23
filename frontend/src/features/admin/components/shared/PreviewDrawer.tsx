@@ -83,7 +83,7 @@ export default function PreviewDrawer({
               minHeight: 160,
               borderRadius: 1,
               overflow: "hidden",
-              bgcolor: "grey.100",
+              bgcolor: "background.neutral",
             }}
           >
             {media}
