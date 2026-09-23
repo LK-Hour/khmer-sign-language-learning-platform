@@ -142,6 +142,7 @@
     "NAV_DICTIONARY": "Dictionary",
     "NAV_CHARACTERS": "Characters",
     "NAV_WORDS": "Words",
+    "NAV_SENTENCE_SPELLING": "Sentence Spelling",
     "NAV_USERS": "Users",
     "NAV_ADMIN": "Admin",
     "NAV_STUDENT": "Student",
@@ -154,6 +155,9 @@
     "ORDER_INDEX": "Order Index",
     "ACTIVE": "Active",
     "PUBLISH_STATUS": "Publish Status",
+    "PUBLISH_HELP_DRAFT": "Saved as a draft. Learners can't see it yet.",
+    "PUBLISH_HELP_LIVE": "Saving will publish this to learners.",
+    "PUBLISH_HELP_INACTIVE": "Restore this item before it can be published.",
     "SEARCH_PLACEHOLDER": "Search...",
     "SELECT_PLACEHOLDER": "Select...",
     "LEVEL": "Level",
@@ -754,14 +758,39 @@
       "CTA": "Start Practice",
       "HISTORY_TITLE": "Recent Sentences",
       "HISTORY_HINT": "Tap a sentence to reuse it, or practice it again right away.",
-      "HISTORY_PRACTICE_AGAIN": "Practice Again"
+      "HISTORY_PRACTICE_AGAIN": "Practice Again",
+      "KHMER_ONLY_HINT": "Khmer characters and Khmer numerals only",
+      "INVALID_CHARS_HINT": "Only Khmer characters and Khmer numerals (០-៩) are allowed"
     },
     "PRACTICE": {
       "EYEBROW": "Sentence Spelling Practice",
       "NEXT": "Next Character",
+      "NEXT_SENTENCE": "Next Sentence",
       "COMPLETE": "Great job! You spelled the whole sentence.",
       "RESTART": "Practice Again",
-      "EMPTY": "No sentence to practice yet."
+      "EMPTY": "No sentence to practice yet.",
+      "SAMPLE_CAPTION": "Reference — the current character to sign",
+      "CAMERA_CAPTION": "Your camera — try signing this character in frame",
+      "SKIP": "Skip Character",
+      "CAMERA_DENIED": "Could not open the camera. Please allow camera access in your browser.",
+      "CAMERA_UNAVAILABLE": "Camera is not available on this device.",
+      "CHART": {
+        "TITLE": "Accuracy per Character",
+        "SERIES": "Accuracy",
+        "SKIPPED": "Skipped"
+      },
+      "STATS": {
+        "ACCURACY_LABEL": "Average Accuracy",
+        "ACCURACY_CAPTION": "Averaged across all signs",
+        "SIGNS_LABEL": "Signs Completed",
+        "SKIP_SINGULAR": "{{count}} Skip",
+        "SKIP_PLURAL": "{{count}} Skips",
+        "TIME_LABEL": "Time Elapsed",
+        "TIME_HOURS_MINUTES": "{{h}}h {{m}}m",
+        "TIME_MINUTES_SECONDS": "{{m}}m {{s}}s",
+        "TIME_SECONDS": "{{s}}s",
+        "PACING": "Pacing: {{seconds}}s / sign"
+      }
     }
   },
   "QUIZ": {
