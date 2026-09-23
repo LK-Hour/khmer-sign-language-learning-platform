@@ -10,18 +10,20 @@ import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
-import { getLastPractice, type LastPractice } from "../utils/recentProgress";
+import { fetchRecentPractice, type RecentPractice } from "../api/practice";
 
-type SentenceRecentProgressCardProps = {
-  locale: string;
-};
-
-export default function SentenceRecentProgressCard({ locale }: SentenceRecentProgressCardProps) {
-  const { t } = useTranslation();
-  const [lastPractice, setLastPractice] = useState<LastPractice | null>(null);
+export default function SentenceRecentProgressCard() {
+  const { t, locale } = useTranslation();
+  const [lastPractice, setLastPractice] = useState<RecentPractice>(null);
 
   useEffect(() => {
-    setLastPractice(getLastPractice());
+    let cancelled = false;
+    fetchRecentPractice().then((recent) => {
+      if (!cancelled) setLastPractice(recent);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!lastPractice) return null;
@@ -80,7 +82,7 @@ export default function SentenceRecentProgressCard({ locale }: SentenceRecentPro
           >
             {t("SENTENCE_SPELLING.RECENT.LAST_LABEL")}{" "}
             <Typography component="span" sx={{ color: KslColors.textPrimary, fontWeight: 700 }}>
-              &ldquo;{lastPractice.text}&rdquo;
+              &ldquo;{lastPractice.practicedText}&rdquo;
             </Typography>
           </Typography>
         </Stack>
@@ -89,7 +91,7 @@ export default function SentenceRecentProgressCard({ locale }: SentenceRecentPro
       <Button
         component={Link}
         href={`/${locale}${ROUTES.sentenceSpelling.practice({
-          text: lastPractice.text,
+          text: lastPractice.practicedText,
           source: lastPractice.source,
         })}`}
         variant="contained"

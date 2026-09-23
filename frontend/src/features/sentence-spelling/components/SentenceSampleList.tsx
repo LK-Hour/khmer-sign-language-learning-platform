@@ -12,18 +12,26 @@ import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
-import { SAMPLE_SENTENCES } from "../data/sampleSentences";
+import type { SentenceSpellingSentence } from "../api/curriculum";
 
-export default function SentenceSampleList() {
+type SentenceSampleListProps = {
+  sentences: SentenceSpellingSentence[];
+};
+
+export default function SentenceSampleList({ sentences }: SentenceSampleListProps) {
   const { t, locale } = useTranslation();
   const router = useRouter();
-  const [selectedId, setSelectedId] = useState<string>(SAMPLE_SENTENCES[0]?.id ?? "");
-  const selected = SAMPLE_SENTENCES.find((sentence) => sentence.id === selectedId);
+  const [selectedId, setSelectedId] = useState<number | null>(sentences[0]?.id ?? null);
+  const selected = sentences.find((sentence) => sentence.id === selectedId);
 
   const handleStart = () => {
     if (!selected) return;
     router.push(
-      `/${locale}${ROUTES.sentenceSpelling.practice({ text: selected.textKh, source: "sample" })}`
+      `/${locale}${ROUTES.sentenceSpelling.practice({
+        text: selected.textKh,
+        source: "sample",
+        sentenceId: selected.id,
+      })}`
     );
   };
 
@@ -100,7 +108,7 @@ export default function SentenceSampleList() {
       >
         <Stack spacing={2}>
           <Stack spacing={1}>
-            {SAMPLE_SENTENCES.map((sentence) => {
+            {sentences.map((sentence) => {
               const isSelected = sentence.id === selectedId;
               return (
                 <Box

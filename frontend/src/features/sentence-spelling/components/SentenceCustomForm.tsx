@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Paper, Stack, TextField, Typography } from "@mui/material";
 import Link from "next/link";
@@ -12,7 +12,8 @@ import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
 import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
 
-import { CUSTOM_SENTENCE_HISTORY } from "../data/customSentenceHistory";
+import { fetchCustomHistory, type CustomHistoryEntry } from "../api/practice";
+import { sanitizeKhmerInput } from "../utils/khmerInput";
 
 const MAX_CHARACTERS = 60;
 
@@ -31,6 +32,18 @@ export default function SentenceCustomForm() {
   const { t, locale } = useTranslation();
   const router = useRouter();
   const [value, setValue] = useState("");
+  const [hasBlockedChars, setHasBlockedChars] = useState(false);
+  const [history, setHistory] = useState<CustomHistoryEntry[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCustomHistory().then((entries) => {
+      if (!cancelled) setHistory(entries);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const charCount = useMemo(() => countCharacters(value), [value]);
   const overLimit = charCount > MAX_CHARACTERS;
@@ -41,6 +54,13 @@ export default function SentenceCustomForm() {
     router.push(
       `/${locale}${ROUTES.sentenceSpelling.practice({ text: value.trim(), source: "custom" })}`
     );
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const raw = event.target.value;
+    const sanitized = sanitizeKhmerInput(raw);
+    setHasBlockedChars(sanitized !== raw);
+    setValue(sanitized);
   };
 
   const handleReuseHistory = (text: string) => {
@@ -129,7 +149,7 @@ export default function SentenceCustomForm() {
               multiline
               minRows={4}
               value={value}
-              onChange={(event) => setValue(event.target.value)}
+              onChange={handleChange}
               placeholder={t("SENTENCE_SPELLING.CUSTOM.PLACEHOLDER")}
               error={overLimit}
               slotProps={{
@@ -143,16 +163,28 @@ export default function SentenceCustomForm() {
                 },
               }}
             />
-            <Typography
-              sx={{
-                alignSelf: "flex-end",
-                color: overLimit ? "error.main" : KslColors.textSecondary,
-                fontSize: KslFontSizes.xs,
-                fontWeight: 700,
-              }}
-            >
-              {charCount} / {MAX_CHARACTERS} {t("PHRASES.CHARACTERS")}
-            </Typography>
+            <Stack direction="row" sx={{ alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
+              <Typography
+                sx={{
+                  color: hasBlockedChars ? "error.main" : KslColors.textSecondary,
+                  fontSize: KslFontSizes.xs,
+                }}
+              >
+                {hasBlockedChars
+                  ? t("SENTENCE_SPELLING.CUSTOM.INVALID_CHARS_HINT")
+                  : t("SENTENCE_SPELLING.CUSTOM.KHMER_ONLY_HINT")}
+              </Typography>
+              <Typography
+                sx={{
+                  flexShrink: 0,
+                  color: overLimit ? "error.main" : KslColors.textSecondary,
+                  fontSize: KslFontSizes.xs,
+                  fontWeight: 700,
+                }}
+              >
+                {charCount} / {MAX_CHARACTERS} {t("PHRASES.CHARACTERS")}
+              </Typography>
+            </Stack>
           </Stack>
 
           <Button
@@ -174,7 +206,7 @@ export default function SentenceCustomForm() {
         </Stack>
       </Paper>
 
-      {CUSTOM_SENTENCE_HISTORY.length > 0 && (
+      {history.length > 0 && (
         <Paper
           elevation={0}
           sx={{
@@ -202,9 +234,9 @@ export default function SentenceCustomForm() {
             </Stack>
 
             <Stack spacing={1}>
-              {CUSTOM_SENTENCE_HISTORY.map((entry) => (
+              {history.map((entry) => (
                 <Box
-                  key={entry.id}
+                  key={entry.text}
                   component="button"
                   type="button"
                   onClick={() => handleReuseHistory(entry.text)}

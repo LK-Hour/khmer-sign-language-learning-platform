@@ -36,8 +36,10 @@ export const ROUTES = {
     root: "/sentence-spelling",
     sample: "/sentence-spelling/sample",
     custom: "/sentence-spelling/custom",
-    practice: (params: { text: string; source: "sample" | "custom" }) =>
-      `/sentence-spelling/practice?source=${params.source}&text=${encodeURIComponent(params.text)}`,
+    practice: (params: { text: string; source: "sample" | "custom"; sentenceId?: number }) =>
+      `/sentence-spelling/practice?source=${params.source}&text=${encodeURIComponent(params.text)}${
+        params.sentenceId != null ? `&sentenceId=${params.sentenceId}` : ""
+      }`,
   },
 
   admin: {
