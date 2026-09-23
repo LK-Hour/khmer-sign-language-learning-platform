@@ -5,7 +5,7 @@ import { useSearchParams, usePathname } from "next/navigation";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type SuccessAction = "created" | "updated" | "upload" | "approved" | "rejected";
+export type SuccessAction = "created" | "updated" | "published" | "upload" | "approved" | "rejected";
 
 interface UseSuccessNotificationReturn {
   /** Whether the snackbar should be shown */
@@ -21,6 +21,7 @@ interface UseSuccessNotificationReturn {
 const SUCCESS_MESSAGES: Record<SuccessAction, string> = {
   created: "Record created successfully",
   updated: "Record updated successfully",
+  published: "Record saved and published successfully",
   upload: "File uploaded successfully",
   approved: "Contribution approved successfully",
   rejected: "Contribution rejected successfully",

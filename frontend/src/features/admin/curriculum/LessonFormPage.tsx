@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Box,
-  Chip,
-  FormControlLabel,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Stack, TextField, Typography } from "@mui/material";
 
 import EntityFormLayout from "../components/shared/EntityFormLayout";
+import PublishStatusSwitch from "../components/shared/PublishStatusSwitch";
 import SearchableDropdown from "../components/shared/SearchableDropdown";
 import JunctionFieldEditor, {
   type JunctionItem,
@@ -43,8 +36,8 @@ import type {
   AdminLesson,
   AdminLessonPayload,
   AdminTrack,
-  PublishStatus,
 } from "../api/types";
+import { publishAfterSave } from "./publishAfterSave";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,7 +55,10 @@ interface LessonFormValues {
   description_en: string;
   description_kh: string;
   order_index: number;
+  /** Read from the row; not editable here. Soft-deleted rows can't be published. */
   is_active: boolean;
+  /** Desired publish state, applied on save. */
+  is_published: boolean;
   [key: string]: unknown;
 }
 
@@ -108,7 +104,9 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(isEdit);
-  const [publishStatus, setPublishStatus] = useState<PublishStatus | null>(null);
+  // Id of the saved row. Set after the first successful save so that a retry (e.g. after a
+  // failed publish) updates the row instead of creating a duplicate.
+  const savedIdRef = useRef<number | undefined>(entityId);
   const [selectedChapter, setSelectedChapter] = useState<AdminChapter | null>(null);
   const [junctionItems, setJunctionItems] = useState<JunctionItem<DictionaryItem>[]>([]);
   const [initialJunctionIds, setInitialJunctionIds] = useState<Set<number>>(new Set());
@@ -124,6 +122,7 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
       description_kh: "",
       order_index: 1,
       is_active: true,
+      is_published: false,
     },
     validate,
     onSubmit: async (values) => {
@@ -136,23 +135,25 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
         order_index: values.order_index,
       };
 
-      let savedId = entityId;
-
-      if (isEdit && entityId) {
-        await adminApi.updateLesson(track as AdminTrack, entityId, payload);
-        savedId = entityId;
-      } else {
-        const result = await adminApi.createLesson(track as AdminTrack, payload);
-        savedId = result.id;
-      }
+      // Saving always leaves the row as a draft; publishing is a separate confirm call.
+      const existingId = savedIdRef.current;
+      const saved = existingId
+        ? await adminApi.updateLesson(track as AdminTrack, existingId, payload)
+        : await adminApi.createLesson(track as AdminTrack, payload);
+      savedIdRef.current = saved.id;
 
       // Sync junction associations
-      await syncJunctionAssociations(savedId!);
+      await syncJunctionAssociations(saved.id);
+      // They are persisted now; a retry after a failed publish must not add them again.
+      setInitialJunctionIds(new Set(junctionItems.map((ji) => ji.item.id)));
 
-      return { id: savedId } as AdminLesson;
+      if (!values.is_published) return saved;
+      return publishAfterSave(() => adminApi.publishLesson(track as AdminTrack, saved.id));
     },
-    onSuccess: () => {
-      router.push(`${listPath}?success=${isEdit ? "updated" : "created"}`);
+    onSuccess: (saved) => {
+      const outcome =
+        saved.publish_status === "published" ? "published" : isEdit ? "updated" : "created";
+      router.push(`${listPath}?success=${outcome}`);
     },
   });
 
@@ -211,8 +212,8 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
           description_kh: data.description_kh ?? "",
           order_index: data.order_index,
           is_active: data.is_active,
+          is_published: data.publish_status === "published" && data.is_active,
         });
-        setPublishStatus(data.publish_status);
 
         // Load the chapter for the SearchableDropdown display
         try {
@@ -402,46 +403,15 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
             helperText={form.errors.order_index}
             slotProps={{ htmlInput: { min: 1 } }}
           />
-
-          {/* Publish Status (read-only in edit mode) */}
-          {isEdit && publishStatus && (
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: 600, mb: 0.5 }}
-              >
-                {t("FORM.PUBLISH_STATUS")}
-              </Typography>
-              <Chip
-                label={publishStatus === "published" ? t("ADMIN.PUBLISHED") : t("ADMIN.DRAFT")}
-                color={publishStatus === "published" ? "success" : "default"}
-                size="small"
-              />
-            </Box>
-          )}
         </Stack>
       }
       statusSection={
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{ alignItems: "center", justifyContent: "space-between" }}
-        >
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            {t("FORM.STATUS")}
-          </Typography>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.values.is_active}
-                onChange={(e) =>
-                  form.setField("is_active", e.target.checked)
-                }
-              />
-            }
-            label={t("FORM.ACTIVE")}
-          />
-        </Stack>
+        // Publish Status: applied on Save (save as draft, then publish if on)
+        <PublishStatusSwitch
+          checked={form.values.is_published}
+          onChange={(published) => form.setField("is_published", published)}
+          inactive={!form.values.is_active}
+        />
       }
       junctionSection={
         <JunctionFieldEditor<DictionaryItem>

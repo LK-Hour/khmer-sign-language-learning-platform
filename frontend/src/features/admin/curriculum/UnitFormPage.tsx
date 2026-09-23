@@ -1,23 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Box,
-  Chip,
-  FormControlLabel,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Stack, TextField } from "@mui/material";
 
 import EntityFormLayout from "../components/shared/EntityFormLayout";
+import PublishStatusSwitch from "../components/shared/PublishStatusSwitch";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
 import * as adminApi from "../api/adminApi";
-import type { AdminTrack, AdminUnit, PublishStatus } from "../api/types";
+import type { AdminTrack, AdminUnit } from "../api/types";
+import { publishAfterSave } from "./publishAfterSave";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +28,10 @@ interface UnitFormValues {
   description_en: string;
   description_kh: string;
   order_index: number;
+  /** Read from the row; not editable here. Soft-deleted rows can't be published. */
   is_active: boolean;
+  /** Desired publish state, applied on save. */
+  is_published: boolean;
   [key: string]: unknown;
 }
 
@@ -77,9 +74,9 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(isEdit);
-  const [publishStatus, setPublishStatus] = useState<PublishStatus | null>(
-    null,
-  );
+  // Id of the saved row. Set after the first successful save so that a retry (e.g. after a
+  // failed publish) updates the row instead of creating a duplicate.
+  const savedIdRef = useRef<number | undefined>(entityId);
 
   // Form hook
   const form = useEntityForm<UnitFormValues, AdminUnit>({
@@ -90,6 +87,7 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
       description_kh: "",
       order_index: 1,
       is_active: true,
+      is_published: false,
     },
     validate,
     onSubmit: async (values) => {
@@ -101,13 +99,20 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
         order_index: values.order_index,
       };
 
-      if (isEdit && entityId) {
-        return adminApi.updateUnit(track as AdminTrack, entityId, payload);
-      }
-      return adminApi.createUnit(track as AdminTrack, payload);
+      // Saving always leaves the row as a draft; publishing is a separate confirm call.
+      const existingId = savedIdRef.current;
+      const saved = existingId
+        ? await adminApi.updateUnit(track as AdminTrack, existingId, payload)
+        : await adminApi.createUnit(track as AdminTrack, payload);
+      savedIdRef.current = saved.id;
+
+      if (!values.is_published) return saved;
+      return publishAfterSave(() => adminApi.publishUnit(track as AdminTrack, saved.id));
     },
-    onSuccess: () => {
-      router.push(`${listPath}?success=${isEdit ? "updated" : "created"}`);
+    onSuccess: (saved) => {
+      const outcome =
+        saved.publish_status === "published" ? "published" : isEdit ? "updated" : "created";
+      router.push(`${listPath}?success=${outcome}`);
     },
   });
 
@@ -126,8 +131,8 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
           description_kh: data.description_kh ?? "",
           order_index: data.order_index,
           is_active: data.is_active,
+          is_published: data.publish_status === "published" && data.is_active,
         });
-        setPublishStatus(data.publish_status);
       } finally {
         setLoading(false);
       }
@@ -176,35 +181,12 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
             slotProps={{ htmlInput: { min: 1 } }}
           />
 
-          {/* Active Toggle */}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.values.is_active}
-                onChange={(e) =>
-                  form.setField("is_active", e.target.checked)
-                }
-              />
-            }
-            label={t("FORM.ACTIVE")}
+          {/* Publish Status: applied on Save (save as draft, then publish if on) */}
+          <PublishStatusSwitch
+            checked={form.values.is_published}
+            onChange={(published) => form.setField("is_published", published)}
+            inactive={!form.values.is_active}
           />
-
-          {/* Publish Status (read-only in edit mode) */}
-          {isEdit && publishStatus && (
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: 600, mb: 0.5 }}
-              >
-                {t("FORM.PUBLISH_STATUS")}
-              </Typography>
-              <Chip
-                label={publishStatus === "published" ? t("ADMIN.PUBLISHED") : t("ADMIN.DRAFT")}
-                color={publishStatus === "published" ? "success" : "default"}
-                size="small"
-              />
-            </Box>
-          )}
         </Stack>
       }
     >
