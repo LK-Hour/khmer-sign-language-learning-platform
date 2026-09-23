@@ -42,6 +42,8 @@ from src.models import (  # noqa: F401
     WordDetectionUserLessonProgress,
     WordDetectionExerciseProgress,
     WordDetectionContribution,
+    SentenceSpellingSentence,
+    SentenceSpellingPracticeAttempt,
 )
 
 config = context.config

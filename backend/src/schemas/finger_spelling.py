@@ -298,6 +298,17 @@ class ChapterPracticeResultResponse(BaseModel):
     attempts: int
 
 
+# ── Letter media lookup schemas ────────────────────────────────────────────
+
+class FsLetterMediaItem(BaseModel):
+    letterKh: str
+    imageUrl: str
+
+
+class FsLetterMediaResponse(BaseModel):
+    items: List[FsLetterMediaItem] = []
+
+
 # ── Unit exercise session schemas ─────────────────────────────────────────────
 
 class ExerciseSessionOptionResponse(BaseModel):

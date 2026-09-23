@@ -51,6 +51,11 @@ from .word_detection import (
     WordDetectionUserPracticeProgress,
     WordDetectionPracticeMedia,
 )
+from .sentence_spelling import (
+    SentenceSpellingSource,
+    SentenceSpellingSentence,
+    SentenceSpellingPracticeAttempt,
+)
 
 __all__ = [
     "User",
@@ -92,4 +97,7 @@ __all__ = [
     "WordDetectionPractice",
     "WordDetectionUserPracticeProgress",
     "WordDetectionPracticeMedia",
+    "SentenceSpellingSource",
+    "SentenceSpellingSentence",
+    "SentenceSpellingPracticeAttempt",
 ]

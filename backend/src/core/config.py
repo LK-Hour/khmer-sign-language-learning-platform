@@ -27,6 +27,12 @@ _DEFAULT_WORD_CONTRIBUTIONS_DIR = (
     _REPO_ROOT / "data_set" / "word_detection_contributions"
 )
 _DEFAULT_MEDIA_UPLOAD_DIR = _REPO_ROOT / "data_set" / "media_uploads"
+_DEFAULT_SENTENCE_ML_MODEL = (
+    _BACKEND_ROOT / "ml" / "models" / "sentence_spelling" / "model.weights.h5"
+)
+_DEFAULT_SENTENCE_CLASS_MAPPING = (
+    _BACKEND_ROOT / "ml" / "models" / "sentence_spelling" / "class_mapping.json"
+)
 
 
 class Settings(BaseSettings):
@@ -76,6 +82,15 @@ class Settings(BaseSettings):
         default=_DEFAULT_MEDIA_UPLOAD_DIR,
         validation_alias="MEDIA_UPLOAD_DIR",
     )
+    sentence_ml_enabled: bool = Field(default=True, validation_alias="SENTENCE_ML_ENABLED")
+    sentence_ml_model_path: Path = Field(
+        default=_DEFAULT_SENTENCE_ML_MODEL,
+        validation_alias="SENTENCE_ML_MODEL_PATH",
+    )
+    sentence_ml_class_mapping_path: Path = Field(
+        default=_DEFAULT_SENTENCE_CLASS_MAPPING,
+        validation_alias="SENTENCE_ML_CLASS_MAPPING_PATH",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -101,6 +116,8 @@ class Settings(BaseSettings):
         "word_ml_label_map_path",
         "word_detection_contributions_dir",
         "media_upload_dir",
+        "sentence_ml_model_path",
+        "sentence_ml_class_mapping_path",
         mode="before",
     )
     @classmethod

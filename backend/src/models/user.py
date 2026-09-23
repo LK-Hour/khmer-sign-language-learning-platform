@@ -66,3 +66,6 @@ class User(Base):
     word_detection_practice_progress = relationship(
         "WordDetectionUserPracticeProgress", back_populates="user", cascade="all, delete-orphan"
     )
+    sentence_spelling_practice_attempts = relationship(
+        "SentenceSpellingPracticeAttempt", back_populates="user", cascade="all, delete-orphan"
+    )
