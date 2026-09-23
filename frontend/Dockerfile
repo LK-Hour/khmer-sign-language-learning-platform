@@ -28,12 +28,12 @@ ENV NODE_ENV=production \
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
-COPY --from=builder /app/package.json /app/package-lock.json ./
-RUN npm ci --omit=dev
-
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./next.config.ts
+# next.config.ts sets output: "standalone", so .next/standalone carries
+# server.js and a traced node_modules containing only reachable modules.
+# .next/static and public are not traced and must be copied alongside it.
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
@@ -42,4 +42,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/ > /dev/null || exit 1
 
-CMD ["npm", "run", "start"]
+# The standalone bundle is started directly; `next start` is not available
+# in this image because the Next CLI is not part of the traced output.
+CMD ["node", "server.js"]

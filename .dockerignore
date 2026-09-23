@@ -1,0 +1,83 @@
+# Both backend/Dockerfile and frontend/Dockerfile build from the repository
+# root, so this single file governs the context for both. Without it the
+# context is ~15 GB (data_set 6 GB, frontend/.next/dev 4.7 GB,
+# backend/venv 2.7 GB, node_modules 1.1 GB).
+
+# --- VCS and editor/tooling metadata -----------------------------------
+.git
+.gitignore
+.dockerignore
+.github
+.vscode
+.cursor
+.kiro
+.claude
+.agents
+.huno
+
+# --- Docs, design assets, local scratch --------------------------------
+docs
+docs.local
+graphify-out
+postman
+ls
+sign language figma
+house_map_sketch.png
+*.md
+**/README.md
+
+# --- Compose and host-only scripts -------------------------------------
+docker-compose.yml
+start.sh
+
+# --- Secrets -----------------------------------------------------------
+**/.env
+**/.env.*
+!**/.env.example
+localhost.pem
+localhost-key.pem
+ngrok.log
+
+# --- Python ------------------------------------------------------------
+**/__pycache__
+**/*.py[cod]
+backend/venv
+backend/.venv
+backend/env
+backend/htmlcov
+backend/tests
+backend/scripts
+backend/.pytest_cache
+backend/.coverage
+backend/pytest.ini
+backend/run_server.sh
+backend/test_db_connection.py
+
+# --- Node / Next.js ----------------------------------------------------
+**/node_modules
+frontend/.next
+frontend/out
+frontend/coverage
+frontend/tests
+frontend/scripts
+frontend/tsconfig.tsbuildinfo
+frontend/vitest.config.ts
+
+# --- Datasets ----------------------------------------------------------
+# 6 GB of training data. Only the word-detection model assets are read at
+# runtime (src/core/config.py), so re-include just those two files.
+data_set
+!data_set/word_detection_model_assets/best_model_25class_fix.h5
+!data_set/word_detection_model_assets/label_map_25class.json
+
+# --- Unused ML checkpoints ---------------------------------------------
+# 276 MB of models no setting points at. mlp_khmer_model.h5 and
+# best_mlp_khmer_model.h5 are byte-identical duplicates; v1 is superseded
+# by v3 (the configured default). Kept on disk, just never shipped.
+backend/ml/models/mlp_khmer_model.h5
+backend/ml/models/best_mlp_khmer_model.h5
+backend/ml/models/mlp_khmer_model_v1.h5
+backend/ml/notebooks
+backend/ml/realtime_test_MLP.py
+# The browser loads its own copy from frontend/public/models/.
+backend/ml/hand_landmarker.task

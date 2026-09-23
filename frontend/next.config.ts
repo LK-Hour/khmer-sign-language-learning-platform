@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const isDevelopment = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
+  // Emit .next/standalone: a self-contained server plus only the node_modules
+  // the build actually traces. The Docker runner ships that instead of a full
+  // `npm ci --omit=dev` tree (892 MB, a quarter of it @next/swc build-time
+  // compilers that never run in production).
+  output: "standalone",
   turbopack: {
     root: __dirname,
   },
