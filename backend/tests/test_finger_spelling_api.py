@@ -272,3 +272,120 @@ class TestFingerSpellingAPI:
         data = response.json()
         assert data["match_confidence"] == 92.5
         assert data["predicted_label"] == "ក"
+
+
+def _create_second_lesson(client, admin_headers, chapter_id: int):
+    """Guarantee the curriculum holds at least two live lessons."""
+    suffix = unique_suffix()
+    response = client.post(
+        "/api/admin/finger/lessons",
+        json={
+            "chapter_id": chapter_id,
+            "name_en": f"Test Lesson {suffix}",
+            "name_kh": f"មេរៀន {suffix}",
+            "description_en": "Second test lesson",
+            "description_kh": "មេរៀនទីពីរ",
+            "order_index": 2,
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 201, response.text
+    return _publish(client, admin_headers, "lessons", response.json()["id"])
+
+
+def _first_two_lesson_ids(client, admin_headers, db) -> tuple[int, int]:
+    """First and second lessons in real curriculum order (robust to seeded data)."""
+    from src.repositories.finger_spelling.finger_curriculum_repository import (
+        FingerCurriculumRepository,
+    )
+
+    _, chapter, _ = _create_curriculum(client, admin_headers)
+    _create_second_lesson(client, admin_headers, chapter["id"])
+    ordered = FingerCurriculumRepository(db).list_lessons_in_curriculum_order()
+    assert len(ordered) >= 2
+    return ordered[0].id, ordered[1].id
+
+
+def _attempt(client, headers, lesson_id: int):
+    return client.post(
+        f"/api/finger_spelling/practice/lessons/{lesson_id}/attempt",
+        json={"accuracy": 90.0, "label_matched": True},
+        headers=headers,
+    )
+
+
+class TestFingerLessonLockEnforcement:
+    """The linear lesson lock must be enforced by the server, not only the UI."""
+
+    def test_locked_lesson_attempt_is_rejected_and_not_recorded(
+        self, client, admin_headers, auth_headers, db
+    ):
+        _, second_id = _first_two_lesson_ids(client, admin_headers, db)
+
+        response = _attempt(client, auth_headers, second_id)
+        assert response.status_code == 403
+        assert "locked" in response.json()["detail"].lower()
+
+        progress = client.get(
+            f"/api/finger_spelling/progress/lessons/{second_id}", headers=auth_headers
+        )
+        assert progress.status_code == 200
+        assert progress.json()["progressStatus"] == "NOT_STARTED"
+        assert progress.json()["attemptCount"] == 0
+        assert progress.json()["isLocked"] is True
+
+    def test_lessons_unlock_in_order_after_completing_the_previous_one(
+        self, client, admin_headers, auth_headers, db
+    ):
+        first_id, second_id = _first_two_lesson_ids(client, admin_headers, db)
+
+        assert _attempt(client, auth_headers, second_id).status_code == 403
+
+        first = _attempt(client, auth_headers, first_id)
+        assert first.status_code == 200
+        assert first.json()["lesson_completed"] is True
+
+        second = _attempt(client, auth_headers, second_id)
+        assert second.status_code == 200
+        assert second.json()["lesson_id"] == second_id
+
+    def test_admin_can_attempt_a_locked_lesson(self, client, admin_headers, db):
+        _, second_id = _first_two_lesson_ids(client, admin_headers, db)
+
+        assert _attempt(client, admin_headers, second_id).status_code == 200
+
+    def test_attempt_on_missing_lesson_is_still_404(self, client, auth_headers):
+        assert _attempt(client, auth_headers, 999_999_999).status_code == 404
+
+    def test_attempt_requires_authentication(self, client):
+        response = client.post(
+            "/api/finger_spelling/practice/lessons/1/attempt",
+            json={"accuracy": 90.0, "label_matched": True},
+        )
+        assert response.status_code == 401
+
+    def test_enforcement_ignores_a_stale_lock_cache(
+        self, client, admin_headers, seed_user, test_user_data, db
+    ):
+        """Progress written without clear_cache() (e.g. by another worker or the
+        guest import) must not leave a legitimate learner locked out."""
+        from src.repositories.finger_spelling.finger_progress_repository import (
+            FingerProgressRepository,
+        )
+        from src.services.finger_spelling.finger_locking_service import (
+            FingerLockingService,
+        )
+
+        first_id, second_id = _first_two_lesson_ids(client, admin_headers, db)
+        user = seed_user(test_user_data)
+        locking = FingerLockingService(db)
+
+        assert locking.is_lesson_locked(second_id, user.id) is True  # now cached
+
+        row = FingerProgressRepository(db).get_or_create_lesson_progress(user.id, first_id)
+        row.is_completed = True
+        db.flush()
+
+        assert locking.is_lesson_locked(second_id, user.id) is True  # stale cache
+        assert locking.is_lesson_locked(second_id, user.id, use_cache=False) is False
+        assert locking.is_lesson_locked(second_id, user.id) is False  # cache refreshed

@@ -6,8 +6,12 @@ import {
   fetchFsLessons,
   fetchFsUnit,
 } from "@/features/finger-spelling/api/curriculum";
-import { FingerSpellingLessonLearningView } from "@/features/finger-spelling/components";
+import {
+  FingerSpellingLessonAccessGuard,
+  FingerSpellingLessonLearningView,
+} from "@/features/finger-spelling/components";
 import { getNextLessonInChapter } from "@/features/finger-spelling/utils/progress";
+import LessonDetailLoading from "./loading";
 
 type PageProps = {
   params: Promise<{ lessonId: string }>;
@@ -33,13 +37,18 @@ export default async function LessonDetailPage({ params }: PageProps) {
   const nextLesson = getNextLessonInChapter(chapterLessons, lesson?.id);
 
   return (
-    <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
-      <FingerSpellingLessonLearningView
-        lesson={lesson}
-        unit={unit}
-        chapter={chapter}
-        nextLessonId={nextLesson?.id}
-      />
-    </PageContainer>
+    <FingerSpellingLessonAccessGuard
+      lessonId={lesson.id}
+      fallback={<LessonDetailLoading />}
+    >
+      <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
+        <FingerSpellingLessonLearningView
+          lesson={lesson}
+          unit={unit}
+          chapter={chapter}
+          nextLessonId={nextLesson?.id}
+        />
+      </PageContainer>
+    </FingerSpellingLessonAccessGuard>
   );
 }

@@ -6,6 +6,7 @@ import uuid
 import logging
 from dataclasses import dataclass
 
+from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -13,6 +14,7 @@ from src.models.finger_spelling import FingerUserLessonProgress
 from src.repositories.finger_spelling.finger_curriculum_repository import (
     FingerCurriculumRepository,
 )
+from src.services.finger_spelling.finger_locking_service import FingerLockingService
 from src.services.finger_spelling.finger_progress_service import FingerProgressService
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,7 @@ class FingerPracticeService:
         lesson_id: int,
         accuracy: float | None,
         label_matched: bool = False,
+        is_admin: bool = False,
     ) -> PracticeAttemptResult | None:
         try:
             logger.info(f"[record_attempt] user_id={user_id}, lesson_id={lesson_id}, accuracy={accuracy}, label_matched={label_matched}")
@@ -47,6 +50,18 @@ class FingerPracticeService:
             if lesson is None:
                 logger.warning(f"[record_attempt] lesson {lesson_id} not found or inactive")
                 return None
+
+            # Bypass the in-memory lock cache: it can lag behind progress written
+            # by another worker or by the guest-progress import, which would
+            # wrongly reject a learner who has legitimately unlocked this lesson.
+            if FingerLockingService(self.db).is_lesson_locked(
+                lesson_id, user_id, is_admin=is_admin, use_cache=False
+            ):
+                logger.warning(f"[record_attempt] lesson {lesson_id} is locked for user {user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Lesson is locked. Complete the previous lesson first.",
+                )
 
             normalized_accuracy = None if accuracy is None else round(float(accuracy), 2)
             # Use explicit label_matched signal from the client instead of
@@ -74,6 +89,8 @@ class FingerPracticeService:
                 lesson_completed=bool(progress.is_completed),
                 progress=progress,
             )
+        except HTTPException:
+            raise
         except SQLAlchemyError as e:
             logger.error(f"[record_attempt] database error: {e}", exc_info=True)
             self.db.rollback()

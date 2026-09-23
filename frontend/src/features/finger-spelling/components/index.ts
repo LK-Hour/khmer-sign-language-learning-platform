@@ -3,6 +3,7 @@ export { default as FingerSpellingPageLoading } from "./FingerSpellingPageLoadin
 export { FingerSpellingTrackSkeleton } from "./FingerSpellingPageLoading";
 export { default as FingerSpellingTrack } from "./FingerSpellingTrack";
 export { default as FingerSpellingTrackContainer } from "./FingerSpellingTrackContainer";
+export { default as FingerSpellingLessonAccessGuard } from "./learning/FingerSpellingLessonAccessGuard";
 export { default as FingerSpellingLessonLearningView } from "./learning/FingerSpellingLessonLearningView";
 export { ChapterPracticeView, ChapterPracticeContainer } from "./practice";
 export { CompletionText, ExerciseStartButtonLink } from "./common";
