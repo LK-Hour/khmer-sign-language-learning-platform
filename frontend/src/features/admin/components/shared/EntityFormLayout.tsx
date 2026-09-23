@@ -32,10 +32,10 @@ export interface EntityFormLayoutProps {
   onSave: () => void | Promise<void>; // Save action
   onCancel: () => void; // Cancel/back navigation
   children: ReactNode; // Main form content (left/primary area)
-  /** Right-hand column content — media preview (image/video), takes priority over `sidebar`. */
+  /** Right-hand column content-media preview (image/video), takes priority over `sidebar`. */
   previewPanel?: ReactNode;
-  sidebar?: ReactNode; // Sidebar content (order_index, metadata — no toggles)
-  /** Full-width section rendered below the main grid, above junctionSection — typically the publish/active toggle. */
+  sidebar?: ReactNode; // Sidebar content (order_index, metadata-no toggles)
+  /** Full-width section rendered below the main grid, above junctionSection-typically the publish/active toggle. */
   statusSection?: ReactNode;
   junctionSection?: ReactNode; // Below-form section for junction editors
 }
@@ -191,7 +191,7 @@ export default function EntityFormLayout({
             )}
           </Box>
 
-          {/* ── Status Section (publish/active toggle) — full width, below the grid ── */}
+          {/* ── Status Section (publish/active toggle)-full width, below the grid ── */}
           {statusSection && (
             <Card sx={{ mt: 3 }}>
               <CardContent sx={{ p: 3 }}>{statusSection}</CardContent>
@@ -211,11 +211,11 @@ export default function EntityFormLayout({
             </Card>
           )}
 
-          {/* ── Action Buttons — bottom-right of the form, in normal page flow ── */}
+          {/* ── Action Buttons-bottom-center of the form, in normal page flow ── */}
           <Stack
             direction="row"
             spacing={2}
-            sx={{ justifyContent: "flex-end", mt: 4 }}
+            sx={{ justifyContent: "center", mt: 4 }}
           >
             <Button
               variant="outlined"

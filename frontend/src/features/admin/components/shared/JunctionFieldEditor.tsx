@@ -137,6 +137,7 @@ export default function JunctionFieldEditor<T>({
         getOptionLabel={getOptionLabel}
         getOptionKey={getOptionKey}
         placeholder={`Type to search and add ${label.toLowerCase()}…`}
+        clearOnSelect
       />
 
       {/* Selected Items as Chips */}

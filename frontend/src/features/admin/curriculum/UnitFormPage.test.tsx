@@ -8,7 +8,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 
@@ -20,13 +20,16 @@ vi.mock("../api/adminApi", () => ({
   updateUnit: vi.fn(),
   publishUnit: vi.fn(),
   getUnit: vi.fn(),
+  listUnits: vi.fn(),
+  listChapters: vi.fn(),
+  updateChapter: vi.fn(),
 }));
 
 import { LocaleContextProvider } from "@/i18n/locale-context";
 import { ApiError } from "@/utils/api/client";
 
 import * as adminApi from "../api/adminApi";
-import type { AdminUnit } from "../api/types";
+import type { AdminChapter, AdminUnit } from "../api/types";
 import UnitFormPage from "./UnitFormPage";
 
 const unit = (overrides: Partial<AdminUnit> = {}): AdminUnit => ({
@@ -42,6 +45,25 @@ const unit = (overrides: Partial<AdminUnit> = {}): AdminUnit => ({
   created_at: null,
   updated_at: null,
   chapter_count: 0,
+  ...overrides,
+});
+
+const chapter = (overrides: Partial<AdminChapter> = {}): AdminChapter => ({
+  id: 21,
+  unit_id: 2,
+  name_en: "Greetings",
+  name_kh: "ស្វាគមន៍",
+  description_en: null,
+  description_kh: null,
+  order_index: 1,
+  is_active: true,
+  publish_status: "draft",
+  published_at: null,
+  created_at: null,
+  updated_at: null,
+  level: null,
+  lesson_count: 0,
+  exercise_count: 0,
   ...overrides,
 });
 
@@ -62,6 +84,9 @@ async function fillRequiredFields() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  api.listChapters.mockResolvedValue([]);
+  api.listUnits.mockResolvedValue([]);
+  api.updateChapter.mockResolvedValue(chapter());
 });
 
 describe("UnitFormPage publish status", () => {
@@ -128,5 +153,103 @@ describe("UnitFormPage publish status", () => {
 
     await waitFor(() => expect(screen.getByRole("switch")).toBeDisabled());
     expect(screen.getByRole("switch")).not.toBeChecked();
+  });
+});
+
+describe("UnitFormPage relationships", () => {
+  it("lists the unit's active chapters in order and links each one", async () => {
+    api.getUnit.mockResolvedValue(unit());
+    api.listChapters.mockImplementation(async (_track, unitId) =>
+      unitId === 5
+        ? [
+            chapter({ id: 22, name_en: "Family", order_index: 2 }),
+            chapter({ id: 21, name_en: "Greetings", order_index: 1, publish_status: "published" }),
+            chapter({ id: 23, name_en: "Removed", order_index: 3, is_active: false }),
+          ]
+        : [],
+    );
+    renderForm(5);
+
+    expect(await screen.findByText("Chapters (2)")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /1\. greetings/i })).toHaveAttribute(
+      "href",
+      "/en/admin/learning/finger-spelling/chapters/21/edit",
+    );
+    expect(screen.getByText("2. Family")).toBeInTheDocument();
+    expect(screen.queryByText(/removed/i)).not.toBeInTheDocument();
+  });
+
+  it("moves a chosen existing chapter under a new unit after creating it", async () => {
+    api.createUnit.mockResolvedValue(unit({ id: 5 }));
+    api.listUnits.mockResolvedValue([unit({ id: 2, name_en: "Old Unit" })]);
+    api.listChapters.mockResolvedValue([chapter({ id: 21, unit_id: 2 })]);
+    renderForm();
+
+    await fillRequiredFields();
+    await userEvent.click(screen.getByRole("combobox", { name: /add existing chapter/i }));
+    await userEvent.click(await screen.findByRole("option", { name: /greetings · currently in old unit/i }));
+    expect(screen.getByText("Chapters (1)")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(api.updateChapter).toHaveBeenCalledWith("finger", 21, { unit_id: 5, order_index: 1 });
+    // the unit has to exist before a chapter can be moved into it
+    expect(api.createUnit.mock.invocationCallOrder[0]).toBeLessThan(
+      api.updateChapter.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("appends attached chapters after the unit's current last chapter on edit", async () => {
+    api.getUnit.mockResolvedValue(unit());
+    api.updateUnit.mockResolvedValue(unit());
+    api.listChapters.mockImplementation(async (_track, unitId) =>
+      unitId === 5
+        ? [chapter({ id: 30, unit_id: 5, name_en: "Existing", order_index: 3 })]
+        : [chapter({ id: 21, unit_id: 2 })],
+    );
+    renderForm(5);
+    await screen.findByText("3. Existing");
+
+    await userEvent.click(screen.getByRole("combobox", { name: /add existing chapter/i }));
+    await userEvent.click(await screen.findByRole("option", { name: /greetings/i }));
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(api.updateChapter).toHaveBeenCalledWith("finger", 21, { unit_id: 5, order_index: 4 });
+  });
+
+  it("lets a staged chapter be undone before saving", async () => {
+    api.createUnit.mockResolvedValue(unit());
+    api.listChapters.mockResolvedValue([chapter({ id: 21, unit_id: 2 })]);
+    renderForm();
+
+    await fillRequiredFields();
+    await userEvent.click(screen.getByRole("combobox", { name: /add existing chapter/i }));
+    await userEvent.click(await screen.findByRole("option", { name: /greetings/i }));
+
+    const chip = screen.getByText("Greetings").closest(".MuiChip-root") as HTMLElement;
+    await userEvent.click(within(chip).getByTestId("CancelIcon"));
+    expect(screen.getByText("Chapters (0)")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(api.updateChapter).not.toHaveBeenCalled();
+  });
+
+  it("stays on the form and keeps the chapter pending when moving it fails", async () => {
+    api.createUnit.mockResolvedValue(unit());
+    api.updateChapter.mockRejectedValue(new ApiError(409, "/chapters/21", "Order already used"));
+    api.listChapters.mockResolvedValue([chapter({ id: 21, unit_id: 2 })]);
+    renderForm();
+
+    await fillRequiredFields();
+    await userEvent.click(screen.getByRole("combobox", { name: /add existing chapter/i }));
+    await userEvent.click(await screen.findByRole("option", { name: /greetings/i }));
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(await screen.findByText(/order already used/i)).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByText("Chapters (1)")).toBeInTheDocument();
   });
 });

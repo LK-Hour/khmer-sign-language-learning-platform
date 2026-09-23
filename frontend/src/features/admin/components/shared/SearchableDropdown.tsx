@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   Autocomplete,
   CircularProgress,
@@ -21,6 +21,12 @@ export interface SearchableDropdownProps<T> {
   helperText?: string;
   disabled?: boolean;
   placeholder?: string;
+  /**
+   * For "add to a list" pickers whose `value` stays null after choosing: clear the typed text
+   * and refresh the options once an item is picked, so the next one can be chosen straight away.
+   * Without it the chosen label stays in the box and filters the list to nothing.
+   */
+  clearOnSelect?: boolean;
 }
 
 /**
@@ -41,6 +47,7 @@ export default function SearchableDropdown<T>({
   helperText,
   disabled = false,
   placeholder,
+  clearOnSelect = false,
 }: SearchableDropdownProps<T>) {
   const { options, loading, search } = useSearchOptions<T>({
     fetcher: fetchOptions,
@@ -48,18 +55,30 @@ export default function SearchableDropdown<T>({
     initialFetch: true,
   });
 
+  // Only used (controlled) when `clearOnSelect` is set; otherwise MUI manages the text itself.
+  const [typed, setTyped] = useState("");
+
   const handleInputChange = useCallback(
     (_event: React.SyntheticEvent, inputValue: string, reason: string) => {
+      if (clearOnSelect) {
+        // "selectOption"/"reset" is MUI writing the chosen option's label into the box.
+        const picked = reason === "selectOption" || reason === "reset";
+        const next = picked ? "" : inputValue;
+        setTyped(next);
+        if (reason === "input" || reason === "clear" || picked) search(next);
+        return;
+      }
       if (reason === "input") {
         search(inputValue);
       }
     },
-    [search],
+    [search, clearOnSelect],
   );
 
   return (
     <Autocomplete<T, false, false, false>
       value={value}
+      inputValue={clearOnSelect ? typed : undefined}
       onChange={(_event, newValue) => onChange(newValue)}
       onInputChange={handleInputChange}
       options={options}

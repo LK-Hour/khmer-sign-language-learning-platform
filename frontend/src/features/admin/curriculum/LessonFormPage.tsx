@@ -6,6 +6,7 @@ import { Box, Stack, TextField, Typography } from "@mui/material";
 
 import EntityFormLayout from "../components/shared/EntityFormLayout";
 import PublishStatusSwitch from "../components/shared/PublishStatusSwitch";
+import RelationshipSection from "../components/shared/RelationshipSection";
 import SearchableDropdown from "../components/shared/SearchableDropdown";
 import JunctionFieldEditor, {
   type JunctionItem,
@@ -13,6 +14,7 @@ import JunctionFieldEditor, {
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
+import { getLocalizedPair } from "@/i18n/localizedText";
 import * as adminApi from "../api/adminApi";
 import {
   getLessonLetters,
@@ -38,6 +40,7 @@ import type {
   AdminTrack,
 } from "../api/types";
 import { publishAfterSave } from "./publishAfterSave";
+import { curriculumEditPath } from "./relatedItems";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -414,21 +417,34 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
         />
       }
       junctionSection={
-        <JunctionFieldEditor<DictionaryItem>
-          label={junctionLabel}
-          selectedItems={junctionItems}
-          onAdd={handleAddJunctionItem}
-          onRemove={handleRemoveJunctionItem}
-          onReorder={handleReorderJunctionItems}
-          fetchOptions={fetchJunctionOptions}
-          getOptionLabel={(item) =>
-            item.name_en
-              ? `${item.name_en} · ${item.name_kh}`
-              : item.name_kh
+        <RelationshipSection
+          parent={
+            selectedChapter
+              ? {
+                  typeLabel: t("FORM.CHAPTER"),
+                  name: getLocalizedPair(locale, selectedChapter.name_en, selectedChapter.name_kh)
+                    .primary,
+                  href: curriculumEditPath(locale, track, "chapters", selectedChapter.id),
+                }
+              : null
           }
-          getOptionKey={(item) => item.id}
-          showOrderIndex
-        />
+        >
+          <JunctionFieldEditor<DictionaryItem>
+            label={junctionLabel}
+            selectedItems={junctionItems}
+            onAdd={handleAddJunctionItem}
+            onRemove={handleRemoveJunctionItem}
+            onReorder={handleReorderJunctionItems}
+            fetchOptions={fetchJunctionOptions}
+            getOptionLabel={(item) =>
+              item.name_en
+                ? `${item.name_en} · ${item.name_kh}`
+                : item.name_kh
+            }
+            getOptionKey={(item) => item.id}
+            showOrderIndex
+          />
+        </RelationshipSection>
       }
     >
       {/* Main form fields */}

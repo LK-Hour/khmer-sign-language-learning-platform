@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Stack, TextField } from "@mui/material";
 
 import EntityFormLayout from "../components/shared/EntityFormLayout";
 import PublishStatusSwitch from "../components/shared/PublishStatusSwitch";
+import RelatedItemsField from "../components/shared/RelatedItemsField";
+import RelationshipSection from "../components/shared/RelationshipSection";
+import { useChildAttachments } from "../hooks/useChildAttachments";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
+import { getLocalizedPair } from "@/i18n/localizedText";
 import * as adminApi from "../api/adminApi";
-import type { AdminTrack, AdminUnit } from "../api/types";
+import type { AdminChapter, AdminTrack, AdminUnit } from "../api/types";
 import { publishAfterSave } from "./publishAfterSave";
+import { curriculumEditPath, matchesName, toRelatedItem } from "./relatedItems";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +83,18 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
   // failed publish) updates the row instead of creating a duplicate.
   const savedIdRef = useRef<number | undefined>(entityId);
 
+  // Chapters under this unit, plus existing chapters chosen to be moved here on save.
+  const chapters = useChildAttachments<AdminChapter>({
+    parentId: entityId,
+    load: async (unitId) =>
+      (await adminApi.listChapters(track as AdminTrack, unitId)).filter((c) => c.is_active),
+    attach: (chapter, unitId, orderIndex) =>
+      adminApi.updateChapter(track as AdminTrack, chapter.id, {
+        unit_id: unitId,
+        order_index: orderIndex,
+      }),
+  });
+
   // Form hook
   const form = useEntityForm<UnitFormValues, AdminUnit>({
     initialValues: {
@@ -105,6 +122,8 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
         ? await adminApi.updateUnit(track as AdminTrack, existingId, payload)
         : await adminApi.createUnit(track as AdminTrack, payload);
       savedIdRef.current = saved.id;
+
+      await chapters.attachPending(saved.id);
 
       if (!values.is_published) return saved;
       return publishAfterSave(() => adminApi.publishUnit(track as AdminTrack, saved.id));
@@ -142,6 +161,27 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityId, track, isEdit]);
 
+  // Candidates for "Add existing chapter": active chapters of other units, with where they are now.
+  const fetchChapterCandidates = useCallback(
+    async (query: string) => {
+      const [allChapters, units] = await Promise.all([
+        adminApi.listChapters(track as AdminTrack),
+        adminApi.listUnits(track as AdminTrack),
+      ]);
+      const unitNames = new Map(
+        units.map((u) => [u.id, getLocalizedPair(locale, u.name_en, u.name_kh).primary]),
+      );
+      return allChapters
+        .filter((c) => c.is_active && c.unit_id !== entityId && matchesName(c, query))
+        .map((c) =>
+          toRelatedItem(c, locale, {
+            note: `${t("FORM.RELATED_CURRENTLY_IN")} ${unitNames.get(c.unit_id) ?? `#${c.unit_id}`}`,
+          }),
+        );
+    },
+    [track, locale, entityId, t],
+  );
+
   // Breadcrumbs
   const trackLabel = track === "finger" ? t("ADMIN.TRACK_FINGER") : t("ADMIN.TRACK_WORD_DETECTION");
   const breadcrumbs = [
@@ -161,6 +201,24 @@ export default function UnitFormPage({ track, entityId }: UnitFormPageProps) {
       serverError={form.serverError}
       onSave={form.handleSubmit}
       onCancel={() => router.push(listPath)}
+      junctionSection={
+        <RelationshipSection>
+          <RelatedItemsField<AdminChapter>
+            label={t("FORM.CHAPTERS")}
+            addLabel={t("FORM.RELATED_ADD_CHAPTER")}
+            items={chapters.items.map((c) =>
+              toRelatedItem(c, locale, {
+                href: curriculumEditPath(locale, track, "chapters", c.id),
+              }),
+            )}
+            pending={chapters.pending.map((c) => toRelatedItem(c, locale))}
+            loading={chapters.loading}
+            onAttach={(item) => chapters.stage(item.source)}
+            onUndoAttach={(item) => chapters.unstage(item.source)}
+            fetchCandidates={fetchChapterCandidates}
+          />
+        </RelationshipSection>
+      }
       sidebar={
         <Stack spacing={3}>
           {/* Order Index */}

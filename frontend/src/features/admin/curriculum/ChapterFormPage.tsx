@@ -6,13 +6,24 @@ import { Box, Stack, TextField } from "@mui/material";
 
 import EntityFormLayout from "../components/shared/EntityFormLayout";
 import PublishStatusSwitch from "../components/shared/PublishStatusSwitch";
+import RelatedItemsField from "../components/shared/RelatedItemsField";
+import RelationshipSection from "../components/shared/RelationshipSection";
 import SearchableDropdown from "../components/shared/SearchableDropdown";
+import { useChildAttachments } from "../hooks/useChildAttachments";
 import { useEntityForm } from "../hooks/useEntityForm";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
+import { getLocalizedPair } from "@/i18n/localizedText";
 import * as adminApi from "../api/adminApi";
-import type { AdminChapter, AdminChapterPayload, AdminTrack, AdminUnit } from "../api/types";
+import type {
+  AdminChapter,
+  AdminChapterPayload,
+  AdminLesson,
+  AdminTrack,
+  AdminUnit,
+} from "../api/types";
 import { publishAfterSave } from "./publishAfterSave";
+import { curriculumEditPath, matchesName, toRelatedItem } from "./relatedItems";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,6 +94,18 @@ export default function ChapterFormPage({ track, entityId }: ChapterFormPageProp
   // Id of the saved row. Set after the first successful save so that a retry (e.g. after a
   // failed publish) updates the row instead of creating a duplicate.
   const savedIdRef = useRef<number | undefined>(entityId);
+
+  // Lessons under this chapter, plus existing lessons chosen to be moved here on save.
+  const lessons = useChildAttachments<AdminLesson>({
+    parentId: entityId,
+    load: async (chapterId) =>
+      (await adminApi.listLessons(track as AdminTrack, chapterId)).filter((l) => l.is_active),
+    attach: (lesson, chapterId, orderIndex) =>
+      adminApi.updateLesson(track as AdminTrack, lesson.id, {
+        chapter_id: chapterId,
+        order_index: orderIndex,
+      }),
+  });
   const [selectedUnit, setSelectedUnit] = useState<AdminUnit | null>(null);
 
   // Form hook
@@ -120,6 +143,8 @@ export default function ChapterFormPage({ track, entityId }: ChapterFormPageProp
         ? await adminApi.updateChapter(track as AdminTrack, existingId, payload)
         : await adminApi.createChapter(track as AdminTrack, payload);
       savedIdRef.current = saved.id;
+
+      await lessons.attachPending(saved.id);
 
       if (!values.is_published) return saved;
       return publishAfterSave(() => adminApi.publishChapter(track as AdminTrack, saved.id));
@@ -182,6 +207,27 @@ export default function ChapterFormPage({ track, entityId }: ChapterFormPageProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityId, track, isEdit]);
 
+  // Candidates for "Add existing lesson": active lessons of other chapters, with where they are now.
+  const fetchLessonCandidates = useCallback(
+    async (query: string) => {
+      const [allLessons, chapters] = await Promise.all([
+        adminApi.listLessons(track as AdminTrack),
+        adminApi.listChapters(track as AdminTrack),
+      ]);
+      const chapterNames = new Map(
+        chapters.map((c) => [c.id, getLocalizedPair(locale, c.name_en, c.name_kh).primary]),
+      );
+      return allLessons
+        .filter((l) => l.is_active && l.chapter_id !== entityId && matchesName(l, query))
+        .map((l) =>
+          toRelatedItem(l, locale, {
+            note: `${t("FORM.RELATED_CURRENTLY_IN")} ${chapterNames.get(l.chapter_id) ?? `#${l.chapter_id}`}`,
+          }),
+        );
+    },
+    [track, locale, entityId, t],
+  );
+
   // Handle unit selection
   const handleUnitChange = (unit: AdminUnit | null) => {
     setSelectedUnit(unit);
@@ -207,6 +253,34 @@ export default function ChapterFormPage({ track, entityId }: ChapterFormPageProp
       serverError={form.serverError}
       onSave={form.handleSubmit}
       onCancel={() => router.push(listPath)}
+      junctionSection={
+        <RelationshipSection
+          parent={
+            selectedUnit
+              ? {
+                  typeLabel: t("FORM.UNIT"),
+                  name: getLocalizedPair(locale, selectedUnit.name_en, selectedUnit.name_kh).primary,
+                  href: curriculumEditPath(locale, track, "units", selectedUnit.id),
+                }
+              : null
+          }
+        >
+          <RelatedItemsField<AdminLesson>
+            label={t("FORM.LESSONS")}
+            addLabel={t("FORM.RELATED_ADD_LESSON")}
+            items={lessons.items.map((l) =>
+              toRelatedItem(l, locale, {
+                href: curriculumEditPath(locale, track, "lessons", l.id),
+              }),
+            )}
+            pending={lessons.pending.map((l) => toRelatedItem(l, locale))}
+            loading={lessons.loading}
+            onAttach={(item) => lessons.stage(item.source)}
+            onUndoAttach={(item) => lessons.unstage(item.source)}
+            fetchCandidates={fetchLessonCandidates}
+          />
+        </RelationshipSection>
+      }
       sidebar={
         <Stack spacing={3}>
           {/* Order Index */}
