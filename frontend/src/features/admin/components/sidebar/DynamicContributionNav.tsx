@@ -49,8 +49,10 @@ function transformTree(nodes: ContributionTreeNode[]): NavTreeNodeConfig[] {
 
 export interface DynamicContributionNavProps {
   depth: number;
+  /** IDs from the root down to the "Data Contribution" node that hosts this tree */
+  ancestorIds: string[];
   expandedIds: Set<string>;
-  onToggle: (id: string) => void;
+  onToggle: (id: string, ancestorIds: string[]) => void;
   onNavigate?: () => void;
 }
 
@@ -58,6 +60,7 @@ export interface DynamicContributionNavProps {
 
 export default function DynamicContributionNav({
   depth,
+  ancestorIds,
   expandedIds,
   onToggle,
   onNavigate,
@@ -147,6 +150,7 @@ export default function DynamicContributionNav({
           key={node.id}
           node={node}
           depth={depth}
+          ancestorIds={ancestorIds}
           expandedIds={expandedIds}
           onToggle={onToggle}
           onNavigate={onNavigate}

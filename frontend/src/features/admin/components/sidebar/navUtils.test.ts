@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { findAncestorIds } from "./navUtils";
+import { findAncestorIds, stripLocalePrefix, toggleAccordionPath } from "./navUtils";
 import type { NavTreeNodeConfig } from "./navTypes";
 
 describe("findAncestorIds", () => {
@@ -67,5 +67,58 @@ describe("findAncestorIds", () => {
   it("handles empty tree", () => {
     const result = findAncestorIds([], "/admin/analytics");
     expect(result).toEqual([]);
+  });
+});
+
+describe("stripLocalePrefix", () => {
+  it("removes the locale segment", () => {
+    expect(stripLocalePrefix("/kh/admin/analytics")).toBe("/admin/analytics");
+    expect(stripLocalePrefix("/en/admin/learning/finger-spelling/units")).toBe(
+      "/admin/learning/finger-spelling/units",
+    );
+  });
+
+  it("maps a bare locale to the root", () => {
+    expect(stripLocalePrefix("/en")).toBe("/");
+  });
+
+  it("leaves paths without a locale untouched", () => {
+    expect(stripLocalePrefix("/admin/analytics")).toBe("/admin/analytics");
+    // must not eat a segment that merely starts with a locale code
+    expect(stripLocalePrefix("/english/admin")).toBe("/english/admin");
+  });
+});
+
+describe("toggleAccordionPath", () => {
+  it("opens a top-level node and closes the other open top-level node", () => {
+    expect(toggleAccordionPath(["learning-mgmt"], "dictionary", [])).toEqual(["dictionary"]);
+  });
+
+  it("opens a nested node, keeping its ancestors and closing its sibling", () => {
+    expect(
+      toggleAccordionPath(
+        ["learning-mgmt", "finger-spelling"],
+        "word-detection",
+        ["learning-mgmt"],
+      ),
+    ).toEqual(["learning-mgmt", "word-detection"]);
+  });
+
+  it("closes an open node together with its open descendants, keeping ancestors", () => {
+    expect(
+      toggleAccordionPath(["learning-mgmt", "finger-spelling"], "learning-mgmt", []),
+    ).toEqual([]);
+    expect(
+      toggleAccordionPath(
+        ["learning-mgmt", "unit-quiz", "quiz-fs"],
+        "unit-quiz",
+        ["learning-mgmt"],
+      ),
+    ).toEqual(["learning-mgmt"]);
+  });
+
+  it("collapses older state that had several branches open", () => {
+    expect(toggleAccordionPath(["learning-mgmt", "dictionary", "users"], "users", [])).toEqual([]);
+    expect(toggleAccordionPath(["learning-mgmt", "dictionary"], "users", [])).toEqual(["users"]);
   });
 });

@@ -31,8 +31,10 @@ function transformUnits(
 export interface DynamicQuizNavProps {
   track: "finger" | "word_detection";
   depth: number;
+  /** IDs from the root down to the node that hosts this list */
+  ancestorIds: string[];
   expandedIds: Set<string>;
-  onToggle: (id: string) => void;
+  onToggle: (id: string, ancestorIds: string[]) => void;
   onNavigate?: () => void;
 }
 
@@ -41,6 +43,7 @@ export interface DynamicQuizNavProps {
 export default function DynamicQuizNav({
   track,
   depth,
+  ancestorIds,
   expandedIds,
   onToggle,
   onNavigate,
@@ -127,6 +130,7 @@ export default function DynamicQuizNav({
           key={node.id}
           node={node}
           depth={depth}
+          ancestorIds={ancestorIds}
           expandedIds={expandedIds}
           onToggle={onToggle}
           onNavigate={onNavigate}

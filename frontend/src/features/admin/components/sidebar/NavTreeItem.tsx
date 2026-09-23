@@ -13,6 +13,8 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import type { NavTreeNodeConfig } from "./navTypes";
+import type { Theme } from "@mui/material/styles";
+import { primaryTint } from "../../theme/tones";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
 
@@ -23,17 +25,20 @@ export interface NavTreeItemProps {
   node: NavTreeNodeConfig;
   depth: number;
   expandedIds: Set<string>;
-  onToggle: (id: string) => void;
+  /** `ancestorIds` lets the store keep the path to this node open and close its siblings. */
+  onToggle: (id: string, ancestorIds: string[]) => void;
   onNavigate?: () => void;
   /** Whether this item is the last sibling in its group */
   isLast?: boolean;
+  /** IDs from the root down to this node's parent (empty for top-level items) */
+  ancestorIds?: string[];
 }
 
 const activeStyles = {
-  bgcolor: "rgba(12, 68, 174, 0.08)",
+  bgcolor: (theme: Theme) => primaryTint(theme),
   color: "primary.main",
   fontWeight: 700,
-  "&:hover": { bgcolor: "rgba(12, 68, 174, 0.12)" },
+  "&:hover": { bgcolor: (theme: Theme) => primaryTint(theme, "hover") },
 };
 
 const expandedStyles = {
@@ -48,6 +53,8 @@ const inactiveStyles = {
   "&:hover": { bgcolor: "action.hover", color: "text.primary" },
 };
 
+const NO_ANCESTORS: string[] = [];
+
 export default function NavTreeItem({
   node,
   depth,
@@ -55,6 +62,7 @@ export default function NavTreeItem({
   onToggle,
   onNavigate,
   isLast = false,
+  ancestorIds = NO_ANCESTORS,
 }: NavTreeItemProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
@@ -79,9 +87,12 @@ export default function NavTreeItem({
   const ROW_HEIGHT = 40;
   const ROW_CENTER = ROW_HEIGHT / 2;
 
+  // Path passed to descendants so their toggles know which branch to keep open.
+  const childAncestorIds = [...ancestorIds, node.id];
+
   const handleClick = () => {
     if (isParent) {
-      onToggle(node.id);
+      onToggle(node.id, ancestorIds);
       // If the parent has its own path, also navigate to it
       if (node.path) {
         onNavigate?.();
@@ -193,6 +204,7 @@ export default function NavTreeItem({
             {node.dynamic === "contribution-tree" ? (
               <DynamicContributionNav
                 depth={depth + 1}
+                ancestorIds={childAncestorIds}
                 expandedIds={expandedIds}
                 onToggle={onToggle}
                 onNavigate={onNavigate}
@@ -201,6 +213,7 @@ export default function NavTreeItem({
               <DynamicQuizNav
                 track="finger"
                 depth={depth + 1}
+                ancestorIds={childAncestorIds}
                 expandedIds={expandedIds}
                 onToggle={onToggle}
                 onNavigate={onNavigate}
@@ -209,6 +222,7 @@ export default function NavTreeItem({
               <DynamicQuizNav
                 track="word_detection"
                 depth={depth + 1}
+                ancestorIds={childAncestorIds}
                 expandedIds={expandedIds}
                 onToggle={onToggle}
                 onNavigate={onNavigate}
@@ -219,6 +233,7 @@ export default function NavTreeItem({
                   key={child.id}
                   node={child}
                   depth={depth + 1}
+                  ancestorIds={childAncestorIds}
                   expandedIds={expandedIds}
                   onToggle={onToggle}
                   onNavigate={onNavigate}

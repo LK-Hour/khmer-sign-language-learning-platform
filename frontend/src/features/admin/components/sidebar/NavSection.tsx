@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { List, ListSubheader } from "@mui/material";
 import NavTreeItem from "./NavTreeItem";
-import { findAncestorIds } from "./navUtils";
+import { findAncestorIds, stripLocalePrefix } from "./navUtils";
 import { NAV_CONFIG } from "./navConfig";
 import type { NavSectionConfig } from "./navConfig";
 import { useAdminUiStore } from "../../store/adminUi.store";
@@ -25,17 +25,16 @@ export default function NavSection({ section, onNavigate }: NavSectionProps) {
   // Convert string[] to Set<string> for efficient lookup by NavTreeItem
   const expandedIds = useMemo(() => new Set(expandedNavIds), [expandedNavIds]);
 
-  // Auto-expand ancestor nodes on mount to reveal the active leaf.
-  // Merges into existing expanded state so other open branches stay open.
+  // Reveal the active leaf when the route changes. The sidebar is an accordion (one open
+  // branch per level), so this replaces the expanded set with just the leaf's ancestors
+  // rather than adding to it, which also tidies up any older state with several branches open.
   useEffect(() => {
     // Collect all items across all sections for full tree traversal
     const allItems = NAV_CONFIG.flatMap((s) => s.items);
-    const ancestors = findAncestorIds(allItems, pathname);
+    // Nav paths have no locale segment, but usePathname() always does.
+    const ancestors = findAncestorIds(allItems, stripLocalePrefix(pathname));
     if (ancestors.length > 0) {
-      // Merge: add ancestors to current expanded set without collapsing others
-      const current = useAdminUiStore.getState().expandedNavIds;
-      const merged = [...new Set([...current, ...ancestors])];
-      expandNavNodes(merged);
+      expandNavNodes(ancestors);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import type { AdminTrack } from "../api/types";
+import { toggleAccordionPath } from "../components/sidebar/navUtils";
 
 export type AdminEntityTab = "units" | "chapters" | "lessons";
 
@@ -14,9 +15,12 @@ interface AdminUiState {
   setTrack: (track: AdminTrack) => void;
   setCurriculumTab: (tab: AdminEntityTab) => void;
   toggleSidebar: () => void;
-  /** Toggle a single nav node's expanded state */
-  toggleNavNode: (id: string) => void;
-  /** Expand multiple nodes at once (for auto-expand on route match) */
+  /**
+   * Toggle a nav node accordion-style: only one branch stays open per level.
+   * `ancestorIds` is the path from the root down to the node's parent.
+   */
+  toggleNavNode: (id: string, ancestorIds?: string[]) => void;
+  /** Replace the expanded set (used to reveal the active route's branch) */
   expandNavNodes: (ids: string[]) => void;
   /** Collapse all nav nodes */
   collapseAllNav: () => void;
@@ -32,11 +36,9 @@ export const useAdminUiStore = create<AdminUiState>()(
       setTrack: (track) => set({ track }),
       setCurriculumTab: (curriculumTab) => set({ curriculumTab }),
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-      toggleNavNode: (id) =>
+      toggleNavNode: (id, ancestorIds = []) =>
         set((state) => ({
-          expandedNavIds: state.expandedNavIds.includes(id)
-            ? state.expandedNavIds.filter((nid) => nid !== id)
-            : [...state.expandedNavIds, id],
+          expandedNavIds: toggleAccordionPath(state.expandedNavIds, id, ancestorIds),
         })),
       expandNavNodes: (ids) =>
         set(() => ({
