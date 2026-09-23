@@ -15,7 +15,7 @@ type SentenceStatCardProps = {
   valueSuffix?: string;
   valueColor?: string;
   caption?: ReactNode;
-  /** Right-hand visual — usually a `SentenceStatIconTile` or a progress ring. */
+  /** Right-hand visual-usually a `SentenceStatIconTile` or a progress ring. */
   icon: ReactNode;
 };
 

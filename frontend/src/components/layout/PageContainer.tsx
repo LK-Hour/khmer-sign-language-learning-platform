@@ -7,7 +7,7 @@ type PageContainerProps = {
 };
 
 /**
- * Standard page wrapper — always use `maxWidth="xl"`.
+ * Standard page wrapper-always use `maxWidth="xl"`.
  *
  * @example
  * <PageContainer>

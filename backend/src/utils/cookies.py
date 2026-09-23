@@ -20,7 +20,7 @@ def set_refresh_cookie(
     lifetime_days = max_age_days or settings.refresh_token_expire_days
     # SameSite=None requires Secure=true in production (HTTPS).
     # For local dev (cookie_secure=False), Chrome still allows SameSite=None
-    # on localhost without Secure. Firefox may not — developers using Firefox
+    # on localhost without Secure. Firefox may not-developers using Firefox
     # locally should set COOKIE_SECURE=true and use HTTPS or a tunnel.
     samesite = settings.cookie_samesite
     secure = settings.cookie_secure

@@ -83,7 +83,7 @@ def get_overview_stats(
     now = datetime.now(timezone.utc)
     twenty_four_hours_ago = now - timedelta(hours=24)
 
-    # Users who logged in recently — label as "uid" for consistent union
+    # Users who logged in recently-label as "uid" for consistent union
     login_active = (
         db.query(User.id.label("uid"))
         .filter(User.last_login_at >= twenty_four_hours_ago)

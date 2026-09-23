@@ -1,7 +1,7 @@
 """Target-label matching for sentence-spelling practice.
 
 Unlike finger-spelling's ``label_match_filter``, this does not resolve any
-visual-ambiguity aliases — the sentence-spelling model is a distinct,
+visual-ambiguity aliases-the sentence-spelling model is a distinct,
 newer classifier and no alias data has been curated for it yet. If specific
 handshapes turn out to be ambiguous for this model, add an alias table here
 the same way ``letter_handshape_aliases`` does for finger-spelling.

@@ -53,13 +53,13 @@ export default function Sidebar({ width, collapsed = false, onToggleCollapse, on
       {collapsed ? (
         /* ═══ COLLAPSED VIEW ═══ */
         <>
-          {/* Logo + expand button row — button sits on the right border edge */}
+          {/* Logo + expand button row-button sits on the right border edge */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", py: 2, position: "relative" }}>
             <Box sx={{ width: 32, height: 32, position: "relative" }}>
               <Image src="/assets/logo.png" alt="KSL" fill sizes="32px" style={{ objectFit: "contain" }} />
             </Box>
 
-            {/* Expand button — bumps out of the right border */}
+            {/* Expand button-bumps out of the right border */}
             {onToggleCollapse && (
               <Tooltip title="Expand sidebar" placement="right">
                 <IconButton

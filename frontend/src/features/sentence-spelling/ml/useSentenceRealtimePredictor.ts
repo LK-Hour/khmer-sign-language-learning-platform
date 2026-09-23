@@ -69,7 +69,7 @@ function getWsBaseUrl(): string {
 
 /**
  * Mirrors finger-spelling's `useRealtimePredictor` exactly, pointed at the
- * sentence-spelling WebSocket endpoint instead — this codebase already
+ * sentence-spelling WebSocket endpoint instead-this codebase already
  * duplicates this hook per feature (word-detection has its own copy too)
  * rather than sharing it.
  */

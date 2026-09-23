@@ -39,7 +39,7 @@ const AUTO_RETRY_DELAY_MS = 1800;
 const AUTO_RETRY_POLL_INTERVAL_MS = 300;
 const ADVANCE_DELAY_MS = 2200;
 
-/** Unlimited retries — only label match enables advance (no skip after N fails). */
+/** Unlimited retries-only label match enables advance (no skip after N fails). */
 const PRACTICE_MAX_ATTEMPTS = Number.MAX_SAFE_INTEGER;
 
 type ChapterPracticeViewProps = {
@@ -345,7 +345,7 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
     advanceToNextLetter(accuracy ?? 0);
   }, [continueEnabled, accuracy, isComplete, advanceToNextLetter]);
 
-  // WebSocket lifecycle — pause while a letter is passed / advancing
+  // WebSocket lifecycle-pause while a letter is passed / advancing
   useEffect(() => {
     if (isLandmarkerReady && !continueEnabled && !isComplete) {
       connectPredictor();

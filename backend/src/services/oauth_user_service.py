@@ -70,7 +70,7 @@ def find_or_create_oauth_user(
         db.refresh(user)
         return user
 
-    # No existing link — check if user exists by email
+    # No existing link-check if user exists by email
     user = None
     if email:
         user = db.query(User).filter(User.email == email).first()

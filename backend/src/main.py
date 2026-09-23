@@ -35,14 +35,14 @@ async def timing_middleware(request: Request, call_next):
         elapsed_ms = (time.perf_counter() - start) * 1000
         # Only log slow requests (>100ms) to reduce noise
         if elapsed_ms > 100:
-            logger.warning("SLOW %s %s — %.0fms", request.method, path, elapsed_ms)
+            logger.warning("SLOW %s %s-%.0fms", request.method, path, elapsed_ms)
         else:
-            logger.info("%s %s — %.0fms", request.method, path, elapsed_ms)
+            logger.info("%s %s-%.0fms", request.method, path, elapsed_ms)
         response.headers["X-Response-Time"] = f"{elapsed_ms:.0f}ms"
         return response
     return await call_next(request)
 
-# Configure CORS — must be added before mounting static files so that
+# Configure CORS-must be added before mounting static files so that
 # cross-origin requests to /data_set/... (video/image assets) also receive
 # the appropriate Access-Control-Allow-Origin headers.
 app.add_middleware(

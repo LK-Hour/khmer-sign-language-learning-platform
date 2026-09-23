@@ -2,7 +2,7 @@
 
 GET  /api/finger_spelling/chapters/{chapter_id}/practice
     Returns the full practice session (items, unlock state, prior progress).
-    Optional auth — guests see isUnlocked=False and no progress fields.
+    Optional auth-guests see isUnlocked=False and no progress fields.
 
 POST /api/finger_spelling/chapters/{chapter_id}/practice/result
     Records the session outcome. Auth required.

@@ -1,13 +1,13 @@
 """Admin dictionary routes.
 
-    /api/admin/dictionary/characters       GET  — paginated list of finger letters
-    /api/admin/dictionary/characters/{id}  GET  — single letter detail
-    /api/admin/dictionary/characters       POST — create a new letter
-    /api/admin/dictionary/characters/{id}  PUT  — update a letter
-    /api/admin/dictionary/words            GET  — paginated list of word detection words
-    /api/admin/dictionary/words/{id}       GET  — single word detail
-    /api/admin/dictionary/words            POST — create a new word
-    /api/admin/dictionary/words/{id}       PUT  — update a word
+    /api/admin/dictionary/characters       GET -paginated list of finger letters
+    /api/admin/dictionary/characters/{id}  GET -single letter detail
+    /api/admin/dictionary/characters       POST-create a new letter
+    /api/admin/dictionary/characters/{id}  PUT -update a letter
+    /api/admin/dictionary/words            GET -paginated list of word detection words
+    /api/admin/dictionary/words/{id}       GET -single word detail
+    /api/admin/dictionary/words            POST-create a new word
+    /api/admin/dictionary/words/{id}       PUT -update a word
 """
 
 from __future__ import annotations

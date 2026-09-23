@@ -191,13 +191,13 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.isTokenExpired() && state?.user && !state.user.is_guest) {
-          // Token expired but user has refresh cookie — attempt silent refresh
+          // Token expired but user has refresh cookie-attempt silent refresh
           // instead of clearing auth immediately (which would log the user out).
           state.setHasHydrated(true);
           import('@/utils/api/client').then(({ refreshAuthSession }) => {
             refreshAuthSession().then((token) => {
               if (!token) {
-                // Refresh failed permanently — refreshAuthSession already
+                // Refresh failed permanently-refreshAuthSession already
                 // clears auth on confirmed 401, so no extra action needed here.
               }
             });

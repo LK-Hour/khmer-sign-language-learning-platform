@@ -16,7 +16,7 @@ function shouldHideNav(pathname: string) {
   return HIDDEN_NAV_SEGMENTS.some((segment) => pathname.includes(segment));
 }
 
-/** Global web layout — sticky header nav on every page except auth routes. */
+/** Global web layout-sticky header nav on every page except auth routes. */
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const hideNav = shouldHideNav(pathname);

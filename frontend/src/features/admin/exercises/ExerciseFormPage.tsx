@@ -377,7 +377,7 @@ export default function ExerciseFormPage({ entityId, track }: ExerciseFormPagePr
     form.setField("options", options);
   };
 
-  // Track change is no longer needed — track comes from the route
+  // Track change is no longer needed-track comes from the route
 
   const showOptions = TYPES_WITH_OPTIONS.has(form.values.exercise_type);
 

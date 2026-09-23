@@ -1,5 +1,5 @@
 /**
- * Sentence-spelling practice attempt API — records completed practice
+ * Sentence-spelling practice attempt API-records completed practice
  * sessions and reads back the learner's most recent one.
  */
 
@@ -9,12 +9,12 @@ import { apiFetch } from "@/utils/api/client";
 export type PracticeSource = "sample" | "custom";
 
 /**
- * "Enter as Guest" never creates a real backend session — it's a purely
+ * "Enter as Guest" never creates a real backend session-it's a purely
  * client-side identity with an empty access token (see
  * `features/auth/api/auth.ts::loginAsGuest`), so there's nothing valid to
  * send as a Bearer token. Practice history can only be attributed to a real
  * account, exactly like finger-spelling's own practice recording
- * (`FingerPracticeService`, gated on `get_current_user` too) — checking for
+ * (`FingerPracticeService`, gated on `get_current_user` too)-checking for
  * a non-empty token (rather than the `is_guest` flag) is what actually
  * matters here, since a real backend-issued guest session would carry one.
  */

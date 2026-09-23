@@ -90,7 +90,7 @@ type UnitWithLessons = {
   }>;
 };
 
-/** First active lesson across units/chapters — the one marked "now" in track order. */
+/** First active lesson across units/chapters-the one marked "now" in track order. */
 export function findResumeLesson<TUnit extends UnitWithLessons>(
   units: TUnit[]
 ): FsLesson | undefined {

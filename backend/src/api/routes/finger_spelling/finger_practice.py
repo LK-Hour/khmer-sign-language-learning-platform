@@ -1,4 +1,4 @@
-"""Finger spelling practice routes — simplified: records attempt directly to lesson progress."""
+"""Finger spelling practice routes-simplified: records attempt directly to lesson progress."""
 
 from __future__ import annotations
 

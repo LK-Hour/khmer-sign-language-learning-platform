@@ -41,7 +41,7 @@ async function extractResponseError(
   try {
     parsed = JSON.parse(raw);
   } catch {
-    // Non-JSON body (e.g. an HTML error page) — surface it verbatim.
+    // Non-JSON body (e.g. an HTML error page)-surface it verbatim.
     return { message: raw };
   }
 
@@ -100,7 +100,7 @@ export async function refreshAuthSession(): Promise<string | null> {
 
       if (!res.ok) {
         if (res.status === 401) {
-          // The refresh failed — possibly a stale cookie race condition.
+          // The refresh failed-possibly a stale cookie race condition.
           // Wait briefly for the browser cookie jar to settle, then retry
           // once before concluding the session is truly invalid.
           await new Promise((r) => setTimeout(r, 500));
@@ -121,7 +121,7 @@ export async function refreshAuthSession(): Promise<string | null> {
             store.setAccessToken(retryToken);
             return retryToken?.access_token;
           }
-          // Retry also failed — session is gone
+          // Retry also failed-session is gone
           store.clear();
         }
         return null;
@@ -203,7 +203,7 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    // No redundant store.clear() here — refreshAuthSession() already handles
+    // No redundant store.clear() here-refreshAuthSession() already handles
     // clearing auth on confirmed 401 (revoked token). Clearing here would
     // double-clear or incorrectly clear when refresh returned null due to a
     // transient error.

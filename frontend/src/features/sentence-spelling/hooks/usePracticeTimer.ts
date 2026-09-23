@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react";
 /**
  * Client-only stopwatch for a practice run. `performance.now()` is monotonic,
  * so it isn't thrown off by system-clock changes, and nothing is sent to the
- * server. `elapsedMs` stays `null` until the run is stopped — and also when
+ * server. `elapsedMs` stays `null` until the run is stopped-and also when
  * the clock never started (e.g. the camera never became ready).
  */
 export function usePracticeTimer() {

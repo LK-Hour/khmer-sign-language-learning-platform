@@ -233,7 +233,7 @@ export default function AdminAnalyticsDashboard() {
         ]}
       />
 
-      {/* KPI Stat Cards — 6 cards (3 cols desktop, 2 tablet, 1 mobile) */}
+      {/* KPI Stat Cards-6 cards (3 cols desktop, 2 tablet, 1 mobile) */}
       <Box>
         {kpis.error ? (
           <SectionError error={kpis.error} onRetry={fetchData} />

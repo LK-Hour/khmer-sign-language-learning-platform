@@ -1,7 +1,7 @@
 """Resolves finger-letter reference images for arbitrary Khmer characters.
 
 Unlike the chapter-practice flow (which resolves images per lesson/chapter),
-this looks a character up directly by ``letter_kh`` — used by other tracks
+this looks a character up directly by ``letter_kh``-used by other tracks
 (e.g. sentence-spelling) that need a reference sign image for whichever
 character is currently being practiced.
 """

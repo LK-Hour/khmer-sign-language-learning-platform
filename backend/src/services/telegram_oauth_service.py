@@ -23,7 +23,7 @@ jwks_client = PyJWKClient(TELEGRAM_JWKS_URL)
 
 
 class TelegramOAuthService:
-    """Telegram auth service — supports OIDC JWT and legacy widget flows."""
+    """Telegram auth service-supports OIDC JWT and legacy widget flows."""
 
     @staticmethod
     def verify_id_token(id_token: str) -> Dict[str, Any]:

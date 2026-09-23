@@ -114,7 +114,7 @@ export default function MediaDetailPanel({
           )}
         </Stack>
 
-        {/* Actions placeholder — will be implemented in task 8.3 */}
+        {/* Actions placeholder-will be implemented in task 8.3 */}
       </Stack>
     </Drawer>
   );

@@ -44,17 +44,17 @@ describe("mapApiError", () => {
   describe("Network errors", () => {
     it("returns network error message for TypeError with 'fetch'", () => {
       const error = new TypeError("Failed to fetch");
-      expect(mapApiError(error)).toBe("Network error — please check your connection");
+      expect(mapApiError(error)).toBe("Network error-please check your connection");
     });
 
     it("returns network error for Error with 'network' in message", () => {
       const error = new Error("NetworkError when attempting to fetch resource");
-      expect(mapApiError(error)).toBe("Network error — please check your connection");
+      expect(mapApiError(error)).toBe("Network error-please check your connection");
     });
 
     it("returns network error for Error with 'failed to fetch' in message", () => {
       const error = new Error("failed to fetch");
-      expect(mapApiError(error)).toBe("Network error — please check your connection");
+      expect(mapApiError(error)).toBe("Network error-please check your connection");
     });
   });
 

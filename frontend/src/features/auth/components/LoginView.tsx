@@ -204,7 +204,7 @@ export function LoginView() {
     handledTelegramTokenRef.current = exchangeCode;
 
     // The widget redirect only carries a short-lived, single-use exchange
-    // code (never the real access token) — exchange it via POST immediately.
+    // code (never the real access token)-exchange it via POST immediately.
     void exchangeTelegramCode(exchangeCode)
       .then((response) => {
         void completeLearnerLogin(response);

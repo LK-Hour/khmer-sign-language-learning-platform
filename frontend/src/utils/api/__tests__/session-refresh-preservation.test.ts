@@ -1,12 +1,12 @@
 /**
- * Preservation Property Tests — Legitimate Security and Session Behavior
+ * Preservation Property Tests-Legitimate Security and Session Behavior
  *
  * These property-based tests are written BEFORE implementing the fix.
- * They MUST PASS on unfixed code — passing confirms baseline behavior to preserve.
+ * They MUST PASS on unfixed code-passing confirms baseline behavior to preserve.
  *
  * **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6**
  *
- * Property 2: Preservation — Legitimate Security and Session Behavior
+ * Property 2: Preservation-Legitimate Security and Session Behavior
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -164,7 +164,7 @@ describe('Preservation: Guest user skips refresh mechanism', () => {
 
           const { refreshAuthSession } = await import('../client');
 
-          // Call refresh directly — should be skipped for guest
+          // Call refresh directly-should be skipped for guest
           const result = await refreshAuthSession();
 
           // PROPERTY: Refresh mechanism is completely skipped for guest users

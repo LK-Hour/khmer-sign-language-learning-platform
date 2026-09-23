@@ -17,7 +17,7 @@ cross-checked against a TensorFlow/Keras reconstruction of the same weights):
       -> Dense(128, softmax)
 
 ``class_mapping.json`` maps model output index directly to the final Khmer
-label (``index_to_label``) — no offset correction needed, unlike finger
+label (``index_to_label``)-no offset correction needed, unlike finger
 spelling's legacy sklearn-exported label encoder.
 """
 

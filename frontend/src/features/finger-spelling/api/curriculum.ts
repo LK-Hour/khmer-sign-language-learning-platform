@@ -139,7 +139,7 @@ export async function fetchFsTree(): Promise<FsTrackUnit[]> {
     .sort((a, b) => a.orderIndex - b.orderIndex);
 }
 
-/** @deprecated Prefer fetchFsTree — same data, one request. */
+/** @deprecated Prefer fetchFsTree-same data, one request. */
 export async function fetchFsTrackUnits(): Promise<FsTrackUnit[]> {
   return fetchFsTree();
 }

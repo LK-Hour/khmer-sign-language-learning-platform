@@ -1,5 +1,5 @@
 /**
- * Route map — keep finger spelling and words on separate URL trees
+ * Route map-keep finger spelling and words on separate URL trees
  * so both tracks can evolve on the same branch without merge conflicts.
  */
 

@@ -1,19 +1,19 @@
 /**
- * Bug Condition Exploration Tests — Session Refresh Race Condition and Premature Logout
+ * Bug Condition Exploration Tests-Session Refresh Race Condition and Premature Logout
  *
  * These property-based tests are written BEFORE implementing the fix.
- * They are EXPECTED TO FAIL on unfixed code — failure confirms the bugs exist.
+ * They are EXPECTED TO FAIL on unfixed code-failure confirms the bugs exist.
  *
  * **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
  *
- * Property 1: Bug Condition — Session Refresh Race Condition and Premature Logout
+ * Property 1: Bug Condition-Session Refresh Race Condition and Premature Logout
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 
 // ---------------------------------------------------------------------------
-// Test Case A — Concurrent Refresh Deduplication Gap
+// Test Case A-Concurrent Refresh Deduplication Gap
 // ---------------------------------------------------------------------------
 
 describe('Bug Condition Exploration: Concurrent Refresh Deduplication Gap', () => {
@@ -109,7 +109,7 @@ describe('Bug Condition Exploration: Concurrent Refresh Deduplication Gap', () =
 });
 
 // ---------------------------------------------------------------------------
-// Test Case B — Transient Error Auth Clearing
+// Test Case B-Transient Error Auth Clearing
 // ---------------------------------------------------------------------------
 
 describe('Bug Condition Exploration: Transient Error Auth Clearing', () => {
@@ -187,7 +187,7 @@ describe('Bug Condition Exploration: Transient Error Auth Clearing', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Test Case C — Page Reload Premature Clear
+// Test Case C-Page Reload Premature Clear
 // ---------------------------------------------------------------------------
 
 describe('Bug Condition Exploration: Page Reload Premature Clear', () => {

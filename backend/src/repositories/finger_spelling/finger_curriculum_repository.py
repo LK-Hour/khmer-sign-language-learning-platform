@@ -197,7 +197,7 @@ class FingerCurriculumRepository:
         return list(self.db.scalars(stmt).all())
 
     def list_medias_for_letters(self, letter_ids: list[int]) -> dict[int, list[Media]]:
-        """Batch version of ``list_medias_for_letter`` — one query instead of N.
+        """Batch version of ``list_medias_for_letter``-one query instead of N.
 
         Returns a dict keyed by letter_id so callers building a tree can look
         up each letter's medias without an extra round-trip per letter.
@@ -227,7 +227,7 @@ class FingerCurriculumRepository:
     def get_primary_letters_for_lessons(
         self, lesson_ids: list[int], *, active_only: bool = True
     ) -> dict[int, FingerLetter]:
-        """Batch version of ``get_primary_letter_for_lesson`` — one query
+        """Batch version of ``get_primary_letter_for_lesson``-one query
         instead of N. Returns a dict keyed by lesson_id (lessons with no
         linked letter are simply absent from the result)."""
         if not lesson_ids:

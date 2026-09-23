@@ -1,5 +1,5 @@
 /** Khmer Unicode block (consonants, vowels, subscripts, native digits ០-៩,
- * native punctuation) plus whitespace — everything else, including Latin
+ * native punctuation) plus whitespace-everything else, including Latin
  * letters, ASCII digits 0-9, emoji, and ASCII punctuation/symbols, should be
  * stripped as the user types, in both the learner-facing custom form and the
  * admin sentence form. */

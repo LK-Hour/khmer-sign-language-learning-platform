@@ -1,6 +1,6 @@
 # Finger spelling (frontend)
 
-**Owner track:** Punleu — image-based Khmer letter curriculum (no video).
+**Owner track:** Punleu-image-based Khmer letter curriculum (no video).
 
 ## Where to work
 
@@ -16,13 +16,13 @@ Do **not** add finger-spelling screens under `src/app/words/` or `src/features/w
 
 Finger spelling curriculum only (under `src/app/[locale]/finger-spelling/`):
 
-- `/finger-spelling` — unit cards (tap to open unit)
-- `/finger-spelling/units/[unitId]` — collapsible chapters with lesson progress
-- `/finger-spelling/chapters/[chapterId]` — chapter with collapsible lessons
-- `/finger-spelling/lessons/[lessonId]` — lesson learning
-- `/finger-spelling/exercise` — chapter exercises (exercise tab)
+- `/finger-spelling`-unit cards (tap to open unit)
+- `/finger-spelling/units/[unitId]`-collapsible chapters with lesson progress
+- `/finger-spelling/chapters/[chapterId]`-chapter with collapsible lessons
+- `/finger-spelling/lessons/[lessonId]`-lesson learning
+- `/finger-spelling/exercise`-chapter exercises (exercise tab)
 
-App-wide bottom nav also links to `/dictionary` and `/profile` (see `src/app/[locale]/dictionary`, `profile` — not under finger-spelling).
+App-wide bottom nav also links to `/dictionary` and `/profile` (see `src/app/[locale]/dictionary`, `profile`-not under finger-spelling).
 
 ## API
 
@@ -55,6 +55,6 @@ Practice, exercise, and progress use `/api/finger_spelling/practice`, `/exercise
 
 ## Figma
 
-[KSL-Project Dev — node 227-1176](https://www.figma.com/design/EecigRtMi06WiCgdUk8OEd/KSL-Project---Dev?node-id=227-1176)
+[KSL-Project Dev-node 227-1176](https://www.figma.com/design/EecigRtMi06WiCgdUk8OEd/KSL-Project---Dev?node-id=227-1176)
 
 Match spacing, orange primary, and mobile shell from that frame when refining UI.

@@ -149,7 +149,7 @@ class WdLessonResponse(BaseModel):
 
 
 class WdLessonDetailResponse(WdLessonResponse):
-    """Mirrors WdLessonDetail — extends WdLessonResponse with descriptions."""
+    """Mirrors WdLessonDetail-extends WdLessonResponse with descriptions."""
     description: str | None = None
     descriptionKh: str | None = None
 

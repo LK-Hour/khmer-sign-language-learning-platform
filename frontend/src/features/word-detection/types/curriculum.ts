@@ -36,7 +36,7 @@ export interface WdChapter {
 export interface WdLesson {
   id: number;
   chapterId: number;
-  word: string;      // Khmer label — matches the dataset folder name
+  word: string;      // Khmer label-matches the dataset folder name
   wordEn: string;    // English translation
   videoUrl: string;  // sample sign video URL (resolved from backend media)
   orderIndex: number;

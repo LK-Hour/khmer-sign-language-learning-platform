@@ -9,9 +9,9 @@ export interface NavTreeNodeConfig {
   id: string;
   /** Display label */
   title: string;
-  /** Route path — only present on leaf nodes */
+  /** Route path-only present on leaf nodes */
   path?: string;
-  /** Icon — typically on top-level items */
+  /** Icon-typically on top-level items */
   icon?: React.ElementType;
   /** Static child nodes */
   children?: NavTreeNodeConfig[];

@@ -1,6 +1,6 @@
 """Admin feedback routes.
 
-    /api/admin/feedback   GET — paginated list of lesson feedback
+    /api/admin/feedback   GET-paginated list of lesson feedback
 """
 
 from __future__ import annotations

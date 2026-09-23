@@ -150,7 +150,7 @@ export default function SentenceFormPage({ entityId }: SentenceFormPageProps) {
           fullWidth
           multiline
           minRows={2}
-          label="Sentence (EN) — gloss / translation"
+          label="Sentence (EN)-gloss / translation"
           value={form.values.text_en}
           onChange={(e) => form.setField("text_en", e.target.value)}
         />

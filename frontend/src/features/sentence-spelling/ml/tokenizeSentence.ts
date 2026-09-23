@@ -4,7 +4,7 @@
  * mirrored from `backend/ml/models/sentence_spelling/class_mapping.json`).
  *
  * Plain `Array.from(text)` splits by Unicode codepoint, which breaks a
- * coeng (subscript) consonant like "្ក" into "្" + "ក" — two codepoints
+ * coeng (subscript) consonant like "្ក" into "្" + "ក"-two codepoints
  * that are each meaningless on their own in the model's label space (the
  * subscript is one distinct hand sign, "្ក", not "្" followed by "ក").
  * This tokenizer greedily matches the longest known multi-codepoint label
@@ -13,7 +13,7 @@
 
 import classMapping from "./classMapping.json";
 
-/** Non-glyph pseudo-labels in the model's class space — never appear in sentence text. */
+/** Non-glyph pseudo-labels in the model's class space-never appear in sentence text. */
 const PSEUDO_LABELS = new Set(["No_Action", "question"]);
 
 /**

@@ -586,7 +586,7 @@ def _print_summary(data: dict[str, list[dict]]) -> None:
             print(f"\n  Unit {current_unit_id}: {unit_map.get(current_unit_id, 'Unknown')}")
         ch_lessons = lessons_by_chapter.get(ch["id"], [])
         words = [l["name_kh"] for l in ch_lessons]
-        print(f"    Chapter {ch['order_index']}: {ch['name_en']:<15}  {len(ch_lessons)} lessons — {', '.join(words)}")
+        print(f"    Chapter {ch['order_index']}: {ch['name_en']:<15}  {len(ch_lessons)} lessons-{', '.join(words)}")
     medias = data.get("medias", [])
     word_medias = data.get("word_detection_word_medias", [])
     print(f"\nMedia Summary:")
@@ -642,7 +642,7 @@ def seed_word_detection(wipe: bool = False, dry_run: bool = False) -> None:
     data = _build_seed_data(media_structure)
     _print_summary(data)
     if dry_run:
-        print("\nDry run complete — no changes written.")
+        print("\nDry run complete-no changes written.")
         return
 
     tables = Base.metadata.tables

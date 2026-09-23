@@ -120,7 +120,7 @@ export default function ContributionCard({
               src={`${videoUrl}#t=0.5`}
             />
           ) : null}
-          {/* Play icon overlay — shown only in thumbnail mode */}
+          {/* Play icon overlay-shown only in thumbnail mode */}
           {!playing && videoUrl && (
             <PlayCircleOutlined
               sx={{
@@ -167,7 +167,7 @@ export default function ContributionCard({
           Submitted {formatDate(contribution.created_at)}
         </Typography>
 
-        {/* Action buttons — only for pending contributions */}
+        {/* Action buttons-only for pending contributions */}
         {contribution.status === "pending" && (
           <Stack direction="row" spacing={1} sx={{ mt: "auto" }}>
             <Button

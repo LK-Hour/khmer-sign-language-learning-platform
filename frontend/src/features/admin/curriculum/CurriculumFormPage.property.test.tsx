@@ -7,7 +7,7 @@
  * when the edit form is rendered with that entity's data, every form field value
  * SHALL equal the corresponding entity field value after pre-population.
  *
- * We test the form pre-population mapping functions — the same transformations
+ * We test the form pre-population mapping functions-the same transformations
  * applied in each form page's useEffect when loading entity data for editing.
  * These functions map API response data to form values passed to `form.reset()`.
  */
@@ -81,7 +81,7 @@ interface ExerciseFormValues {
 }
 
 /**
- * Maps a Unit API response to form values — replicates UnitFormPage edit logic.
+ * Maps a Unit API response to form values-replicates UnitFormPage edit logic.
  */
 function mapUnitToFormValues(data: AdminUnit): UnitFormValues {
   return {
@@ -95,7 +95,7 @@ function mapUnitToFormValues(data: AdminUnit): UnitFormValues {
 }
 
 /**
- * Maps a Chapter API response to form values — replicates ChapterFormPage edit logic.
+ * Maps a Chapter API response to form values-replicates ChapterFormPage edit logic.
  */
 function mapChapterToFormValues(data: AdminChapter): ChapterFormValues {
   return {
@@ -111,7 +111,7 @@ function mapChapterToFormValues(data: AdminChapter): ChapterFormValues {
 }
 
 /**
- * Maps a Lesson API response to form values — replicates LessonFormPage edit logic.
+ * Maps a Lesson API response to form values-replicates LessonFormPage edit logic.
  */
 function mapLessonToFormValues(data: AdminLesson): LessonFormValues {
   return {
@@ -126,7 +126,7 @@ function mapLessonToFormValues(data: AdminLesson): LessonFormValues {
 }
 
 /**
- * Maps an Exercise API response to form values — replicates ExerciseFormPage edit logic.
+ * Maps an Exercise API response to form values-replicates ExerciseFormPage edit logic.
  */
 function mapExerciseToFormValues(data: AdminExercise): ExerciseFormValues {
   return {

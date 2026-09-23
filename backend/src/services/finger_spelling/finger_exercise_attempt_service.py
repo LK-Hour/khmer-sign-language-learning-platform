@@ -94,7 +94,7 @@ class FingerExerciseAttemptService:
         completed = self.progress_repo.count_completed_lessons(user_id, lesson_ids)
         return completed >= len(lesson_ids)
 
-    # ── Session start (ephemeral — no DB write) ──────────────────────────────
+    # ── Session start (ephemeral-no DB write) ──────────────────────────────
 
     def get_or_start_exercise(
         self, user_id: uuid.UUID, unit_id: int, *, is_admin: bool = False

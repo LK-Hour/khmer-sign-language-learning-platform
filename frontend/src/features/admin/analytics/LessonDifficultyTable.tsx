@@ -32,7 +32,7 @@ export default function LessonDifficultyTable({ entries }: LessonDifficultyTable
       <Typography
         sx={{ fontSize: "0.875rem", color: "text.secondary", textAlign: "center" }}
       >
-        Lesson difficulty table — {entries.length} lessons loaded.
+        Lesson difficulty table-{entries.length} lessons loaded.
       </Typography>
     </Paper>
   );

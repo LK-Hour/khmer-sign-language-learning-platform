@@ -53,7 +53,7 @@ export function formatLessonLabel(orderIndex: number, locale: Locale): string {
 
 const KHMER_SCRIPT = /[\u1780-\u17FF\u19E0-\u19FF]/;
 
-/** Khmer sign character for lesson rows — matches lesson detail display. */
+/** Khmer sign character for lesson rows-matches lesson detail display. */
 export function getLessonDisplayLetter(lesson: {
   letter: string;
   letterNameKh?: string | null;

@@ -329,7 +329,7 @@ def seed_practices(wipe: bool = False, dry_run: bool = False) -> None:
     print(f"  Word detection: {sum(len(v) for v in word_media.values())} images in {len(word_media)} word folders")
 
     if dry_run:
-        print("\nDry run complete — no changes written.")
+        print("\nDry run complete-no changes written.")
         return
 
     with SessionLocal.begin() as db:

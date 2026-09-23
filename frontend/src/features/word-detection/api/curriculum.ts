@@ -120,7 +120,7 @@ export async function fetchWdTree(): Promise<WdTrackUnit[]> {
     .sort((a, b) => a.orderIndex - b.orderIndex);
 }
 
-/** @deprecated Prefer fetchWdTree — same data, one request. */
+/** @deprecated Prefer fetchWdTree-same data, one request. */
 export async function fetchWdTrackUnits(): Promise<WdTrackUnit[]> {
   return fetchWdTree();
 }

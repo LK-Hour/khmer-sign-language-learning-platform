@@ -137,7 +137,7 @@ MAIN_CONSONANTS = [
     ("អ", "'a"),
 ]
 
-# 32 sub-consonants (coeng / cheung âksâr) — ឡ has no subscript form
+# 32 sub-consonants (coeng / cheung âksâr)-ឡ has no subscript form
 SUB_CONSONANTS = [
     ("្ក", "sub ka"),
     ("្ខ", "sub kha"),
@@ -203,7 +203,7 @@ INDEPENDENT_VOWELS = [
     ("ឦ", "ei"),
     ("ឧ", "o"),
     ("ឩ", "ou"),
-    ("ឪ", "ov"),      # U+17AA — distinct from ឳ (combination of ឧ+វ)
+    ("ឪ", "ov"),      # U+17AA-distinct from ឳ (combination of ឧ+វ)
     ("ឫ", "rue"),
     ("ឬ", "rueu"),
     ("ឭ", "lue"),
@@ -817,7 +817,7 @@ def main() -> None:
     if args.dry_run:
         data = _build_curriculum()
         _print_summary(data)
-        print("\nDry run complete — no changes written.")
+        print("\nDry run complete-no changes written.")
         return
 
     seed_curriculum(wipe=args.wipe, wipe_media=args.wipe_media)

@@ -140,14 +140,14 @@ npm test
 
 Developer-facing guides are available in [docs](docs):
 
-- [docs/developer-guide.md](docs/developer-guide.md) — onboarding and development workflow
-- [docs/admin-content-lifecycle.md](docs/admin-content-lifecycle.md) — admin publish and visibility lifecycle
-- [docs/admin-test-matrix.md](docs/admin-test-matrix.md) — admin feature test matrix
-- [docs/refactor-audit-report.md](docs/refactor-audit-report.md) — frontend refactor notes
-- [docs/feature-guides/finger-spelling.md](docs/feature-guides/finger-spelling.md) — backend, ML, and frontend ownership for finger spelling
-- [docs/feature-guides/word-detection.md](docs/feature-guides/word-detection.md) — backend, ML, and frontend ownership for word detection
-- [docs/feature-guides/ai-integration-overview.md](docs/feature-guides/ai-integration-overview.md) — how AI prediction is wired through the platform
-- [docs/feature-guides/frontend-ownership-map.md](docs/feature-guides/frontend-ownership-map.md) — where to edit frontend feature areas
+- [docs/developer-guide.md](docs/developer-guide.md)-onboarding and development workflow
+- [docs/admin-content-lifecycle.md](docs/admin-content-lifecycle.md)-admin publish and visibility lifecycle
+- [docs/admin-test-matrix.md](docs/admin-test-matrix.md)-admin feature test matrix
+- [docs/refactor-audit-report.md](docs/refactor-audit-report.md)-frontend refactor notes
+- [docs/feature-guides/finger-spelling.md](docs/feature-guides/finger-spelling.md)-backend, ML, and frontend ownership for finger spelling
+- [docs/feature-guides/word-detection.md](docs/feature-guides/word-detection.md)-backend, ML, and frontend ownership for word detection
+- [docs/feature-guides/ai-integration-overview.md](docs/feature-guides/ai-integration-overview.md)-how AI prediction is wired through the platform
+- [docs/feature-guides/frontend-ownership-map.md](docs/feature-guides/frontend-ownership-map.md)-where to edit frontend feature areas
 
 ## Useful Commands
 

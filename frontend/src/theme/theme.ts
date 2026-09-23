@@ -1,6 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 
-/** KSL design tokens — aligned with Figma KSL-Project Dev */
+/** KSL design tokens-aligned with Figma KSL-Project Dev */
 export const KslPalette = {
   primary: {
     main: "#1f9f6f",

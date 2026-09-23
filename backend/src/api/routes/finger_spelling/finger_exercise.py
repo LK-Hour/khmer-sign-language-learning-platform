@@ -1,4 +1,4 @@
-"""Legacy chapter exercise routes (retired — use unit exercise APIs)."""
+"""Legacy chapter exercise routes (retired-use unit exercise APIs)."""
 
 from __future__ import annotations
 

@@ -54,7 +54,7 @@
   }
 
   /**
-   * Simple contrast stretch — a browser-side approximation of CLAHE.
+   * Simple contrast stretch-a browser-side approximation of CLAHE.
    */
   function enhanceContrast(imageData: ImageData): void {
     const data = imageData.data;
@@ -230,7 +230,7 @@
           };
         } catch {
           // Detection may fail transiently (e.g. GL context busy).
-          // Return empty — the overlay will retry on the next frame.
+          // Return empty-the overlay will retry on the next frame.
           return EMPTY_DETECTION;
         }
       },

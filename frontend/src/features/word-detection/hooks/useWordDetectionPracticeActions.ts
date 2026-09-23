@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/auth.store";
 import type { WdLessonDetail } from "../types";
 
 /**
- * Word detection practice actions — mirrors useFingerSpellingPracticeActions.
+ * Word detection practice actions-mirrors useFingerSpellingPracticeActions.
  *
  * `completePractice` is called when the user clicks "Continue" after seeing
  * their result. It records the attempt (backend for signed-in users, local

@@ -9,7 +9,7 @@ shuffling, no true randomness) but adapted to word_detection's schema:
     (no true_false / multiple_answer like finger spelling has).
   - free_form is skipped: word_detection_exercise_service.py grades it against
     exercise.correct_answer / reads exercise.explanation_en/kh, but those columns
-    don't exist on word_detection_exercises (only description_en/kh) — selecting
+    don't exist on word_detection_exercises (only description_en/kh)-selecting
     a free_form exercise today would raise AttributeError. Until that schema/
     service mismatch is fixed, this generator produces none.
   - multiple_answer has no equivalent type in the enum, so it's skipped too.
@@ -18,13 +18,13 @@ Produces, per word (lesson):
   1. multiple_choice - video prompt, "What word does this sign represent?", 4 text
      options (1 correct + 3 distractors).
   2. image_select    - text prompt naming the word, 2 video options (1 correct +
-     1 distractor) — the closest analogue to finger spelling's true_false slot.
+     1 distractor)-the closest analogue to finger spelling's true_false slot.
 
 Produces, per unit (grouped, same pattern as finger spelling's matching):
   3. matching        - 4 or 6 (word text <-> sign video) pairs.
 
 Distractors are pooled from the ENTIRE word list, not scoped to the word's own
-unit/chapter — several units (Vehicles: 2 words, Sports: 2 words, Pronouns and
+unit/chapter-several units (Vehicles: 2 words, Sports: 2 words, Pronouns and
 Nouns: 4 words) are too small to supply in-unit distractors.
 
 Curriculum + primary media are read live from the database (not re-derived from
@@ -138,7 +138,7 @@ def _pick_distractor_indices(total: int, target_index: int, count: int, salt: in
 
 
 def build_word_items() -> list[WordItem]:
-    """Read curriculum + primary media live from the DB — the source of truth."""
+    """Read curriculum + primary media live from the DB-the source of truth."""
     from sqlalchemy import text
 
     from src.db.session import SessionLocal

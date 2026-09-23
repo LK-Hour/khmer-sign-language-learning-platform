@@ -385,7 +385,7 @@ export default function MainHeader() {
       segments.splice(1, 0, newLocale);
     }
     const newPath = segments.join("/") || `/${newLocale}`;
-    // Replace the URL silently — no Next.js navigation, no server re-render, no data refetch.
+    // Replace the URL silently-no Next.js navigation, no server re-render, no data refetch.
     // The store update above immediately switches translations via LocaleProvider context.
     window.history.replaceState(null, "", newPath);
   };
@@ -441,7 +441,7 @@ export default function MainHeader() {
                   {t("NAV.HOME")}
                 </Stack>
 
-                {/* Modes — click + hover dropdown */}
+                {/* Modes-click + hover dropdown */}
                 <Stack
                   ref={modesRef}
                   sx={{ position: "relative" }}
@@ -516,7 +516,7 @@ export default function MainHeader() {
                 </Stack>
                 <Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: "auto", height: 20 , display: { xl:"none", md:"none" }}} />
 
-                {/* Language — click + hover dropdown */}
+                {/* Language-click + hover dropdown */}
                 <Stack
                   direction="row"
                   ref={langRef}

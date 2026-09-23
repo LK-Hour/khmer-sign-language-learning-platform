@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     word.entryType === "word"
       ? t(locale, "DICTIONARY.LIST.TYPE_WORD")
       : t(locale, "DICTIONARY.LIST.TYPE_CHARACTER");
-  const title = `${displayName} — ${typeLabel}`;
+  const title = `${displayName}-${typeLabel}`;
   const description =
     word.description?.trim() ||
     t(locale, "DICTIONARY.LIST.SUBHEADLINE");

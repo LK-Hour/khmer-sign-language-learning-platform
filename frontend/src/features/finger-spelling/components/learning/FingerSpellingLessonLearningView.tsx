@@ -136,7 +136,7 @@ export default function FingerSpellingLessonLearningView({
   const retryPendingRef = useRef(false);
 
   // ═══════════════════════════════════════════════════════════════════════
-  //  ORIGINAL STABILITY DETECTOR — commented out for realtime path
+  //  ORIGINAL STABILITY DETECTOR-commented out for realtime path
   // ═══════════════════════════════════════════════════════════════════════
   //
   // const doCapture = useCallback(async () => {
@@ -575,7 +575,7 @@ export default function FingerSpellingLessonLearningView({
         videoRef={videoRef}
         detectLandmarks={detectLandmarks}
         onDetection={handleDetection}
-        // Comment out old stability props — stability-based UI hidden
+        // Comment out old stability props-stability-based UI hidden
         stabilityState="idle"
         stabilityProgress={0}
         continueLabel={continueLabel}

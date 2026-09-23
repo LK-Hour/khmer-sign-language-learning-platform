@@ -7,15 +7,15 @@ type ResponsiveHiddenProps = {
   children: React.ReactNode;
   /** How children render when visible (default: block) */
   displayWhenVisible?: Exclude<DisplayValue, "none">;
-  /** Hidden on sm and below — visible on md, lg, xl */
+  /** Hidden on sm and below-visible on md, lg, xl */
   smDown?: boolean;
-  /** Hidden on md and below — visible on lg, xl only */
+  /** Hidden on md and below-visible on lg, xl only */
   mdDown?: boolean;
-  /** Hidden on md and above — visible on xs, sm only */
+  /** Hidden on md and above-visible on xs, sm only */
   mdUp?: boolean;
-  /** Hidden on lg and below — visible on xl only */
+  /** Hidden on lg and below-visible on xl only */
   lgDown?: boolean;
-  /** Hidden on lg and above — visible on xs, sm, md only */
+  /** Hidden on lg and above-visible on xs, sm, md only */
   lgUp?: boolean;
 };
 

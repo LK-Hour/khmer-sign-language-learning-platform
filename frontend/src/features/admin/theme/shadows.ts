@@ -13,7 +13,7 @@ export const PAPER_SHADOW_VAR = `var(--Paper-shadow, ${CARD_SHADOW})`;
  *
  * - Index 0: "none" (required by MUI Shadows type)
  * - Index 1: subtle elevation shadow
- * - Indices 2-24: "none" — Minimals uses elevation-0 pattern with
+ * - Indices 2-24: "none"-Minimals uses elevation-0 pattern with
  *   the CSS custom property `--Paper-shadow` instead of MUI's built-in elevation scale.
  */
 export const shadows: Shadows = [

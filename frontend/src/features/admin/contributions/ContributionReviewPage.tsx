@@ -376,7 +376,7 @@ export default function ContributionReviewPage({
         </Card>
       </Box>
 
-      {/* Action Section — only for pending contributions */}
+      {/* Action Section-only for pending contributions */}
       {contribution.status === "pending" && (
         <Card sx={{ mt: 3 }}>
           <CardContent sx={{ p: 3 }}>

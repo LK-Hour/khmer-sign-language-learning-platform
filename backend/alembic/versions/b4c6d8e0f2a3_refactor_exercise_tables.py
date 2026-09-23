@@ -200,7 +200,7 @@ def upgrade() -> None:
     )
 
     # ════════════════════════════════════════════════════════════════════════
-    # EXERCISE OPTIONS — add updated_at
+    # EXERCISE OPTIONS-add updated_at
     # ════════════════════════════════════════════════════════════════════════
     _add_column_if_missing(
         "finger_exercise_options",
@@ -259,11 +259,11 @@ def downgrade() -> None:
     op.add_column("finger_exercise_progress", sa.Column("progress_id", postgresql.UUID(as_uuid=True), nullable=False))
     op.rename_table("finger_exercise_progress", "finger_user_exercise_results")
 
-    # ── Exercise Options — remove updated_at ──
+    # ── Exercise Options-remove updated_at ──
     op.drop_column("word_detection_exercise_options", "updated_at")
     op.drop_column("finger_exercise_options", "updated_at")
 
-    # ── Word Detection Exercises — revert ──
+    # ── Word Detection Exercises-revert ──
     op.drop_column("word_detection_exercises", "lesson_count")
     op.drop_index("ix_word_detection_exercises_unit_id", table_name="word_detection_exercises")
     op.drop_column("word_detection_exercises", "unit_id")
@@ -274,7 +274,7 @@ def downgrade() -> None:
     op.add_column("word_detection_exercises", sa.Column("published_at", sa.DateTime(), nullable=True))
     op.add_column("word_detection_exercises", sa.Column("publish_status", sa.String(20), nullable=False, server_default="published"))
 
-    # ── Finger Exercises — revert ──
+    # ── Finger Exercises-revert ──
     op.drop_column("finger_exercises", "lesson_count")
     op.drop_index("ix_finger_exercises_unit_id", table_name="finger_exercises")
     op.drop_column("finger_exercises", "unit_id")

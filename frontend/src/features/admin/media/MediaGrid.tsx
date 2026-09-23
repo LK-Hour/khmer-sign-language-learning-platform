@@ -32,7 +32,7 @@ function isVideo(item: MediaResponse): boolean {
   return item.media_type === "video";
 }
 
-/** Thumbnail preview — renders img for images/gifs, video poster for videos. */
+/** Thumbnail preview-renders img for images/gifs, video poster for videos. */
 function MediaThumbnail({
   item,
   width,

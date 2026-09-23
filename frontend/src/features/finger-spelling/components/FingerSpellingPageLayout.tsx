@@ -12,7 +12,7 @@ type FingerSpellingPageLayoutProps = {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
-  /** Khmer counterpart — when set, title/subtitle swap by locale. */
+  /** Khmer counterpart-when set, title/subtitle swap by locale. */
   titleKh?: string;
   headerVariant?: "default" | "compact" | "exercise" | "lesson";
   contextBadge?: string;

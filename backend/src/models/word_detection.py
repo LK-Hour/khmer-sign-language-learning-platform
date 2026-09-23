@@ -100,7 +100,7 @@ class WordDetectionChapter(PublishableMixin, Base):
 
 
 class WordDetectionLesson(PublishableMixin, Base):
-    """Individual lesson — teaches one Khmer word via its sign."""
+    """Individual lesson-teaches one Khmer word via its sign."""
     __tablename__ = "word_detection_lessons"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

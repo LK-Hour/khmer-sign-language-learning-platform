@@ -226,7 +226,7 @@ class WordDetectionCurriculumRepository:
         return list(self.db.scalars(stmt).all())
 
     def list_medias_for_words(self, word_ids: list[int]) -> dict[int, list[Media]]:
-        """Batch version of ``list_medias_for_word`` — one query instead of N.
+        """Batch version of ``list_medias_for_word``-one query instead of N.
 
         Returns a dict keyed by word_id so callers building a tree can look
         up each word's medias without an extra round-trip per word.
@@ -256,7 +256,7 @@ class WordDetectionCurriculumRepository:
     def get_primary_words_for_lessons(
         self, lesson_ids: list[int], *, active_only: bool = True
     ) -> dict[int, WordDetectionWord]:
-        """Batch version of ``get_primary_word_for_lesson`` — one query
+        """Batch version of ``get_primary_word_for_lesson``-one query
         instead of N. Returns a dict keyed by lesson_id (lessons with no
         linked word are simply absent from the result)."""
         if not lesson_ids:

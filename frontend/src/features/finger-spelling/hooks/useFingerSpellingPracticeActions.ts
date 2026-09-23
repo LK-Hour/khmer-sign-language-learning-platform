@@ -22,7 +22,7 @@ export function useFingerSpellingPracticeActions() {
   );
 
   /**
-   * Runs ML prediction only — no backend submission.
+   * Runs ML prediction only-no backend submission.
    * Stores accuracy + predicted letter in the store for display.
    */
   const runPracticePredict = useCallback(

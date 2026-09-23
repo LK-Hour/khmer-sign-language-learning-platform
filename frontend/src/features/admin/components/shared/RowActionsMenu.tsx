@@ -45,7 +45,7 @@ export interface RowActionsMenuProps {
 
 /**
  * Standard 3-dot row actions menu for admin tables: Preview, Edit, Delete.
- * Any action can be omitted by not passing its handler — e.g. tables with
+ * Any action can be omitted by not passing its handler-e.g. tables with
  * no preview route just skip `onPreview`.
  */
 export default function RowActionsMenu({

@@ -44,7 +44,7 @@ def list_dictionary_entries(
             detail=f"sort must be one of: {', '.join(sorted(_VALID_SORT))}",
         )
 
-    # Cache public dictionary responses (no user context — same for everyone)
+    # Cache public dictionary responses (no user context-same for everyone)
     cache_key = f"ksl:cache:public:dict:t{normalized_type}:s{normalized_sort}:p{page}:ps{page_size}:q{search or ''}"
     cached = cache_get(rc, cache_key)
     if cached is not None:
@@ -59,7 +59,7 @@ def list_dictionary_entries(
         page_size=page_size,
     )
 
-    # Cache for 15 minutes — dictionary content rarely changes
+    # Cache for 15 minutes-dictionary content rarely changes
     cache_set(rc, cache_key, result.model_dump(mode="json"), ttl=900)
     return result
 

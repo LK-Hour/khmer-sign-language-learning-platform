@@ -30,7 +30,7 @@ export async function fetchSentences(): Promise<SentenceSpellingSentence[]> {
 
 /**
  * Best-effort lookup of the sample sentence after `currentId`. A failed fetch
- * just means no "Next sentence" shortcut — it must never break the practice page.
+ * just means no "Next sentence" shortcut-it must never break the practice page.
  */
 export async function fetchNextSentence(
   currentId: number | undefined

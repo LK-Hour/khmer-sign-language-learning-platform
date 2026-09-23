@@ -133,7 +133,7 @@ export default function NavTreeItem({
       )}
 
       {/* Horizontal branch: a straight line from the trunk to the item text,
-          pinned at row center. No borderLeft needed — the trunk already covers
+          pinned at row center. No borderLeft needed-the trunk already covers
           that vertical span, so adding borderLeft here would double-up. */}
       {showConnector && (
         <Box

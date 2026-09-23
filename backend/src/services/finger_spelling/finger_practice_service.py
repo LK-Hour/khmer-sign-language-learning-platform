@@ -65,7 +65,7 @@ class FingerPracticeService:
 
             normalized_accuracy = None if accuracy is None else round(float(accuracy), 2)
             # Use explicit label_matched signal from the client instead of
-            # comparing accuracy to a threshold — this ensures max-retry skips
+            # comparing accuracy to a threshold-this ensures max-retry skips
             # never accidentally mark lessons complete.
             passed = label_matched
             logger.info(f"[record_attempt] normalized_accuracy={normalized_accuracy}, passed={passed}")
@@ -81,7 +81,7 @@ class FingerPracticeService:
                 logger.warning(f"[record_attempt] record_practice_attempt returned None")
                 return None
 
-            logger.info(f"[record_attempt] success — attempts={progress.attempts}, is_completed={progress.is_completed}, last_practiced_at={progress.last_practiced_at}")
+            logger.info(f"[record_attempt] success-attempts={progress.attempts}, is_completed={progress.is_completed}, last_practiced_at={progress.last_practiced_at}")
 
             return PracticeAttemptResult(
                 lesson_id=lesson_id,

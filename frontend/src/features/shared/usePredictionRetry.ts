@@ -24,7 +24,7 @@ function normalizeLabel(label: string | null | undefined): string | null {
 // Letters that are visually/gesturally indistinguishable by the hand-keypoint
 // model, so the model can only ever output one canonical label for the
 // group. Mirrors `LETTER_MATCH_ALIASES` in
-// backend/src/ml/letter_handshape_aliases.py — keep both in sync.
+// backend/src/ml/letter_handshape_aliases.py-keep both in sync.
 //
 // ឣ (independent vowel, deprecated code point) has the same hand shape as
 // អ (main consonant); the model only ever predicts "អ". Without this

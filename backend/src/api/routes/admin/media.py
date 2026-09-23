@@ -3,12 +3,12 @@
 Provides CRUD endpoints for browsing, uploading, associating, and deleting
 media assets. All endpoints require admin authentication.
 
-    /api/admin/media              GET   — paginated list with media_type filter
-    /api/admin/media              POST  — upload new media (multipart/form-data)
-    /api/admin/media/{id}         GET   — detail with associations
-    /api/admin/media/{id}         DELETE — delete media record + file
-    /api/admin/media/{id}/associate    POST   — link media to letter/word
-    /api/admin/media/{id}/associate    DELETE — unlink media from letter/word
+    /api/admin/media              GET  -paginated list with media_type filter
+    /api/admin/media              POST -upload new media (multipart/form-data)
+    /api/admin/media/{id}         GET  -detail with associations
+    /api/admin/media/{id}         DELETE-delete media record + file
+    /api/admin/media/{id}/associate    POST  -link media to letter/word
+    /api/admin/media/{id}/associate    DELETE-unlink media from letter/word
 """
 
 from __future__ import annotations

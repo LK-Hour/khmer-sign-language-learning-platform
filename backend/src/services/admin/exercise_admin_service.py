@@ -2,7 +2,7 @@
 
 Exercises follow the confirm-publish workflow: create/update produce ``draft``
 rows hidden from learners; an explicit publish action makes them live. Options
-have no publish state of their own — they go live together with their parent
+have no publish state of their own-they go live together with their parent
 exercise's publish action.
 """
 

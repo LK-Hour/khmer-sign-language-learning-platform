@@ -19,7 +19,7 @@ export function collectCharacterAccuracies(
 
 /**
  * Mean confidence (0–100) across every character in the sentence, skipped
- * characters counting as 0 — the same value that is submitted to the server,
+ * characters counting as 0-the same value that is submitted to the server,
  * so the on-screen number matches history.
  */
 export function computeAverageAccuracy(
@@ -46,7 +46,7 @@ export function secondsPerSign(elapsedMs: number, totalCount: number): number {
   return elapsedMs / totalCount / 1000;
 }
 
-/** "Skips" only when more than one — 0 and 1 both read "Skip". */
+/** "Skips" only when more than one-0 and 1 both read "Skip". */
 export function skipLabelKey(skippedCount: number): TranslationKey {
   return skippedCount > 1
     ? "SENTENCE_SPELLING.PRACTICE.STATS.SKIP_PLURAL"

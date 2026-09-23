@@ -10,14 +10,14 @@ class, "អ", for that shape.
 This module is the single source of truth for that relationship. It is
 consumed in two places that would otherwise need to agree on the same facts:
 
-1. ``src.ml.predictor.KhmerHandPredictor._mask_by_category`` — when a lesson
+1. ``src.ml.predictor.KhmerHandPredictor._mask_by_category``-when a lesson
    for the *alias* letter (ឣ) requests category-restricted prediction, the
    category sent is the alias letter's own curriculum category
    ("Independent Vowels"), not the canonical label's category
    ("Main Consonants"). Without accounting for the alias here, the
    canonical label would be masked out entirely and could never be
    predicted for that lesson.
-2. ``src.ml.label_match_filter.filter_by_label_match`` — the final
+2. ``src.ml.label_match_filter.filter_by_label_match``-the final
    predicted-label vs. target-label string comparison needs to treat the
    canonical prediction ("អ") as a match for a lesson targeting the alias
    letter ("ឣ").

@@ -1,10 +1,10 @@
 """Admin sentence-spelling routes.
 
-    /api/admin/sentence_spelling/sentences       GET  — paginated list of sentences
-    /api/admin/sentence_spelling/sentences/{id}  GET  — single sentence detail
-    /api/admin/sentence_spelling/sentences       POST — create a new sentence
-    /api/admin/sentence_spelling/sentences/{id}  PUT  — update a sentence
-    /api/admin/sentence_spelling/sentences/{id}  DELETE — delete a sentence
+    /api/admin/sentence_spelling/sentences       GET -paginated list of sentences
+    /api/admin/sentence_spelling/sentences/{id}  GET -single sentence detail
+    /api/admin/sentence_spelling/sentences       POST-create a new sentence
+    /api/admin/sentence_spelling/sentences/{id}  PUT -update a sentence
+    /api/admin/sentence_spelling/sentences/{id}  DELETE-delete a sentence
 """
 
 from __future__ import annotations

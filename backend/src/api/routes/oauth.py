@@ -178,7 +178,7 @@ def telegram_widget_redirect(
     Telegram Login Widget redirect endpoint.
     Telegram sends user data as query params with HMAC hash.
     We verify, create/find user, mint JWT, and redirect to frontend with a
-    short-lived one-time exchange code (never the raw access token) — the
+    short-lived one-time exchange code (never the raw access token)-the
     frontend immediately exchanges it via POST /api/auth/login/telegram/exchange.
     """
     redirect_url = _telegram_redirect_url(request)
@@ -258,7 +258,7 @@ def google_login(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    """Google OAuth login — verifies ID token, creates/finds user, returns JWT."""
+    """Google OAuth login-verifies ID token, creates/finds user, returns JWT."""
     try:
         token_info = google_oauth_service.verify_token(body.code)
         user_info = google_oauth_service.extract_user_info(token_info)
@@ -300,7 +300,7 @@ def facebook_login(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    """Facebook OAuth login — verifies access token, creates/finds user, returns JWT."""
+    """Facebook OAuth login-verifies access token, creates/finds user, returns JWT."""
     try:
         user_data = facebook_oauth_service.verify_token(body.code)
         user_info = facebook_oauth_service.extract_user_info(user_data)

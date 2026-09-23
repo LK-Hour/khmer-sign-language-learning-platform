@@ -17,7 +17,7 @@ import {
 
 const CHART_HEIGHT = 280;
 
-// ApexCharts touches `window`, so it can only load on the client — same as the admin charts.
+// ApexCharts touches `window`, so it can only load on the client-same as the admin charts.
 const Chart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
   loading: () => <Box sx={{ height: CHART_HEIGHT }} />,
@@ -75,7 +75,7 @@ export default function SentenceAccuracyChart({ points, sentence }: SentenceAccu
         </Typography>
 
         {/* Apex sets font-family as an SVG attribute, which can't resolve the
-            font CSS variables — a CSS rule can, and covers Khmer glyphs too. */}
+            font CSS variables-a CSS rule can, and covers Khmer glyphs too. */}
         <Box
           sx={{
             width: "100%",

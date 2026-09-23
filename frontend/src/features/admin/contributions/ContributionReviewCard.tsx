@@ -76,7 +76,7 @@ export default function ContributionReviewCard({
           setVideoUrl(resolveApiAssetUrl(detail.video_url) ?? detail.video_url);
         }
       } catch {
-        // Silently fail — video just won't show
+        // Silently fail-video just won't show
       }
     };
     fetchVideo();

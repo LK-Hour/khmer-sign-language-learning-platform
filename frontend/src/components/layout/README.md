@@ -1,6 +1,6 @@
 # Layout
 
-Responsive **web** layout — not a mobile app shell.
+Responsive **web** layout-not a mobile app shell.
 
 ## Active
 
@@ -50,13 +50,13 @@ MUI v9 removed `<Hidden />`. Use `ResponsiveHidden` instead:
 
 | Prop | Meaning |
 |---|---|
-| `smDown` | Hidden on xs, sm — visible on md, lg, xl |
-| `mdDown` | Hidden on xs, sm, md — visible on lg, xl |
-| `mdUp` | Hidden on md, lg, xl — visible on xs, sm |
-| `lgDown` | Hidden on xs–lg — visible on xl only |
-| `lgUp` | Hidden on lg, xl — visible on xs, sm, md |
+| `smDown` | Hidden on xs, sm-visible on md, lg, xl |
+| `mdDown` | Hidden on xs, sm, md-visible on lg, xl |
+| `mdUp` | Hidden on md, lg, xl-visible on xs, sm |
+| `lgDown` | Hidden on xs–lg-visible on xl only |
+| `lgUp` | Hidden on lg, xl-visible on xs, sm, md |
 
-`MainHeader` is mounted in `AppLayout` — do not import it on individual pages.
+`MainHeader` is mounted in `AppLayout`-do not import it on individual pages.
 
 ## Legacy (unused)
 

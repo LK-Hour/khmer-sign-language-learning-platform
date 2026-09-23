@@ -20,8 +20,8 @@ A row is **learner-visible ("live") only when both** `is_active = true` **and**
 `publish_status = 'published'`. This predicate is implemented once in
 `backend/src/models/publishable.py`:
 
-- `live(Model)` — SQL predicate used by learner-facing repositories.
-- `is_live(entity)` — Python-side check for already-loaded ORM instances.
+- `live(Model)`-SQL predicate used by learner-facing repositories.
+- `is_live(entity)`-Python-side check for already-loaded ORM instances.
 
 Supporting columns: `published_at` (timestamp of last publish) and
 `published_by` (FK to `users.id` of the admin who confirmed the publish).

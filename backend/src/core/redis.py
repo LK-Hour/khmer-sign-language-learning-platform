@@ -16,7 +16,7 @@ from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Global connection pool — created once, reused by all threads/coroutines.
+# Global connection pool-created once, reused by all threads/coroutines.
 _pool: redis.ConnectionPool | None = None
 
 

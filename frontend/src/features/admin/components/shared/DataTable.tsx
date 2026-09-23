@@ -97,7 +97,7 @@ export default function DataTable<T extends { id: number }>({
       resizingRef.current = { colId, startX: e.clientX, startWidth };
 
       // Prevent text selection and show resize cursor for the whole page
-      // while dragging — without this, fast mouse movement selects header
+      // while dragging-without this, fast mouse movement selects header
       // text and rows, which reads as visual "glitching".
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";

@@ -23,7 +23,7 @@ DICTIONARY_UNIT_ORDER: dict[str, int] = {
     "Diacritics": 5,
 }
 
-# Word detection units — keep in sync with seed_data/seed_word_detection.py order.
+# Word detection units-keep in sync with seed_data/seed_word_detection.py order.
 WORD_DETECTION_UNIT_ORDER: dict[str, int] = {
     "Education": 100,
     "Directions and Places": 101,
@@ -39,7 +39,7 @@ WORD_DETECTION_UNIT_ORDER: dict[str, int] = {
 # Word dictionary ids continue immediately after the highest active finger letter id.
 # Example: letters 1..127 → first word is 128, second is 129, etc.
 
-# Khmer teaching order within each unit — keep in sync with seed_data/seed_curriculum.py
+# Khmer teaching order within each unit-keep in sync with seed_data/seed_curriculum.py
 UNIT_LETTER_ORDERS: dict[str, list[str]] = {
     "Numbers": ["០", "១", "២", "៣", "៤", "៥", "៦", "៧", "៨", "៩"],
     "Dependent Vowels": [

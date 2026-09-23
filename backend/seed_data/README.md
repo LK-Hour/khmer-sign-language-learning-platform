@@ -85,8 +85,8 @@ Demo users live in `seed_data.json` (6 users: 2 email/password students, 1 admin
 | Role | Email | Password |
 |------|-------|----------|
 | **Admin** | `admin@cadt.com` | `AdminPass123!` |
-| Student | `test@cadt.com` | *(see team — hash in fixture)* |
-| Student | `test2@cadt.com` | *(see team — hash in fixture)* |
+| Student | `test@cadt.com` | *(see team-hash in fixture)* |
+| Student | `test2@cadt.com` | *(see team-hash in fixture)* |
 
 Load or refresh demo users **without wiping curriculum**:
 
@@ -95,7 +95,7 @@ cd backend
 python seed_data/seed_users.py
 ```
 
-To replace all managed tables from the full fixture (destructive — clears curriculum too):
+To replace all managed tables from the full fixture (destructive-clears curriculum too):
 
 ```bash
 python seed_data/seed_database.py --output seed_data/seed_data.json --wipe

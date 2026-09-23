@@ -42,7 +42,7 @@ export function mapApiError(error: unknown): string {
 
   // Network failure or other non-API errors
   if (error instanceof TypeError && error.message.includes("fetch")) {
-    return "Network error — please check your connection";
+    return "Network error-please check your connection";
   }
 
   if (error instanceof Error) {
@@ -51,7 +51,7 @@ export function mapApiError(error: unknown): string {
       error.message.toLowerCase().includes("network") ||
       error.message.toLowerCase().includes("failed to fetch")
     ) {
-      return "Network error — please check your connection";
+      return "Network error-please check your connection";
     }
     return error.message;
   }
