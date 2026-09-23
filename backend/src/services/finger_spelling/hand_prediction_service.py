@@ -20,7 +20,11 @@ class HandPredictionResponse:
 class HandPredictionService:
     @property
     def is_available(self) -> bool:
-        return settings.ml_enabled and settings.ml_model_path.is_file()
+        return (
+            settings.ml_enabled
+            and settings.ml_model_path.is_file()
+            and settings.ml_class_mapping_path.is_file()
+        )
 
     def predict_from_features(
         self,

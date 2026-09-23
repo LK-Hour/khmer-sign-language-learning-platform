@@ -1,11 +1,33 @@
-"""Load Keras ``.h5`` MLP weights and run inference with NumPy only (no TensorFlow)."""
+"""Load the Keras 3 finger-spelling MLP and run inference with NumPy only (no TensorFlow).
+
+The model is exported as a ``.keras`` archive: a zip holding ``model.weights.h5``,
+whose variables live under ``layers/<layer_name>/vars/<index>``. A bare
+``.weights.h5`` file uses the same layout and is accepted too.
+
+Architecture (from the exported ``config.json``):
+
+    Input(126)
+      -> Dense(512) -> BatchNorm -> ReLU
+      -> Dense(256) -> BatchNorm -> ReLU
+      -> Dense(128) -> BatchNorm -> ReLU
+      -> Dense(128, softmax)
+
+Dropout is a no-op at inference and is skipped. ``class_mapping.json`` maps each
+output index straight to its label, so there is no index offset to correct for.
+
+The 126 inputs are Right(63) + Left(63) MediaPipe landmarks, wrist-normalized
+(one hand) or pair-normalized (two hands) in the browser -- see
+``frontend/src/features/finger-spelling/ml/handKeypoints.ts``.
+"""
 
 from __future__ import annotations
 
+import io
+import json
+import zipfile
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
 import h5py
 import numpy as np
@@ -31,7 +53,7 @@ INDEPENDENT_VOWEL_LABELS = [
     "អា", "ឥ", "ឦ", "ឧ", "ឩ", "ឪ", "ឫ", "ឬ", "ឭ", "ឮ", "ឯ", "ឰ", "ឱ", "ឳ",
 ]
 DIACRITIC_LABELS = [
-    "!", "question", "៉", "៊", "៌", "៍", "៎", "៏", "័", "។", "។ល។", "៖", "ៗ", "៚",
+    "!", "question", "៉", "៊", "់", "៌", "៍", "៎", "៏", "័", "។", "។ល។", "៖", "ៗ", "៚",
 ]
 NUMBER_LABELS = ["០", "១", "២", "៣", "៤", "៥", "៦", "៧", "៨", "៩"]
 
@@ -49,6 +71,13 @@ CATEGORY_ALIASES: dict[str, set[str]] = {
     "Consonant": {"Main Consonants", "Sub Consonants"},
     "Vowel": {"Dependent Vowels", "Independent Vowels"},
 }
+
+# Layer names as exported for this architecture: each block is
+# Dense -> BatchNorm -> ReLU, followed by a softmax output Dense.
+_DENSE_LAYERS = ("dense", "dense_1", "dense_2")
+_BN_LAYERS = ("batch_normalization", "batch_normalization_1", "batch_normalization_2")
+_OUTPUT_LAYER = "dense_3"
+_KERAS_WEIGHTS_MEMBER = "model.weights.h5"
 
 
 @dataclass(frozen=True)
@@ -86,31 +115,32 @@ def _batch_norm(
     return (x - mean) / np.sqrt(var + eps) * gamma + beta
 
 
-def _load_block(file: h5py.File, layer: str, bn_layer: str) -> _DenseBlock:
-    prefix = f"model_weights/{layer}/Deep_MLP_Khmer/{layer}"
-    bn_prefix = f"model_weights/{bn_layer}/Deep_MLP_Khmer/{bn_layer}"
+def _open_weights(model_path: Path) -> h5py.File:
+    """Open the weights file, unpacking it from a ``.keras`` archive when needed."""
+    if model_path.suffix == ".keras":
+        with zipfile.ZipFile(model_path) as archive:
+            return h5py.File(io.BytesIO(archive.read(_KERAS_WEIGHTS_MEMBER)), "r")
+    return h5py.File(model_path, "r")
+
+
+def _load_block(file: h5py.File, dense_layer: str, bn_layer: str) -> _DenseBlock:
+    dense_vars = file[f"layers/{dense_layer}/vars"]
+    bn_vars = file[f"layers/{bn_layer}/vars"]
     return _DenseBlock(
-        kernel=np.array(file[f"{prefix}/kernel"]),
-        bias=np.array(file[f"{prefix}/bias"]),
-        bn_gamma=np.array(file[f"{bn_prefix}/gamma"]),
-        bn_beta=np.array(file[f"{bn_prefix}/beta"]),
-        bn_mean=np.array(file[f"{bn_prefix}/moving_mean"]),
-        bn_var=np.array(file[f"{bn_prefix}/moving_variance"]),
+        kernel=np.array(dense_vars["0"]),
+        bias=np.array(dense_vars["1"]),
+        bn_gamma=np.array(bn_vars["0"]),
+        bn_beta=np.array(bn_vars["1"]),
+        bn_mean=np.array(bn_vars["2"]),
+        bn_var=np.array(bn_vars["3"]),
     )
 
 
-def _load_output_layer(file: h5py.File) -> tuple[np.ndarray, np.ndarray]:
-    prefix = "model_weights/output/Deep_MLP_Khmer/output"
-    return np.array(file[f"{prefix}/kernel"]), np.array(file[f"{prefix}/bias"])
-
-
 class KhmerLabelDecoder:
-    """Decode model class indices with the exported Khmer ``LabelEncoder`` classes."""
+    """Decode model output indices with ``class_mapping.json`` (``index_to_label``)."""
 
-    _ITEM_SIZE = 36  # joblib stored dtype '<U9' => 9 unicode codepoints * 4 bytes
-
-    def __init__(self, encoder_path: Path) -> None:
-        self._encoder_path = encoder_path
+    def __init__(self, mapping_path: Path) -> None:
+        self._mapping_path = mapping_path
         self._classes: list[str] | None = None
 
     @property
@@ -132,72 +162,35 @@ class KhmerLabelDecoder:
 
     @staticmethod
     def _sign(label: str) -> str:
-        return label.split(",", 1)[0].strip().replace("_", " ")
+        return label.strip().replace("_", " ")
 
     def label_category_map(self) -> dict[str, str]:
-        """Return a mapping of display label → category from the encoder labels.
-
-        Older exported encoders only contain the raw label. Newer encoders may
-        store ``"Label,Category"``; both shapes are accepted here.
-        """
-        mapping: dict[str, str] = {}
-        for raw in self.classes:
-            parts = raw.split(",", 1)
-            label = parts[0].strip()
-            display = label.replace("_", " ")
-            category = (
-                parts[1].strip()
-                if len(parts) > 1
-                else LABEL_CATEGORIES.get(label, "")
-            )
-            mapping[display] = category
-        return mapping
+        """Return a mapping of display label → category, in output-index order."""
+        return {
+            self._sign(label): LABEL_CATEGORIES.get(label, "")
+            for label in self.classes
+        }
 
     def _ensure_loaded(self) -> None:
         if self._classes is not None:
             return
-        if not self._encoder_path.is_file():
+        if not self._mapping_path.is_file():
             self._classes = []
             return
 
-        self._classes = self._load_with_joblib() or self._load_embedded_unicode_array()
-
-    def _load_with_joblib(self) -> list[str] | None:
-        try:
-            import joblib  # type: ignore[import-not-found]
-        except ModuleNotFoundError:
-            return None
-
-        encoder: Any = joblib.load(self._encoder_path)
-        classes = getattr(encoder, "classes_", None)
-        if classes is None:
-            return []
-        return [str(label) for label in classes]
-
-    def _load_embedded_unicode_array(self) -> list[str]:
-        data = self._encoder_path.read_bytes()
-        start = data.find("No_Action".encode("utf-32-le"))
-        if start < 0:
-            return []
-
-        labels: list[str] = []
-        for offset in range(start, len(data) - self._ITEM_SIZE + 1, self._ITEM_SIZE):
-            raw = data[offset : offset + self._ITEM_SIZE]
-            label = raw.decode("utf-32-le", errors="ignore").rstrip("\x00")
-            if label:
-                labels.append(label)
-        return labels
+        with self._mapping_path.open("r", encoding="utf-8-sig") as file:
+            index_to_label = json.load(file).get("index_to_label") or {}
+        self._classes = [index_to_label[str(i)] for i in range(len(index_to_label))]
 
 
 class KhmerHandPredictor:
-    """NumPy forward pass for Khmer MLP ``.h5`` models."""
+    """NumPy forward pass for the Khmer finger-spelling Keras 3 MLP."""
 
     INPUT_DIM = 126
-    CLASS_INDEX_OFFSET = 1
 
-    def __init__(self, model_path: Path) -> None:
+    def __init__(self, model_path: Path, class_mapping_path: Path) -> None:
         self._model_path = model_path
-        self._label_decoder = KhmerLabelDecoder(settings.ml_label_encoder_path)
+        self._label_decoder = KhmerLabelDecoder(class_mapping_path)
         self._dense_blocks: list[_DenseBlock] = []
         self._output_kernel: np.ndarray | None = None
         self._output_bias: np.ndarray | None = None
@@ -208,18 +201,17 @@ class KhmerHandPredictor:
         if not self._model_path.is_file():
             raise FileNotFoundError(f"ML model not found: {self._model_path}")
 
-        with h5py.File(self._model_path, "r") as file:
-            block_index = 1
-            while f"model_weights/dense_{block_index}" in file:
-                self._dense_blocks.append(
-                    _load_block(file, f"dense_{block_index}", f"bn_{block_index}")
-                )
-                block_index += 1
+        with _open_weights(self._model_path) as file:
+            blocks = [
+                _load_block(file, dense_layer, bn_layer)
+                for dense_layer, bn_layer in zip(_DENSE_LAYERS, _BN_LAYERS)
+            ]
+            output_vars = file[f"layers/{_OUTPUT_LAYER}/vars"]
+            self._output_kernel = np.array(output_vars["0"])
+            self._output_bias = np.array(output_vars["1"])
 
-            if not self._dense_blocks:
-                raise ValueError(f"No dense blocks found in ML model: {self._model_path}")
-
-            self._output_kernel, self._output_bias = _load_output_layer(file)
+        # Assigned last: `_dense_blocks` being non-empty is the "fully loaded" flag.
+        self._dense_blocks = blocks
 
     @property
     def input_dim(self) -> int:
@@ -242,8 +234,8 @@ class KhmerHandPredictor:
 
     def _forward_block(self, x: np.ndarray, block: _DenseBlock) -> np.ndarray:
         x = x @ block.kernel + block.bias
-        x = np.maximum(x, 0.0)  # ReLU
         x = _batch_norm(x, block.bn_gamma, block.bn_beta, block.bn_mean, block.bn_var)
+        x = np.maximum(x, 0.0)  # ReLU
         return x
 
     def predict(
@@ -277,13 +269,12 @@ class KhmerHandPredictor:
             x = self._forward_block(x, block)
         logits = x @ self._output_kernel + self._output_bias
         probabilities = _softmax(logits)
-        raw_predicted_index = int(np.argmax(probabilities))
-        predicted_index = max(0, raw_predicted_index - self.CLASS_INDEX_OFFSET)
-        confidence = float(probabilities[raw_predicted_index]) * 100.0
 
         if category is not None and category.lower() == "none":
+            classes = self._label_decoder.classes
+            no_action_index = classes.index("No_Action") if "No_Action" in classes else 0
             return PredictionResult(
-                predicted_class_index=0,
+                predicted_class_index=no_action_index,
                 predicted_label="No Action",
                 confidence=0.0,
                 probabilities=[float(p) for p in probabilities],
@@ -291,17 +282,15 @@ class KhmerHandPredictor:
 
         if category is not None:
             probabilities = self._mask_by_category(probabilities, category)
-            raw_predicted_index = int(np.argmax(probabilities))
-            predicted_index = max(0, raw_predicted_index - self.CLASS_INDEX_OFFSET)
-            confidence = float(probabilities[raw_predicted_index]) * 100.0
 
+        predicted_index = int(np.argmax(probabilities))
         return PredictionResult(
             predicted_class_index=predicted_index,
             predicted_label=self._label_decoder.decode(
                 predicted_index,
                 expected_count=int(probabilities.shape[0]),
             ),
-            confidence=confidence,
+            confidence=float(probabilities[predicted_index]) * 100.0,
             probabilities=[float(p) for p in probabilities],
         )
 
@@ -324,8 +313,7 @@ class KhmerHandPredictor:
         label_category_map = self._label_decoder.label_category_map()
         masked = np.zeros_like(probabilities)
         for i, (display_label, label_category) in enumerate(label_category_map.items()):
-            output_idx = i + self.CLASS_INDEX_OFFSET
-            if 0 <= output_idx < len(probabilities):
+            if i < len(probabilities):
                 extra_categories = CANONICAL_LABEL_EXTRA_CATEGORIES.get(display_label, set())
                 if (
                     label_category in allowed_categories
@@ -333,7 +321,7 @@ class KhmerHandPredictor:
                     or display_label == "No Action"
                     or extra_categories & allowed_categories
                 ):
-                    masked[output_idx] = probabilities[output_idx]
+                    masked[i] = probabilities[i]
 
         total = np.sum(masked)
         if total > 0:
@@ -343,4 +331,4 @@ class KhmerHandPredictor:
 
 @lru_cache
 def get_predictor() -> KhmerHandPredictor:
-    return KhmerHandPredictor(settings.ml_model_path)
+    return KhmerHandPredictor(settings.ml_model_path, settings.ml_class_mapping_path)

@@ -79,6 +79,7 @@ finger_spelling_data_set/
 backend/ml/models/*.h5
 backend/ml/models/*.task
 backend/ml/models/**/*.h5
+backend/ml/models/**/*.keras
 backend/ml/models/**/*.task
 
 # Graphify knowledge graph

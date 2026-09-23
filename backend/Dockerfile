@@ -56,12 +56,11 @@ COPY backend/alembic.ini ./alembic.ini
 COPY backend/src ./src
 COPY backend/seed_data ./seed_data
 
-# Copy only the checkpoints the settings actually point at. The other four
-# files under backend/ml/models are 276 MB of duplicate and superseded
-# weights; .dockerignore keeps them out of the build context entirely.
-COPY backend/ml/models/mlp_khmer_model_v3.h5 \
-     backend/ml/models/khmer_label_encoder.pkl \
-     ./ml/models/
+# Copy only the checkpoints the settings actually point at. The legacy
+# finger-spelling MLP (v3 + its label encoder) and the older duplicate weights
+# under backend/ml/models are superseded; .dockerignore keeps them out of the
+# build context entirely.
+COPY backend/ml/models/finger_spelling ./ml/models/finger_spelling
 COPY backend/ml/models/sentence_spelling ./ml/models/sentence_spelling
 
 # The word-detection model lives under data_set/ in the repo, which is

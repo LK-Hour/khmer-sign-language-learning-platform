@@ -14,9 +14,13 @@ logger = logging.getLogger(__name__)
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 _REPO_ROOT = _BACKEND_ROOT.parent
-_DEFAULT_ML_MODEL = _BACKEND_ROOT / "ml" / "models" / "mlp_khmer_model_v3.h5"
+_DEFAULT_ML_MODEL = (
+    _BACKEND_ROOT / "ml" / "models" / "finger_spelling" / "best_mlp_model.keras"
+)
 _DEFAULT_LANDMARKER = _BACKEND_ROOT / "ml" / "models" / "hand_landmarker.task"
-_DEFAULT_LABEL_ENCODER = _BACKEND_ROOT / "ml" / "models" / "khmer_label_encoder.pkl"
+_DEFAULT_ML_CLASS_MAPPING = (
+    _BACKEND_ROOT / "ml" / "models" / "finger_spelling" / "class_mapping.json"
+)
 _DEFAULT_WORD_ML_MODEL = (
     _REPO_ROOT / "data_set" / "word_detection_model_assets" / "best_model_25class_fix.h5"
 )
@@ -61,9 +65,9 @@ class Settings(BaseSettings):
         default=_DEFAULT_LANDMARKER,
         validation_alias="ML_LANDMARKER_PATH",
     )
-    ml_label_encoder_path: Path = Field(
-        default=_DEFAULT_LABEL_ENCODER,
-        validation_alias="ML_LABEL_ENCODER_PATH",
+    ml_class_mapping_path: Path = Field(
+        default=_DEFAULT_ML_CLASS_MAPPING,
+        validation_alias="ML_CLASS_MAPPING_PATH",
     )
     word_ml_enabled: bool = Field(default=True, validation_alias="WORD_ML_ENABLED")
     word_ml_model_path: Path = Field(
@@ -111,7 +115,7 @@ class Settings(BaseSettings):
     @field_validator(
         "ml_model_path",
         "ml_landmarker_path",
-        "ml_label_encoder_path",
+        "ml_class_mapping_path",
         "word_ml_model_path",
         "word_ml_label_map_path",
         "word_detection_contributions_dir",

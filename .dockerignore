@@ -71,12 +71,15 @@ data_set
 !data_set/word_detection_model_assets/label_map_25class.json
 
 # --- Unused ML checkpoints ---------------------------------------------
-# 276 MB of models no setting points at. mlp_khmer_model.h5 and
-# best_mlp_khmer_model.h5 are byte-identical duplicates; v1 is superseded
-# by v3 (the configured default). Kept on disk, just never shipped.
+# Models no setting points at. mlp_khmer_model.h5 and best_mlp_khmer_model.h5
+# are byte-identical duplicates; v1 and v3 are superseded by the Keras 3 model
+# in backend/ml/models/finger_spelling (the configured default), and the pickle
+# is v3's label encoder. Kept on disk, just never shipped.
 backend/ml/models/mlp_khmer_model.h5
 backend/ml/models/best_mlp_khmer_model.h5
 backend/ml/models/mlp_khmer_model_v1.h5
+backend/ml/models/mlp_khmer_model_v3.h5
+backend/ml/models/khmer_label_encoder.pkl
 backend/ml/notebooks
 backend/ml/realtime_test_MLP.py
 # The browser loads its own copy from frontend/public/models/.
