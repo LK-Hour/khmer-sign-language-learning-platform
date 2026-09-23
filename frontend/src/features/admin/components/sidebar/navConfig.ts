@@ -1,6 +1,7 @@
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
+import SpellcheckRoundedIcon from "@mui/icons-material/SpellcheckRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PhotoLibraryRoundedIcon from "@mui/icons-material/PhotoLibraryRounded";
 import FeedbackRoundedIcon from "@mui/icons-material/FeedbackRounded";
@@ -81,6 +82,12 @@ export const NAV_CONFIG: NavSectionConfig[] = [
           { id: "dict-chars", title: "ADMIN.NAV_CHARACTERS", path: "/admin/dictionary/characters" },
           { id: "dict-words", title: "ADMIN.NAV_WORDS", path: "/admin/dictionary/words" },
         ],
+      },
+      {
+        id: "sentence-spelling",
+        title: "ADMIN.NAV_SENTENCE_SPELLING",
+        icon: SpellcheckRoundedIcon,
+        path: "/admin/sentence-spelling",
       },
     ],
   },
