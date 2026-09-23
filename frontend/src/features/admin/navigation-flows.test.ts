@@ -114,8 +114,8 @@ function getMediaUploadPath(): string {
   return "/admin/media/upload";
 }
 
-function getMediaPreviewPath(mediaId: number): string {
-  return `/admin/media/${mediaId}/preview`;
+function getMediaEditPath(mediaId: number): string {
+  return `/admin/media/${mediaId}/edit`;
 }
 
 function getMediaListPath(): string {
@@ -160,7 +160,7 @@ describe("Navigation Flows", () => {
   // ──────────────────────────────────────────────────────────────────────────
 
   describe("Create buttons trigger correct router.push calls (Req 1.1)", () => {
-    it("Finger Spelling Units — Create navigates to /admin/learning/finger-spelling/units/create", () => {
+    it("Finger Spelling Units-Create navigates to /admin/learning/finger-spelling/units/create", () => {
       const path = getCreatePath("finger", "units");
       mockPush(path);
 
@@ -169,7 +169,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Finger Spelling Chapters — Create navigates to /admin/learning/finger-spelling/chapters/create", () => {
+    it("Finger Spelling Chapters-Create navigates to /admin/learning/finger-spelling/chapters/create", () => {
       const path = getCreatePath("finger", "chapters");
       mockPush(path);
 
@@ -178,7 +178,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Finger Spelling Lessons — Create navigates to /admin/learning/finger-spelling/lessons/create", () => {
+    it("Finger Spelling Lessons-Create navigates to /admin/learning/finger-spelling/lessons/create", () => {
       const path = getCreatePath("finger", "lessons");
       mockPush(path);
 
@@ -187,7 +187,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Word Detection Units — Create navigates to /admin/learning/word-detection/units/create", () => {
+    it("Word Detection Units-Create navigates to /admin/learning/word-detection/units/create", () => {
       const path = getCreatePath("word_detection", "units");
       mockPush(path);
 
@@ -196,7 +196,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Word Detection Chapters — Create navigates to /admin/learning/word-detection/chapters/create", () => {
+    it("Word Detection Chapters-Create navigates to /admin/learning/word-detection/chapters/create", () => {
       const path = getCreatePath("word_detection", "chapters");
       mockPush(path);
 
@@ -205,7 +205,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Word Detection Lessons — Create navigates to /admin/learning/word-detection/lessons/create", () => {
+    it("Word Detection Lessons-Create navigates to /admin/learning/word-detection/lessons/create", () => {
       const path = getCreatePath("word_detection", "lessons");
       mockPush(path);
 
@@ -214,35 +214,35 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Dictionary Characters — Create navigates to /admin/dictionary/characters/create", () => {
+    it("Dictionary Characters-Create navigates to /admin/dictionary/characters/create", () => {
       const path = getDictionaryCreatePath("characters");
       mockPush(path);
 
       expect(mockPush).toHaveBeenCalledWith("/admin/dictionary/characters/create");
     });
 
-    it("Dictionary Words — Create navigates to /admin/dictionary/words/create", () => {
+    it("Dictionary Words-Create navigates to /admin/dictionary/words/create", () => {
       const path = getDictionaryCreatePath("words");
       mockPush(path);
 
       expect(mockPush).toHaveBeenCalledWith("/admin/dictionary/words/create");
     });
 
-    it("Exercises — Create navigates to /admin/exercises/create", () => {
+    it("Exercises-Create navigates to /admin/exercises/create", () => {
       const path = getExerciseCreatePath();
       mockPush(path);
 
       expect(mockPush).toHaveBeenCalledWith("/admin/exercises/create");
     });
 
-    it("Media — Upload navigates to /admin/media/upload", () => {
+    it("Media-Upload navigates to /admin/media/upload", () => {
       const path = getMediaUploadPath();
       mockPush(path);
 
       expect(mockPush).toHaveBeenCalledWith("/admin/media/upload");
     });
 
-    it("Practices (Finger Spelling) — Create navigates to /admin/learning/finger-spelling/practices/create", () => {
+    it("Practices (Finger Spelling)-Create navigates to /admin/learning/finger-spelling/practices/create", () => {
       const path = getPracticeCreatePath("finger");
       mockPush(path);
 
@@ -251,7 +251,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Practices (Word Detection) — Create navigates to /admin/learning/word-detection/practices/create", () => {
+    it("Practices (Word Detection)-Create navigates to /admin/learning/word-detection/practices/create", () => {
       const path = getPracticeCreatePath("word_detection");
       mockPush(path);
 
@@ -266,7 +266,7 @@ describe("Navigation Flows", () => {
   // ──────────────────────────────────────────────────────────────────────────
 
   describe("Edit buttons trigger correct router.push calls (Req 1.2)", () => {
-    it("Finger Spelling Units — Edit navigates to /admin/learning/finger-spelling/units/:id/edit", () => {
+    it("Finger Spelling Units-Edit navigates to /admin/learning/finger-spelling/units/:id/edit", () => {
       const path = getEditPath("finger", "units", 42);
       mockPush(path);
 
@@ -275,7 +275,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Word Detection Chapters — Edit navigates to /admin/learning/word-detection/chapters/:id/edit", () => {
+    it("Word Detection Chapters-Edit navigates to /admin/learning/word-detection/chapters/:id/edit", () => {
       const path = getEditPath("word_detection", "chapters", 7);
       mockPush(path);
 
@@ -284,7 +284,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Finger Spelling Lessons — Edit includes entity ID in path", () => {
+    it("Finger Spelling Lessons-Edit includes entity ID in path", () => {
       const path = getEditPath("finger", "lessons", 123);
       mockPush(path);
 
@@ -293,35 +293,35 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Dictionary Characters — Edit navigates to /admin/dictionary/characters/:id/edit", () => {
+    it("Dictionary Characters-Edit navigates to /admin/dictionary/characters/:id/edit", () => {
       const path = getDictionaryEditPath("characters", 5);
       mockPush(path);
 
       expect(mockPush).toHaveBeenCalledWith("/admin/dictionary/characters/5/edit");
     });
 
-    it("Dictionary Words — Edit navigates to /admin/dictionary/words/:id/edit", () => {
+    it("Dictionary Words-Edit navigates to /admin/dictionary/words/:id/edit", () => {
       const path = getDictionaryEditPath("words", 99);
       mockPush(path);
 
       expect(mockPush).toHaveBeenCalledWith("/admin/dictionary/words/99/edit");
     });
 
-    it("Exercises — Edit navigates to /admin/exercises/:id/edit", () => {
+    it("Exercises-Edit navigates to /admin/exercises/:id/edit", () => {
       const path = getExerciseEditPath(15);
       mockPush(path);
 
       expect(mockPush).toHaveBeenCalledWith("/admin/exercises/15/edit");
     });
 
-    it("Media — Preview navigates to /admin/media/:id/preview", () => {
-      const path = getMediaPreviewPath(33);
+    it("Media-Edit navigates to /admin/media/:id/edit", () => {
+      const path = getMediaEditPath(33);
       mockPush(path);
 
-      expect(mockPush).toHaveBeenCalledWith("/admin/media/33/preview");
+      expect(mockPush).toHaveBeenCalledWith("/admin/media/33/edit");
     });
 
-    it("Contributions — Review navigates to /admin/learning/contributions/:id/review", () => {
+    it("Contributions-Review navigates to /admin/learning/contributions/:id/review", () => {
       const path = getContributionReviewPath(77);
       mockPush(path);
 
@@ -330,7 +330,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Practices (Finger Spelling) — Edit navigates to /admin/learning/finger-spelling/practices/:id/edit", () => {
+    it("Practices (Finger Spelling)-Edit navigates to /admin/learning/finger-spelling/practices/:id/edit", () => {
       const path = getPracticeEditPath("finger", 8);
       mockPush(path);
 
@@ -339,7 +339,7 @@ describe("Navigation Flows", () => {
       );
     });
 
-    it("Practices (Word Detection) — Edit navigates to /admin/learning/word-detection/practices/:id/edit", () => {
+    it("Practices (Word Detection)-Edit navigates to /admin/learning/word-detection/practices/:id/edit", () => {
       const path = getPracticeEditPath("word_detection", 12);
       mockPush(path);
 
@@ -634,7 +634,7 @@ describe("Navigation Flows", () => {
         getDictionaryCreatePath("characters"),
         getExerciseEditPath(5),
         getMediaUploadPath(),
-        getMediaPreviewPath(10),
+        getMediaEditPath(10),
         getContributionReviewPath(3),
         getPracticeCreatePath("word_detection"),
         getPracticeEditPath("finger", 4),
@@ -693,7 +693,7 @@ describe("Navigation Flows", () => {
         getExerciseEditPath(1),
         getExerciseListPath(),
         getMediaUploadPath(),
-        getMediaPreviewPath(1),
+        getMediaEditPath(1),
         getMediaListPath(),
         getContributionReviewPath(1),
         getContributionListPath(),

@@ -15,7 +15,6 @@ import PageHeader from "../components/shared/PageHeader";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
 import RowActionsMenu from "../components/shared/RowActionsMenu";
-import PreviewDrawer from "../components/shared/PreviewDrawer";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { listExercises, deleteExercise } from "../api/adminApi";
 import type { AdminExercise, AdminTrack, PublishStatus } from "../api/types";
@@ -105,7 +104,6 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [previewItem, setPreviewItem] = useState<QuizExercise | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<QuizExercise | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -203,7 +201,6 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
         width: 80,
         render: (row) => (
           <RowActionsMenu
-            onPreview={() => setPreviewItem(row)}
             onEdit={() => handleEdit(row.id)}
             onDelete={() => setDeleteTarget(row)}
           />
@@ -301,26 +298,6 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
         onRowsPerPageChange={setRowsPerPage}
       />
 
-      {/* Preview drawer */}
-      <PreviewDrawer
-        open={previewItem !== null}
-        onClose={() => setPreviewItem(null)}
-        title={previewItem?.question ?? ""}
-        subtitle={previewItem?.question_kh}
-        fields={
-          previewItem
-            ? [
-                { label: "ID", value: previewItem.id },
-                { label: "Type", value: typeLabel(previewItem.type) },
-                { label: "Options", value: previewItem.options_count },
-                {
-                  label: "Status",
-                  value: <StatusChip variant={previewItem.status} />,
-                },
-              ]
-            : []
-        }
-      />
 
       {/* Delete confirmation */}
       <ConfirmDialog

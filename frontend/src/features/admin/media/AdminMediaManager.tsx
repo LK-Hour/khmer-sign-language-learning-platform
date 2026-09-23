@@ -23,8 +23,6 @@ import DataTable, { type DataTableColumn } from "../components/shared/DataTable"
 import PageHeader from "../components/shared/PageHeader";
 import RowActionsMenu from "../components/shared/RowActionsMenu";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
-import PreviewDrawer from "../components/shared/PreviewDrawer";
-import { MediaCarousel } from "../components/shared/MediaCarousel";
 
 import { filterMediaByType } from "./mediaFilterUtils";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
@@ -90,9 +88,6 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   // ── Delete Confirmation State ──────────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<MediaResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  // ── Preview State ──────────────────────────────────────────────────────────
-  const [previewMedia, setPreviewMedia] = useState<MediaResponse | null>(null);
 
   // ── Data Fetching ──────────────────────────────────────────────────────────
   const loadMedia = useCallback(async () => {
@@ -198,7 +193,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
         sortable: false,
         render: (row) => (
           <RowActionsMenu
-            onPreview={() => setPreviewMedia(row)}
+            onEdit={() => router.push(`/${locale}/admin/media/${row.id}/edit`)}
             onDelete={() => setDeleteTarget(row)}
           />
         ),
@@ -268,7 +263,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
           columns={columns}
           rows={filteredItems}
           loading={loading}
-          onRowClick={(row) => router.push(`/${locale}/admin/media/${row.id}/preview`)}
+          onRowClick={(row) => router.push(`/${locale}/admin/media/${row.id}/edit`)}
           pagination={{
             page,
             rowsPerPage,
@@ -293,38 +288,6 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
         loading={deleting}
       />
 
-      {/* Preview drawer */}
-      <PreviewDrawer
-        open={previewMedia !== null}
-        onClose={() => setPreviewMedia(null)}
-        title={`Media #${previewMedia?.id ?? ""}`}
-        subtitle={previewMedia?.file_url?.split("/").pop() ?? undefined}
-        media={
-          previewMedia ? (
-            <MediaCarousel medias={[previewMedia]} />
-          ) : undefined
-        }
-        fields={
-          previewMedia
-            ? [
-                { label: "ID", value: previewMedia.id },
-                { label: "Type", value: previewMedia.media_type },
-                {
-                  label: "Linked To",
-                  value: previewMedia.associations?.length
-                    ? previewMedia.associations.map((a) => a.target_name).join(", ")
-                    : "—",
-                },
-                {
-                  label: "Created At",
-                  value: previewMedia.created_at
-                    ? new Date(previewMedia.created_at).toLocaleString()
-                    : "—",
-                },
-              ]
-            : []
-        }
-      />
 
       {/* Success notification from form submission */}
       <SuccessSnackbar />

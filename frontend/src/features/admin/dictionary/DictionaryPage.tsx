@@ -9,20 +9,15 @@ import SearchInput from "../components/shared/SearchInput";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
 import RowActionsMenu from "../components/shared/RowActionsMenu";
-import PreviewDrawer from "../components/shared/PreviewDrawer";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import {
   listCharacters,
   listWords,
-  getCharacter,
-  getWord,
   deleteCharacter,
   deleteWord,
   type DictionaryItem,
   type PaginatedDictionaryResponse,
 } from "../api/dictionaryAdminApi";
-import type { MediaResponse } from "../api/mediaAdminApi";
-import { MediaCarousel } from "../components/shared/MediaCarousel";
 import { ApiError } from "@/utils/api/client";
 import { useLocale } from "@/i18n/locale-context";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
@@ -51,24 +46,11 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [previewItem, setPreviewItem] = useState<DictionaryItem | null>(null);
-  const [previewMedias, setPreviewMedias] = useState<MediaResponse[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<DictionaryItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const title = type === "characters" ? "Characters" : "Words";
   const basePath = `/${locale}/admin/dictionary/${type}`;
-
-  const handlePreview = useCallback(async (row: DictionaryItem) => {
-    setPreviewItem(row);
-    setPreviewMedias([]);
-    try {
-      const detail = type === "characters"
-        ? await getCharacter(row.id)
-        : await getWord(row.id);
-      setPreviewMedias(detail.medias ?? []);
-    } catch { /* non-critical */ }
-  }, [type]);
 
   // Debounce search input
   useEffect(() => {
@@ -133,7 +115,6 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
       sortable: false,
       render: (row) => (
         <RowActionsMenu
-          onPreview={() => handlePreview(row)}
           onEdit={() => router.push(`${basePath}/${row.id}/edit`)}
           onDelete={() => setDeleteTarget(row)}
         />
@@ -216,36 +197,6 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
       {/* Success notification from form submission */}
       <SuccessSnackbar />
 
-      {/* Preview drawer */}
-      <PreviewDrawer
-        open={previewItem !== null}
-        onClose={() => { setPreviewItem(null); setPreviewMedias([]); }}
-        title={previewItem?.name_kh ?? ""}
-        subtitle={previewItem?.name_en ?? undefined}
-        media={<MediaCarousel medias={previewMedias} emptyLabel="No media" />}
-        fields={
-          previewItem
-            ? [
-                { label: "ID", value: previewItem.id },
-                { label: "Name (KH)", value: previewItem.name_kh },
-                { label: "Name (EN)", value: previewItem.name_en ?? "—" },
-                { label: "Media Count", value: previewItem.media_count },
-                {
-                  label: "Status",
-                  value: (
-                    <StatusChip variant={previewItem.is_active ? "published" : "draft"} />
-                  ),
-                },
-                {
-                  label: "Created At",
-                  value: previewItem.created_at
-                    ? new Date(previewItem.created_at).toLocaleDateString()
-                    : "—",
-                },
-              ]
-            : []
-        }
-      />
 
       {/* Delete confirmation */}
       <ConfirmDialog

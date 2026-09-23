@@ -30,7 +30,6 @@ import StatusChip from "../components/shared/StatusChip";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 import RowActionsMenu from "../components/shared/RowActionsMenu";
-import PreviewDrawer from "../components/shared/PreviewDrawer";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -82,7 +81,6 @@ export default function CurriculumTablePage({
   const [publishTarget, setPublishTarget] = useState<AdminEntity | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminEntity | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<AdminEntity | null>(null);
-  const [previewItem, setPreviewItem] = useState<AdminEntity | null>(null);
 
   const isWordDetection = track === "word_detection";
 
@@ -148,7 +146,7 @@ export default function CurriculumTablePage({
   const trackLabel = isWordDetection ? "Word Detection" : "Finger Spelling";
   const entityLabel =
     entity === "units" ? "Units" : entity === "chapters" ? "Chapters" : "Lessons";
-  const pageTitle = `${trackLabel} — ${entityLabel}`;
+  const pageTitle = `${trackLabel}-${entityLabel}`;
 
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -372,7 +370,6 @@ export default function CurriculumTablePage({
       width: 80,
       render: (row) => (
         <RowActionsMenu
-          onPreview={() => setPreviewItem(row)}
           onEdit={() => openEdit(row)}
           onDelete={row.is_active ? () => setDeleteTarget(row) : undefined}
           extraActions={[
@@ -498,33 +495,6 @@ export default function CurriculumTablePage({
       {/* Success notification from form submission */}
       <SuccessSnackbar />
 
-      {/* Preview drawer */}
-      <PreviewDrawer
-        open={previewItem !== null}
-        onClose={() => setPreviewItem(null)}
-        title={previewItem?.name_en ?? ""}
-        subtitle={previewItem?.name_kh ?? undefined}
-        fields={
-          previewItem
-            ? [
-                { label: "ID", value: previewItem.id },
-                { label: "Name (EN)", value: previewItem.name_en },
-                { label: "Name (KH)", value: previewItem.name_kh },
-                {
-                  label: "Status",
-                  value: (
-                    <StatusChip
-                      variant={
-                        previewItem.publish_status === "published" ? "published" : "draft"
-                      }
-                    />
-                  ),
-                },
-                { label: "Active", value: previewItem.is_active ? "Yes" : "No" },
-              ]
-            : []
-        }
-      />
     </>
   );
 }
