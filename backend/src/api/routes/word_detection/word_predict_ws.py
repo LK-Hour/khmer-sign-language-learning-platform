@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -158,16 +159,19 @@ async def handle_websocket(websocket: WebSocket) -> None:
                 try:
                     label_match = None
                     if msg_type == "predict_label_match":
-                        label_match_result = (
-                            label_match_service.predict_from_features_with_target(
-                                pred_msg.features,
-                                target_label=pred_msg.target_label or pred_msg.targetLabel,
-                            )
+                        # Inference is CPU-bound; run it off the event loop so
+                        # REST requests (progress, curriculum) are not blocked.
+                        label_match_result = await asyncio.to_thread(
+                            label_match_service.predict_from_features_with_target,
+                            pred_msg.features,
+                            target_label=pred_msg.target_label or pred_msg.targetLabel,
                         )
                         result = label_match_result.base
                         label_match = label_match_result.label_match
                     else:
-                        result = service.predict_from_features(pred_msg.features)
+                        result = await asyncio.to_thread(
+                            service.predict_from_features, pred_msg.features
+                        )
                 except Exception as exc:
                     logger.exception("Word prediction failed")
                     await websocket.send_json(WsErrorResponse(message=str(exc)).model_dump())
