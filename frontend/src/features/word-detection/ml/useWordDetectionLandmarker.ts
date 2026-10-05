@@ -1,68 +1,125 @@
 "use client";
 
 import {
-  type Category,
   FilesetResolver,
   HandLandmarker,
   type NormalizedLandmark,
+  PoseLandmarker,
 } from "@mediapipe/tasks-vision";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  WORD_RAW_FRAME_FEATURES,
+  WORD_SEQUENCE_LENGTH,
+  buildRawFrame,
+  pruneHistory,
+  resampleSequence,
+  type TimedFrame,
+} from "./wordSequence";
 
-/** Matches the final active extraction loop in `landmark_extract.ipynb`. */
-export const WORD_DETECTION_SEQUENCE_LENGTH = 30;
-export const WORD_DETECTION_HAND_FEATURES = 21 * 3;   // 63 features per hand (x, y, z for 21 landmarks)
-export const WORD_DETECTION_POSITION_FEATURES =
-  WORD_DETECTION_HAND_FEATURES * 2;
-export const WORD_DETECTION_TOTAL_FEATURES =
-  WORD_DETECTION_POSITION_FEATURES * 2;
+/** 30 consecutive frames at 30 fps, as in training. */
+export const WORD_DETECTION_SEQUENCE_LENGTH = WORD_SEQUENCE_LENGTH;
+/** Raw landmark values per frame (pose 132 + two hands 126); the backend builds the model features. */
+export const WORD_DETECTION_TOTAL_FEATURES = WORD_RAW_FRAME_FEATURES;
 
 const WASM_BASE =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm";
+/** "full" is the equivalent of the live test's Holistic model_complexity=1. */
+const POSE_MODEL_PATH = "/models/pose_landmarker_full.task";
 const HAND_MODEL_PATH = "/models/hand_landmarker.task";
+const POSE_LEFT_WRIST = 15;
+const POSE_RIGHT_WRIST = 16;
 
-let handLandmarkerPromise: Promise<HandLandmarker> | null = null;
+type Landmarkers = { pose: PoseLandmarker; hand: HandLandmarker };
 
-const EMPTY_FRAME_FEATURES = new Float32Array(WORD_DETECTION_POSITION_FEATURES);
+let landmarkersPromise: Promise<Landmarkers> | null = null;
 
 const EMPTY_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
   handDetected: false,
-  frameFeatures: EMPTY_FRAME_FEATURES,
   sequenceFeatures: null,
 };
 
 export type WordDetectionLandmarks = {
-  /** Kept for overlay compatibility. Word model features are hands-only. */
+  /** Pose landmarks (33) when a body was detected, for the overlay. */
   poseLandmarks: NormalizedLandmark[];
-  /** Up to two hands, 21 landmarks each. */
+  /** Always [left, right] in the live test's (Holistic) sense; an empty array when that hand is missing. */
   handLandmarks: NormalizedLandmark[][];
   /** True when at least one hand was detected in this frame. */
   handDetected: boolean;
-  /** Current frame positions: left hand 63 + right hand 63. */
-  frameFeatures: Float32Array;
-  /** Flattened row-major (30, 252) sequence, or null before any valid frame. */
+  /** Flattened row-major (30, 258) raw sequence on a 30 fps grid, or null before any valid frame. */
   sequenceFeatures: Float32Array | null;
 };
 
-async function loadHandLandmarker(): Promise<HandLandmarker> {
-  if (!handLandmarkerPromise) {
-    handLandmarkerPromise = (async () => {
+/**
+ * Pose + hands -- the parts of Holistic the word model uses, as two calls.
+ * A dedicated hand detector finds hands anywhere in the frame; Holistic only
+ * looks around the pose wrists and loses hands when a wrist is misplaced. It
+ * also skips Holistic's face mesh, which the model never reads.
+ * Settings mirror the live test (confidence 0.5, model complexity "full").
+ * VIDEO mode tracks across frames like the live test's static_image_mode=False.
+ */
+async function loadLandmarkers(): Promise<Landmarkers> {
+  if (!landmarkersPromise) {
+    landmarkersPromise = (async () => {
       const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
-      return HandLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: HAND_MODEL_PATH,
-          delegate: "GPU",
-        },
-        runningMode: "IMAGE",
-        numHands: 2,
-        minHandDetectionConfidence: 0.5,
-        minHandPresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
+      const [pose, hand] = await Promise.all([
+        PoseLandmarker.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: POSE_MODEL_PATH, delegate: "GPU" },
+          runningMode: "VIDEO",
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.5,
+          minPosePresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        }),
+        HandLandmarker.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: HAND_MODEL_PATH, delegate: "GPU" },
+          runningMode: "VIDEO",
+          numHands: 2,
+          minHandDetectionConfidence: 0.5,
+          minHandPresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        }),
+      ]);
+      return { pose, hand };
     })();
   }
-  return handLandmarkerPromise;
+  return landmarkersPromise;
+}
+
+function squaredDistance(a: NormalizedLandmark, b: NormalizedLandmark): number {
+  return (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+}
+
+/**
+ * Put detected hands into Holistic's [left, right] slots. Holistic attaches
+ * each hand to the pose wrist it belongs to, so match every hand's wrist to the
+ * nearest pose wrist (15 = left, 16 = right). Without a pose, fall back to image
+ * position: on the mirrored frame the pose's left side has the larger x.
+ */
+function assignHands(
+  hands: NormalizedLandmark[][],
+  pose: NormalizedLandmark[],
+): [NormalizedLandmark[], NormalizedLandmark[]] {
+  const detected = hands.filter((hand) => hand.length > 0).slice(0, 2);
+  if (detected.length === 0) return [[], []];
+
+  if (pose.length > POSE_RIGHT_WRIST) {
+    const leftWrist = pose[POSE_LEFT_WRIST];
+    const rightWrist = pose[POSE_RIGHT_WRIST];
+    const leftScore = (hand: NormalizedLandmark[]) =>
+      squaredDistance(hand[0], leftWrist) - squaredDistance(hand[0], rightWrist);
+
+    if (detected.length === 1) {
+      return leftScore(detected[0]) <= 0 ? [detected[0], []] : [[], detected[0]];
+    }
+    const [a, b] = detected;
+    return leftScore(a) <= leftScore(b) ? [a, b] : [b, a];
+  }
+
+  const byX = [...detected].sort((a, b) => b[0].x - a[0].x);
+  if (byX.length === 1) return byX[0][0].x >= 0.5 ? [byX[0], []] : [[], byX[0]];
+  return [byX[0], byX[1]];
 }
 
 function createOffscreenCanvas(): HTMLCanvasElement {
@@ -82,134 +139,20 @@ function copyFrameToCanvas(
 ): void {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
+  // Mirror before detection, exactly like the live test (cv2.flip(frame, 1)):
+  // landmarks and the left/right hand slots are then in the mirrored view.
+  ctx.setTransform(-1, 0, 0, 1, canvas.width, 0);
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-}
-
-function extractNativeHand(handLandmarks: NormalizedLandmark[] | undefined): Float32Array {
-  const features = new Float32Array(WORD_DETECTION_HAND_FEATURES);
-  if (!handLandmarks?.length) return features;
-
-  const wrist = handLandmarks[0];
-  const count = Math.min(handLandmarks.length, 21);
-
-  for (let i = 0; i < count; i += 1) {
-    const landmark = handLandmarks[i];
-    const offset = i * 3;
-    features[offset] = landmark.x - wrist.x;
-    features[offset + 1] = landmark.y - wrist.y;
-    features[offset + 2] = landmark.z - wrist.z;
-  }
-
-  return features;
-}
-
-function handednessName(categories: Category[] | undefined): string {
-  return categories?.[0]?.categoryName?.toLowerCase() ?? "";
-}
-
-function slotHandsByHandedness(
-  landmarks: NormalizedLandmark[][],
-  handedness: Category[][],
-): [NormalizedLandmark[] | undefined, NormalizedLandmark[] | undefined] {
-  let leftHand: NormalizedLandmark[] | undefined;
-  let rightHand: NormalizedLandmark[] | undefined;
-  const fallbackHands: NormalizedLandmark[][] = [];
-
-  landmarks.forEach((hand, index) => {
-    const label = handednessName(handedness[index]);
-    if (label === "left" && !leftHand) {
-      leftHand = hand;
-      return;
-    }
-    if (label === "right" && !rightHand) {
-      rightHand = hand;
-      return;
-    }
-    fallbackHands.push(hand);
-  });
-
-  for (const hand of fallbackHands) {
-    if (!leftHand) {
-      leftHand = hand;
-    } else if (!rightHand) {
-      rightHand = hand;
-    }
-  }
-
-  return [leftHand, rightHand];
-}
-
-function extractFrameFeatures(
-  landmarks: NormalizedLandmark[][],
-  handedness: Category[][],
-): Float32Array {
-  const [leftHand, rightHand] = slotHandsByHandedness(landmarks, handedness);
-  const frameFeatures = new Float32Array(WORD_DETECTION_POSITION_FEATURES);
-  frameFeatures.set(extractNativeHand(leftHand), 0);
-  frameFeatures.set(extractNativeHand(rightHand), WORD_DETECTION_HAND_FEATURES);
-  return frameFeatures;
-}
-
-function cloneFrame(frame: Float32Array): Float32Array {
-  return new Float32Array(frame);
-}
-
-function linspaceIndex(index: number, totalFrames: number): number {
-  if (WORD_DETECTION_SEQUENCE_LENGTH <= 1) return 0;
-  return Math.trunc(
-    (index * (totalFrames - 1)) / (WORD_DETECTION_SEQUENCE_LENGTH - 1),
-  );
-}
-
-function standardizeSequence(frames: Float32Array[]): Float32Array[] {
-  const totalFrames = frames.length;
-  if (totalFrames === 0) return [];
-
-  if (totalFrames >= WORD_DETECTION_SEQUENCE_LENGTH) {
-    return Array.from({ length: WORD_DETECTION_SEQUENCE_LENGTH }, (_, index) =>
-      cloneFrame(frames[linspaceIndex(index, totalFrames)]),
-    );
-  }
-
-  const positions = frames.map(cloneFrame);
-  const lastFrame = frames[totalFrames - 1];
-  while (positions.length < WORD_DETECTION_SEQUENCE_LENGTH) {
-    positions.push(cloneFrame(lastFrame));
-  }
-  return positions;
-}
-
-function buildSequenceFeatures(frames: Float32Array[]): Float32Array | null {
-  const positions = standardizeSequence(frames);
-  if (positions.length === 0) return null;
-
-  const sequenceFeatures = new Float32Array(
-    WORD_DETECTION_SEQUENCE_LENGTH * WORD_DETECTION_TOTAL_FEATURES,
-  );
-
-  for (let frameIndex = 0; frameIndex < WORD_DETECTION_SEQUENCE_LENGTH; frameIndex += 1) {
-    const position = positions[frameIndex];
-    const outputOffset = frameIndex * WORD_DETECTION_TOTAL_FEATURES;
-    sequenceFeatures.set(position, outputOffset);
-
-    if (frameIndex === 0) continue;
-
-    const previousPosition = positions[frameIndex - 1];
-    const velocityOffset = outputOffset + WORD_DETECTION_POSITION_FEATURES;
-    for (let i = 0; i < WORD_DETECTION_POSITION_FEATURES; i += 1) {
-      sequenceFeatures[velocityOffset + i] = position[i] - previousPosition[i];
-    }
-  }
-
-  return sequenceFeatures;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 export function useWordDetectionLandmarker() {
-  const handLandmarkerRef = useRef<HandLandmarker | null>(null);
+  const landmarkersRef = useRef<Landmarkers | null>(null);
   const runtimeFailedRef = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const sequenceFramesRef = useRef<Float32Array[]>([]);
+  const framesRef = useRef<TimedFrame[]>([]);
+  const lastTimestampRef = useRef(0);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -221,10 +164,10 @@ export function useWordDetectionLandmarker() {
     canvasRef.current = canvas;
     ctxRef.current = canvas.getContext("2d")!;
 
-    loadHandLandmarker()
-      .then((handLandmarker) => {
+    loadLandmarkers()
+      .then((landmarkers) => {
         if (cancelled) return;
-        handLandmarkerRef.current = handLandmarker;
+        landmarkersRef.current = landmarkers;
         setIsReady(true);
       })
       .catch((loadError: unknown) => {
@@ -245,15 +188,15 @@ export function useWordDetectionLandmarker() {
   }, []);
 
   const resetSequence = useCallback(() => {
-    sequenceFramesRef.current = [];
+    framesRef.current = [];
   }, []);
 
   const detectLandmarks = useCallback((video: HTMLVideoElement): WordDetectionLandmarks => {
-    const handLandmarker = handLandmarkerRef.current;
+    const landmarkers = landmarkersRef.current;
     const canvas = canvasRef.current;
     const ctx = ctxRef.current;
 
-    if (runtimeFailedRef.current || !handLandmarker || !canvas || !ctx) {
+    if (runtimeFailedRef.current || !landmarkers || !canvas || !ctx) {
       return EMPTY_DETECTION;
     }
 
@@ -262,37 +205,39 @@ export function useWordDetectionLandmarker() {
     }
 
     copyFrameToCanvas(video, canvas, ctx);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const now = performance.now();
+    // VIDEO mode needs strictly increasing timestamps.
+    const timestamp = Math.max(now, lastTimestampRef.current + 1);
+    lastTimestampRef.current = timestamp;
 
     try {
-      const handResult = handLandmarker.detect(imageData);
-      const handLandmarks = handResult.landmarks ?? [];
-      const handedness = handResult.handedness ?? handResult.handednesses ?? [];
-      const handDetected = handLandmarks.length > 0;
+      // Pass the mirrored canvas directly: no getImageData GPU->CPU readback.
+      const poseResult = landmarkers.pose.detectForVideo(canvas, timestamp);
+      const handResult = landmarkers.hand.detectForVideo(canvas, timestamp);
+      const pose = poseResult.landmarks?.[0] ?? [];
+      const [left, right] = assignHands(handResult.landmarks ?? [], pose);
+      const handLandmarks = [left, right];
+      const handDetected = left.length > 0 || right.length > 0;
 
-      // Only accumulate real motion frames. Feeding all-zero frames (no hand)
-      // into the sequence makes the model emit a phantom default prediction,
-      // so we skip frames where no hand is present.
+      // Only accumulate frames with a hand: all-zero frames make the model emit
+      // a phantom default prediction.
       if (!handDetected) {
         return {
-          poseLandmarks: [],
+          poseLandmarks: pose,
           handLandmarks,
           handDetected: false,
-          frameFeatures: EMPTY_FRAME_FEATURES,
-          sequenceFeatures: buildSequenceFeatures(sequenceFramesRef.current),
+          sequenceFeatures: resampleSequence(framesRef.current),
         };
       }
 
-      const frameFeatures = extractFrameFeatures(handLandmarks, handedness);
-      sequenceFramesRef.current.push(frameFeatures);
-      const sequenceFeatures = buildSequenceFeatures(sequenceFramesRef.current);
+      const frame = buildRawFrame(pose, left, right);
+      framesRef.current = pruneHistory([...framesRef.current, { time: now, values: frame }], now);
 
       return {
-        poseLandmarks: [],
+        poseLandmarks: pose,
         handLandmarks,
         handDetected: true,
-        frameFeatures,
-        sequenceFeatures,
+        sequenceFeatures: resampleSequence(framesRef.current),
       };
     } catch {
       return EMPTY_DETECTION;

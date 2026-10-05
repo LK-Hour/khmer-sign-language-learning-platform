@@ -44,7 +44,6 @@ const EMPTY_WORD_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
   handDetected: false,
-  frameFeatures: new Float32Array(0),
   sequenceFeatures: null,
 };
 
@@ -72,6 +71,7 @@ export default function WordDetectionLessonLearningView({
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingInFlightRef = useRef(false);
+  const resultSavedRef = useRef(false);
   const recordingStartTimeRef = useRef<number | null>(null);
   const capturedPredictionRef = useRef<typeof capturedPrediction>(null);
   const [recError, setRecError] = useState<string | null>(null);
@@ -162,20 +162,30 @@ export default function WordDetectionLessonLearningView({
     latestDetectionRef.current = detection;
   }, []);
 
+  // A correct prediction is saved as soon as it happens; Continue only saves
+  // when the user ran out of attempts without a match.
+  useEffect(() => {
+    if (!continueEnabled || !labelMatches || !capturedPrediction) return;
+    if (resultSavedRef.current) return;
+    resultSavedRef.current = true;
+    completePractice(lesson, capturedPrediction.confidence, true).catch(() => {
+      resultSavedRef.current = false;
+    });
+  }, [capturedPrediction, completePractice, continueEnabled, labelMatches, lesson]);
+
   const handleContinue = useCallback(async () => {
     if (isCompleting || isRecording || isUploading) return;
 
-    setIsCompleting(true);
-    // Send the actual confidence only when label matched; otherwise 0
-    const accuracy = labelMatches ? (capturedPrediction?.confidence ?? 0) : 0;
-
-    try {
-      await completePractice(lesson, accuracy, labelMatches);
-    } catch {
-      // If the API call itself fails (network error, 500, etc.), show error
-      setIsCompleting(false);
-      setRecError(t("WORD_DETECTION.LESSON.PROGRESS_SYNC_FAILED"));
-      return;
+    if (!resultSavedRef.current) {
+      setIsCompleting(true);
+      try {
+        await completePractice(lesson, 0, false);
+        resultSavedRef.current = true;
+      } catch {
+        setIsCompleting(false);
+        setRecError(t("WORD_DETECTION.LESSON.PROGRESS_SYNC_FAILED"));
+        return;
+      }
     }
 
     setIsCompleting(false);
@@ -221,6 +231,7 @@ export default function WordDetectionLessonLearningView({
 
   useEffect(() => {
     resetAttempts();
+    resultSavedRef.current = false;
     queueMicrotask(() => {
       setManualRetryListening(false);
       resetPredictionState();
@@ -257,6 +268,10 @@ export default function WordDetectionLessonLearningView({
     }
 
     samplingLoopRef.current = setInterval(() => {
+      // Prediction already passed: stop streaming so the server is free for
+      // the progress save and next-lesson load.
+      if (continueEnabled && !manualRetryListening) return;
+
       const detection = latestDetectionRef.current;
 
       // Require the hand to be present for a few consecutive samples before
@@ -294,7 +309,7 @@ export default function WordDetectionLessonLearningView({
         samplingLoopRef.current = null;
       }
     };
-  }, [isLandmarkerReady, lesson.word, predictorState, sendFeatures, handDetected, handWarmupComplete]);
+  }, [isLandmarkerReady, lesson.word, predictorState, sendFeatures, handDetected, handWarmupComplete, continueEnabled, manualRetryListening]);
 
   useEffect(() => {
     if ((continueEnabled && !manualRetryListening) || retryWaiting) return;

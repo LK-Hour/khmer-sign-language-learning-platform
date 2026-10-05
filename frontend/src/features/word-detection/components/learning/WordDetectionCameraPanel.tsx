@@ -7,13 +7,23 @@ import type { WordDetectionLandmarks } from "@/features/word-detection/ml/useWor
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
-const OVERLAY_DETECTION_INTERVAL_MS = 0;
+/** Detect at 30 fps, the model's frame rate; the overlay still redraws every animation frame. */
+const OVERLAY_DETECTION_INTERVAL_MS = 1000 / 30;
+
+/**
+ * Body points drawn in the overlay: shoulders, elbows, wrists and hips. Face
+ * (0-10), the pose model's wrist fans (17-22) and legs/feet (25-32) are hidden
+ * to keep the view clear -- display only, the model still receives all 33.
+ */
+const VISIBLE_POSE_POINTS = new Set([11, 12, 13, 14, 15, 16, 23, 24]);
+const VISIBLE_POSE_CONNECTIONS = PoseLandmarker.POSE_CONNECTIONS.filter(
+  ({ start, end }) => VISIBLE_POSE_POINTS.has(start) && VISIBLE_POSE_POINTS.has(end),
+);
 
 const EMPTY_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
   handDetected: false,
-  frameFeatures: new Float32Array(0),
   sequenceFeatures: null,
 };
 
@@ -120,7 +130,8 @@ export default function WordDetectionCameraPanel({
         canvas.height = video.videoHeight;
       }
 
-      if (now - lastDetectionAt >= OVERLAY_DETECTION_INTERVAL_MS) {
+      // Small tolerance so 60 Hz animation frames (16.7 ms) land on every 2nd frame.
+      if (now - lastDetectionAt >= OVERLAY_DETECTION_INTERVAL_MS - 4) {
         lastDetectionAt = now;
         const detection = detectLandmarks(video);
         lastDetectionRef.current = detection;
@@ -136,11 +147,11 @@ export default function WordDetectionCameraPanel({
 
         const pose = detection.poseLandmarks;
         if (pose.length > 0) {
-          drawingUtils.drawConnectors(pose, PoseLandmarker.POSE_CONNECTIONS, {
+          drawingUtils.drawConnectors(pose, VISIBLE_POSE_CONNECTIONS, {
             color: "#4dabf7",
             lineWidth: 2,
           });
-          drawingUtils.drawLandmarks(pose, {
+          drawingUtils.drawLandmarks(pose.filter((_, index) => VISIBLE_POSE_POINTS.has(index)), {
             color: "#ffffff",
             fillColor: "#4dabf7",
             lineWidth: 1,
@@ -211,7 +222,8 @@ export default function WordDetectionCameraPanel({
               height: "100%",
               objectFit: "cover",
               pointerEvents: "none",
-              transform: "scaleX(-1)",
+              // No flip here: landmarks come from the already-mirrored frame
+              // (see useWordDetectionLandmarker), so they match the mirrored video.
             }}
           />
         </>

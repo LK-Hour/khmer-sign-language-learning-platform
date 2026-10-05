@@ -44,7 +44,6 @@ const EMPTY_WORD_DETECTION: WordDetectionLandmarks = {
   poseLandmarks: [],
   handLandmarks: [],
   handDetected: false,
-  frameFeatures: new Float32Array(0),
   sequenceFeatures: null,
 };
 
