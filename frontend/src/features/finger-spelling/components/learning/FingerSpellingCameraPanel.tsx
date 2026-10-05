@@ -196,7 +196,6 @@ export default function FingerSpellingCameraPanel({
               height: "100%",
               objectFit: "cover",
               pointerEvents: "none",
-              transform: "scaleX(-1)",
             }}
           />
         </>

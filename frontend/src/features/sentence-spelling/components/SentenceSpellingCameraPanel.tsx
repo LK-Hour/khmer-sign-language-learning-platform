@@ -268,7 +268,6 @@ export default function SentenceSpellingCameraPanel({
               height: "100%",
               objectFit: "cover",
               pointerEvents: "none",
-              transform: "scaleX(-1)",
             }}
           />
         </>

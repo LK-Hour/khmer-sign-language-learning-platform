@@ -36,6 +36,13 @@
     return landmarkerPromise;
   }
 
+  /**
+   * Copies the current frame onto the canvas mirrored horizontally. The model's
+   * reference script (`real_time_mlp_inference.py`) flips every frame before
+   * detection ("mirroring before detection makes MediaPipe handedness match the
+   * user"), so the same flip is applied here; without it the Left/Right labels
+   * and the landmark geometry are mirrored relative to what the model expects.
+   */
   function copyFrameToCanvas(
     video: HTMLVideoElement,
     canvas: HTMLCanvasElement,
@@ -43,7 +50,11 @@
   ): void {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
   }
 
   function getCanvasImageData(
@@ -195,8 +206,9 @@
      * Detect landmarks for overlay visualization.
      * Detects from a 2D canvas instead of the video element to avoid MediaPipe's
      * WebGL texture path, which can fail when its internal GL context is absent.
-     * The overlay canvas's CSS `scaleX(-1)` handles visual alignment with
-     * the mirrored video display.
+     * The frame is mirrored before detection (see `copyFrameToCanvas`), so the
+     * landmarks already line up with the CSS-mirrored video display and the
+     * overlay canvas must not be flipped again.
      * Uses its own offscreen canvas so there's no race condition with `extractFromVideo`. */
     const detectLandmarks = useCallback(
       (video: HTMLVideoElement): RawHandDetection => {
