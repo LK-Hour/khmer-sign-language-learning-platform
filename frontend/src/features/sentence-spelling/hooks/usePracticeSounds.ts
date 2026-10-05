@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 
 // Served from `frontend/public/assets/mp3`.
 export const SUCCESS_SOUND_SRC = "/assets/mp3/success.mp3";
-export const FAIL_SOUND_SRC = "/assets/mp3/prank.mp3";
+export const FAIL_SOUND_SRC = "/assets/mp3/fails.mp3";
 
 function createAudio(src: string): HTMLAudioElement {
   const audio = new Audio(src);
