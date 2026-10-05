@@ -34,7 +34,6 @@ Optional env overrides (in `backend/.env`):
 ML_ENABLED=true
 ML_MODEL_PATH=ml/models/finger_spelling/best_mlp_model.keras
 ML_CLASS_MAPPING_PATH=ml/models/finger_spelling/class_mapping.json
-ML_LANDMARKER_PATH=ml/models/hand_landmarker.task
 ```
 
 ## Model input

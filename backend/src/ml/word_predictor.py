@@ -1,4 +1,4 @@
-"""Keras inference for word-detection sequence models."""
+"""Keras 3 inference for the word-detection BiLSTM (landmarks in, feature engineering here)."""
 
 from __future__ import annotations
 
@@ -11,10 +11,14 @@ from typing import Any
 import numpy as np
 
 from src.core.config import settings
+from src.ml.word_features import (
+    RAW_FEATURES_PER_FRAME as WORD_FEATURES_PER_FRAME,
+    SEQUENCE_LENGTH as WORD_SEQUENCE_LENGTH,
+    build_model_input,
+)
 
-
-WORD_SEQUENCE_LENGTH = 30
-WORD_FEATURES_PER_FRAME = 252
+# The browser sends raw landmarks (30 frames x 258); the model's 686 engineered
+# features per frame are built server-side in ``word_features``.
 WORD_FEATURE_COUNT = WORD_SEQUENCE_LENGTH * WORD_FEATURES_PER_FRAME
 
 
@@ -97,49 +101,11 @@ class WordDetectionPredictor:
             raise FileNotFoundError(f"Word ML model not found: {self._model_path}")
 
         try:
-            import tensorflow as tf  # type: ignore[import-not-found]
+            import keras  # type: ignore[import-not-found]
         except ModuleNotFoundError as exc:
-            raise RuntimeError(
-                "TensorFlow is required for word prediction because the model "
-                "uses recurrent layers and custom TemporalAttention"
-            ) from exc
+            raise RuntimeError("Keras 3 (with TensorFlow) is required for word prediction") from exc
 
-        @tf.keras.utils.register_keras_serializable()
-        class TemporalAttention(tf.keras.layers.Layer):  # type: ignore[misc]
-            def build(self, input_shape: tuple[int, ...]) -> None:
-                feature_dim = int(input_shape[-1])
-                self.att_W = self.add_weight(
-                    name="att_W",
-                    shape=(feature_dim, feature_dim),
-                    initializer="glorot_uniform",
-                    trainable=True,
-                )
-                self.att_b = self.add_weight(
-                    name="att_b",
-                    shape=(feature_dim,),
-                    initializer="zeros",
-                    trainable=True,
-                )
-                self.att_u = self.add_weight(
-                    name="att_u",
-                    shape=(feature_dim,),
-                    initializer="glorot_uniform",
-                    trainable=True,
-                )
-                super().build(input_shape)
-
-            def call(self, inputs: Any) -> Any:
-                score = tf.tanh(tf.tensordot(inputs, self.att_W, axes=1) + self.att_b)
-                score = tf.tensordot(score, self.att_u, axes=1)
-                weights = tf.nn.softmax(score, axis=1)
-                weights = tf.expand_dims(weights, axis=-1)
-                return tf.reduce_sum(inputs * weights, axis=1)
-
-        self._model = tf.keras.models.load_model(
-            self._model_path,
-            custom_objects={"TemporalAttention": TemporalAttention},
-            compile=False,
-        )
+        self._model = keras.models.load_model(self._model_path, compile=False)
 
     def predict(self, features: list[float] | np.ndarray) -> WordPredictionResult:
         self._ensure_loaded()
@@ -151,8 +117,8 @@ class WordDetectionPredictor:
                 f"Expected {WORD_FEATURE_COUNT} word features, got {vector.shape[0]}"
             )
 
-        sequence = vector.reshape(1, WORD_SEQUENCE_LENGTH, WORD_FEATURES_PER_FRAME)
-        prediction = self._model(sequence, training=False)
+        sequence = build_model_input(vector.reshape(WORD_SEQUENCE_LENGTH, WORD_FEATURES_PER_FRAME))
+        prediction = self._model(sequence[np.newaxis], training=False)
         probabilities = np.asarray(prediction, dtype=np.float32).reshape(-1)
         predicted_index = int(np.argmax(probabilities))
         confidence = float(probabilities[predicted_index]) * 100.0

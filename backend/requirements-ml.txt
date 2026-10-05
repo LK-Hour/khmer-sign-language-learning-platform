@@ -3,17 +3,15 @@
 # in: opencv-contrib-python, matplotlib, Pillow, sounddevice) are deliberately
 # absent. Do not re-add them without an actual import.
 #
-# TensorFlow is needed only by word detection, whose model uses recurrent
-# layers plus a custom TemporalAttention layer (src/ml/word_predictor.py).
-# Finger-spelling and sentence-spelling read Keras weights with h5py and run a
-# NumPy-only forward pass (src/ml/predictor.py), no TensorFlow involved.
+# TensorFlow/Keras 3 is needed only by word detection (BiLSTM exported with
+# Keras 3.10). Finger-spelling and sentence-spelling read Keras weights with
+# h5py and run a NumPy-only forward pass (src/ml/predictor.py).
 #
-# tensorflow-cpu is the same build minus the GPU kernels: 198 MB wheel against
-# 453 MB for `tensorflow`, and identical behaviour on a CPU-only server.
+# tensorflow-cpu is the same build minus the GPU kernels.
 #
 #   pip install -r requirements.txt -r requirements-ml.txt
 
 h5py>=3.10,<4.0
-tensorflow-cpu==2.15.0
-keras==2.15.0
-numpy>=1.24.0,<1.25
+tensorflow-cpu==2.19.0
+keras==3.10.0
+numpy>=1.26.0,<2.2

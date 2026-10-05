@@ -64,11 +64,9 @@ frontend/tsconfig.tsbuildinfo
 frontend/vitest.config.ts
 
 # --- Datasets ----------------------------------------------------------
-# 6 GB of training data. Only the word-detection model assets are read at
-# runtime (src/core/config.py), so re-include just those two files.
+# 6 GB of training data; nothing under data_set/ is read at runtime now that
+# every model lives under backend/ml/models.
 data_set
-!data_set/word_detection_model_assets/best_model_25class_fix.h5
-!data_set/word_detection_model_assets/label_map_25class.json
 
 # --- Unused ML checkpoints ---------------------------------------------
 # Models no setting points at. mlp_khmer_model.h5 and best_mlp_khmer_model.h5

@@ -17,15 +17,14 @@ _REPO_ROOT = _BACKEND_ROOT.parent
 _DEFAULT_ML_MODEL = (
     _BACKEND_ROOT / "ml" / "models" / "finger_spelling" / "best_mlp_model.keras"
 )
-_DEFAULT_LANDMARKER = _BACKEND_ROOT / "ml" / "models" / "hand_landmarker.task"
 _DEFAULT_ML_CLASS_MAPPING = (
     _BACKEND_ROOT / "ml" / "models" / "finger_spelling" / "class_mapping.json"
 )
 _DEFAULT_WORD_ML_MODEL = (
-    _REPO_ROOT / "data_set" / "word_detection_model_assets" / "best_model_25class_fix.h5"
+    _BACKEND_ROOT / "ml" / "models" / "word_detection" / "blstm_best_model_v1.h5"
 )
 _DEFAULT_WORD_LABEL_MAP = (
-    _REPO_ROOT / "data_set" / "word_detection_model_assets" / "label_map_25class.json"
+    _BACKEND_ROOT / "ml" / "models" / "word_detection" / "label_map_blstm.json"
 )
 _DEFAULT_WORD_CONTRIBUTIONS_DIR = (
     _REPO_ROOT / "data_set" / "word_detection_contributions"
@@ -60,10 +59,6 @@ class Settings(BaseSettings):
     ml_model_path: Path = Field(
         default=_DEFAULT_ML_MODEL,
         validation_alias="ML_MODEL_PATH",
-    )
-    ml_landmarker_path: Path = Field(
-        default=_DEFAULT_LANDMARKER,
-        validation_alias="ML_LANDMARKER_PATH",
     )
     ml_class_mapping_path: Path = Field(
         default=_DEFAULT_ML_CLASS_MAPPING,
@@ -114,7 +109,6 @@ class Settings(BaseSettings):
 
     @field_validator(
         "ml_model_path",
-        "ml_landmarker_path",
         "ml_class_mapping_path",
         "word_ml_model_path",
         "word_ml_label_map_path",

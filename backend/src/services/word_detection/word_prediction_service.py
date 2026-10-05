@@ -33,8 +33,8 @@ class WordPredictionService:
             return f"Word ML model not found: {settings.word_ml_model_path}"
         if not settings.word_ml_label_map_path.is_file():
             return f"Word label map not found: {settings.word_ml_label_map_path}"
-        if find_spec("tensorflow") is None:
-            return "TensorFlow is not installed in the backend environment"
+        if find_spec("keras") is None:
+            return "Keras 3 is not installed in the backend environment"
         return None
 
     def predict_from_features(self, features: list[float]) -> WordPredictionResponse:

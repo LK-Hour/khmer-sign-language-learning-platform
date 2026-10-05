@@ -62,16 +62,7 @@ COPY backend/seed_data ./seed_data
 # build context entirely.
 COPY backend/ml/models/finger_spelling ./ml/models/finger_spelling
 COPY backend/ml/models/sentence_spelling ./ml/models/sentence_spelling
-
-# The word-detection model lives under data_set/ in the repo, which is
-# excluded from the context apart from these two files. Relocate it under
-# /app and point the settings at the new location, since the defaults in
-# src/core/config.py resolve to /data_set inside the image.
-COPY data_set/word_detection_model_assets/best_model_25class_fix.h5 \
-     data_set/word_detection_model_assets/label_map_25class.json \
-     ./ml/word_detection/
-ENV WORD_ML_MODEL_PATH=/app/ml/word_detection/best_model_25class_fix.h5 \
-    WORD_ML_LABEL_MAP_PATH=/app/ml/word_detection/label_map_25class.json
+COPY backend/ml/models/word_detection ./ml/models/word_detection
 
 # Runtime write targets also default under /data_set, which the app user
 # cannot create. Bind-mount or volume-mount /app/data in production so
