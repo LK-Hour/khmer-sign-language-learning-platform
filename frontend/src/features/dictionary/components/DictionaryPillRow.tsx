@@ -8,7 +8,7 @@ import { KslColors, KslFontSizes, KslPalette } from "@/theme/theme";
 
 import { springSnappy } from "./dictionaryMotion";
 
-export type PillItem<T extends string> = {
+type PillItem<T extends string> = {
   value: T;
   label: string;
   count?: number;

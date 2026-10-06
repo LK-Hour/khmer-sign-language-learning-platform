@@ -18,7 +18,7 @@ export type PracticeSource = "sample" | "custom";
  * a non-empty token (rather than the `is_guest` flag) is what actually
  * matters here, since a real backend-issued guest session would carry one.
  */
-export function hasPersistentAccount(): boolean {
+function hasPersistentAccount(): boolean {
   const { token } = useAuthStore.getState();
   return Boolean(token && token.trim().length > 0);
 }

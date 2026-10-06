@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { getOrCreateLocalGuestId } from '@/utils/localGuest';
 
 /** Matches backend `OAuthUserResponse`. */
-export interface AuthUser {
+interface AuthUser {
   id: string;
   email: string | null;
   first_name: string;

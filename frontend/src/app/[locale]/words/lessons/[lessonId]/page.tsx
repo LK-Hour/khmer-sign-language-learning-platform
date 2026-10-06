@@ -6,7 +6,7 @@ import {
   fetchWdLessons,
   fetchWdUnit,
 } from "@/features/word-detection/api/curriculum";
-import { getNextLessonInChapter } from "@/features/word-detection/utils/progress";
+import { getNextLessonInChapter } from "@/features/shared/trackProgress";
 import { WordDetectionLessonLearningView } from "@/features/word-detection/components";
 
 type PageProps = {

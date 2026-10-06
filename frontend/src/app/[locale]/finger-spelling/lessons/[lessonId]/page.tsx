@@ -10,7 +10,7 @@ import {
   FingerSpellingLessonAccessGuard,
   FingerSpellingLessonLearningView,
 } from "@/features/finger-spelling/components";
-import { getNextLessonInChapter } from "@/features/finger-spelling/utils/progress";
+import { getNextLessonInChapter } from "@/features/shared/trackProgress";
 import LessonDetailLoading from "./loading";
 
 type PageProps = {

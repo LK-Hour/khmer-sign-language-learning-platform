@@ -26,26 +26,26 @@ export function loginWithEmail(
   });
 }
 
-export type GuestLessonProgressImport = {
+type GuestLessonProgressImport = {
   lesson_id: number;
   is_completed?: boolean;
   attempt_count?: number;
   completed_at?: string | null;
 };
 
-export type GuestPracticeSummaryImport = {
+type GuestPracticeSummaryImport = {
   lesson_id: number;
   attempt_count?: number;
   completed_at?: string | null;
 };
 
-export type GuestChapterPracticeImport = {
+type GuestChapterPracticeImport = {
   chapter_id: number;
   avg_score?: number;
   completed_at?: string | null;
 };
 
-export type GuestUnitExerciseImport = {
+type GuestUnitExerciseImport = {
   unit_id: number;
   score: number;
   max_score: number;

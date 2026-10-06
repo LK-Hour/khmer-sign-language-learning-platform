@@ -7,7 +7,7 @@ import { useTranslation } from "@/i18n/useTranslation";
 import type { DictionaryEntryType, DictionaryWord } from "../types";
 import { getDictionaryEntryLabels } from "./entryLabels";
 
-export function useDictionaryEntryLabels(
+function useDictionaryEntryLabels(
   textEn: string,
   textKh: string | null | undefined,
   entryType: DictionaryEntryType = "character"

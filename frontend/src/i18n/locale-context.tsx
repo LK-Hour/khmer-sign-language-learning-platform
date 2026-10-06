@@ -32,7 +32,3 @@ export function useLocale(): Locale {
 export function useSetLocale() {
   return useLocaleStore((state) => state.setLocale);
 }
-
-export function useToggleLocale() {
-  return useLocaleStore((state) => state.toggleLocale);
-}

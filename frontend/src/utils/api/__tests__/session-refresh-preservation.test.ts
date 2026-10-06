@@ -287,7 +287,7 @@ describe('Preservation: Explicit logout clears frontend state', () => {
           let clearCalled = false;
           let logoutRequestMade = false;
 
-          globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+          globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
             const url = typeof input === 'string' ? input : input.toString();
             if (url.includes('/api/auth/logout')) {
               logoutRequestMade = true;
