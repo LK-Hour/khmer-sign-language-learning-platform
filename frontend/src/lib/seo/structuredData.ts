@@ -1,4 +1,5 @@
 import type { DictionaryWord } from "@/features/dictionary/types";
+import { getDictionaryDescription } from "@/features/dictionary/utils/dictionaryList";
 import { ROUTES } from "@/constants/routes";
 import type { JsonLdData } from "./JsonLd";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "./config";
@@ -57,8 +58,9 @@ export function dictionaryWordJsonLd(
     },
   };
 
-  if (word.description?.trim()) {
-    data.description = word.description.trim();
+  const description = getDictionaryDescription(word);
+  if (description) {
+    data.description = description;
   }
   if (word.mediaUrl) {
     data.image = word.mediaUrl;

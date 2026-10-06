@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchDictionaryWord } from "@/features/dictionary/api/dictionary";
-import {
-  DictionaryLayout,
-  DictionaryWordDetail,
-} from "@/features/dictionary/components";
+
+import { PageContainer } from "@/components/layout";
 import { ROUTES } from "@/constants/routes";
+import {
+  fetchAllDictionaryWords,
+  fetchDictionaryWord,
+} from "@/features/dictionary/api/dictionary";
+import { DictionaryWordDetail } from "@/features/dictionary/components";
+import { getDictionaryDescription, getDictionaryNeighbors } from "@/features/dictionary/utils/dictionaryList";
 import { isValidLocale } from "@/i18n/config";
 import { t } from "@/i18n/translations";
 import { absoluteUrl, buildLanguageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo/config";
@@ -35,10 +38,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     word.entryType === "word"
       ? t(locale, "DICTIONARY.LIST.TYPE_WORD")
       : t(locale, "DICTIONARY.LIST.TYPE_CHARACTER");
-  const title = `${displayName}-${typeLabel}`;
+  const title = `${displayName} · ${typeLabel}`;
   const description =
-    word.description?.trim() ||
-    t(locale, "DICTIONARY.LIST.SUBHEADLINE");
+    getDictionaryDescription(word) ?? t(locale, "DICTIONARY.LIST.SUBHEADLINE");
   const url = absoluteUrl(`/${locale}${ROUTES.dictionaryWord(word.id)}`);
   const image = word.mediaUrl ?? DEFAULT_OG_IMAGE;
 
@@ -70,13 +72,18 @@ export default async function DictionaryWordPage({ params }: PageProps) {
   const id = Number(wordId);
   if (Number.isNaN(id)) notFound();
 
-  const word = await fetchDictionaryWord(id);
+  const [word, allWords] = await Promise.all([
+    fetchDictionaryWord(id),
+    fetchAllDictionaryWords().catch(() => []),
+  ]);
   if (!word) notFound();
 
+  const { previous, next, siblings } = getDictionaryNeighbors(allWords, word);
+
   return (
-    <DictionaryLayout showHero={false}>
+    <PageContainer>
       <JsonLd data={dictionaryWordJsonLd(word, locale)} />
-      <DictionaryWordDetail word={word} />
-    </DictionaryLayout>
+      <DictionaryWordDetail word={word} previous={previous} next={next} siblings={siblings} />
+    </PageContainer>
   );
 }
