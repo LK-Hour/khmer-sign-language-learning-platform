@@ -37,6 +37,8 @@ export interface FingerSpellingState {
   setUnits: (units: FsTrackUnit[]) => void;
   toggleUnitExpanded: (unitId: number) => void;
   toggleChapterExpanded: (chapterId: number) => void;
+  /** Close every unit and chapter (persists as explicit `false`). */
+  collapseAll: () => void;
   isChapterExpanded: (chapterId: number) => boolean;
 
   setPracticeContext: (context: PracticeContext) => void;
@@ -115,6 +117,18 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
       toggleUnitExpanded: (unitId) =>
         set((state) => ({
           expandedUnitId: state.expandedUnitId === unitId ? null : unitId,
+        })),
+
+      // Chapters are stored as explicit `false` (not `{}`) so setUnits does
+      // not treat an empty map as "never expanded" and re-open defaults.
+      collapseAll: () =>
+        set((state) => ({
+          expandedUnitId: null,
+          expandedChapterIds: Object.fromEntries(
+            state.units.flatMap((unit) =>
+              (unit?.chapters ?? []).map((chapter) => [chapter?.id, false]),
+            ),
+          ),
         })),
 
       toggleChapterExpanded: (chapterId) =>

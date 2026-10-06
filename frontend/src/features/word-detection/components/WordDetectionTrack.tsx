@@ -13,6 +13,12 @@ import {
 import Link from "next/link";
 import { useMemo } from "react";
 
+import {
+  StickyTrackHeader,
+  TrackEmptyState,
+  TrackToolbar,
+  useTrackFilters,
+} from "@/components/track";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
 import { fontFamilies } from "@/theme/fonts";
@@ -96,10 +102,29 @@ function getUnitTitle(unit: WdTrackUnit, locale: "kh" | "en"): string {
   return locale === "kh" ? unit?.titleKh || unit?.title : unit?.title;
 }
 
+/** Fields a learner might type to find a word lesson. */
+function getLessonSearchText(lesson: WdLesson) {
+  return [lesson?.word, lesson?.wordEn];
+}
+
+type WdTrackFilters = ReturnType<
+  typeof useTrackFilters<WdLesson, WdTrackChapter, WdTrackUnit>
+>;
+
 export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
   const { locale, t } = useTranslation();
   const expandedUnitId = useWordDetectionStore((s) => s.expandedUnitId);
+  const expandedChapterIds = useWordDetectionStore((s) => s.expandedChapterIds);
   const toggleUnitExpanded = useWordDetectionStore((s) => s.toggleUnitExpanded);
+  const toggleChapterExpanded = useWordDetectionStore((s) => s.toggleChapterExpanded);
+  const collapseAll = useWordDetectionStore((s) => s.collapseAll);
+  const filters = useTrackFilters(units ?? [], getLessonSearchText, {
+    expandedUnitId,
+    expandedChapterIds,
+    toggleUnitExpanded,
+    toggleChapterExpanded,
+    collapseAll,
+  });
   const resumeLesson = useWordDetectionStore(selectResumeLesson);
   const currentUnit = useWordDetectionStore(selectCurrentUnit);
 
@@ -114,64 +139,88 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
 
   return (
     <Stack spacing={{ xs: 2.5, md: 3 }} sx={{ width: "100%" }}>
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={2}
-        sx={{
-          alignItems: { xs: "flex-start", md: "center" },
-          justifyContent: "space-between",
-        }}
-      >
-        <Stack spacing={1.5}>
-          <Typography
-            sx={{
-              color: KslColors.primaryDark,
-              fontFamily: fontFamilies.english,
-              fontSize: KslFontSizes.md,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            {t("WORD_DETECTION.TRACK.EYEBROW")}
-          </Typography>
-          <Typography
-            component="h1"
-            sx={{
-              color: KslColors.textPrimary,
-              fontFamily: fontFamilies.english,
-              textTransform: "capitalize",
-              fontSize: { xs: 30, md: 42 },
-              fontWeight: 700,
-              letterSpacing: "-0.04em",
-              lineHeight: 1.05,
-            }}
-          >
-            {t("WORD_DETECTION.TRACK.TITLE")}
-          </Typography>
-        </Stack>
-
-        <Button
-          component={resumeLesson ? Link : "button"}
-          href={
-            resumeLesson
-              ? ROUTES.words.lesson(resumeLesson?.id)
-              : undefined
-          }
-          disabled={!resumeLesson}
-          variant="outlined"
+      <StickyTrackHeader>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
           sx={{
-            borderColor: KslColors.border,
-            borderRadius: `${KslRadii.button}px`,
-            color: KslColors.primaryDark,
-            fontWeight: 700,
-            px: 2.5,
-            py: 1.25,
+            alignItems: { xs: "flex-start", md: "center" },
+            justifyContent: "space-between",
           }}
         >
-          {t("BUTTON.CONTINUE_LESSON")}
-        </Button>
-      </Stack>
+          <Stack spacing={1.5}>
+            <Typography
+              sx={{
+                color: KslColors.primaryDark,
+                fontFamily: fontFamilies.english,
+                fontSize: KslFontSizes.md,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {t("WORD_DETECTION.TRACK.EYEBROW")}
+            </Typography>
+            <Typography
+              component="h1"
+              sx={{
+                color: KslColors.textPrimary,
+                fontFamily: fontFamilies.english,
+                textTransform: "capitalize",
+                fontSize: { xs: 26, md: 32 },
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.05,
+              }}
+            >
+              {t("WORD_DETECTION.TRACK.TITLE")}
+            </Typography>
+          </Stack>
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            sx={{ alignItems: { xs: "stretch", sm: "center" }, gap: 1.5, width: { xs: "100%", md: "auto" } }}
+          >
+            <TrackToolbar
+              query={filters.query}
+              onQueryChange={filters.setQuery}
+              placeholder={t("TRACK_FILTER.SEARCH_PLACEHOLDER_WORD")}
+              unitOptions={(units ?? []).map((unit) => ({
+                id: unit?.id,
+                label: `${formatUnitBadge(unit?.orderIndex, locale, t("WORD_DETECTION.LABELS.UNIT"))}: ${getUnitTitle(unit, locale)}`,
+              }))}
+              unitIds={filters.unitIds}
+              onUnitIdsChange={filters.setUnitIds}
+              status={filters.status}
+              onStatusChange={filters.setStatus}
+              activeFilterCount={filters.activeFilterCount}
+              canCollapse={filters.hasOpenSections}
+              onCollapseAll={filters.collapseAll}
+            />
+            <Button
+              component={resumeLesson ? Link : "button"}
+              href={
+                resumeLesson
+                  ? ROUTES.words.lesson(resumeLesson?.id)
+                  : undefined
+              }
+              disabled={!resumeLesson}
+              variant="outlined"
+              sx={{
+                borderColor: KslColors.border,
+                borderRadius: `${KslRadii.button}px`,
+                color: KslColors.primaryDark,
+                fontWeight: 700,
+                height: 44,
+                px: 2.5,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t("BUTTON.CONTINUE_LESSON")}
+            </Button>
+          </Stack>
+        </Stack>
+      </StickyTrackHeader>
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -200,20 +249,21 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
       </Grid>
 
       <Stack spacing={1.5}>
-        {units?.map((unit) => (
+        {filters.visibleUnits.map((unit) => (
           <UnitTrackCard
             key={unit?.id}
             unit={unit}
-            expanded={unit?.isLocked !== true && expandedUnitId === unit?.id}
-            onToggle={() => {
-              if (unit?.isLocked === true) return;
-              toggleUnitExpanded(unit?.id);
-            }}
+            expanded={filters.isUnitExpanded(unit)}
+            onToggle={() => filters.toggleUnit(unit)}
+            filters={filters}
             locale={locale}
             unitLabel={t("WORD_DETECTION.LABELS.UNIT")}
             chapterLabel={t("WORD_DETECTION.LABELS.CHAPTER")}
           />
         ))}
+        {filters.visibleUnits.length === 0 ? (
+          <TrackEmptyState onClear={filters.clearAll} />
+        ) : null}
       </Stack>
     </Stack>
   );
@@ -359,6 +409,7 @@ function UnitTrackCard({
   unit,
   expanded,
   onToggle,
+  filters,
   locale,
   unitLabel,
   chapterLabel,
@@ -366,6 +417,7 @@ function UnitTrackCard({
   unit: WdTrackUnit;
   expanded: boolean;
   onToggle: () => void;
+  filters: WdTrackFilters;
   locale: "kh" | "en";
   unitLabel: string;
   chapterLabel: string;
@@ -471,14 +523,20 @@ function UnitTrackCard({
 
       <Collapse in={expanded} unmountOnExit>
         <Stack spacing={1.5} sx={{ borderTop: `1px solid ${KslColors.border}`, p: 2 }}>
-          {unit?.chapters?.map((chapter) => (
-            <ChapterTrackSection
-              key={chapter?.id}
-              chapter={chapter}
-              locale={locale}
-              chapterLabel={chapterLabel}
-            />
-          ))}
+          {unit?.chapters
+            ?.filter((chapter) => filters.isChapterVisible(chapter?.id))
+            .map((chapter) => (
+              <ChapterTrackSection
+                key={chapter?.id}
+                chapter={chapter}
+                expanded={filters.isChapterExpanded(chapter)}
+                onToggle={() => filters.toggleChapter(chapter)}
+                isLessonVisible={filters.isLessonVisible}
+                showPractice={filters.isPracticeVisible(chapter?.id)}
+                locale={locale}
+                chapterLabel={chapterLabel}
+              />
+            ))}
         </Stack>
       </Collapse>
     </Paper>
@@ -487,18 +545,22 @@ function UnitTrackCard({
 
 function ChapterTrackSection({
   chapter,
+  expanded,
+  onToggle,
+  isLessonVisible,
+  showPractice,
   locale,
   chapterLabel,
 }: {
   chapter: WdTrackChapter;
+  expanded: boolean;
+  onToggle: () => void;
+  isLessonVisible: (lessonId: number) => boolean;
+  showPractice: boolean;
   locale: "kh" | "en";
   chapterLabel: string;
 }) {
   const locked = chapter?.isLocked === true;
-  const expanded = useWordDetectionStore(
-    (s) => chapter?.isLocked !== true && s.expandedChapterIds[chapter?.id] === true
-  );
-  const toggleChapterExpanded = useWordDetectionStore((s) => s.toggleChapterExpanded);
   const isAdmin = useAuthStore((s) => s.user?.account_type === "admin");
   const lessonStates = useMemo(
     () => resolveLessonStates(chapter?.lessons, isAdmin),
@@ -525,7 +587,7 @@ function ChapterTrackSection({
         aria-disabled={locked}
         onClick={() => {
           if (locked) return;
-          toggleChapterExpanded(chapter?.id);
+          onToggle();
         }}
         sx={{
           alignItems: "center",
@@ -600,15 +662,17 @@ function ChapterTrackSection({
 
       <Collapse in={expanded} unmountOnExit>
         <Stack spacing={0.75} sx={{ borderTop: `1px solid ${KslColors.border}`, p: 1 }}>
-          {chapter?.lessons?.map((lesson) => (
-            <LessonTrackRow
-              key={lesson?.id}
-              lesson={lesson}
-              locale={locale}
-              state={lessonStates.get(lesson?.id) ?? "lock"}
-            />
-          ))}
-          <PracticeTrackRow chapter={chapter} locale={locale} />
+          {chapter?.lessons
+            ?.filter((lesson) => isLessonVisible(lesson?.id))
+            .map((lesson) => (
+              <LessonTrackRow
+                key={lesson?.id}
+                lesson={lesson}
+                locale={locale}
+                state={lessonStates.get(lesson?.id) ?? "lock"}
+              />
+            ))}
+          {showPractice ? <PracticeTrackRow chapter={chapter} locale={locale} /> : null}
         </Stack>
       </Collapse>
     </Paper>

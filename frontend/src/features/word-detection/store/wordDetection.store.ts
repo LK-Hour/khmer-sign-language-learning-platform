@@ -18,6 +18,8 @@ export interface WordDetectionState {
   setUnits: (units: WdTrackUnit[]) => void;
   toggleUnitExpanded: (unitId: number) => void;
   toggleChapterExpanded: (chapterId: number) => void;
+  /** Close every unit and chapter (persists as explicit `false`). */
+  collapseAll: () => void;
   isChapterExpanded: (chapterId: number) => boolean;
   markPracticeCompleted: (chapterId: number) => void;
 }
@@ -125,6 +127,18 @@ export const useWordDetectionStore = create<WordDetectionState>()(
         set((state) => ({
           expandedUnitId:
             state.expandedUnitId === unitId ? null : unitId,
+        })),
+
+      // Chapters are stored as explicit `false` (not `{}`) so setUnits does
+      // not treat an empty map as "never expanded" and re-open defaults.
+      collapseAll: () =>
+        set((state) => ({
+          expandedUnitId: null,
+          expandedChapterIds: Object.fromEntries(
+            state.units.flatMap((unit) =>
+              (unit?.chapters ?? []).map((chapter) => [chapter?.id, false]),
+            ),
+          ),
         })),
 
       toggleChapterExpanded: (chapterId) =>
