@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload, with_loader_criteria
 
 from src.models.publishable import live
@@ -16,18 +16,6 @@ from src.models.word_detection import (
 class WordDetectionExerciseRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
-
-    def list_by_lesson(
-        self, lesson_id: int, *, active_only: bool = True
-    ) -> list[WordDetectionExercise]:
-        stmt = (
-            select(WordDetectionExercise)
-            .where(WordDetectionExercise.lesson_id == lesson_id)
-            .order_by(WordDetectionExercise.order_index)
-        )
-        if active_only:
-            stmt = stmt.where(live(WordDetectionExercise))
-        return list(self.db.scalars(stmt).all())
 
     def list_with_options_by_lesson(
         self, lesson_id: int, *, active_only: bool = True
@@ -136,22 +124,3 @@ class WordDetectionExerciseRepository:
             WordDetectionExerciseOption.is_active.is_(True),
         )
         return self.db.scalars(stmt).first()
-
-    def count_by_lesson(self, lesson_id: int, *, active_only: bool = True) -> int:
-        stmt = select(func.count()).select_from(WordDetectionExercise).where(
-            WordDetectionExercise.lesson_id == lesson_id
-        )
-        if active_only:
-            stmt = stmt.where(live(WordDetectionExercise))
-        return int(self.db.scalar(stmt) or 0)
-
-    def count_by_chapter(self, chapter_id: int, *, active_only: bool = True) -> int:
-        stmt = (
-            select(func.count())
-            .select_from(WordDetectionExercise)
-            .join(WordDetectionLesson, WordDetectionExercise.lesson_id == WordDetectionLesson.id)
-            .where(WordDetectionLesson.chapter_id == chapter_id)
-        )
-        if active_only:
-            stmt = stmt.where(live(WordDetectionExercise))
-        return int(self.db.scalar(stmt) or 0)

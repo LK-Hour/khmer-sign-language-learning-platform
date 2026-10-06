@@ -7,7 +7,7 @@ both active (not soft-deleted) and published (confirm-publish workflow).
 from __future__ import annotations
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 
 from src.models.word_detection import (
     WordDetectionChapter,
@@ -83,17 +83,6 @@ class WordDetectionCurriculumRepository:
             stmt = stmt.where(live(WordDetectionChapter))
         return self.db.scalars(stmt).first()
 
-    def get_chapter_in_unit(
-        self, unit_id: int, chapter_id: int, *, active_only: bool = True
-    ) -> WordDetectionChapter | None:
-        stmt = select(WordDetectionChapter).where(
-            WordDetectionChapter.id == chapter_id,
-            WordDetectionChapter.unit_id == unit_id,
-        )
-        if active_only:
-            stmt = stmt.where(live(WordDetectionChapter))
-        return self.db.scalars(stmt).first()
-
     def count_lessons(self, chapter_id: int, *, active_only: bool = True) -> int:
         stmt = select(func.count()).select_from(WordDetectionLesson).where(
             WordDetectionLesson.chapter_id == chapter_id
@@ -120,17 +109,6 @@ class WordDetectionCurriculumRepository:
         self, lesson_id: int, *, active_only: bool = True
     ) -> WordDetectionLesson | None:
         stmt = select(WordDetectionLesson).where(WordDetectionLesson.id == lesson_id)
-        if active_only:
-            stmt = stmt.where(live(WordDetectionLesson))
-        return self.db.scalars(stmt).first()
-
-    def get_lesson_in_chapter(
-        self, chapter_id: int, lesson_id: int, *, active_only: bool = True
-    ) -> WordDetectionLesson | None:
-        stmt = select(WordDetectionLesson).where(
-            WordDetectionLesson.id == lesson_id,
-            WordDetectionLesson.chapter_id == chapter_id,
-        )
         if active_only:
             stmt = stmt.where(live(WordDetectionLesson))
         return self.db.scalars(stmt).first()
@@ -202,20 +180,6 @@ class WordDetectionCurriculumRepository:
             stmt = stmt.where(WordDetectionWord.is_active.is_(True))
         return list(self.db.scalars(stmt).all())
 
-    def get_word_with_medias(
-        self, word_id: int, *, active_only: bool = True
-    ) -> WordDetectionWord | None:
-        stmt = (
-            select(WordDetectionWord)
-            .options(
-                selectinload(WordDetectionWord.word_medias).joinedload(WordDetectionWordMedia.media)
-            )
-            .where(WordDetectionWord.id == word_id)
-        )
-        if active_only:
-            stmt = stmt.where(WordDetectionWord.is_active.is_(True))
-        return self.db.scalars(stmt).unique().first()
-
     def list_medias_for_word(self, word_id: int) -> list[Media]:
         stmt = (
             select(Media)
@@ -275,27 +239,6 @@ class WordDetectionCurriculumRepository:
             # matching get_primary_word_for_lesson's "first word" semantics.
             result.setdefault(junction.lesson_id, word)
         return result
-
-    def get_word_by_kh(
-        self, word_kh: str, *, active_only: bool = True
-    ) -> WordDetectionWord | None:
-        stmt = select(WordDetectionWord).where(WordDetectionWord.word_kh == word_kh)
-        if active_only:
-            stmt = stmt.where(WordDetectionWord.is_active.is_(True))
-        return self.db.scalars(stmt).first()
-
-    def word_belongs_to_lesson(
-        self, lesson_id: int, word_id: int, *, active_only: bool = True
-    ) -> bool:
-        stmt = select(WordDetectionLessonWord.id).where(
-            WordDetectionLessonWord.lesson_id == lesson_id,
-            WordDetectionLessonWord.word_id == word_id,
-        )
-        if active_only:
-            stmt = stmt.join(
-                WordDetectionWord, WordDetectionLessonWord.word_id == WordDetectionWord.id
-            ).where(WordDetectionWord.is_active.is_(True))
-        return self.db.scalar(stmt) is not None
 
     def list_lesson_paths_for_word(
         self, word_id: int, *, active_only: bool = True

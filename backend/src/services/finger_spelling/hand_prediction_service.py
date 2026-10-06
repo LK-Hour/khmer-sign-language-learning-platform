@@ -7,7 +7,7 @@ from functools import lru_cache
 
 from src.core.config import settings
 from src.ml.keypoints import HandKeypointFeatures, features_from_payload, parse_feature_payload
-from src.ml.predictor import KhmerHandPredictor, PredictionResult, get_predictor
+from src.ml.predictor import PredictionResult, get_predictor
 
 
 @dataclass(frozen=True)

@@ -7,19 +7,11 @@ paginated list responses and media association details.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
 from typing import List, Literal
 
 from pydantic import BaseModel, Field
 
 from ..media import MediaType
-
-
-class AssociateTargetType(str, Enum):
-    """Valid target types for media association."""
-
-    LETTER = "letter"
-    WORD = "word"
 
 
 class AssociateMediaRequest(BaseModel):

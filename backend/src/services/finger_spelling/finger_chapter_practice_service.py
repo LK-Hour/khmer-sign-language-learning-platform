@@ -25,7 +25,6 @@ from src.repositories.finger_spelling.finger_progress_repository import (
     FingerProgressRepository,
 )
 from src.services.finger_spelling.finger_practice_image_service import (
-    media_file_url_to_serve_url,
     resolve_practice_image_url,
     resolve_practice_image_url_from_medias,
 )

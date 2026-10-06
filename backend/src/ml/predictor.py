@@ -228,10 +228,6 @@ class KhmerHandPredictor:
     def label_count(self) -> int:
         return self._label_decoder.class_count
 
-    @property
-    def label_decoder(self) -> KhmerLabelDecoder:
-        return self._label_decoder
-
     def _forward_block(self, x: np.ndarray, block: _DenseBlock) -> np.ndarray:
         x = x @ block.kernel + block.bias
         x = _batch_norm(x, block.bn_gamma, block.bn_beta, block.bn_mean, block.bn_var)

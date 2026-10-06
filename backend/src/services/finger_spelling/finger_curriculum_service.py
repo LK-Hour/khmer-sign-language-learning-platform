@@ -115,9 +115,6 @@ class FingerCurriculumService:
 
         return LessonDetailBundle(lesson=lesson, chapter=chapter, unit=unit, letters=letters)
 
-    def get_letter(self, letter_id: int, *, active_only: bool = True) -> FingerLetter | None:
-        return self.curriculum.get_letter_with_medias(letter_id, active_only=active_only)
-
     def get_letter_by_kh(self, letter_kh: str, *, active_only: bool = True) -> FingerLetter | None:
         return self.curriculum.get_letter_by_kh(letter_kh, active_only=active_only)
 

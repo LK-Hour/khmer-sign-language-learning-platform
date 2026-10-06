@@ -18,7 +18,7 @@ WORKDIR /app
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"
 
-COPY backend/requirements.txt backend/requirements-ml.txt backend/constraints.txt ./
+COPY backend/requirements.txt backend/requirements-ml.txt ./
 # --no-compile skips .pyc generation (~100 MB across tensorflow-cpu and its
 # deps). Modules are byte-compiled lazily on first import instead.
 RUN pip install --upgrade pip && \

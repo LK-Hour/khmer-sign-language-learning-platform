@@ -7,14 +7,11 @@ across all requests.
 
 from __future__ import annotations
 
-import logging
 from typing import Generator
 
 import redis
 
 from src.core.config import settings
-
-logger = logging.getLogger(__name__)
 
 # Global connection pool-created once, reused by all threads/coroutines.
 _pool: redis.ConnectionPool | None = None
@@ -52,13 +49,3 @@ def get_redis() -> Generator[redis.Redis, None, None]:
     finally:
         # Connection returns to pool automatically; no explicit close needed.
         pass
-
-
-def check_redis_health() -> bool:
-    """Check if Redis is reachable. Returns True if healthy."""
-    try:
-        client = get_redis_client()
-        return client.ping()
-    except (redis.ConnectionError, redis.TimeoutError):
-        logger.warning("Redis health check failed")
-        return False

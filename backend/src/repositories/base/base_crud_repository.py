@@ -76,10 +76,6 @@ class BaseCrudRepository(Generic[ModelT]):
             self.db.flush()
         return obj
 
-    def hard_delete(self, obj: ModelT) -> None:
-        self.db.delete(obj)
-        self.db.flush()
-
     def count(self, **filters: Any) -> int:
         stmt = select(func.count()).select_from(self.model)
         for column, value in filters.items():

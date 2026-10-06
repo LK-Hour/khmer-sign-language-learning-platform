@@ -89,12 +89,6 @@ def dictionary_letter_index(unit: FingerUnit | None, letter_kh: str | None) -> i
     return _LETTER_INDEX.get((unit.name_en, normalized), _UNKNOWN_LETTER_INDEX)
 
 
-def dictionary_lesson_order(lesson: FingerLesson | None) -> int:
-    if lesson is None:
-        return _UNKNOWN_UNIT_RANK
-    return lesson.order_index
-
-
 def pick_primary_lesson_path(
     paths: list[tuple[FingerLesson, FingerChapter, FingerUnit]],
 ) -> tuple[FingerLesson | None, FingerUnit | None]:
@@ -154,13 +148,6 @@ def build_word_dictionary_id_maps(
         dictionary_id_to_word_id[dictionary_id] = word.id
 
     return word_id_to_dictionary_id, dictionary_id_to_word_id
-
-
-def dictionary_entry_id_for_word(
-    word_id: int,
-    word_id_to_dictionary_id: dict[int, int],
-) -> int:
-    return word_id_to_dictionary_id[word_id]
 
 
 def word_id_from_dictionary_entry_id(

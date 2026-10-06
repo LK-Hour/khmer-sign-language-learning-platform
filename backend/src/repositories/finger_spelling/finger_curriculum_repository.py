@@ -7,7 +7,7 @@ both active (not soft-deleted) and published (confirm-publish workflow).
 from __future__ import annotations
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 
 from src.models.finger_spelling import (
     FingerChapter,
@@ -74,17 +74,6 @@ class FingerCurriculumRepository:
             stmt = stmt.where(live(FingerChapter))
         return self.db.scalars(stmt).first()
 
-    def get_chapter_in_unit(
-        self, unit_id: int, chapter_id: int, *, active_only: bool = True
-    ) -> FingerChapter | None:
-        stmt = select(FingerChapter).where(
-            FingerChapter.id == chapter_id,
-            FingerChapter.unit_id == unit_id,
-        )
-        if active_only:
-            stmt = stmt.where(live(FingerChapter))
-        return self.db.scalars(stmt).first()
-
     def count_lessons(self, chapter_id: int, *, active_only: bool = True) -> int:
         stmt = select(func.count()).select_from(FingerLesson).where(FingerLesson.chapter_id == chapter_id)
         if active_only:
@@ -105,17 +94,6 @@ class FingerCurriculumRepository:
 
     def get_lesson_by_id(self, lesson_id: int, *, active_only: bool = True) -> FingerLesson | None:
         stmt = select(FingerLesson).where(FingerLesson.id == lesson_id)
-        if active_only:
-            stmt = stmt.where(live(FingerLesson))
-        return self.db.scalars(stmt).first()
-
-    def get_lesson_in_chapter(
-        self, chapter_id: int, lesson_id: int, *, active_only: bool = True
-    ) -> FingerLesson | None:
-        stmt = select(FingerLesson).where(
-            FingerLesson.id == lesson_id,
-            FingerLesson.chapter_id == chapter_id,
-        )
         if active_only:
             stmt = stmt.where(live(FingerLesson))
         return self.db.scalars(stmt).first()
@@ -174,18 +152,6 @@ class FingerCurriculumRepository:
         if active_only:
             stmt = stmt.where(FingerLetter.is_active.is_(True))
         return self.db.scalars(stmt).first()
-
-    def get_letter_with_medias(self, letter_id: int, *, active_only: bool = True) -> FingerLetter | None:
-        stmt = (
-            select(FingerLetter)
-            .options(
-                selectinload(FingerLetter.letter_medias).joinedload(FingerLetterMedia.media)
-            )
-            .where(FingerLetter.id == letter_id)
-        )
-        if active_only:
-            stmt = stmt.where(FingerLetter.is_active.is_(True))
-        return self.db.scalars(stmt).unique().first()
 
     def list_medias_for_letter(self, letter_id: int) -> list[Media]:
         stmt = (

@@ -26,12 +26,6 @@ INDEPENDENT_VOWEL_STEM_TO_LETTER: dict[str, str] = {
     "ឳ": "ឳ",
 }
 
-# Reverse map: letter_kh → canonical filename stem
-LETTER_TO_INDEPENDENT_VOWEL_STEM: dict[str, str] = {
-    v: k for k, v in INDEPENDENT_VOWEL_STEM_TO_LETTER.items()
-    if k not in {"ឥ", "ឦ", "ឧ", "ឩ", "ឪ", "ឫ", "ឬ", "ឭ", "ឮ", "ឯ", "ឰ", "ឱ", "ឳ"}
-}
-
 # Diacritics: folder/stem name → letter_kh stored in the DB.
 DIACRITIC_STEM_TO_LETTER: dict[str, str] = {
     "question": "?",

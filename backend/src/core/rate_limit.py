@@ -81,5 +81,3 @@ class RateLimiter:
 
 # Pre-configured limiters for common use cases
 auth_rate_limiter = RateLimiter(max_requests=10, window_seconds=60, key_prefix="ksl:rate:auth")
-upload_rate_limiter = RateLimiter(max_requests=5, window_seconds=60, key_prefix="ksl:rate:upload")
-feedback_rate_limiter = RateLimiter(max_requests=10, window_seconds=60, key_prefix="ksl:rate:feedback")

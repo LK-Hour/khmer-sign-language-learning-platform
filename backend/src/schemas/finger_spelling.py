@@ -181,21 +181,6 @@ class ExerciseResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class ExerciseSubmitRequest(BaseModel):
-    selected_option_id: int | None = None
-    selected_answer: str | None = None
-    time_taken: int = 0
-
-
-class ExerciseSubmitResponse(BaseModel):
-    is_correct: bool
-    attempt_number: int
-    lesson_id: int
-    progress_id: uuid.UUID
-    explanation_en: str | None = None
-    explanation_kh: str | None = None
-
-
 class PracticeAttemptRequest(BaseModel):
     accuracy: float | None = None
     label_matched: bool = False

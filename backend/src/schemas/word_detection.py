@@ -29,15 +29,6 @@ class WdUnitBase(BaseModel):
     is_active: bool = True
 
 
-class WdUnitAdminResponse(WdUnitBase):
-    id: int
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    chapter_count: int = 0
-
-    model_config = {"from_attributes": True}
-
-
 class WdChapterBase(BaseModel):
     unit_id: int
     name_en: str
@@ -49,16 +40,6 @@ class WdChapterBase(BaseModel):
     is_active: bool = True
 
 
-class WdChapterAdminResponse(WdChapterBase):
-    id: int
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    lesson_count: int = 0
-    exercise_count: int = 0
-
-    model_config = {"from_attributes": True}
-
-
 class WdLessonBase(BaseModel):
     chapter_id: int
     name_en: str
@@ -67,38 +48,6 @@ class WdLessonBase(BaseModel):
     description_kh: Optional[str] = None
     order_index: int = 0
     is_active: bool = True
-
-
-class WdLessonAdminResponse(WdLessonBase):
-    id: int
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}
-
-
-# ── WD-specific admin create/update schemas with level ───────────────────────
-
-class WdChapterCreate(BaseModel):
-    unit_id: int
-    name_en: str
-    name_kh: str
-    description_en: str | None = None
-    description_kh: str | None = None
-    order_index: int = 0
-    level: int = 0
-    is_active: bool = True
-
-
-class WdChapterUpdate(BaseModel):
-    unit_id: int | None = None
-    name_en: str | None = None
-    name_kh: str | None = None
-    description_en: str | None = None
-    description_kh: str | None = None
-    order_index: int | None = None
-    level: int | None = None
-    is_active: bool | None = None
 
 
 # ── Frontend-aligned API shapes (/api/word_detection/*) ──────────────────────

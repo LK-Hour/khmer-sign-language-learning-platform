@@ -38,15 +38,3 @@ class UserResponse(UserBase):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
-
-
-class UserSessionResponse(BaseModel):
-    id: UUID
-    ip_address: Optional[str] = None
-    device_id: Optional[str] = None
-    user_agent: Optional[str] = None
-    is_active: bool
-    expires_at: datetime
-    created_at: datetime
-
-    model_config = {"from_attributes": True}

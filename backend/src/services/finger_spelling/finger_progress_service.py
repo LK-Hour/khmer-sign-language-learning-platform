@@ -66,22 +66,6 @@ class FingerProgressService:
         FingerLockingService.clear_cache()
         return progress
 
-    def complete_lesson(
-        self,
-        user_id: uuid.UUID,
-        lesson_id: int,
-        *,
-        accuracy: float | None = None,
-        predicted_confidence: float | None = None,
-    ) -> FingerUserLessonProgress | None:
-        return self.record_practice_attempt(
-            user_id,
-            lesson_id,
-            accuracy=accuracy,
-            passed=True,
-            predicted_confidence=predicted_confidence,
-        )
-
     def is_lesson_locked_by_id(
         self,
         user_id: uuid.UUID | None,

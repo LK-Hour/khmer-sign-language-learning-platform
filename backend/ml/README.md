@@ -12,8 +12,7 @@ backend/ml/
 │   ├── finger_spelling/
 │   │   ├── best_mlp_model.keras   # Pre-trained MLP (Keras 3 export, NumPy inference)
 │   │   └── class_mapping.json     # Output index -> Khmer label (128 classes)
-│   ├── sentence_spelling/         # Same model export, used by sentence spelling
-│   └── hand_landmarker.task       # MediaPipe hand landmarker
+│   └── sentence_spelling/         # Same model export, used by sentence spelling
 └── notebooks/
     └── extract_keypoints_handedness.ipynb
 ```

@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import os
 import threading
-from functools import lru_cache
 from pathlib import Path
 
 from src.core.khmer_letter_aliases import (
@@ -99,13 +98,6 @@ def _get_index() -> dict[str, str]:
         if _index_cache is None:
             _index_cache = _build_index()
     return _index_cache
-
-
-def invalidate_index() -> None:
-    """Force a rebuild on the next look-up (useful after dataset updates)."""
-    global _index_cache
-    with _INDEX_LOCK:
-        _index_cache = None
 
 
 # ---------------------------------------------------------------------------

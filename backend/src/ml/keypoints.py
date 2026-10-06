@@ -26,10 +26,6 @@ class HandKeypointFeatures:
         hand_code = 1.0 if self.handedness == "Right" else 0.0
         return [hand_code, *self.right_hand, *self.left_hand]
 
-    @property
-    def vector_without_handedness(self) -> list[float]:
-        return [*self.right_hand, *self.left_hand]
-
 
 def parse_feature_payload(features: list[float]) -> list[float]:
     """Normalize browser payload to 126-dim model input (right + left hands)."""
