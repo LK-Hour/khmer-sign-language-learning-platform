@@ -1,7 +1,5 @@
 import type { TranslationKey } from "@/i18n/translations";
 
-import type { DictionaryWord } from "../types";
-
 /** Maps backend unit `category` (English name) to i18n label keys. */
 const UNIT_CATEGORY_KEYS: Record<string, TranslationKey> = {
   Numbers: "DICTIONARY.CATEGORY.NUMBERS",
@@ -21,18 +19,12 @@ const UNIT_CATEGORY_KEYS: Record<string, TranslationKey> = {
   Sports: "DICTIONARY.CATEGORY.SPORTS",
 };
 
-export function getDictionaryCategoryKey(
-  word: DictionaryWord
-): TranslationKey | null {
-  if (!word.category) return null;
-  return UNIT_CATEGORY_KEYS[word.category] ?? null;
-}
-
-export function getDictionaryChipKey(word: DictionaryWord): TranslationKey {
-  const categoryKey = getDictionaryCategoryKey(word);
-  if (categoryKey) return categoryKey;
-
-  return word.entryType === "word"
-    ? "DICTIONARY.LIST.TYPE_WORD"
-    : "DICTIONARY.LIST.TYPE_CHARACTER";
+/** Localized unit label, falling back to the raw backend name. */
+export function getDictionaryCategoryLabel(
+  category: string | null | undefined,
+  translate: (key: TranslationKey) => string,
+): string {
+  if (!category) return "";
+  const key = UNIT_CATEGORY_KEYS[category];
+  return key ? translate(key) : category;
 }

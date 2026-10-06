@@ -1,6 +1,4 @@
-export { default as DictionaryLayout } from "./DictionaryLayout";
-export { default as DictionaryPageContent } from "./DictionaryPageContent";
+export { default as DictionaryBrowser } from "./DictionaryBrowser";
 export { default as DictionaryWordDetail } from "./DictionaryWordDetail";
-export { default as DictionaryEntryCard } from "./DictionaryEntryCard";
-export { default as DictionaryToolbar } from "./DictionaryToolbar";
-export { default as DictionaryPagination } from "./DictionaryPagination";
+export { default as CharacterTile } from "./CharacterTile";
+export { default as WordCard } from "./WordCard";

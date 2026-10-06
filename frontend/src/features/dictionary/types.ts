@@ -17,8 +17,8 @@ export interface DictionaryWord {
   level?: number | null;
 }
 
-export type DictionarySortOrder = "default" | "az" | "za";
-
-export type DictionaryTypeFilter = "all" | DictionaryEntryType;
-
-export const DICTIONARY_PAGE_SIZE = 12;
+/** A run of entries sharing one curriculum unit, in backend order. */
+export interface DictionarySection {
+  category: string;
+  words: DictionaryWord[];
+}

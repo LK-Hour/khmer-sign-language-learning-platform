@@ -1,184 +1,77 @@
 import type {
-  DictionarySortOrder,
-  DictionaryTypeFilter,
+  DictionaryEntryType,
+  DictionarySection,
   DictionaryWord,
 } from "../types";
-import { DICTIONARY_PAGE_SIZE } from "../types";
 
-/** Keep in sync with backend dictionary_order.py */
-const DICTIONARY_UNIT_ORDER: Record<string, number> = {
-  Numbers: 0,
-  "Dependent Vowels": 1,
-  "Main Consonants": 2,
-  "Sub Consonants": 3,
-  "Independent Vowels": 4,
-  Diacritics: 5,
-};
-
-/** Keep in sync with backend dictionary_order.py WORD_DETECTION_UNIT_ORDER */
-const WORD_DETECTION_UNIT_ORDER: Record<string, number> = {
-  Education: 100,
-  "Directions and Places": 101,
-  Time: 102,
-  "Pronouns and Nouns": 103,
-  "Daily Activities": 104,
-  "Food and Drinks": 105,
-  "Household Items": 106,
-  Vehicles: 107,
-  Sports: 108,
-};
-
-const UNIT_LETTER_ORDERS: Record<string, string[]> = {
-  Numbers: ["០", "១", "២", "៣", "៤", "៥", "៦", "៧", "៨", "៩"],
-  "Dependent Vowels": [
-    "ា", "ិ", "ី", "ឹ", "ឺ", "ុ", "ូ", "ួ", "ើ", "ឿ", "ៀ", "េ", "ែ", "ៃ",
-    "ោ", "ៅ", "ុំ", "ំ", "ាំ", "ះ", "ុះ", "េះ", "ោះ",
-  ],
-  "Main Consonants": [
-    "ក", "ខ", "គ", "ឃ", "ង", "ច", "ឆ", "ជ", "ឈ", "ញ", "ដ", "ឋ", "ឌ", "ឍ",
-    "ណ", "ត", "ថ", "ទ", "ធ", "ន", "ប", "ផ", "ព", "ភ", "ម", "យ", "រ", "ល",
-    "វ", "ស", "ហ", "ឡ", "អ",
-  ],
-  "Sub Consonants": [
-    "្ក", "្ខ", "្គ", "្ឃ", "្ង", "្ច", "្ឆ", "្ជ", "្ឈ", "្ញ", "្ដ", "្ឋ",
-    "្ឌ", "្ឍ", "្ណ", "្ត", "្ថ", "្ទ", "្ធ", "្ន", "្ប", "្ផ", "្ព", "្ភ",
-    "្ម", "្យ", "្រ", "្ល", "្វ", "្ស", "្ហ", "្អ",
-  ],
-  "Independent Vowels": [
-    "ឣ", "ឤ", "ឥ", "ឦ", "ឧ", "ឩ", "ឪ", "ឫ", "ឬ", "ឭ", "ឮ", "ឯ", "ឰ", "ឱ", "ឳ",
-  ],
-  Diacritics: [
-    "់", "៉", "៊", "៌", "៍", "៎", "៏", "័", "។", "។ល។", "៖", "ៗ", "៚", "!", "?",
-  ],
-};
-
-const LETTER_INDEX = new Map<string, number>(
-  Object.entries(UNIT_LETTER_ORDERS).flatMap(([unitName, letters]) =>
-    letters.map((letter, index) => [`${unitName}:${letter}`, index]),
-  ),
-);
-
-type DictionaryListFilters = {
-  search?: string;
-  entryType?: DictionaryTypeFilter;
-  sort?: DictionarySortOrder;
-};
-
-function dictionaryUnitRank(
-  category: string | null | undefined,
-  entryType: DictionaryWord["entryType"] = "character",
-): number {
-  if (entryType === "word") {
-    return WORD_DETECTION_UNIT_ORDER[category ?? ""] ?? 99;
-  }
-  return DICTIONARY_UNIT_ORDER[category ?? ""] ?? 99;
-}
-
-function dictionaryLetterIndex(
-  category: string | null | undefined,
-  textKh: string,
-): number {
-  const normalized = textKh.trim();
-  if (!normalized) return 9999;
-  return LETTER_INDEX.get(`${category ?? ""}:${normalized}`) ?? 9999;
-}
-
-function dictionarySortKey(word: DictionaryWord): [number, number, string] {
-  return [
-    dictionaryUnitRank(word.category, word.entryType),
-    dictionaryLetterIndex(word.category, word.textKh),
-    word.textKh,
-  ];
-}
-
-function compareSortKeys(
-  left: [number, number, string],
-  right: [number, number, string],
-): number {
-  for (let index = 0; index < left.length; index += 1) {
-    if (left[index] < right[index]) return -1;
-    if (left[index] > right[index]) return 1;
-  }
-  return 0;
-}
+/**
+ * The backend already returns entries in curriculum order
+ * (see backend dictionary_order.py), so these helpers only filter and group;
+ * they never re-sort.
+ */
 
 export function matchesDictionarySearch(
   word: DictionaryWord,
   query: string,
+  extraFields: (string | null | undefined)[] = [],
 ): boolean {
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery) return true;
 
-  const fields = [
-    word.textEn,
-    word.textKh,
-    word.description,
-    word.category,
-  ];
-
-  return fields.some((value) =>
-    (value ?? "").toLowerCase().includes(normalizedQuery),
-  );
+  return [word.textEn, word.textKh, word.description, word.category, ...extraFields]
+    .some((value) => (value ?? "").toLowerCase().includes(normalizedQuery));
 }
 
-export function matchesDictionaryType(
-  word: DictionaryWord,
-  entryType: DictionaryTypeFilter,
-): boolean {
-  if (entryType === "all") return true;
-  return word.entryType === entryType;
-}
-
-export function filterDictionaryWords(
+export function filterByEntryType(
   words: DictionaryWord[],
-  { search = "", entryType = "all" }: DictionaryListFilters,
+  entryType: DictionaryEntryType,
 ): DictionaryWord[] {
-  return words.filter(
-    (word) =>
-      matchesDictionarySearch(word, search) &&
-      matchesDictionaryType(word, entryType),
-  );
+  return words.filter((word) => word.entryType === entryType);
 }
 
-export function sortDictionaryWords(
-  words: DictionaryWord[],
-  sort: DictionarySortOrder = "default",
-): DictionaryWord[] {
-  const sorted = [...words].sort((left, right) =>
-    compareSortKeys(dictionarySortKey(left), dictionarySortKey(right)),
-  );
-
-  if (sort === "za") {
-    return sorted.reverse();
-  }
-
-  return sorted;
-}
-
-export function paginateDictionaryWords(
-  words: DictionaryWord[],
-  page: number,
-  pageSize = DICTIONARY_PAGE_SIZE,
-): DictionaryWord[] {
-  const safePage = Math.max(1, page);
-  const start = (safePage - 1) * pageSize;
-  return words.slice(start, start + pageSize);
-}
-
-export function countDictionaryEntryTypes(words: DictionaryWord[]): {
-  characterCount: number;
-  wordCount: number;
-} {
-  let characterCount = 0;
-  let wordCount = 0;
+export function groupDictionaryWords(words: DictionaryWord[]): DictionarySection[] {
+  const sections: DictionarySection[] = [];
+  const byCategory = new Map<string, DictionarySection>();
 
   for (const word of words) {
-    if (word.entryType === "word") {
-      wordCount += 1;
-    } else {
-      characterCount += 1;
+    const category = word.category ?? "";
+    let section = byCategory.get(category);
+    if (!section) {
+      section = { category, words: [] };
+      byCategory.set(category, section);
+      sections.push(section);
     }
+    section.words.push(word);
   }
 
-  return { characterCount, wordCount };
+  return sections;
+}
+
+/**
+ * The backend falls back to the unit name when a character has no
+ * description; that just repeats the category, so treat it as missing.
+ */
+export function getDictionaryDescription(word: DictionaryWord): string | null {
+  const description = word.description?.trim();
+  if (!description || description === word.category) return null;
+  return description;
+}
+
+/** Previous/next entries of the same type, plus siblings from the same unit. */
+export function getDictionaryNeighbors(
+  words: DictionaryWord[],
+  current: DictionaryWord,
+) {
+  const sameType = filterByEntryType(words, current.entryType);
+  const index = sameType.findIndex((word) => word.id === current.id);
+
+  return {
+    previous: index > 0 ? sameType[index - 1] : null,
+    next: index >= 0 && index < sameType.length - 1 ? sameType[index + 1] : null,
+    siblings: sameType.filter((word) => word.category === current.category),
+  };
+}
+
+export function sectionAnchorId(category: string): string {
+  return `unit-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 }
