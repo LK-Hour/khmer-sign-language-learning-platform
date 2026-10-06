@@ -587,8 +587,6 @@ def _build_curriculum() -> dict[str, list[dict]]:
     
     Returns a dict keyed by table name.
     """
-    tables_meta = Base.metadata.tables
-
     all_letters: list[dict] = []
     all_units: list[dict] = []
     all_chapters: list[dict] = []

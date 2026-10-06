@@ -18,7 +18,6 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import redis as redis_lib

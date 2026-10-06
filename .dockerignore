@@ -79,6 +79,3 @@ backend/ml/models/mlp_khmer_model_v1.h5
 backend/ml/models/mlp_khmer_model_v3.h5
 backend/ml/models/khmer_label_encoder.pkl
 backend/ml/notebooks
-backend/ml/realtime_test_MLP.py
-# The browser loads its own copy from frontend/public/models/.
-backend/ml/hand_landmarker.task

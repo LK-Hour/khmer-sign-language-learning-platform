@@ -162,9 +162,6 @@ def seed_finger_practices(db, media_map: dict[str, list[Path]], media_id_offset:
     that belongs to lessons in that chapter.
     Returns the next available media_id.
     """
-    from src.models.finger_spelling import (
-        FingerChapter, FingerLesson, FingerLessonLetter, FingerLetter,
-    )
 
     tables = Base.metadata.tables
 

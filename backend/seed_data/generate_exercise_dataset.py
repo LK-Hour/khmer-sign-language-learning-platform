@@ -203,14 +203,6 @@ def _items_by_unit(items: list[CurriculumItem]) -> dict[int, list[CurriculumItem
     return grouped
 
 
-def _chapter_groups(items: list[CurriculumItem]) -> list[list[CurriculumItem]]:
-    """Group items by chapter_id, preserving curriculum order."""
-    groups: dict[int, list[CurriculumItem]] = {}
-    for item in items:
-        groups.setdefault(item.chapter_id, []).append(item)
-    return list(groups.values())
-
-
 def _matching_groups(items: list[CurriculumItem]) -> list[list[CurriculumItem]]:
     """Build matching sets with exactly 4 or 6 pairs (prefer 6 when possible)."""
     if not items:
