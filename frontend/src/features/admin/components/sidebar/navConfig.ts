@@ -5,21 +5,10 @@ import SpellcheckRoundedIcon from "@mui/icons-material/SpellcheckRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PhotoLibraryRoundedIcon from "@mui/icons-material/PhotoLibraryRounded";
 import FeedbackRoundedIcon from "@mui/icons-material/FeedbackRounded";
-import type { NavSectionConfig, NavTreeNodeConfig } from "./navTypes";
+import type { NavSectionConfig } from "./navTypes";
 
 // Re-export types so existing imports from "./navConfig" continue to work
 export type { NavSectionConfig, NavTreeNodeConfig } from "./navTypes";
-
-/**
- * @deprecated Use `NavTreeNodeConfig` from `./navTypes` instead.
- * Kept for backward compatibility with the old NavItem component until it's fully removed.
- */
-export interface NavItemConfig {
-  title: string;
-  path: string;
-  icon: React.ElementType;
-  children?: NavItemConfig[];
-}
 
 export const NAV_CONFIG: NavSectionConfig[] = [
   {

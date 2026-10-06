@@ -175,16 +175,6 @@ export const deleteExercise = (track: AdminTrack, id: number) =>
     method: "DELETE",
   });
 
-export const restoreExercise = (track: AdminTrack, id: number) =>
-  apiFetch<AdminExercise>(`${base(track)}/exercises/${id}/restore`, {
-    method: "POST",
-  });
-
-export const publishExercise = (track: AdminTrack, id: number) =>
-  apiFetch<AdminExercise>(`${base(track)}/exercises/${id}/publish`, {
-    method: "POST",
-  });
-
 // ── Exercise options ─────────────────────────────────────────────────────────
 
 export const createExerciseOption = (

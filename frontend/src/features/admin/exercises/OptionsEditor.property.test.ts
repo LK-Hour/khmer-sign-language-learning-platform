@@ -106,66 +106,6 @@ function applyOperation(
 
 // ── Arbitrary generators ─────────────────────────────────────────────────────
 
-/** Generate a valid operation given current list size. */
-function operationArb(currentSize: number): fc.Arbitrary<Operation> {
-  const ops: fc.Arbitrary<Operation>[] = [fc.constant({ type: "add" as const })];
-
-  if (currentSize > 0) {
-    ops.push(
-      fc.nat({ max: currentSize - 1 }).map((index) => ({
-        type: "remove" as const,
-        index,
-      })),
-    );
-    ops.push(
-      fc.nat({ max: currentSize - 1 }).map((index) => ({
-        type: "moveUp" as const,
-        index,
-      })),
-    );
-    ops.push(
-      fc.nat({ max: currentSize - 1 }).map((index) => ({
-        type: "moveDown" as const,
-        index,
-      })),
-    );
-  }
-
-  return fc.oneof(...ops);
-}
-
-/**
- * Generate a sequence of operations that respect the state at each step.
- * We build the sequence lazily so that remove/reorder indices are valid
- * relative to the list size at that point in the sequence.
- */
-function operationSequenceArb(
-  initialSize: number,
-  maxOps: number,
-): fc.Arbitrary<Operation[]> {
-  return fc.nat({ max: maxOps }).chain((numOps) => {
-    if (numOps === 0) return fc.constant([]);
-
-    // Build operation sequence step by step
-    let arb: fc.Arbitrary<Operation[]> = fc.constant([]);
-    let size = initialSize;
-
-    for (let i = 0; i < numOps; i++) {
-      const currentSize = size;
-      arb = arb.chain((ops) =>
-        operationArb(currentSize).map((op) => [...ops, op]),
-      );
-      // We can't perfectly predict the size since we can't see the generated
-      // ops yet, but we can estimate based on probability. Instead, we'll use
-      // a simpler approach: generate ops independently with valid-range indices.
-      // The applyOperation function handles out-of-bounds gracefully.
-      size = Math.max(0, size); // Keep non-negative
-    }
-
-    return arb;
-  });
-}
-
 /**
  * Simpler approach: generate operations with indices in a reasonable range.
  * applyOperation already handles boundary cases gracefully.

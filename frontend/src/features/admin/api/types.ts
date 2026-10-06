@@ -65,7 +65,7 @@ export interface AdminExerciseOption {
   order_index: number;
 }
 
-export interface AdminExerciseMedia {
+interface AdminExerciseMedia {
   id: number;
   media_type: "video" | "gif" | "image";
   file_url: string;
@@ -109,10 +109,3 @@ export interface AdminExercisePayload {
   order_index: number;
   options?: AdminExerciseOptionPayload[];
 }
-
-export const EXERCISE_TYPES = [
-  "multiple_choice",
-  "free_form",
-  "image_select",
-  "matching",
-] as const;

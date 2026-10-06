@@ -16,7 +16,7 @@ import { useState, type ReactNode } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface RowActionsMenuExtraItem {
+interface RowActionsMenuExtraItem {
   label: string;
   icon?: ReactNode;
   onClick: () => void;

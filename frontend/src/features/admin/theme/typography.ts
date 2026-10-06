@@ -3,7 +3,7 @@
 
 import type { TypographyVariantsOptions } from "@mui/material/styles";
 
-export const FONT_PRIMARY =
+const FONT_PRIMARY =
   "'DM Sans Variable', 'DM Sans', system-ui, sans-serif";
 
 export const typography: TypographyVariantsOptions = {

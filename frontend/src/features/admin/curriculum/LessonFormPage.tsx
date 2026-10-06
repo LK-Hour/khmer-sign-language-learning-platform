@@ -44,7 +44,7 @@ import { curriculumEditPath } from "./relatedItems";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type LessonTrack = "finger" | "word_detection";
+type LessonTrack = "finger" | "word_detection";
 
 export interface LessonFormPageProps {
   track: LessonTrack;
@@ -365,8 +365,6 @@ export default function LessonFormPage({ track, entityId }: LessonFormPageProps)
 
   const pageTitle = isEdit ? t("PAGE.EDIT_LESSON") : t("PAGE.CREATE_LESSON");
   const junctionLabel = track === "finger" ? t("FORM.LESSON_LETTERS") : t("FORM.LESSON_WORDS");
-  const junctionSearchPlaceholder = t("FORM.SEARCH_PLACEHOLDER");
-
   return (
     <EntityFormLayout
       title={pageTitle}

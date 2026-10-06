@@ -14,10 +14,12 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { ContributionListItem } from "../api/contributionsAdminApi";
 import ContributionReviewCard from "./ContributionReviewCard";
+import {
+  filterContributionsByStatus,
+  type ContributionStatusFilter as StatusFilter,
+} from "./contributionFilters";
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-type StatusFilter = "all" | "pending" | "approved" | "rejected";
 
 interface ContributionReviewListProps {
   contributions: ContributionListItem[];
@@ -26,17 +28,6 @@ interface ContributionReviewListProps {
   selectedWordId: number | null;
   onRetry: () => void;
   onReview?: (contributionId: string) => void;
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Filter contributions by status. When filter is "all", all contributions pass. */
-export function filterContributionsByStatus(
-  contributions: ContributionListItem[],
-  status: StatusFilter,
-): ContributionListItem[] {
-  if (status === "all") return contributions;
-  return contributions.filter((c) => c.status === status);
 }
 
 // ── Component ────────────────────────────────────────────────────────────────

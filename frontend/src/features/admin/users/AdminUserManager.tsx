@@ -52,7 +52,7 @@ import UserDetailPanel from "./UserDetailPanel";
  * Filter users by role.
  * Returns only users whose account_type matches the given role.
  */
-export function filterUsersByRole(
+function filterUsersByRole(
   users: UserResponse[],
   role: "admin" | "student"
 ): UserResponse[] {
@@ -63,7 +63,7 @@ export function filterUsersByRole(
  * Filter users by search query (case-insensitive substring match on name or email).
  * Returns all users if query is empty.
  */
-export function filterUsersBySearch(
+function filterUsersBySearch(
   users: UserResponse[],
   query: string
 ): UserResponse[] {
@@ -80,7 +80,7 @@ export function filterUsersBySearch(
  * Returns true if destructive actions (delete, deactivate) should be disabled for a user.
  * Destructive actions are disabled for users with the "admin" role.
  */
-export function isDestructiveActionDisabled(user: UserResponse): boolean {
+function isDestructiveActionDisabled(user: UserResponse): boolean {
   return user.account_type === "admin";
 }
 

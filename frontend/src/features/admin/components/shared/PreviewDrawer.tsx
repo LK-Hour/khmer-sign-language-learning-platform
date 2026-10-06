@@ -13,7 +13,7 @@ import type { ReactNode } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface PreviewField {
+interface PreviewField {
   label: string;
   value: ReactNode;
 }

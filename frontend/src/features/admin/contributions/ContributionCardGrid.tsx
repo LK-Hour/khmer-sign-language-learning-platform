@@ -21,24 +21,15 @@ import { ApiError } from "@/utils/api/client";
 import type { ContributionDetail } from "../api/contributionsAdminApi";
 import * as contributionsApi from "../api/contributionsAdminApi";
 import ContributionCard from "./ContributionCard";
+import {
+  filterContributionsByStatus,
+  type ContributionStatusFilter as StatusFilter,
+} from "./contributionFilters";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface ContributionCardGridProps {
   wordId: number;
-}
-
-type StatusFilter = "all" | "pending" | "approved" | "rejected";
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Filter contributions by status. When filter is "all", all contributions pass. */
-export function filterContributionsByStatus(
-  contributions: ContributionDetail[],
-  status: StatusFilter,
-): ContributionDetail[] {
-  if (status === "all") return contributions;
-  return contributions.filter((c) => c.status === status);
 }
 
 // ── Component ────────────────────────────────────────────────────────────────

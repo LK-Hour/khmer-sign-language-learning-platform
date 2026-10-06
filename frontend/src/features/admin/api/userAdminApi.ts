@@ -23,14 +23,6 @@ export interface UserResponse {
   created_at: string;
 }
 
-export interface UserUpdate {
-  display_name?: string;
-  email?: string | null;
-  account_type?: "student" | "admin" | "guest";
-  is_active?: boolean;
-  avatar_url?: string | null;
-}
-
 export interface ListUsersParams {
   skip?: number;
   limit?: number;
@@ -45,7 +37,7 @@ export interface ListUsersParams {
  * Builds a URL query string from a params object.
  * Omits keys whose values are undefined or null.
  */
-export function buildQuery(params: object): string {
+function buildQuery(params: object): string {
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null) {
@@ -60,17 +52,6 @@ export function buildQuery(params: object): string {
 /** Fetch a paginated, optionally filtered list of users. */
 export const listUsers = (params: ListUsersParams = {}) =>
   apiFetch<UserResponse[]>(`/api/users?${buildQuery(params)}`);
-
-/** Fetch a single user by ID. */
-export const getUser = (userId: string) =>
-  apiFetch<UserResponse>(`/api/users/${userId}`);
-
-/** Update user fields (role, display name, active status, etc.). */
-export const updateUser = (userId: string, body: Partial<UserUpdate>) =>
-  apiFetch<UserResponse>(`/api/users/${userId}`, {
-    method: "PUT",
-    body: JSON.stringify(body),
-  });
 
 /** Soft-delete (deactivate) a user account. */
 export const deactivateUser = (userId: string) =>

@@ -27,7 +27,7 @@ import { curriculumEditPath, matchesName, toRelatedItem } from "./relatedItems";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type ChapterTrack = "finger" | "word_detection";
+type ChapterTrack = "finger" | "word_detection";
 
 export interface ChapterFormPageProps {
   track: ChapterTrack;

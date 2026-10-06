@@ -46,7 +46,7 @@ export interface RelatedItemsFieldProps<T> {
   maxVisible?: number;
 }
 
-export const DEFAULT_MAX_VISIBLE = 5;
+const DEFAULT_MAX_VISIBLE = 5;
 
 // ── Pieces ───────────────────────────────────────────────────────────────────
 

@@ -37,10 +37,6 @@ export interface PracticeMediaPayload {
 
 const base = (track: AdminTrack) => `/api/admin/${track}/practices`;
 
-/** List all practices for the given track. */
-export const listPractices = (track: AdminTrack) =>
-  apiFetch<AdminPractice[]>(`${base(track)}`);
-
 /** Get a single practice by ID. */
 export const getPractice = (track: AdminTrack, id: number) =>
   apiFetch<AdminPractice>(`${base(track)}/${id}`);
@@ -62,10 +58,6 @@ export const updatePractice = (
     method: "PUT",
     body: JSON.stringify(body),
   });
-
-/** Delete a practice. */
-export const deletePractice = (track: AdminTrack, id: number) =>
-  apiFetch<void>(`${base(track)}/${id}`, { method: "DELETE" });
 
 /** Add a media association to a practice. */
 export const addPracticeMedia = (

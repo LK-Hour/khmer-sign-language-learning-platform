@@ -9,12 +9,10 @@ export type AdminEntityTab = "units" | "chapters" | "lessons";
 interface AdminUiState {
   track: AdminTrack;
   curriculumTab: AdminEntityTab;
-  sidebarCollapsed: boolean;
   /** Set of nav node IDs that are currently expanded */
   expandedNavIds: string[];
   setTrack: (track: AdminTrack) => void;
   setCurriculumTab: (tab: AdminEntityTab) => void;
-  toggleSidebar: () => void;
   /**
    * Toggle a nav node accordion-style: only one branch stays open per level.
    * `ancestorIds` is the path from the root down to the node's parent.
@@ -22,8 +20,6 @@ interface AdminUiState {
   toggleNavNode: (id: string, ancestorIds?: string[]) => void;
   /** Replace the expanded set (used to reveal the active route's branch) */
   expandNavNodes: (ids: string[]) => void;
-  /** Collapse all nav nodes */
-  collapseAllNav: () => void;
 }
 
 export const useAdminUiStore = create<AdminUiState>()(
@@ -31,11 +27,9 @@ export const useAdminUiStore = create<AdminUiState>()(
     (set) => ({
       track: "finger",
       curriculumTab: "units",
-      sidebarCollapsed: false,
       expandedNavIds: [],
       setTrack: (track) => set({ track }),
       setCurriculumTab: (curriculumTab) => set({ curriculumTab }),
-      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       toggleNavNode: (id, ancestorIds = []) =>
         set((state) => ({
           expandedNavIds: toggleAccordionPath(state.expandedNavIds, id, ancestorIds),
@@ -44,7 +38,6 @@ export const useAdminUiStore = create<AdminUiState>()(
         set(() => ({
           expandedNavIds: [...new Set(ids)],
         })),
-      collapseAllNav: () => set({ expandedNavIds: [] }),
     }),
     { name: "admin-ui-storage" },
   ),

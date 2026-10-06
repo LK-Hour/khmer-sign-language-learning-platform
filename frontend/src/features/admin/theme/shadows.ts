@@ -1,7 +1,7 @@
 import type { Shadows } from "@mui/material/styles";
 
 // Minimals elevation-0 card shadow value
-export const CARD_SHADOW =
+const CARD_SHADOW =
   "0px 12px 24px -4px rgba(145,158,171,0.12), 0px 0px 2px 0px rgba(145,158,171,0.2)";
 
 // CSS custom property pattern used by MuiCard/MuiPaper overrides.

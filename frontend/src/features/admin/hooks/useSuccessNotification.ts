@@ -5,7 +5,7 @@ import { useSearchParams, usePathname } from "next/navigation";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type SuccessAction = "created" | "updated" | "published" | "upload" | "approved" | "rejected";
+type SuccessAction = "created" | "updated" | "published" | "upload" | "approved" | "rejected";
 
 interface UseSuccessNotificationReturn {
   /** Whether the snackbar should be shown */

@@ -20,7 +20,7 @@ import { curriculumEditPath, matchesName, toRelatedItem } from "./relatedItems";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type UnitTrack = "finger" | "word_detection";
+type UnitTrack = "finger" | "word_detection";
 
 export interface UnitFormPageProps {
   track: UnitTrack;

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Box, IconButton, List, ListItemButton, ListItemIcon, Stack, Tooltip } from "@mui/material";
 import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
-import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import SimpleBar from "simplebar-react";

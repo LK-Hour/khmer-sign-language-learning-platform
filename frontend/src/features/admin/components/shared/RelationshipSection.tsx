@@ -7,7 +7,7 @@ import { Chip, Stack, Typography } from "@mui/material";
 
 import { useTranslation } from "@/i18n/useTranslation";
 
-export interface RelationshipParent {
+interface RelationshipParent {
   /** What the parent is, e.g. "Unit". */
   typeLabel: string;
   /** Name in the active language. */

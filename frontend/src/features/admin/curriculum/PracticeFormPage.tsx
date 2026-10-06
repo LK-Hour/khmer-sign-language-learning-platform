@@ -34,7 +34,7 @@ import type { AdminChapter, AdminTrack } from "../api/types";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type PracticeTrack = "finger" | "word_detection";
+type PracticeTrack = "finger" | "word_detection";
 
 export interface PracticeFormPageProps {
   track: PracticeTrack;

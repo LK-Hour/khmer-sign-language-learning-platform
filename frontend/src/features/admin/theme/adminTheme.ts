@@ -79,6 +79,3 @@ export function createAdminTheme(mode: "light" | "dark"): Theme {
     },
   });
 }
-
-/** Default admin theme using light mode */
-export const adminTheme = createAdminTheme("light");

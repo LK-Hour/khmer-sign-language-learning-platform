@@ -27,16 +27,10 @@ import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { filterMediaByType } from "./mediaFilterUtils";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
-export type ViewMode = "grid" | "list";
-export type MediaTypeFilter = "all" | "image" | "video" | "gif";
-
 export interface AdminMediaManagerProps {
   /** Optional type filter to restrict displayed assets to a specific media type */
   typeFilter?: "image" | "video";
 }
-
-// Re-export for backward compatibility
-export { filterMediaByType } from "./mediaFilterUtils";
 
 // ── Helper: extract file name from URL ───────────────────────────────────────
 
