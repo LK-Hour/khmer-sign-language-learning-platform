@@ -156,7 +156,7 @@ function UnitCardSkeleton({
   );
 }
 
-export type TrackSkeletonProps = {
+type TrackSkeletonProps = {
   /** Render inline (no PageContainer wrapper) when true. */
   embedded?: boolean;
   /** Number of unit cards to render (the first is always expanded). */
@@ -165,7 +165,7 @@ export type TrackSkeletonProps = {
   lessonRowSecondWidth?: number;
 };
 
-export function TrackSkeleton({
+function TrackSkeleton({
   embedded = false,
   unitCount = 3,
   lessonRowSecondWidth = 68,
@@ -217,13 +217,13 @@ export function TrackSkeleton({
   );
 }
 
-export type TrackPageLoadingProps = {
+type TrackPageLoadingProps = {
   /** Accessible label for the loading overlay. */
   ariaLabel: string;
 } & Pick<TrackSkeletonProps, "unitCount" | "lessonRowSecondWidth">;
 
 /** Full-page overlay used by route loaders and client fetch gates. */
-export function TrackPageLoading({
+function TrackPageLoading({
   ariaLabel,
   unitCount,
   lessonRowSecondWidth,
@@ -250,4 +250,37 @@ export function TrackPageLoading({
       </PageContainer>
     </Box>
   );
+}
+
+/**
+ * Builds a track's embedded skeleton and full-page loader from one preset so
+ * each feature only declares its sizing.
+ */
+export function createTrackLoaders({
+  ariaLabel,
+  unitCount,
+  lessonRowSecondWidth,
+}: TrackPageLoadingProps) {
+  function TrackLoadingSkeleton({ embedded = false }: { embedded?: boolean }) {
+    return (
+      <TrackSkeleton
+        embedded={embedded}
+        unitCount={unitCount}
+        lessonRowSecondWidth={lessonRowSecondWidth}
+      />
+    );
+  }
+
+  /** Full-page overlay used by the route loader and client fetch gate. */
+  function TrackLoadingPage() {
+    return (
+      <TrackPageLoading
+        ariaLabel={ariaLabel}
+        unitCount={unitCount}
+        lessonRowSecondWidth={lessonRowSecondWidth}
+      />
+    );
+  }
+
+  return { TrackLoadingSkeleton, TrackLoadingPage };
 }

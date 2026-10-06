@@ -37,11 +37,12 @@ export function resolveInitialUnitId<Unit extends { id: number; isLocked?: boole
   return units.find((unit) => !unit?.isLocked)?.id ?? units[0]?.id ?? null;
 }
 
-export function mergeUnitsProgress<
-  Lesson extends TrackLessonLike,
-  Chapter extends TrackChapterLike<Lesson>,
-  Unit extends TrackUnitLike<Lesson, Chapter>,
->(current: Unit[], incoming: Unit[]): Unit[] {
+type AnyTrackUnit = TrackUnitLike<TrackLessonLike, TrackChapterLike<TrackLessonLike>>;
+
+export function mergeUnitsProgress<Unit extends AnyTrackUnit>(
+  current: Unit[],
+  incoming: Unit[]
+): Unit[] {
   if (current.length === 0) return incoming;
 
   const progressByLessonId = new Map<
@@ -103,12 +104,8 @@ export function mergeUnitsProgress<
   })) as Unit[];
 }
 
-export function buildInitialChapterExpansion<
-  Lesson extends TrackLessonLike,
-  Chapter extends TrackChapterLike<Lesson>,
-  Unit extends TrackUnitLike<Lesson, Chapter>,
->(
-  units: Unit[],
+export function buildInitialChapterExpansion(
+  units: AnyTrackUnit[],
   options: { skipLockedFirstChapter?: boolean } = {}
 ): Record<number, boolean> {
   const { skipLockedFirstChapter = false } = options;

@@ -31,7 +31,7 @@ type TrackUnitLike<C> = {
   chapters: C[];
 };
 
-type StoreExpansion = {
+export type TrackExpansionStore = {
   expandedUnitId: number | null;
   expandedChapterIds: Record<number, boolean>;
   toggleUnitExpanded: (unitId: number) => void;
@@ -70,7 +70,7 @@ export function useTrackFilters<
   L extends TrackLessonLike,
   C extends TrackChapterLike<L>,
   U extends TrackUnitLike<C>,
->(units: U[], getLessonText: (lesson: L) => (string | null | undefined)[], store: StoreExpansion) {
+>(units: U[], getLessonText: (lesson: L) => (string | null | undefined)[], store: TrackExpansionStore) {
   const [query, setQueryState] = useState("");
   const [unitIds, setUnitIds] = useState<number[]>([]);
   const [status, setStatus] = useState<TrackStatusFilter>("all");
