@@ -8,7 +8,7 @@ import { fetchFsChapterPractice } from "../../api/curriculum";
 import { useFingerSpellingStore } from "../../store";
 import { useGuestProgressStore } from "../../store/guestProgress.store";
 import type { FsChapterPractice } from "../../types";
-import { isChapterPracticeUnlocked } from "../../utils/chapterPracticeUnlock";
+import { isChapterPracticeUnlocked } from "@/features/shared/trackProgress";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
 import { KslColors, KslFontSizes } from "@/theme/theme";

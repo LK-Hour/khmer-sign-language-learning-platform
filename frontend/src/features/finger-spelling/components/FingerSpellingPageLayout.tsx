@@ -5,7 +5,7 @@ import { Chip, Stack, Typography } from "@mui/material";
 import { PageContainer } from "@/components/layout";
 import { useTranslation } from "@/i18n/useTranslation";
 import { getLocalizedPair } from "@/i18n/localizedText";
-import { formatUnitBadge } from "@/features/finger-spelling/utils/chapter";
+import { formatChapterBadge } from "@/features/shared/trackFormat";
 import { KslColors, KslFontSizes, KslLineHeights } from "@/theme/theme";
 
 type FingerSpellingPageLayoutProps = {
@@ -39,7 +39,7 @@ export default function FingerSpellingPageLayout({
 
   const contextBadge =
     contextUnitIndex != null
-      ? formatUnitBadge(contextUnitIndex, locale, t("FINGER_SPELLING.LABELS.UNIT"))
+      ? formatChapterBadge(contextUnitIndex, locale, t("FINGER_SPELLING.LABELS.UNIT"))
       : contextBadgeProp;
 
   const header = titleKh

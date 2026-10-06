@@ -27,8 +27,6 @@ export function useFingerSpellingPracticeActions() {
    */
   const runPracticePredict = useCallback(
     async (
-      letterId: number | undefined,
-      lessonId: number,
       features: number[],
       handedness?: string,
       category?: string,

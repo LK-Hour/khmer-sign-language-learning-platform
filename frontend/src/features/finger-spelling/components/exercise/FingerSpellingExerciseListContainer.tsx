@@ -12,7 +12,8 @@ import { useAuthStore } from "@/store/auth.store";
 import { fetchFsTree } from "../../api/curriculum";
 import { useGuestProgressStore } from "../../store/guestProgress.store";
 import type { FsUnit } from "../../types";
-import { formatBadgeStep, formatUnitBadge } from "../../utils/chapter";
+import { formatOrderIndex, formatChapterBadge } from "@/features/shared/trackFormat";
+import { NumberBadge } from "@/components/track";
 import { applyGuestProgress } from "../../utils/guestProgressMerge";
 import { FingerSpellingTrackSkeleton } from "../FingerSpellingPageLoading";
 
@@ -208,29 +209,6 @@ function ExerciseSummaryCard({
   );
 }
 
-function NumberBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <Stack
-      component="span"
-      sx={{
-        alignItems: "center",
-        bgcolor: KslColors.primaryLighter,
-        borderRadius: 2.5,
-        color: KslColors.primaryDark,
-        flexShrink: 0,
-        fontFamily: fontFamilies.english,
-        fontSize: KslFontSizes.lg,
-        fontWeight: 700,
-        height: 42,
-        justifyContent: "center",
-        width: 42,
-      }}
-    >
-      {children}
-    </Stack>
-  );
-}
-
 function ExerciseUnitCard({
   unit,
   locale,
@@ -315,7 +293,7 @@ function ExerciseUnitCard({
       }}
     >
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", flex: 1, minWidth: 0 }}>
-        <NumberBadge>{formatBadgeStep(unit?.orderIndex, locale)}</NumberBadge>
+        <NumberBadge>{formatOrderIndex(unit?.orderIndex, locale)}</NumberBadge>
         <Stack spacing={0.5} sx={{ minWidth: 0 }}>
           <Typography
             sx={{
@@ -325,7 +303,7 @@ function ExerciseUnitCard({
               lineHeight: 1.25,
             }}
           >
-            {formatUnitBadge(unit?.orderIndex, locale, unitLabel)}: {unitTitle}
+            {formatChapterBadge(unit?.orderIndex, locale, unitLabel)}: {unitTitle}
           </Typography>
           <Typography
             sx={{

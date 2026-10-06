@@ -6,10 +6,9 @@ import { KslColors, KslRadii } from "@/theme/theme";
 type SignImageCardProps = {
   src: string;
   alt: string;
-  highlight?: boolean;
 };
 
-export default function FingerSpellingSignImageCard({ src, alt, highlight }: SignImageCardProps) {
+export default function FingerSpellingSignImageCard({ src, alt }: SignImageCardProps) {
   return (
     <Stack
       sx={{

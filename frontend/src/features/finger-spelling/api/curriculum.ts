@@ -25,13 +25,6 @@ export async function fetchFsUnit(unitId: number): Promise<FsUnit | null> {
   }
 }
 
-export async function fetchFsChapters(unitId: number): Promise<FsChapter[]> {
-  const raw = await apiFetch<FsChapter[]>(
-    `/api/finger_spelling/units/${unitId}/chapters`
-  );
-  return raw?.map(normalizeChapter);
-}
-
 export async function fetchFsChapter(
   chapterId: number
 ): Promise<FsChapter | null> {
@@ -137,9 +130,4 @@ export async function fetchFsTree(): Promise<FsTrackUnit[]> {
         .sort((a, b) => a.orderIndex - b.orderIndex),
     }))
     .sort((a, b) => a.orderIndex - b.orderIndex);
-}
-
-/** @deprecated Prefer fetchFsTree-same data, one request. */
-export async function fetchFsTrackUnits(): Promise<FsTrackUnit[]> {
-  return fetchFsTree();
 }

@@ -1,10 +1,10 @@
-export type ExerciseQuestionType =
+type ExerciseQuestionType =
   | "multiple_choice"
   | "true_false"
   | "multiple_answer"
   | "matching";
 
-export interface ExerciseOptionData {
+interface ExerciseOptionData {
   id: number;
   option_text_en: string | null;
   option_text_kh: string | null;

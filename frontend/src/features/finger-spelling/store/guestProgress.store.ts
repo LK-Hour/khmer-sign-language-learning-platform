@@ -16,13 +16,13 @@ export type LocalGuestPracticeSummary = {
   completedAt: string | null;
 };
 
-export type LocalGuestChapterPractice = {
+type LocalGuestChapterPractice = {
   chapterId: number;
   avgScore: number;
   completedAt: string;
 };
 
-export type LocalGuestUnitExercise = {
+type LocalGuestUnitExercise = {
   unitId: number;
   bestScore: number;
   maxScore: number;

@@ -5,10 +5,9 @@ import { Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type { RawHandDetection } from "@/features/finger-spelling/ml/useHandLandmarker";
 import { useTranslation } from "@/i18n/useTranslation";
-import { KslColors, KslFontSizes, KslPalette, KslRadii } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
 type FingerSpellingCameraPanelProps = {
-  resetKey?: number;
   videoRef?: RefObject<HTMLVideoElement | null>;
   detectLandmarks: (video: HTMLVideoElement) => RawHandDetection;
   isLandmarkerReady: boolean;
@@ -23,7 +22,6 @@ function stopStream(stream: MediaStream | null) {
 }
 
 export default function FingerSpellingCameraPanel({
-  resetKey = 0,
   videoRef,
   detectLandmarks,
   isLandmarkerReady,
@@ -86,7 +84,7 @@ export default function FingerSpellingCameraPanel({
       window.clearTimeout(timer);
       stopStream(streamRef.current);
     };
-  }, [startCamera, resetKey]);
+  }, [startCamera]);
 
   useEffect(() => {
     if (!isLandmarkerReady || cameraError) return;

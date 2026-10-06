@@ -5,18 +5,13 @@ import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ROUTES } from "@/constants/routes";
-import {
-  type RawHandDetection,
-  useHandLandmarker,
-} from "@/features/finger-spelling/ml/useHandLandmarker";
+import { useHandLandmarker } from "@/features/finger-spelling/ml/useHandLandmarker";
 import { useRealtimePredictor } from "@/features/finger-spelling/ml/useRealtimePredictor";
 import { useFingerSpellingPracticeActions } from "@/features/finger-spelling/hooks/useFingerSpellingPracticeActions";
 import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
 import { useFingerSpellingStore } from "@/features/finger-spelling/store";
-import {
-  formatOrderIndex,
-  getLessonDisplayLetter,
-} from "@/features/finger-spelling/utils/chapter";
+import { getLessonDisplayLetter } from "@/features/finger-spelling/utils/chapter";
+import { formatOrderIndex } from "@/features/shared/trackFormat";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors } from "@/theme/theme";
 import type { FsChapter, FsLessonDetail, FsUnit } from "../../types";
@@ -25,8 +20,6 @@ import FingerSpellingLessonPracticeStep from "./FingerSpellingLessonPracticeStep
 import PermissionRequestDialog from "@/components/custom-dialog/permission-request-dialog";
 import { usePermissionStore } from "@/store/permission.store";
 import { PERMISSION_DIALOG_CONTENT } from "@/constants/permission-dialog";
-
-const EMPTY_DETECTION: RawHandDetection = { landmarks: [], handednesses: [] };
 
 const categoryFromUnitTitle = (title?: string | null) => {
   return title?.trim() || undefined;
@@ -64,7 +57,6 @@ export default function FingerSpellingLessonLearningView({
   const router = useRouter();
   const { locale, t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const latestDetectionRef = useRef<RawHandDetection>(EMPTY_DETECTION);
   const capturingRef = useRef(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -107,7 +99,6 @@ export default function FingerSpellingLessonLearningView({
   const accuracy = useFingerSpellingStore((state) => state.accuracy);
   const predictedLetter = useFingerSpellingStore((state) => state.predictedLetter);
   const isSubmitting = useFingerSpellingStore((state) => state.isSubmitting);
-  const cameraResetKey = useFingerSpellingStore((state) => state.cameraResetKey);
   const displayLetter = getLessonDisplayLetter(lesson);
   const retryState = usePredictionRetry({
     targetLabel: displayLetter,
@@ -134,70 +125,6 @@ export default function FingerSpellingLessonLearningView({
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryPendingRef = useRef(false);
-
-  // ═══════════════════════════════════════════════════════════════════════
-  //  ORIGINAL STABILITY DETECTOR-commented out for realtime path
-  // ═══════════════════════════════════════════════════════════════════════
-  //
-  // const doCapture = useCallback(async () => {
-  //   if (capturingRef.current) return;
-  //   capturingRef.current = true;
-  //
-  //   try {
-  //     const video = videoRef.current;
-  //     setRecError(null);
-  //
-  //     if (landmarkerError) {
-  //       setRecError(landmarkerError);
-  //       return;
-  //     }
-  //     if (!isLandmarkerReady) {
-  //       setRecError(t("FINGER_SPELLING.LESSON.LANDMARKER_LOADING"));
-  //       return;
-  //     }
-  //     if (!video) {
-  //       setRecError(t("FINGER_SPELLING.LESSON.CAMERA_UNAVAILABLE"));
-  //       return;
-  //     }
-  //
-  //     const extraction = extractFromVideo(video);
-  //     if (!extraction.handDetected) {
-  //       setRecError(t("FINGER_SPELLING.LESSON.NO_HAND_DETECTED"));
-  //       return;
-  //     }
-  //     await runPracticeRec(lesson.letterId, lesson.id, extraction.features, extraction.handedness, categoryFromUnitTitle(unit.title) ?? undefined);
-  //   } catch (error) {
-  //     setRecError(
-  //       error instanceof Error ? error.message : t("FINGER_SPELLING.LESSON.HAND_PREDICTION_FAILED")
-  //     );
-  //   } finally {
-  //     capturingRef.current = false;
-  //   }
-  // }, [extractFromVideo, isLandmarkerReady, landmarkerError, lesson.id, runPracticeRec, t, unit.title]);
-  //
-  // const handleStable = useCallback(() => {
-  //   void doCapture();
-  // }, [doCapture]);
-  //
-  // const getLatestDetection = useCallback(() => latestDetectionRef.current, []);
-  //
-  // const { state: stabilityState, progress: stabilityProgress, startMonitoring, stopMonitoring } =
-  //   useStabilityDetector(
-  //     getLatestDetection,
-  //     handleStable,
-  //   );
-  //
-  // useEffect(() => {
-  //   if (isLandmarkerReady && !isSubmitting && accuracy == null) {
-  //     startMonitoring();
-  //   }
-  // }, [isLandmarkerReady, isSubmitting, accuracy, startMonitoring]);
-  //
-  // useEffect(() => {
-  //   return () => {
-  //     stopMonitoring();
-  //   };
-  // }, [stopMonitoring]);
 
   // ═══════════════════════════════════════════════════════════════════════
   //  REALTIME PREDICTION LOOP
@@ -234,8 +161,6 @@ export default function FingerSpellingLessonLearningView({
         }
 
         await runPracticePredict(
-          lesson.letterId,
-          lesson.id,
           extraction.features,
           extraction.handedness,
           categoryFromUnitTitle(unit.title) ?? undefined,
@@ -253,8 +178,6 @@ export default function FingerSpellingLessonLearningView({
       extractFromVideo,
       isLandmarkerReady,
       landmarkerError,
-      lesson.letterId,
-      lesson.id,
       runPracticePredict,
       t,
       unit.title,
@@ -280,7 +203,6 @@ export default function FingerSpellingLessonLearningView({
     retryPendingRef.current = false;
     setRetryWaiting(false);
     setRecError(null);
-    latestDetectionRef.current = EMPTY_DETECTION;
     setCapturedPrediction(null);
     resetPracticeResult();
     resetLivePrediction();
@@ -500,10 +422,6 @@ export default function FingerSpellingLessonLearningView({
     setIsPermissionOpen(false);
   }, []);
 
-  const handleDetection = useCallback((detection: RawHandDetection) => {
-    latestDetectionRef.current = detection;
-  }, []);
-
   const handleContinue = async () => {
     if (isCompleting) return;
 
@@ -563,7 +481,6 @@ export default function FingerSpellingLessonLearningView({
         imageUrl={lesson?.imageUrl}
         tip={tip}
         accuracy={accuracy}
-        cameraResetKey={cameraResetKey}
         isSubmitting={isSubmitting || isCompleting}
         isContinuing={isCompleting}
         retryWaiting={retryWaiting}
@@ -574,10 +491,6 @@ export default function FingerSpellingLessonLearningView({
         recError={recError}
         videoRef={videoRef}
         detectLandmarks={detectLandmarks}
-        onDetection={handleDetection}
-        // Comment out old stability props-stability-based UI hidden
-        stabilityState="idle"
-        stabilityProgress={0}
         continueLabel={continueLabel}
         // Pass live prediction for the MetricCards
         capturedLabel={capturedPrediction?.label ?? null}

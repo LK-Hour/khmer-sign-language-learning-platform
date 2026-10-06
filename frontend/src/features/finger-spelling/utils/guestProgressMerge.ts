@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/store/auth.store";
 import type { FsTrackUnit } from "../store/types";
-import { isChapterPracticeUnlocked } from "./chapterPracticeUnlock";
+import { isChapterPracticeUnlocked } from "@/features/shared/trackProgress";
 import { isUnitExerciseUnlocked } from "./unitExerciseUnlock";
 import { useGuestProgressStore } from "../store/guestProgress.store";
 

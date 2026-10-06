@@ -8,18 +8,11 @@ import {
   buildInitialChapterExpansion,
   mergeUnitsProgress,
   resolveInitialUnitId,
-} from "./trackState";
-import { isChapterPracticeUnlocked } from "../utils/chapterPracticeUnlock";
+} from "@/features/shared/trackState";
+import { isChapterPracticeUnlocked } from "@/features/shared/trackProgress";
 import { applyGuestProgress } from "../utils/guestProgressMerge";
 import { useAuthStore } from "@/store/auth.store";
 import { useGuestProgressStore } from "./guestProgress.store";
-
-export type CaptureState =
-  | "idle"
-  | "waiting_stable"
-  | "stable_ready"
-  | "capturing"
-  | "result";
 
 export interface FingerSpellingState {
   units: FsTrackUnit[];
@@ -29,32 +22,24 @@ export interface FingerSpellingState {
   practiceContext: PracticeContext | null;
   accuracy: number | null;
   predictedLetter: string | null;
-  cameraResetKey: number;
   isSubmitting: boolean;
-  captureState: CaptureState;
-  stabilityProgress: number;
 
   setUnits: (units: FsTrackUnit[]) => void;
   toggleUnitExpanded: (unitId: number) => void;
   toggleChapterExpanded: (chapterId: number) => void;
   /** Close every unit and chapter (persists as explicit `false`). */
   collapseAll: () => void;
-  isChapterExpanded: (chapterId: number) => boolean;
 
   setPracticeContext: (context: PracticeContext) => void;
   clearPracticeContext: () => void;
-  resetPracticeSession: () => void;
-  /** Resets the practice result (accuracy, predictedLetter, isSubmitting, captureState). */
+  /** Resets the practice result (accuracy, predictedLetter, isSubmitting). */
   resetPracticeResult: () => void;
-  incrementCameraResetKey: () => void;
   startPracticeSubmission: () => void;
   finishPracticeSubmission: (result: {
     accuracy: number;
     predictedLetter: string;
   }) => void;
   failPracticeSubmission: () => void;
-  setCaptureState: (state: CaptureState) => void;
-  setStabilityProgress: (progress: number) => void;
 
   markLessonCompleted: (lessonId: number) => void;
   markPracticeCompleted: (chapterId: number, avgScore?: number) => void;
@@ -62,7 +47,7 @@ export interface FingerSpellingState {
 
 export const useFingerSpellingStore = create<FingerSpellingState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       units: [],
       expandedUnitId: null,
       expandedChapterIds: {},
@@ -70,10 +55,7 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
       practiceContext: null,
       accuracy: null,
       predictedLetter: null,
-      cameraResetKey: 0,
       isSubmitting: false,
-      captureState: "idle",
-      stabilityProgress: 0,
 
       setUnits: (units) =>
         set((state) => {
@@ -139,17 +121,12 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           },
         })),
 
-      isChapterExpanded: (chapterId) =>
-        get().expandedChapterIds[chapterId] === true,
-
       setPracticeContext: (context) =>
         set({
           practiceContext: context,
           accuracy: null,
           predictedLetter: null,
           isSubmitting: false,
-          captureState: "idle",
-          stabilityProgress: 0,
         }),
 
       clearPracticeContext: () =>
@@ -158,17 +135,6 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           accuracy: null,
           predictedLetter: null,
           isSubmitting: false,
-          captureState: "idle",
-          stabilityProgress: 0,
-        }),
-
-      resetPracticeSession: () =>
-        set({
-          accuracy: null,
-          predictedLetter: null,
-          isSubmitting: false,
-          captureState: "idle",
-          stabilityProgress: 0,
         }),
 
       resetPracticeResult: () =>
@@ -176,23 +142,13 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           accuracy: null,
           predictedLetter: null,
           isSubmitting: false,
-          captureState: "idle",
-          stabilityProgress: 0,
         }),
-
-      setCaptureState: (state) => set({ captureState: state }),
-
-      setStabilityProgress: (progress) => set({ stabilityProgress: progress }),
-
-      incrementCameraResetKey: () =>
-        set((state) => ({ cameraResetKey: state.cameraResetKey + 1 })),
 
       startPracticeSubmission: () =>
         set({
           isSubmitting: true,
           accuracy: null,
           predictedLetter: null,
-          captureState: "capturing",
         }),
 
       finishPracticeSubmission: ({ accuracy, predictedLetter }) =>
@@ -200,11 +156,10 @@ export const useFingerSpellingStore = create<FingerSpellingState>()(
           accuracy,
           predictedLetter,
           isSubmitting: false,
-          captureState: "result",
         }),
 
       failPracticeSubmission: () =>
-        set({ isSubmitting: false, captureState: "idle" }),
+        set({ isSubmitting: false }),
 
       markLessonCompleted: (lessonId) =>
         set((state) => {

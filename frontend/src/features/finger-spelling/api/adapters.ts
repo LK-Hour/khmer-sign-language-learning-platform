@@ -6,7 +6,7 @@ import type {
   FsUnit,
 } from "../types";
 import { resolveApiAssetUrl } from "./config";
-import { statusToPercent } from "../utils/progress";
+import { statusToPercent } from "@/features/shared/trackProgress";
 
 /** Matches backend `FsUnitResponse`. */
 export function normalizeUnit(unit: FsUnit): FsUnit {

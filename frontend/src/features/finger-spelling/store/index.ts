@@ -4,7 +4,6 @@ export {
 export { selectCurrentUnit, selectResumeLesson } from "./selectors";
 export type {
   FingerSpellingState,
-  CaptureState,
 } from "./fingerSpelling.store";
 export type {
   FsTrackChapter,

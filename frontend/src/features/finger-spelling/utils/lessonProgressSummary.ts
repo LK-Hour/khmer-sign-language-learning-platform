@@ -1,7 +1,7 @@
 import type { Locale } from "@/i18n/config";
 import type { FsTrackUnit } from "../store/types";
 import type { FsUnit } from "../types";
-import { toKhmerNumeral } from "./chapter";
+import { toKhmerNumeral } from "@/features/shared/trackFormat";
 
 type LessonCountSource = Pick<FsUnit, "completedLessonCount" | "totalLessonCount">;
 

@@ -3,7 +3,6 @@
 import {
   Alert,
   Grid,
-  LinearProgress,
   Stack,
   Typography,
 } from "@mui/material";
@@ -19,7 +18,6 @@ import {
 import type {
   RawHandDetection,
 } from "@/features/finger-spelling/ml/useHandLandmarker";
-import type { StabilityState } from "@/features/finger-spelling/ml/useStabilityDetector";
 import FingerSpellingCameraPanel from "./FingerSpellingCameraPanel";
 import FingerSpellingPracticeFeedbackPanel from "./FingerSpellingPracticeFeedbackPanel";
 import { MetricCard, TipCard } from "./FingerSpellingPracticeInfoCards";
@@ -37,7 +35,6 @@ type FingerSpellingLessonPracticeStepProps = {
   imageUrl: string;
   tip?: string | null;
   accuracy: number | null;
-  cameraResetKey: number;
   isSubmitting?: boolean;
   isContinuing?: boolean;
   retryWaiting?: boolean;
@@ -48,9 +45,6 @@ type FingerSpellingLessonPracticeStepProps = {
   recError?: string | null;
   videoRef?: RefObject<HTMLVideoElement | null>;
   detectLandmarks: (video: HTMLVideoElement) => RawHandDetection;
-  onDetection?: (detection: RawHandDetection) => void;
-  stabilityState: StabilityState;
-  stabilityProgress: number;
   continueLabel: string;
   onRetry: () => void;
   onContinue: () => void | Promise<void>;
@@ -72,7 +66,6 @@ export default function FingerSpellingLessonPracticeStep({
   imageUrl,
   tip,
   accuracy,
-  cameraResetKey,
   isSubmitting = false,
   isContinuing = false,
   retryWaiting = false,
@@ -83,9 +76,6 @@ export default function FingerSpellingLessonPracticeStep({
   recError = null,
   videoRef,
   detectLandmarks,
-  onDetection,
-  stabilityState,
-  stabilityProgress,
   continueLabel,
   onRetry,
   onContinue,
@@ -123,8 +113,6 @@ export default function FingerSpellingLessonPracticeStep({
   const tipText =
     tip?.trim() ||
     t("FINGER_SPELLING.LESSON.DEFAULT_PRACTICE_TIP");
-  const showStabilityProgress =
-    !hasFinalResult && !isSubmitting;
 
   // Determine what to show in the MetricCards
   const showLivePrediction = !!(
@@ -187,43 +175,11 @@ export default function FingerSpellingLessonPracticeStep({
           <Stack spacing={1}>
             <Stack sx={VISUAL_FRAME_SX}>
               <FingerSpellingCameraPanel
-                resetKey={cameraResetKey}
                 videoRef={videoRef}
                 detectLandmarks={detectLandmarks}
                 isLandmarkerReady={isLandmarkerReady}
-                onDetection={onDetection}
               />
             </Stack>
-
-            {showStabilityProgress && stabilityState !== "idle" && (
-              <Stack spacing={0.5}>
-                <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
-                  <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary, fontWeight: 600 }}>
-                    {stabilityState === "waiting" && t("FINGER_SPELLING.LESSON.HOLD_STILL")}
-                    {stabilityState === "stable" && t("FINGER_SPELLING.LESSON.STABLE_HOLD")}
-                    {stabilityState === "timeout" && t("FINGER_SPELLING.LESSON.STABILITY_TIMEOUT")}
-                  </Typography>
-                  {stabilityState === "waiting" && (
-                    <Typography sx={{ fontSize: KslFontSizes.sm, color: KslColors.textSecondary }}>
-                      {stabilityProgress}%
-                    </Typography>
-                  )}
-                </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={stabilityProgress}
-                  sx={{
-                    height: 6,
-                    borderRadius: 3,
-                    bgcolor: "rgba(196, 196, 196, 0.05)",
-                    "& .MuiLinearProgress-bar": {
-                      bgcolor: stabilityState === "stable" ? KslColors.primary : KslColors.textSecondary,
-                      borderRadius: 3,
-                    },
-                  }}
-                />
-              </Stack>
-            )}
 
             <Typography
               sx={{

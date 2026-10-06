@@ -30,12 +30,3 @@ export async function predictHandFromFeatures(
     }
   );
 }
-
-export async function fetchHandPredictStatus(): Promise<{
-  available: boolean;
-  model_loaded: boolean;
-}> {
-  return apiFetch("/api/finger_spelling/practice/predict/status", {
-    headers: guestHeaders(),
-  });
-}

@@ -250,8 +250,6 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
       }
 
       await runPracticePredict(
-        currentItem.letterId,
-        currentItem.lessonId,
         extraction.features,
         extraction.handedness,
         categoryFromUnitTitle(practice.unitTitle) ?? undefined,
