@@ -4,7 +4,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
-import { formatOrderIndex } from "@/features/word-detection/utils/chapter";
+import { formatOrderIndex } from "@/features/shared/trackFormat";
 import type { WdChapter, WdLessonDetail, WdUnit } from "@/features/word-detection/types";
 import {
   useWordDetectionLandmarker,
@@ -568,7 +568,6 @@ export default function WordDetectionLessonLearningView({
         open={isRecordingPreviewOpen}
         videoBlob={recordedBlob}
         word={lesson.word}
-        predictedLabel={capturedPrediction?.label ?? null}
         confidence={capturedPrediction?.confidence ?? null}
         isUploading={isUploading}
         uploadError={uploadError}

@@ -19,9 +19,7 @@ export type {
 } from "./chapterPractice";
 
 export type {
-  WdExerciseType,
   WdExerciseMediaData,
-  WdExerciseOptionData,
   WdExerciseQuestionData,
   WdExerciseSubmitRequest,
   WdExerciseSubmitResult,

@@ -37,13 +37,6 @@ export async function fetchWdUnit(unitId: number): Promise<WdUnit | null> {
 
 // ─── Chapters ────────────────────────────────────────────────────────────────
 
-export async function fetchWdChapters(unitId: number): Promise<WdChapter[]> {
-  const raw = await apiFetch<WdChapter[]>(
-    `/api/word_detection/units/${unitId}/chapters`
-  );
-  return raw?.map(normalizeChapter);
-}
-
 export async function fetchWdChapter(
   chapterId: number
 ): Promise<WdChapter | null> {
@@ -64,12 +57,6 @@ export async function fetchWdLessons(chapterId: number): Promise<WdLesson[]> {
     `/api/word_detection/chapters/${chapterId}/lessons`
   );
   return raw?.map(normalizeLesson);
-}
-
-export async function fetchWdLessonsInChapter(
-  chapterId: number
-): Promise<WdLesson[]> {
-  return fetchWdLessons(chapterId);
 }
 
 export async function fetchWdLesson(
@@ -118,9 +105,4 @@ export async function fetchWdTree(): Promise<WdTrackUnit[]> {
         .sort((a, b) => a.orderIndex - b.orderIndex),
     }))
     .sort((a, b) => a.orderIndex - b.orderIndex);
-}
-
-/** @deprecated Prefer fetchWdTree-same data, one request. */
-export async function fetchWdTrackUnits(): Promise<WdTrackUnit[]> {
-  return fetchWdTree();
 }

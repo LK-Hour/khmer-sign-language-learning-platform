@@ -5,7 +5,7 @@ import type {
   WdProgressStatus,
   WdUnit,
 } from "../types";
-import { statusToPercent } from "../utils/progress";
+import { statusToPercent } from "@/features/shared/trackProgress";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
 
 export function normalizeUnit(unit: WdUnit): WdUnit {

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { resolveApiAssetUrl } from "@/features/finger-spelling/api/config";
 import PlayButton from "@/components/ui/PlayButton";
 import { useTranslation } from "@/i18n/useTranslation";
-import { KslColors, KslFontSizes, KslRadii, KslShadows } from "@/theme/theme";
+import { KslColors, KslFontSizes, KslRadii } from "@/theme/theme";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 

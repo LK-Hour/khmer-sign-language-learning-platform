@@ -8,7 +8,7 @@ import { fetchWdChapterPractice } from "../../api/curriculum";
 import { useWordDetectionStore } from "../../store";
 import { useWordDetectionGuestProgressStore } from "../../store/guestProgress.store";
 import type { WdChapterPractice } from "../../types";
-import { isChapterPracticeUnlocked } from "../../utils/chapterPracticeUnlock";
+import { isChapterPracticeUnlocked } from "@/features/shared/trackProgress";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
 import { KslColors, KslFontSizes } from "@/theme/theme";

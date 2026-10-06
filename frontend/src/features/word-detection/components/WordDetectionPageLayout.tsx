@@ -4,7 +4,7 @@ import { Chip, Stack, Typography } from "@mui/material";
 import { PageContainer } from "@/components/layout";
 import { useTranslation } from "@/i18n/useTranslation";
 import { getLocalizedPair } from "@/i18n/localizedText";
-import { formatUnitBadge } from "@/features/word-detection/utils/chapter";
+import { formatChapterBadge } from "@/features/shared/trackFormat";
 import { KslColors, KslFontSizes, KslLineHeights } from "@/theme/theme";
 
 type WordDetectionPageLayoutProps = {
@@ -35,7 +35,7 @@ export default function WordDetectionPageLayout({
 
   const contextBadge =
     contextUnitIndex != null
-      ? formatUnitBadge(contextUnitIndex, locale, t("WORD_DETECTION.LABELS.UNIT"))
+      ? formatChapterBadge(contextUnitIndex, locale, t("WORD_DETECTION.LABELS.UNIT"))
       : contextBadgeProp;
 
   const header = titleKh

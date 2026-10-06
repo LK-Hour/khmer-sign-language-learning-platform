@@ -1,4 +1,4 @@
-import { findCurrentUnit, findResumeLesson } from "../utils/progress";
+import { findCurrentUnit, findResumeLesson } from "@/features/shared/trackProgress";
 import type { WordDetectionState } from "./wordDetection.store";
 
 export function selectResumeLesson(state: WordDetectionState) {

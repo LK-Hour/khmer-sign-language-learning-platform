@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Box,
   Button,
   Checkbox,
   Dialog,
@@ -19,7 +18,6 @@ type WordRecordingPreviewProps = {
   open: boolean;
   videoBlob: Blob | null;
   word: string;
-  predictedLabel: string | null;
   confidence: number | null;
   isUploading?: boolean;
   uploadError?: string | null;
@@ -31,7 +29,6 @@ export default function WordRecordingPreview({
   open,
   videoBlob,
   word,
-  predictedLabel,
   confidence,
   isUploading = false,
   uploadError = null,

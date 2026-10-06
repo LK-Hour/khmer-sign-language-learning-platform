@@ -1,4 +1,4 @@
-export type WdExerciseType = "multiple_choice" | "image_select" | "matching";
+type WdExerciseType = "multiple_choice" | "image_select" | "matching";
 
 export interface WdExerciseMediaData {
   id: number;
@@ -6,7 +6,7 @@ export interface WdExerciseMediaData {
   media_type: "video" | "gif" | "image";
 }
 
-export interface WdExerciseOptionData {
+interface WdExerciseOptionData {
   id: number;
   option_text_en: string | null;
   option_text_kh: string | null;

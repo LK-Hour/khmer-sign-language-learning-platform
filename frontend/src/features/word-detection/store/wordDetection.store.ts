@@ -6,9 +6,9 @@ import {
   buildInitialChapterExpansion,
   mergeUnitsProgress,
   resolveInitialUnitId,
-} from "./trackState";
+} from "@/features/shared/trackState";
 import { useWordDetectionGuestProgressStore } from "./guestProgress.store";
-import { isChapterPracticeUnlocked } from "../utils/chapterPracticeUnlock";
+import { isChapterPracticeUnlocked } from "@/features/shared/trackProgress";
 
 export interface WordDetectionState {
   units: WdTrackUnit[];
@@ -20,7 +20,6 @@ export interface WordDetectionState {
   toggleChapterExpanded: (chapterId: number) => void;
   /** Close every unit and chapter (persists as explicit `false`). */
   collapseAll: () => void;
-  isChapterExpanded: (chapterId: number) => boolean;
   markPracticeCompleted: (chapterId: number) => void;
 }
 
@@ -94,7 +93,7 @@ function applyGuestProgress(units: WdTrackUnit[]): WdTrackUnit[] {
 
 export const useWordDetectionStore = create<WordDetectionState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       units: [],
       expandedUnitId: null,
       expandedChapterIds: {},
@@ -118,7 +117,7 @@ export const useWordDetectionStore = create<WordDetectionState>()(
             Object.keys(state.expandedChapterIds).length > 0;
           const expandedChapterIds = hasExpandedChapters
             ? state.expandedChapterIds
-            : buildInitialChapterExpansion(mergedUnits);
+            : buildInitialChapterExpansion(mergedUnits, { skipLockedFirstChapter: true });
 
           return { units: mergedUnits, expandedUnitId, expandedChapterIds };
         }),
@@ -148,9 +147,6 @@ export const useWordDetectionStore = create<WordDetectionState>()(
             [chapterId]: !state.expandedChapterIds[chapterId],
           },
         })),
-
-      isChapterExpanded: (chapterId) =>
-        get().expandedChapterIds[chapterId] === true,
 
       markPracticeCompleted: (chapterId) =>
         set((state) => {
