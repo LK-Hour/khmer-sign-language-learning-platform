@@ -87,7 +87,7 @@ class FingerChapterPracticeRepository:
         stmt = (
             select(Media)
             .join(FingerPracticeMedia, FingerPracticeMedia.media_id == Media.id)
-            .where(FingerPracticeMedia.practice_id == practice_id)
+            .where(FingerPracticeMedia.practice_id == practice_id, Media.is_active.is_(True))
             .order_by(FingerPracticeMedia.id)
         )
         return list(self.db.scalars(stmt).all())

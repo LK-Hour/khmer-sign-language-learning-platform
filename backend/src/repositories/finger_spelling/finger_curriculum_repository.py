@@ -157,7 +157,7 @@ class FingerCurriculumRepository:
         stmt = (
             select(Media)
             .join(FingerLetterMedia, FingerLetterMedia.media_id == Media.id)
-            .where(FingerLetterMedia.letter_id == letter_id)
+            .where(FingerLetterMedia.letter_id == letter_id, Media.is_active.is_(True))
             .order_by(FingerLetterMedia.id)
         )
         return list(self.db.scalars(stmt).all())
@@ -173,7 +173,7 @@ class FingerCurriculumRepository:
         stmt = (
             select(FingerLetterMedia.letter_id, Media)
             .join(Media, FingerLetterMedia.media_id == Media.id)
-            .where(FingerLetterMedia.letter_id.in_(letter_ids))
+            .where(FingerLetterMedia.letter_id.in_(letter_ids), Media.is_active.is_(True))
             .order_by(FingerLetterMedia.letter_id, FingerLetterMedia.id)
         )
         result: dict[int, list[Media]] = {letter_id: [] for letter_id in letter_ids}

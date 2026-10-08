@@ -1,12 +1,13 @@
 """Admin media management routes.
 
-Provides CRUD endpoints for browsing, uploading, associating, and deleting
-media assets. All endpoints require admin authentication.
+Provides CRUD endpoints for browsing, uploading, associating, and
+soft-deleting media assets. All endpoints require admin authentication.
 
     /api/admin/media              GET  -paginated list with media_type filter
     /api/admin/media              POST -upload new media (multipart/form-data)
     /api/admin/media/{id}         GET  -detail with associations
-    /api/admin/media/{id}         DELETE-delete media record + file
+    /api/admin/media/{id}         DELETE-soft-delete (is_active=false); file and links are kept
+    /api/admin/media/{id}/restore      POST  -reactivate soft-deleted media
     /api/admin/media/{id}/associate    POST  -link media to letter/word
     /api/admin/media/{id}/associate    DELETE-unlink media from letter/word
 """
@@ -18,6 +19,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import redis as redis_lib
@@ -26,10 +28,20 @@ from src.api.deps import get_admin_user, get_db
 from src.core.cache import cache_invalidate, cache_invalidate_pattern
 from src.core.config import settings
 from src.core.redis import get_redis
-from src.models.finger_spelling import FingerLetter, FingerLetterMedia
+from src.models.finger_spelling import (
+    FingerExercise,
+    FingerExerciseOption,
+    FingerLetter,
+    FingerLetterMedia,
+)
 from src.models.media import Media, MediaType
 from src.models.user import User
-from src.models.word_detection import WordDetectionWord, WordDetectionWordMedia
+from src.models.word_detection import (
+    WordDetectionExercise,
+    WordDetectionExerciseOption,
+    WordDetectionWord,
+    WordDetectionWordMedia,
+)
 from src.schemas.admin.media import (
     AssociateMediaRequest,
     MediaAssociation,
@@ -51,7 +63,7 @@ def _invalidate_media_related_cache(rc: redis_lib.Redis) -> None:
     public dictionary and letter-lookup endpoints, as well as the
     image_url / video_url fields embedded in the cached finger-spelling and
     word-detection tree structures, so any delete, associate, or
-    disassociate action must bust all of those caches.
+    disassociate, or restore action must bust all of those caches.
     """
     cache_invalidate_pattern(rc, "ksl:cache:public:dict:*")
     cache_invalidate_pattern(rc, "ksl:cache:public:letter:*")
@@ -128,17 +140,49 @@ def _get_associations(db: Session, media_id: int) -> list[MediaAssociation]:
     return associations
 
 
+def _media_response(db: Session, media: Media) -> MediaResponse:
+    return MediaResponse(
+        id=media.id,
+        media_type=media.media_type,
+        file_url=media.file_url,
+        is_active=media.is_active,
+        created_at=media.created_at,
+        associations=_get_associations(db, media.id),
+    )
+
+
+def _count_exercise_references(db: Session, media_id: int) -> int:
+    """Count exercises and exercise options (both tracks) that point at this
+    media through their ``media_id`` column."""
+    return sum(
+        db.query(func.count(model.id)).filter(model.media_id == media_id).scalar() or 0
+        for model in (
+            FingerExercise,
+            FingerExerciseOption,
+            WordDetectionExercise,
+            WordDetectionExerciseOption,
+        )
+    )
+
+
 @router.get("", response_model=PaginatedMediaResponse)
 def list_media(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     media_type: str | None = Query(None),
     search: str | None = Query(None),
+    include_inactive: bool = Query(False, description="Include soft-deleted media"),
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    """List media assets with pagination, optional media_type filter, and file name search."""
+    """List media assets with pagination, optional media_type filter, and file name search.
+
+    Soft-deleted media is hidden unless ``include_inactive`` is set.
+    """
     query = db.query(Media)
+
+    if not include_inactive:
+        query = query.filter(Media.is_active.is_(True))
 
     if media_type:
         query = query.filter(Media.media_type == media_type)
@@ -152,21 +196,8 @@ def list_media(
 
     media_items = query.order_by(Media.id.asc()).offset(offset).limit(size).all()
 
-    items = []
-    for media in media_items:
-        associations = _get_associations(db, media.id)
-        items.append(
-            MediaResponse(
-                id=media.id,
-                media_type=media.media_type,
-                file_url=media.file_url,
-                created_at=media.created_at,
-                associations=associations,
-            )
-        )
-
     return PaginatedMediaResponse(
-        items=items,
+        items=[_media_response(db, media) for media in media_items],
         total=total,
         page=page,
         size=size,
@@ -218,13 +249,7 @@ def upload_media(
         db.commit()
         db.refresh(media)
 
-        return MediaResponse(
-            id=media.id,
-            media_type=media.media_type,
-            file_url=media.file_url,
-            created_at=media.created_at,
-            associations=[],
-        )
+        return _media_response(db, media)
     except HTTPException:
         if file_path.exists():
             file_path.unlink()
@@ -250,24 +275,23 @@ def get_media_detail(
             detail="Media not found",
         )
 
-    associations = _get_associations(db, media.id)
-    return MediaResponse(
-        id=media.id,
-        media_type=media.media_type,
-        file_url=media.file_url,
-        created_at=media.created_at,
-        associations=associations,
-    )
+    return _media_response(db, media)
 
 
 @router.delete("/{media_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_media(
+def soft_delete_media(
     media_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
     rc: redis_lib.Redis = Depends(get_redis),
 ):
-    """Delete media record and associated file from disk."""
+    """Soft-delete a media asset (``is_active=false``).
+
+    The database row, the file on disk, and its letter/word links are all
+    kept, so restore brings it back exactly as it was. Learner-facing reads
+    skip inactive media. Media still used directly by an exercise or option
+    is rejected with 409 so no exercise ends up pointing at hidden media.
+    """
     media = db.get(Media, media_id)
     if not media:
         raise HTTPException(
@@ -275,32 +299,40 @@ def delete_media(
             detail="Media not found",
         )
 
-    # Attempt to delete the file from disk
-    # The file_url is a relative URL like /data_set/media_uploads/filename.ext
-    # We need to resolve it to the actual file path
-    file_url = media.file_url
-    if file_url:
-        # Try to resolve the file path from the URL
-        # Handle URLs like /data_set/media_uploads/filename.ext
-        if "/data_set/media_uploads/" in file_url:
-            filename = file_url.split("/data_set/media_uploads/")[-1]
-            file_path = settings.media_upload_dir / filename
-            if file_path.exists():
-                file_path.unlink()
-        else:
-            # For files stored in other locations, try a best-effort approach
-            # using the repo root
-            repo_root = Path(settings.media_upload_dir).parent.parent
-            relative_path = file_url.lstrip("/")
-            file_path = repo_root / relative_path
-            if file_path.exists():
-                file_path.unlink()
+    in_use = _count_exercise_references(db, media.id)
+    if in_use:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Media is used by {in_use} exercise(s) or option(s); reassign them first",
+        )
 
-    # Delete the database record (cascade will handle junction table entries)
-    db.delete(media)
+    media.is_active = False
     db.commit()
 
     _invalidate_media_related_cache(rc)
+
+
+@router.post("/{media_id}/restore", response_model=MediaResponse)
+def restore_media(
+    media_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
+    """Reactivate a soft-deleted media asset."""
+    media = db.get(Media, media_id)
+    if not media:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Media not found",
+        )
+
+    media.is_active = True
+    db.commit()
+    db.refresh(media)
+
+    _invalidate_media_related_cache(rc)
+    return _media_response(db, media)
 
 
 @router.post("/{media_id}/associate", response_model=MediaResponse)
@@ -315,13 +347,18 @@ def associate_media(
 
     Creates a junction record in the appropriate table (FingerLetterMedia or
     WordDetectionWordMedia). Returns 404 if media or target not found, 409 if
-    the association already exists.
+    the media is soft-deleted or the association already exists.
     """
     media = db.get(Media, media_id)
     if not media:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Media not found",
+        )
+    if not media.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Media is deleted; restore it first",
         )
 
     if body.target_type == "letter":
@@ -380,14 +417,7 @@ def associate_media(
     _invalidate_media_related_cache(rc)
 
     # Return updated media with associations
-    associations = _get_associations(db, media.id)
-    return MediaResponse(
-        id=media.id,
-        media_type=media.media_type,
-        file_url=media.file_url,
-        created_at=media.created_at,
-        associations=associations,
-    )
+    return _media_response(db, media)
 
 
 @router.delete("/{media_id}/associate", status_code=status.HTTP_200_OK, response_model=MediaResponse)
@@ -446,11 +476,4 @@ def disassociate_media(
     _invalidate_media_related_cache(rc)
 
     # Return updated media with remaining associations
-    associations = _get_associations(db, media.id)
-    return MediaResponse(
-        id=media.id,
-        media_type=media.media_type,
-        file_url=media.file_url,
-        created_at=media.created_at,
-        associations=associations,
-    )
+    return _media_response(db, media)

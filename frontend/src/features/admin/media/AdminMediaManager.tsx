@@ -277,7 +277,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         title="Delete Media?"
-        message="Are you sure you want to delete this media asset? This action cannot be undone and will remove it from any associated letters or words."
+        message="This media asset will be deactivated and hidden from the library and from learners. The file and its letter/word links are kept, so it can be restored later."
         confirmLabel="Delete"
         loading={deleting}
       />

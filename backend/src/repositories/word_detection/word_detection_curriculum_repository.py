@@ -184,7 +184,7 @@ class WordDetectionCurriculumRepository:
         stmt = (
             select(Media)
             .join(WordDetectionWordMedia, WordDetectionWordMedia.media_id == Media.id)
-            .where(WordDetectionWordMedia.word_id == word_id)
+            .where(WordDetectionWordMedia.word_id == word_id, Media.is_active.is_(True))
             .order_by(WordDetectionWordMedia.id)
         )
         return list(self.db.scalars(stmt).all())
@@ -200,7 +200,7 @@ class WordDetectionCurriculumRepository:
         stmt = (
             select(WordDetectionWordMedia.word_id, Media)
             .join(Media, WordDetectionWordMedia.media_id == Media.id)
-            .where(WordDetectionWordMedia.word_id.in_(word_ids))
+            .where(WordDetectionWordMedia.word_id.in_(word_ids), Media.is_active.is_(True))
             .order_by(WordDetectionWordMedia.word_id, WordDetectionWordMedia.id)
         )
         result: dict[int, list[Media]] = {word_id: [] for word_id in word_ids}

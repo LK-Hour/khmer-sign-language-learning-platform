@@ -187,7 +187,7 @@ export default function SentenceSpellingPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         title="Delete Sentence?"
-        message={`Are you sure you want to delete "${deleteTarget?.text_kh ?? ""}"? This action cannot be undone.`}
+        message={`"${deleteTarget?.text_kh ?? ""}" will be deactivated and hidden from learners. The data is kept, and you can re-activate it by editing the sentence.`}
         confirmLabel="Delete"
         loading={deleting}
       />

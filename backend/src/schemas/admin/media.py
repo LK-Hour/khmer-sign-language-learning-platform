@@ -39,6 +39,7 @@ class MediaResponse(BaseModel):
     id: int
     media_type: MediaType
     file_url: str
+    is_active: bool = True
     created_at: datetime | None = None
     associations: List[MediaAssociation] = []
 

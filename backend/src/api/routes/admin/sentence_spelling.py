@@ -4,7 +4,8 @@
     /api/admin/sentence_spelling/sentences/{id}  GET -single sentence detail
     /api/admin/sentence_spelling/sentences       POST-create a new sentence
     /api/admin/sentence_spelling/sentences/{id}  PUT -update a sentence
-    /api/admin/sentence_spelling/sentences/{id}  DELETE-delete a sentence
+    /api/admin/sentence_spelling/sentences/{id}  DELETE-soft-delete (is_active=false)
+    /api/admin/sentence_spelling/sentences/{id}/restore  POST-reactivate a sentence
 """
 
 from __future__ import annotations
@@ -151,17 +152,35 @@ def update_sentence(
 
 
 @router.delete("/sentences/{sentence_id}", status_code=204)
-def delete_sentence(
+def soft_delete_sentence(
     sentence_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
     rc: redis_lib.Redis = Depends(get_redis),
 ):
-    """Delete a sentence. Practice attempt history keeps its own denormalized
-    ``practiced_text`` copy, so deleting the sentence row does not lose it."""
+    """Soft-delete a sentence (``is_active=false``). The row and its practice
+    attempt history are kept; learners stop seeing it."""
     sentence = db.get(SentenceSpellingSentence, sentence_id)
     if not sentence:
         raise HTTPException(status_code=404, detail="Sentence not found")
-    db.delete(sentence)
+    sentence.is_active = False
     db.commit()
     cache_invalidate_pattern(rc, _CACHE_PATTERN)
+
+
+@router.post("/sentences/{sentence_id}/restore")
+def restore_sentence(
+    sentence_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+    rc: redis_lib.Redis = Depends(get_redis),
+):
+    """Reactivate a soft-deleted sentence."""
+    sentence = db.get(SentenceSpellingSentence, sentence_id)
+    if not sentence:
+        raise HTTPException(status_code=404, detail="Sentence not found")
+    sentence.is_active = True
+    db.commit()
+    db.refresh(sentence)
+    cache_invalidate_pattern(rc, _CACHE_PATTERN)
+    return _sentence_detail(sentence)

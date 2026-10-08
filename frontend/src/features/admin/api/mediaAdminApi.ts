@@ -14,6 +14,7 @@ export interface MediaResponse {
   id: number;
   media_type: "video" | "gif" | "image";
   file_url: string;
+  is_active?: boolean;
   created_at: string;
   associations: MediaAssociation[];
 }
@@ -74,7 +75,7 @@ export const uploadMedia = (file: File, mediaType: string) => {
 export const getMediaDetail = (id: number) =>
   apiFetch<MediaResponse>(`/api/admin/media/${id}`);
 
-/** Delete a media asset and its file. */
+/** Soft-delete a media asset (sets is_active=false; file and links are kept). */
 export const deleteMedia = (id: number) =>
   apiFetch<void>(`/api/admin/media/${id}`, { method: "DELETE" });
 

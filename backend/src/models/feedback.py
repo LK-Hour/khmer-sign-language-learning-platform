@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import BigInteger, DateTime, Enum as SQLEnum, ForeignKey, Index, String, Text, func
+from sqlalchemy import BigInteger, Boolean, DateTime, Enum as SQLEnum, ForeignKey, Index, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db.session import Base
@@ -50,6 +50,7 @@ class LessonFeedback(Base):
         nullable=False,
     )
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

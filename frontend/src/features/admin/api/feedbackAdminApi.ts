@@ -44,6 +44,6 @@ export const listFeedback = (params: ListFeedbackParams = {}) =>
     `/api/admin/feedback${buildQuery(params as Record<string, unknown>)}`,
   );
 
-/** Delete a feedback entry. */
+/** Soft-delete a feedback entry (sets is_active=false; data is kept). */
 export const deleteFeedback = (id: number) =>
   apiFetch<void>(`/api/admin/feedback/${id}`, { method: "DELETE" });

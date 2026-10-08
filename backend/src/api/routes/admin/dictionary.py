@@ -69,7 +69,7 @@ def _letter_detail(letter: FingerLetter, db: Session) -> dict:
     medias = (
         db.query(Media)
         .join(FingerLetterMedia, FingerLetterMedia.media_id == Media.id)
-        .filter(FingerLetterMedia.letter_id == letter.id)
+        .filter(FingerLetterMedia.letter_id == letter.id, Media.is_active.is_(True))
         .all()
     )
     return {
@@ -89,7 +89,7 @@ def _word_detail(word: WordDetectionWord, db: Session) -> dict:
     medias = (
         db.query(Media)
         .join(WordDetectionWordMedia, WordDetectionWordMedia.media_id == Media.id)
-        .filter(WordDetectionWordMedia.word_id == word.id)
+        .filter(WordDetectionWordMedia.word_id == word.id, Media.is_active.is_(True))
         .all()
     )
     return {
@@ -139,7 +139,8 @@ def list_characters(
     for letter in letters:
         media_count = (
             db.query(func.count(FingerLetterMedia.id))
-            .filter(FingerLetterMedia.letter_id == letter.id)
+            .join(Media, FingerLetterMedia.media_id == Media.id)
+            .filter(FingerLetterMedia.letter_id == letter.id, Media.is_active.is_(True))
             .scalar()
         )
         items.append(
@@ -197,7 +198,8 @@ def list_words(
     for word in words:
         media_count = (
             db.query(func.count(WordDetectionWordMedia.id))
-            .filter(WordDetectionWordMedia.word_id == word.id)
+            .join(Media, WordDetectionWordMedia.media_id == Media.id)
+            .filter(WordDetectionWordMedia.word_id == word.id, Media.is_active.is_(True))
             .scalar()
         )
         items.append(
@@ -344,31 +346,3 @@ def update_word(
     db.commit()
     db.refresh(word)
     return _word_detail(word, db)
-
-
-@router.delete("/characters/{character_id}", status_code=204)
-def delete_character(
-    character_id: int,
-    db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
-):
-    """Delete a letter. Cascades to its lesson associations and media links."""
-    letter = db.query(FingerLetter).filter(FingerLetter.id == character_id).first()
-    if not letter:
-        raise HTTPException(status_code=404, detail="Character not found")
-    db.delete(letter)
-    db.commit()
-
-
-@router.delete("/words/{word_id}", status_code=204)
-def delete_word(
-    word_id: int,
-    db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
-):
-    """Delete a word. Cascades to its lesson associations and media links."""
-    word = db.query(WordDetectionWord).filter(WordDetectionWord.id == word_id).first()
-    if not word:
-        raise HTTPException(status_code=404, detail="Word not found")
-    db.delete(word)
-    db.commit()

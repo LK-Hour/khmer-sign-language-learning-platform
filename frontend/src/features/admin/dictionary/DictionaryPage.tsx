@@ -9,12 +9,9 @@ import SearchInput from "../components/shared/SearchInput";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
 import StatusChip from "../components/shared/StatusChip";
 import RowActionsMenu from "../components/shared/RowActionsMenu";
-import ConfirmDialog from "../components/shared/ConfirmDialog";
 import {
   listCharacters,
   listWords,
-  deleteCharacter,
-  deleteWord,
   type DictionaryItem,
   type PaginatedDictionaryResponse,
 } from "../api/dictionaryAdminApi";
@@ -45,9 +42,6 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
   const [data, setData] = useState<PaginatedDictionaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [deleteTarget, setDeleteTarget] = useState<DictionaryItem | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const title = type === "characters" ? "Characters" : "Words";
   const basePath = `/${locale}/admin/dictionary/${type}`;
@@ -116,29 +110,10 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
       render: (row) => (
         <RowActionsMenu
           onEdit={() => router.push(`${basePath}/${row.id}/edit`)}
-          onDelete={() => setDeleteTarget(row)}
         />
       ),
     },
   ];
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      if (type === "characters") {
-        await deleteCharacter(deleteTarget.id);
-      } else {
-        await deleteWord(deleteTarget.id);
-      }
-      setDeleteTarget(null);
-      void loadData();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to delete item.");
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   return (
     <Box>
@@ -196,18 +171,6 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
 
       {/* Success notification from form submission */}
       <SuccessSnackbar />
-
-
-      {/* Delete confirmation */}
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title={`Delete ${type === "characters" ? "Character" : "Word"}?`}
-        message={`Are you sure you want to delete "${deleteTarget?.name_kh ?? ""}"? This action cannot be undone.`}
-        confirmLabel="Delete"
-        loading={deleting}
-      />
     </Box>
   );
 }

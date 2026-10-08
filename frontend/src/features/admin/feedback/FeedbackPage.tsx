@@ -372,7 +372,7 @@ export default function FeedbackPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         title="Delete Feedback?"
-        message="Are you sure you want to delete this feedback entry? This action cannot be undone."
+        message="This feedback entry will be deactivated and hidden from the list. The data is kept and can be restored later."
         confirmLabel="Delete"
         loading={deleting}
       />

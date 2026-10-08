@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, TYPE_CHECKING
 
-from sqlalchemy import BigInteger, DateTime, Enum as SQLEnum, String, func
+from sqlalchemy import BigInteger, Boolean, DateTime, Enum as SQLEnum, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.session import Base
@@ -55,6 +55,8 @@ class Media(Base):
         nullable=False,
     )
     file_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    # Soft-delete flag. DELETE sets it false; the file and links are kept.
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 

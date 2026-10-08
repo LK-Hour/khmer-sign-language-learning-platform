@@ -72,7 +72,7 @@ export const updateSentence = (id: number, body: Partial<SentencePayload>) =>
     body: JSON.stringify(body),
   });
 
-/** Delete a sentence. */
+/** Soft-delete a sentence (sets is_active=false; data is kept). */
 export const deleteSentence = (id: number) =>
   apiFetch<void>(`/api/admin/sentence_spelling/sentences/${id}`, {
     method: "DELETE",

@@ -90,7 +90,10 @@ class WordDetectionChapterPracticeRepository:
                 WordDetectionPracticeMedia,
                 WordDetectionPracticeMedia.media_id == Media.id,
             )
-            .where(WordDetectionPracticeMedia.practice_id == practice_id)
+            .where(
+                WordDetectionPracticeMedia.practice_id == practice_id,
+                Media.is_active.is_(True),
+            )
             .order_by(WordDetectionPracticeMedia.id)
         )
         return list(self.db.scalars(stmt).all())
