@@ -78,6 +78,8 @@ export function buildAccuracyChartOptions({
       strokeDashArray: 3,
       borderColor: GRID_COLOR,
       xaxis: { lines: { show: false } },
+      // Room above the 100% line so the stroke and markers there aren't clipped.
+      padding: { top: 16 },
     },
     markers: {
       size: markerSize,

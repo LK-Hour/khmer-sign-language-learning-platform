@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Button, Grid, Paper, Stack, Typography, alpha } from "@mui/material";
+import { Box, Button, Grid, Paper, Stack, Typography, alpha } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -147,6 +147,20 @@ export default function SentenceSpellingPracticeView({
     setCurrentIndex(index);
   }, []);
 
+  // The sentence as spelled so far: attempted characters in order, grouped into
+  // runs so Khmer shaping only breaks where a run turns from done to skipped.
+  const spelledRuns = useMemo(() => {
+    const runs: { text: string; skipped: boolean }[] = [];
+    characters.forEach((char, index) => {
+      const skipped = skippedIndices.has(index);
+      if (!skipped && !completedIndices.has(index)) return;
+      const last = runs[runs.length - 1];
+      if (last && last.skipped === skipped) last.text += char;
+      else runs.push({ text: char, skipped });
+    });
+    return runs;
+  }, [characters, completedIndices, skippedIndices]);
+
   // Memoized so the chart isn't handed fresh data (and re-animated) on every render.
   const accuracyPoints = useMemo(
     () =>
@@ -265,97 +279,140 @@ export default function SentenceSpellingPracticeView({
         }}
       >
         <Stack spacing={3} sx={{ alignItems: "center" }}>
-          {/* Once finished, show the sentence as one line of text; per-character
-              accuracy is in the chart below. */}
-          {isComplete ? (
-            <Typography
-              sx={{
-                fontFamily: fontFamilies.khmer,
-                fontSize: { xs: 28, md: 36 },
-                fontWeight: 700,
-                lineHeight: 1.6,
-                color: KslColors.primaryDark,
-                textAlign: "center",
-              }}
-            >
-              {text}
-            </Typography>
-          ) : (
-            <Stack
-              direction="row"
-              sx={{ flexWrap: "wrap", justifyContent: "center", columnGap: 1, rowGap: 1 }}
-            >
-              {characters?.map((char, index) => {
-                const state =
-                  index === currentIndex
-                    ? "now"
-                    : completedIndices.has(index)
-                      ? "done"
-                      : skippedIndices.has(index)
-                        ? "skipped"
-                        : "upcoming";
-                // Reachable = already attempted (confirmed or skipped) at some
-                // point, not just "before wherever we currently are"-so
-                // navigating back to an earlier character doesn't lock out
-                // characters already passed further ahead.
-                const isClickable = index <= maxReachedIndex && index !== currentIndex;
-                return (
-                  <Stack
-                    key={`${char}-${index}`}
-                    onClick={isClickable ? () => goToCharacter(index) : undefined}
-                    role={isClickable ? "button" : undefined}
-                    tabIndex={isClickable ? 0 : undefined}
-                    onKeyDown={
-                      isClickable
-                        ? (event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              goToCharacter(index);
-                            }
+          {/* The sentence as spelled so far, above the character blocks: done
+              characters in order, skipped ones in red. Once finished the blocks
+              also show each character's accuracy. */}
+          <Typography
+            aria-live="polite"
+            sx={{
+              minHeight: "1.6em",
+              fontFamily: fontFamilies.khmer,
+              fontSize: { xs: 28, md: 36 },
+              fontWeight: 700,
+              lineHeight: 1.6,
+              color: KslColors.primaryDark,
+              textAlign: "center",
+              wordBreak: "break-word",
+            }}
+          >
+            {spelledRuns.map((run, index) => (
+              <Box
+                key={index}
+                component="span"
+                sx={run.skipped ? { color: KslColors.fail } : undefined}
+              >
+                {run.text}
+              </Box>
+            ))}
+            {!isComplete ? (
+              <Box
+                component="span"
+                aria-hidden="true"
+                sx={{
+                  display: "inline-block",
+                  width: "2px",
+                  height: "1em",
+                  ml: 0.5,
+                  verticalAlign: "-0.1em",
+                  bgcolor: KslColors.primary,
+                  "@keyframes sentenceCaretBlink": { "50%": { opacity: 0 } },
+                  animation: "sentenceCaretBlink 1s step-end infinite",
+                }}
+              />
+            ) : null}
+          </Typography>
+
+          <Stack
+            direction="row"
+            sx={{ flexWrap: "wrap", justifyContent: "center", columnGap: 1, rowGap: 1 }}
+          >
+            {characters?.map((char, index) => {
+              const state =
+                index === currentIndex
+                  ? "now"
+                  : completedIndices.has(index)
+                    ? "done"
+                    : skippedIndices.has(index)
+                      ? "skipped"
+                      : "upcoming";
+              // Reachable = already attempted (confirmed or skipped) at some
+              // point, not just "before wherever we currently are"-so
+              // navigating back to an earlier character doesn't lock out
+              // characters already passed further ahead. Locked once the
+              // sentence is finished.
+              const isClickable =
+                !isComplete && index <= maxReachedIndex && index !== currentIndex;
+              return (
+                <Stack
+                  key={`${char}-${index}`}
+                  onClick={isClickable ? () => goToCharacter(index) : undefined}
+                  role={isClickable ? "button" : undefined}
+                  tabIndex={isClickable ? 0 : undefined}
+                  onKeyDown={
+                    isClickable
+                      ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            goToCharacter(index);
                           }
-                        : undefined
-                    }
-                    sx={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 52,
-                      height: 52,
-                      borderRadius: `${KslRadii.wordCard}px`,
-                      fontFamily: fontFamilies.khmer,
-                      fontSize: KslFontSizes.lg,
-                      fontWeight: 600,
-                      cursor: isClickable ? "pointer" : "default",
-                      transition: "opacity 0.15s ease",
-                      ...(isClickable ? { "&:hover": { opacity: 0.8 } } : {}),
-                      border: `1px solid ${
-                        state === "now"
-                          ? KslColors.primary
+                        }
+                      : undefined
+                  }
+                  sx={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 52,
+                    height: isComplete ? 68 : 52,
+                    borderRadius: `${KslRadii.wordCard}px`,
+                    fontFamily: fontFamilies.khmer,
+                    fontSize: KslFontSizes.lg,
+                    fontWeight: 600,
+                    cursor: isClickable ? "pointer" : "default",
+                    transition: "opacity 0.15s ease",
+                    ...(isClickable ? { "&:hover": { opacity: 0.8 } } : {}),
+                    border: `1px solid ${
+                      state === "now"
+                        ? KslColors.primary
+                        : state === "skipped"
+                          ? KslColors.fail
+                          : KslColors.border
+                    }`,
+                    bgcolor:
+                      state === "done"
+                        ? KslColors.primaryLighter
+                        : state === "now"
+                          ? KslColors.primaryLight
                           : state === "skipped"
-                            ? KslColors.fail
-                            : KslColors.border
-                      }`,
-                      bgcolor:
-                        state === "done"
-                          ? KslColors.primaryLighter
-                          : state === "now"
-                            ? KslColors.primaryLight
-                            : state === "skipped"
-                              ? alpha(KslColors.fail, 0.12)
-                              : "background.paper",
-                      color:
-                        state === "upcoming"
-                          ? KslColors.textSecondary
-                          : state === "skipped"
-                            ? KslColors.fail
-                            : KslColors.textPrimary,
-                    }}
-                  >
-                    {char}
-                  </Stack>
-                );
-              })}
-            </Stack>
-          )}
+                            ? alpha(KslColors.fail, 0.12)
+                            : "background.paper",
+                    color:
+                      state === "upcoming"
+                        ? KslColors.textSecondary
+                        : state === "skipped"
+                          ? KslColors.fail
+                          : KslColors.textPrimary,
+                  }}
+                >
+                  {char}
+                  {isComplete && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontFamily: fontFamilies.sans,
+                        fontSize: KslFontSizes.xs,
+                        fontWeight: 700,
+                        lineHeight: 1.2,
+                        mt: 0.75,
+                        opacity: 0.85,
+                      }}
+                    >
+                      {Math.round(Math.min(100, Math.max(0, accuracyByIndex.get(index) ?? 0)))}%
+                    </Typography>
+                  )}
+                </Stack>
+              );
+            })}
+          </Stack>
 
           {!isComplete ? (
             <Stack spacing={2.5} sx={{ width: "100%" }}>

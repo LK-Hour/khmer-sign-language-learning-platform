@@ -52,6 +52,10 @@ describe("buildAccuracyChartOptions", () => {
     expect([0, 20, 40, 60, 80, 100].map(format)).toEqual(["0%", "20%", "40%", "60%", "80%", "100%"]);
   });
 
+  it("pads the top of the plot so points at 100% are not clipped", () => {
+    expect(build().grid?.padding?.top).toBeGreaterThan(0);
+  });
+
   it("keeps the characters off the x axis (they only appear in the tooltip)", () => {
     const { xaxis } = build();
     expect(xaxis?.labels?.show).toBe(false);

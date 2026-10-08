@@ -24,7 +24,7 @@ const MISMATCH_CONFIG = {
   /** ~0.8 s of a steady wrong sign at the 100 ms sampling rate. */
   holdFrames: 8,
   /** Ignore low-confidence guesses, typically a hand moving between shapes. */
-  minConfidence: 60,
+  minConfidence: 75,
   /** At most one fail every 2.5 s, even if the wrong sign is held. */
   cooldownMs: 2500,
   /** Quiet time after a new character appears, while the last sign is released. */
