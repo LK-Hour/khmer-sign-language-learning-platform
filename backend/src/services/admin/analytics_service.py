@@ -34,7 +34,18 @@ from src.schemas.admin.analytics import (
 
 
 class AnalyticsService:
-    """Encapsulates all analytics queries for the admin dashboard."""
+    """Encapsulates all analytics queries for the admin dashboard.
+
+    Every metric is scoped to learner accounts (``User.account_type ==
+    "student"``) so an admin's own logins, progress, or activity never
+    skews the numbers. ``lesson_feedback`` has no ``user_id`` column (it's
+    anonymous), so ``_feedback_distribution`` is the one metric that can't
+    be scoped this way.
+    """
+
+    #: Reused everywhere a query touches `users` directly, so "student" stays
+    #: the single definition of who counts toward these metrics.
+    STUDENT_FILTER = User.account_type == "student"
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -76,6 +87,7 @@ class AnalyticsService:
         base_filter = and_(
             User.is_guest == False,  # noqa: E712
             User.is_active == True,  # noqa: E712
+            self.STUDENT_FILTER,
         )
 
         # Total count (all time up to now)
@@ -111,14 +123,16 @@ class AnalyticsService:
         # Current window: users with a valid token OR last_login_at within 7 days
         token_users_current = (
             self.db.query(RefreshToken.user_id)
+            .join(User, User.id == RefreshToken.user_id)
             .filter(
                 RefreshToken.revoked == False,  # noqa: E712
                 RefreshToken.expires_at > now,
+                self.STUDENT_FILTER,
             )
         )
         login_users_current = (
             self.db.query(User.id.label("user_id"))
-            .filter(User.last_login_at >= seven_days_ago)
+            .filter(User.last_login_at >= seven_days_ago, self.STUDENT_FILTER)
         )
         combined_current = union_all(
             token_users_current.subquery().select(),
@@ -136,6 +150,7 @@ class AnalyticsService:
             .filter(
                 User.last_login_at >= fourteen_days_ago,
                 User.last_login_at < seven_days_ago,
+                self.STUDENT_FILTER,
             )
             .scalar()
         ) or 0
@@ -154,9 +169,11 @@ class AnalyticsService:
         # Current month completions (finger)
         finger_current = (
             self.db.query(func.count(FingerUserLessonProgress.id))
+            .join(User, User.id == FingerUserLessonProgress.user_id)
             .filter(
                 FingerUserLessonProgress.is_completed == True,  # noqa: E712
                 FingerUserLessonProgress.completed_at >= current_month_start,
+                self.STUDENT_FILTER,
             )
             .scalar()
         ) or 0
@@ -164,9 +181,11 @@ class AnalyticsService:
         # Current month completions (word detection)
         word_current = (
             self.db.query(func.count(WordDetectionUserLessonProgress.id))
+            .join(User, User.id == WordDetectionUserLessonProgress.user_id)
             .filter(
                 WordDetectionUserLessonProgress.is_completed == True,  # noqa: E712
                 WordDetectionUserLessonProgress.completed_at >= current_month_start,
+                self.STUDENT_FILTER,
             )
             .scalar()
         ) or 0
@@ -174,10 +193,12 @@ class AnalyticsService:
         # Previous month completions (finger)
         finger_previous = (
             self.db.query(func.count(FingerUserLessonProgress.id))
+            .join(User, User.id == FingerUserLessonProgress.user_id)
             .filter(
                 FingerUserLessonProgress.is_completed == True,  # noqa: E712
                 FingerUserLessonProgress.completed_at >= previous_month_start,
                 FingerUserLessonProgress.completed_at < current_month_start,
+                self.STUDENT_FILTER,
             )
             .scalar()
         ) or 0
@@ -185,10 +206,12 @@ class AnalyticsService:
         # Previous month completions (word detection)
         word_previous = (
             self.db.query(func.count(WordDetectionUserLessonProgress.id))
+            .join(User, User.id == WordDetectionUserLessonProgress.user_id)
             .filter(
                 WordDetectionUserLessonProgress.is_completed == True,  # noqa: E712
                 WordDetectionUserLessonProgress.completed_at >= previous_month_start,
                 WordDetectionUserLessonProgress.completed_at < current_month_start,
+                self.STUDENT_FILTER,
             )
             .scalar()
         ) or 0
@@ -214,15 +237,18 @@ class AnalyticsService:
         )
         current_count = (
             self.db.query(func.count(FingerUserExerciseProgress.id))
-            .filter(ts >= current_month_start)
+            .join(User, User.id == FingerUserExerciseProgress.user_id)
+            .filter(ts >= current_month_start, self.STUDENT_FILTER)
             .scalar()
         ) or 0
 
         previous_count = (
             self.db.query(func.count(FingerUserExerciseProgress.id))
+            .join(User, User.id == FingerUserExerciseProgress.user_id)
             .filter(
                 ts >= previous_month_start,
                 ts < current_month_start,
+                self.STUDENT_FILTER,
             )
             .scalar()
         ) or 0
@@ -255,18 +281,21 @@ class AnalyticsService:
 
         current_avg = (
             self.db.query(func.avg(score_expr))
+            .join(User, User.id == FingerUserExerciseProgress.user_id)
             .filter(base_filter)
-            .filter(ts >= current_month_start)
+            .filter(ts >= current_month_start, self.STUDENT_FILTER)
             .scalar()
         )
         current_avg = float(current_avg) if current_avg is not None else 0.0
 
         previous_avg = (
             self.db.query(func.avg(score_expr))
+            .join(User, User.id == FingerUserExerciseProgress.user_id)
             .filter(base_filter)
             .filter(
                 ts >= previous_month_start,
                 ts < current_month_start,
+                self.STUDENT_FILTER,
             )
             .scalar()
         )
@@ -287,38 +316,42 @@ class AnalyticsService:
         finger_current = self.db.query(
             func.avg(FingerUserLessonProgress.predicted_confidence * 100),
             func.count(FingerUserLessonProgress.id),
-        ).filter(
+        ).join(User, User.id == FingerUserLessonProgress.user_id).filter(
             FingerUserLessonProgress.predicted_confidence.isnot(None),
             FingerUserLessonProgress.created_at >= current_month_start,
+            self.STUDENT_FILTER,
         ).one()
 
         # Word detection - current month
         word_current = self.db.query(
             func.avg(WordDetectionUserLessonProgress.predicted_confidence * 100),
             func.count(WordDetectionUserLessonProgress.id),
-        ).filter(
+        ).join(User, User.id == WordDetectionUserLessonProgress.user_id).filter(
             WordDetectionUserLessonProgress.predicted_confidence.isnot(None),
             WordDetectionUserLessonProgress.created_at >= current_month_start,
+            self.STUDENT_FILTER,
         ).one()
 
         # Finger spelling - previous month
         finger_previous = self.db.query(
             func.avg(FingerUserLessonProgress.predicted_confidence * 100),
             func.count(FingerUserLessonProgress.id),
-        ).filter(
+        ).join(User, User.id == FingerUserLessonProgress.user_id).filter(
             FingerUserLessonProgress.predicted_confidence.isnot(None),
             FingerUserLessonProgress.created_at >= previous_month_start,
             FingerUserLessonProgress.created_at < current_month_start,
+            self.STUDENT_FILTER,
         ).one()
 
         # Word detection - previous month
         word_previous = self.db.query(
             func.avg(WordDetectionUserLessonProgress.predicted_confidence * 100),
             func.count(WordDetectionUserLessonProgress.id),
-        ).filter(
+        ).join(User, User.id == WordDetectionUserLessonProgress.user_id).filter(
             WordDetectionUserLessonProgress.predicted_confidence.isnot(None),
             WordDetectionUserLessonProgress.created_at >= previous_month_start,
             WordDetectionUserLessonProgress.created_at < current_month_start,
+            self.STUDENT_FILTER,
         ).one()
 
         # Compute weighted average across both tables
@@ -373,10 +406,12 @@ class AnalyticsService:
             # token created before month_end AND expires_at > month_start AND not revoked
             token_users = (
                 self.db.query(RefreshToken.user_id)
+                .join(User, User.id == RefreshToken.user_id)
                 .filter(
                     RefreshToken.created_at < month_end,
                     RefreshToken.expires_at > month_start,
                     RefreshToken.revoked == False,  # noqa: E712
+                    self.STUDENT_FILTER,
                 )
             )
 
@@ -386,6 +421,7 @@ class AnalyticsService:
                 .filter(
                     User.last_login_at >= month_start,
                     User.last_login_at < month_end,
+                    self.STUDENT_FILTER,
                 )
             )
 
@@ -414,7 +450,8 @@ class AnalyticsService:
         """
         finger_completed = (
             self.db.query(func.count(FingerUserLessonProgress.id))
-            .filter(FingerUserLessonProgress.is_completed == True)  # noqa: E712
+            .join(User, User.id == FingerUserLessonProgress.user_id)
+            .filter(FingerUserLessonProgress.is_completed == True, self.STUDENT_FILTER)  # noqa: E712
             .scalar()
         ) or 0
 
@@ -425,7 +462,8 @@ class AnalyticsService:
 
         word_completed = (
             self.db.query(func.count(WordDetectionUserLessonProgress.id))
-            .filter(WordDetectionUserLessonProgress.is_completed == True)  # noqa: E712
+            .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+            .filter(WordDetectionUserLessonProgress.is_completed == True, self.STUDENT_FILTER)  # noqa: E712
             .scalar()
         ) or 0
 
@@ -454,7 +492,8 @@ class AnalyticsService:
         # Finger Spelling track
         finger_completed = (
             self.db.query(func.count(FingerUserLessonProgress.id))
-            .filter(FingerUserLessonProgress.is_completed == True)  # noqa: E712
+            .join(User, User.id == FingerUserLessonProgress.user_id)
+            .filter(FingerUserLessonProgress.is_completed == True, self.STUDENT_FILTER)  # noqa: E712
             .scalar()
         ) or 0
 
@@ -468,7 +507,8 @@ class AnalyticsService:
         # Word Detection track
         word_completed = (
             self.db.query(func.count(WordDetectionUserLessonProgress.id))
-            .filter(WordDetectionUserLessonProgress.is_completed == True)  # noqa: E712
+            .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+            .filter(WordDetectionUserLessonProgress.is_completed == True, self.STUDENT_FILTER)  # noqa: E712
             .scalar()
         ) or 0
 
@@ -497,6 +537,8 @@ class AnalyticsService:
                 FingerLesson.name_kh.label("name_kh"),
             )
             .join(FingerLesson, FingerLesson.id == FingerUserLessonProgress.finger_lesson_id)
+            .join(User, User.id == FingerUserLessonProgress.user_id)
+            .filter(self.STUDENT_FILTER)
             .group_by(FingerUserLessonProgress.finger_lesson_id, FingerLesson.name_kh)
         )
 
@@ -511,6 +553,8 @@ class AnalyticsService:
                 WordDetectionLesson,
                 WordDetectionLesson.id == WordDetectionUserLessonProgress.word_detection_lesson_id,
             )
+            .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+            .filter(self.STUDENT_FILTER)
             .group_by(
                 WordDetectionUserLessonProgress.word_detection_lesson_id,
                 WordDetectionLesson.name_kh,
@@ -556,7 +600,8 @@ class AnalyticsService:
                 FingerLesson.name_kh.label("name_kh"),
             )
             .join(FingerLesson, FingerLesson.id == FingerUserLessonProgress.finger_lesson_id)
-            .filter(FingerUserLessonProgress.predicted_confidence.isnot(None))
+            .join(User, User.id == FingerUserLessonProgress.user_id)
+            .filter(FingerUserLessonProgress.predicted_confidence.isnot(None), self.STUDENT_FILTER)
             .group_by(FingerUserLessonProgress.finger_lesson_id, FingerLesson.name_kh)
         )
 
@@ -571,7 +616,8 @@ class AnalyticsService:
                 WordDetectionLesson,
                 WordDetectionLesson.id == WordDetectionUserLessonProgress.word_detection_lesson_id,
             )
-            .filter(WordDetectionUserLessonProgress.predicted_confidence.isnot(None))
+            .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+            .filter(WordDetectionUserLessonProgress.predicted_confidence.isnot(None), self.STUDENT_FILTER)
             .group_by(
                 WordDetectionUserLessonProgress.word_detection_lesson_id,
                 WordDetectionLesson.name_kh,
@@ -608,6 +654,7 @@ class AnalyticsService:
                 LessonFeedback.type,
                 func.count(LessonFeedback.id).label("count"),
             )
+            .filter(LessonFeedback.is_active.is_(True))
             .group_by(LessonFeedback.type)
             .all()
         )

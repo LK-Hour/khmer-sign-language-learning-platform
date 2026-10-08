@@ -59,20 +59,28 @@ def get_overview_stats(
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    """Aggregate total_users, total_lessons_completed, active_learners_today."""
+    """Aggregate total_users, total_lessons_completed, active_learners_today.
+
+    Scoped to learner accounts (``account_type == "student"``) so admin
+    accounts never inflate these numbers.
+    """
+    student_filter = User.account_type == "student"
+
     # Total registered users
-    total_users = db.query(func.count(User.id)).scalar() or 0
+    total_users = db.query(func.count(User.id)).filter(student_filter).scalar() or 0
 
     # Total lessons completed across both tracks
     finger_completed = (
         db.query(func.count(FingerUserLessonProgress.id))
-        .filter(FingerUserLessonProgress.is_completed.is_(True))
+        .join(User, User.id == FingerUserLessonProgress.user_id)
+        .filter(FingerUserLessonProgress.is_completed.is_(True), student_filter)
         .scalar()
         or 0
     )
     word_completed = (
         db.query(func.count(WordDetectionUserLessonProgress.id))
-        .filter(WordDetectionUserLessonProgress.is_completed.is_(True))
+        .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+        .filter(WordDetectionUserLessonProgress.is_completed.is_(True), student_filter)
         .scalar()
         or 0
     )
@@ -86,19 +94,21 @@ def get_overview_stats(
     # Users who logged in recently-label as "uid" for consistent union
     login_active = (
         db.query(User.id.label("uid"))
-        .filter(User.last_login_at >= twenty_four_hours_ago)
+        .filter(User.last_login_at >= twenty_four_hours_ago, student_filter)
     )
 
     # Users with finger spelling progress in last 24 hours
     finger_active = (
         db.query(FingerUserLessonProgress.user_id.label("uid"))
-        .filter(FingerUserLessonProgress.last_practiced_at >= twenty_four_hours_ago)
+        .join(User, User.id == FingerUserLessonProgress.user_id)
+        .filter(FingerUserLessonProgress.last_practiced_at >= twenty_four_hours_ago, student_filter)
     )
 
     # Users with word detection progress in last 24 hours
     word_active = (
         db.query(WordDetectionUserLessonProgress.user_id.label("uid"))
-        .filter(WordDetectionUserLessonProgress.last_practiced_at >= twenty_four_hours_ago)
+        .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+        .filter(WordDetectionUserLessonProgress.last_practiced_at >= twenty_four_hours_ago, student_filter)
     )
 
     # Union all active user IDs and count distinct
@@ -119,12 +129,19 @@ def get_track_completion(
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    """Per-track completion rates."""
+    """Per-track completion rates.
+
+    Scoped to learner accounts (``account_type == "student"``) so admin
+    accounts never inflate these numbers.
+    """
+    student_filter = User.account_type == "student"
+
     # Finger spelling track
     finger_total_lessons = db.query(func.count(FingerLesson.id)).scalar() or 0
     finger_completed_lessons = (
         db.query(func.count(distinct(FingerUserLessonProgress.finger_lesson_id)))
-        .filter(FingerUserLessonProgress.is_completed.is_(True))
+        .join(User, User.id == FingerUserLessonProgress.user_id)
+        .filter(FingerUserLessonProgress.is_completed.is_(True), student_filter)
         .scalar()
         or 0
     )
@@ -138,7 +155,8 @@ def get_track_completion(
     word_total_lessons = db.query(func.count(WordDetectionLesson.id)).scalar() or 0
     word_completed_lessons = (
         db.query(func.count(distinct(WordDetectionUserLessonProgress.word_detection_lesson_id)))
-        .filter(WordDetectionUserLessonProgress.is_completed.is_(True))
+        .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+        .filter(WordDetectionUserLessonProgress.is_completed.is_(True), student_filter)
         .scalar()
         or 0
     )
@@ -170,7 +188,12 @@ def get_leaderboard(
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    """Top 10 users by lessons completed across both tracks."""
+    """Top 10 users by lessons completed across both tracks.
+
+    Scoped to learner accounts (``account_type == "student"``) so an admin
+    account never shows up on the leaderboard.
+    """
+    student_filter = User.account_type == "student"
     # Count completed lessons per user from finger spelling
     finger_counts = (
         db.query(
@@ -236,7 +259,8 @@ def get_leaderboard(
         .outerjoin(word_last, User.id == word_last.c.user_id)
         .filter(
             # Only include users who completed at least one lesson
-            (func.coalesce(finger_counts.c.completed, 0) + func.coalesce(word_counts.c.completed, 0)) > 0
+            (func.coalesce(finger_counts.c.completed, 0) + func.coalesce(word_counts.c.completed, 0)) > 0,
+            student_filter,
         )
         .order_by(total_completed.desc())
         .limit(limit)
@@ -265,7 +289,13 @@ def get_lesson_difficulty(
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
 ):
-    """Per-lesson avg_attempts, completion_rate, unique_users."""
+    """Per-lesson avg_attempts, completion_rate, unique_users.
+
+    Scoped to learner accounts (``account_type == "student"``) so admin
+    accounts never skew these numbers.
+    """
+    student_filter = User.account_type == "student"
+
     if track == "finger":
         # Query finger spelling lesson difficulty
         results = (
@@ -289,6 +319,8 @@ def get_lesson_difficulty(
                 FingerUserLessonProgress,
                 FingerLesson.id == FingerUserLessonProgress.finger_lesson_id,
             )
+            .join(User, User.id == FingerUserLessonProgress.user_id)
+            .filter(student_filter)
             .group_by(FingerLesson.id, FingerLesson.name_kh)
             .all()
         )
@@ -315,6 +347,8 @@ def get_lesson_difficulty(
                 WordDetectionUserLessonProgress,
                 WordDetectionLesson.id == WordDetectionUserLessonProgress.word_detection_lesson_id,
             )
+            .join(User, User.id == WordDetectionUserLessonProgress.user_id)
+            .filter(student_filter)
             .group_by(WordDetectionLesson.id, WordDetectionLesson.name_kh)
             .all()
         )
