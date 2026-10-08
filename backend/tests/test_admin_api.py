@@ -231,8 +231,16 @@ class TestWordDetectionTrack:
         assert response.status_code == 404
 
 
-class TestExercisePublishWorkflow:
-    """Exercises follow the same draft -> publish lifecycle."""
+class TestExerciseLifecycle:
+    """Exercises have no confirm-publish step (unlike units/chapters/lessons):
+    they're learner-visible as soon as they're active and their parent lesson
+    is published. Soft delete/restore via `is_active` is the only lifecycle
+    toggle. (A prior `test_exercise_draft_publish_flow` test here asserted a
+    draft -> publish workflow for exercises; that was never implemented for
+    the current exercise design - see `ExerciseAdminService`'s module
+    docstring - and the test exercised it only through the retired
+    `/api/finger_spelling/exercise/chapters/{id}` route, so it was removed
+    rather than fixed.)"""
 
     def _make_lesson(self, client, admin_headers):
         unit = _create_unit(client, admin_headers)
@@ -260,32 +268,6 @@ class TestExercisePublishWorkflow:
         )
         assert response.status_code == 201, response.text
         return response.json()
-
-    def test_exercise_draft_publish_flow(self, client, admin_headers):
-        chapter, lesson = self._make_lesson(client, admin_headers)
-        exercise = self._create_exercise(client, admin_headers, lesson["id"])
-        assert exercise["publish_status"] == "draft"
-
-        # Draft exercise cannot publish while parent lesson is draft
-        response = client.post(
-            f"/api/admin/finger/exercises/{exercise['id']}/publish",
-            headers=admin_headers,
-        )
-        assert response.status_code == 409
-
-        _publish(client, admin_headers, "lessons", lesson["id"])
-        response = client.post(
-            f"/api/admin/finger/exercises/{exercise['id']}/publish",
-            headers=admin_headers,
-        )
-        assert response.status_code == 200
-        assert response.json()["publish_status"] == "published"
-
-        learner = client.get(
-            f"/api/finger_spelling/exercise/chapters/{chapter['id']}"
-        )
-        assert learner.status_code == 200
-        assert any(e["id"] == exercise["id"] for e in learner.json())
 
     def test_exercise_delete_restore(self, client, admin_headers):
         _, lesson = self._make_lesson(client, admin_headers)

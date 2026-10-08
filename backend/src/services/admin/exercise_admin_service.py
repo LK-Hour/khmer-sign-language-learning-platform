@@ -1,20 +1,17 @@
 """Track-aware admin service for exercise and option management.
 
-Exercises follow the confirm-publish workflow: create/update produce ``draft``
-rows hidden from learners; an explicit publish action makes them live. Options
-have no publish state of their own-they go live together with their parent
-exercise's publish action.
+Unlike units/chapters/lessons, exercises don't go through a confirm-publish
+step: an exercise is learner-visible as soon as it's ``is_active`` and its
+parent lesson is published (see ``FingerExerciseRepository.list_exercises_for_unit``
+and its word-detection equivalent, which never look at a per-exercise publish
+state). Soft delete via ``is_active`` is the only lifecycle toggle here.
 """
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from src.models.publishable import PUBLISH_STATUS_DRAFT, PUBLISH_STATUS_PUBLISHED
 from src.schemas.admin.exercise import (
     ExerciseCreate,
     ExerciseOptionCreate,
@@ -39,6 +36,16 @@ class ExerciseAdminService:
 
     def _get_lesson(self, lesson_id: int):
         return self.db.get(self.config.lesson_model, lesson_id)
+
+    def _unit_id_for_lesson(self, lesson_id: int) -> int | None:
+        """`finger_exercises.unit_id` / `word_detection_exercises.unit_id` are NOT NULL
+        (added for direct unit-scoped queries, e.g. quiz question pools), but the admin
+        only picks a lesson, so this derives it via lesson -> chapter -> unit."""
+        lesson = self._get_lesson(lesson_id)
+        if lesson is None:
+            return None
+        chapter = self.db.get(self.config.chapter_model, lesson.chapter_id)
+        return chapter.unit_id if chapter is not None else None
 
     def _get_exercise(self, exercise_id: int):
         stmt = (
@@ -65,7 +72,6 @@ class ExerciseAdminService:
         chapter_id: int | None = None,
         unit_id: int | None = None,
         active_only: bool = False,
-        status: str | None = None,
     ):
         stmt = select(self.config.exercise_model).options(
             selectinload(self.config.exercise_model.options)
@@ -81,8 +87,6 @@ class ExerciseAdminService:
             stmt = stmt.where(self.config.exercise_model.lesson_id == lesson_id)
         if active_only:
             stmt = stmt.where(self.config.exercise_model.is_active.is_(True))
-        if status:
-            stmt = stmt.where(self.config.exercise_model.publish_status == status)
         stmt = stmt.order_by(
             self.config.exercise_model.lesson_id,
             self.config.exercise_model.order_index,
@@ -93,14 +97,15 @@ class ExerciseAdminService:
         return exercises
 
     def create_exercise(self, body: ExerciseCreate):
-        if self._get_lesson(body.lesson_id) is None:
+        unit_id = self._unit_id_for_lesson(body.lesson_id)
+        if unit_id is None:
             return None
 
         exercise_data = body.model_dump(exclude={"options"})
         exercise_data["exercise_type"] = self._validate_exercise_type(
             body.exercise_type
         )
-        exercise_data["publish_status"] = PUBLISH_STATUS_DRAFT
+        exercise_data["unit_id"] = unit_id
         exercise = self.config.exercise_model(**exercise_data)
         self.db.add(exercise)
         self.db.flush()
@@ -126,13 +131,17 @@ class ExerciseAdminService:
 
         update_data = body.model_dump(exclude_unset=True)
         lesson_id = update_data.get("lesson_id")
-        if lesson_id is not None and self._get_lesson(lesson_id) is None:
-            return None
+        if lesson_id is not None:
+            # Moving the exercise to a lesson in a different chapter/unit must keep
+            # unit_id in sync-it's what the learner-facing quiz pool queries filter on.
+            unit_id = self._unit_id_for_lesson(lesson_id)
+            if unit_id is None:
+                return None
+            update_data["unit_id"] = unit_id
         if "exercise_type" in update_data:
             update_data["exercise_type"] = self._validate_exercise_type(
                 update_data["exercise_type"]
             )
-        update_data["publish_status"] = PUBLISH_STATUS_DRAFT
 
         for field, value in update_data.items():
             setattr(exercise, field, value)
@@ -153,27 +162,6 @@ class ExerciseAdminService:
         if exercise is None:
             return None
         exercise.is_active = True
-        self.db.commit()
-        return self._get_exercise(exercise_id)
-
-    def publish_exercise(self, exercise_id: int, actor_id: uuid.UUID | None):
-        exercise = self._get_exercise(exercise_id)
-        if exercise is None:
-            return None
-        if not exercise.is_active:
-            raise ValueError("Cannot publish an inactive exercise. Restore it first.")
-        lesson = self._get_lesson(exercise.lesson_id)
-        if (
-            lesson is None
-            or not lesson.is_active
-            or lesson.publish_status != PUBLISH_STATUS_PUBLISHED
-        ):
-            raise ValueError(
-                "Cannot publish this exercise: its parent lesson is not published and active."
-            )
-        exercise.publish_status = PUBLISH_STATUS_PUBLISHED
-        exercise.published_at = datetime.now()
-        exercise.published_by = actor_id
         self.db.commit()
         return self._get_exercise(exercise_id)
 

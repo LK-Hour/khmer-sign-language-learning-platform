@@ -7,13 +7,13 @@ Supports the required exercise types per track. For Finger Spelling:
     /api/admin/{track}/exercises             GET  POST
     /api/admin/{track}/exercises/{id}        GET  PUT  DELETE
     /api/admin/{track}/exercises/{id}/restore              POST
-    /api/admin/{track}/exercises/{id}/publish              POST
     /api/admin/{track}/exercises/{id}/options              POST
     /api/admin/{track}/exercise-options/{id}               PUT  DELETE
     /api/admin/{track}/exercise-options/{id}/restore       POST
 
-Create/update save exercises as ``draft`` (not learner-visible); the publish
-endpoint is the explicit confirm action that makes them live.
+Unlike units/chapters/lessons, exercises have no confirm-publish step: an
+exercise is learner-visible as soon as it's active and its parent lesson is
+published. ``DELETE`` toggles ``is_active`` (soft delete).
 """
 
 from __future__ import annotations
@@ -54,7 +54,6 @@ def list_exercises(
     chapter_id: int | None = Query(None),
     unit_id: int | None = Query(None),
     active_only: bool = Query(False),
-    publish_status: str | None = Query(None, alias="status"),
     db: Session = Depends(get_db),
 ):
     return _svc(track, db).list_exercises(
@@ -62,7 +61,6 @@ def list_exercises(
         chapter_id=chapter_id,
         unit_id=unit_id,
         active_only=active_only,
-        status=publish_status,
     )
 
 
@@ -111,22 +109,6 @@ def soft_delete_exercise(track: str, exercise_id: int, db: Session = Depends(get
 @router.post("/exercises/{exercise_id}/restore", response_model=ExerciseResponse)
 def restore_exercise(track: str, exercise_id: int, db: Session = Depends(get_db)):
     result = _svc(track, db).restore_exercise(exercise_id)
-    if result is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Exercise not found")
-    return result
-
-
-@router.post("/exercises/{exercise_id}/publish", response_model=ExerciseResponse)
-def publish_exercise(
-    track: str,
-    exercise_id: int,
-    db: Session = Depends(get_db),
-    user=Depends(get_admin_user),
-):
-    try:
-        result = _svc(track, db).publish_exercise(exercise_id, user.id)
-    except ValueError as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     if result is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Exercise not found")
     return result

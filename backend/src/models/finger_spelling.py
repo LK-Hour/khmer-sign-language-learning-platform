@@ -225,6 +225,9 @@ class FingerExercise(Base):
         nullable=False,
     )
     media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
+    # Finger-spelling exercise types are all option-based (no free_form type), so this
+    # is always None here; kept for parity with the shared admin exercise schema.
+    correct_answer: Mapped[Optional[str]] = mapped_column(Text)
     explanation_en: Mapped[Optional[str]] = mapped_column(Text)
     explanation_kh: Mapped[Optional[str]] = mapped_column(Text)
     order_index: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)

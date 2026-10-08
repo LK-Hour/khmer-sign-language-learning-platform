@@ -230,6 +230,9 @@ class WordDetectionExercise(Base):
         nullable=False,
     )
     media_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("medias.id"))
+    # Answer key for the free_form exercise type; read by
+    # WordDetectionExerciseService._grade_exercise for exact-match (casefolded) grading.
+    correct_answer: Mapped[Optional[str]] = mapped_column(Text)
     description_en: Mapped[Optional[str]] = mapped_column(Text)
     description_kh: Mapped[Optional[str]] = mapped_column(Text)
     order_index: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
