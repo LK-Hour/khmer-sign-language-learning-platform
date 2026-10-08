@@ -37,6 +37,12 @@ from src.utils.refresh_tokens import create_refresh_token
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth/login", tags=["auth"])
+
+# "Remember me" refresh-token lifetime. Admin sessions get a much shorter window than
+# student sessions: an admin account can change curriculum content and other users'
+# accounts, so a stolen/forgotten session on a shared device is higher-stakes.
+REMEMBER_ME_REFRESH_DAYS = 30
+REMEMBER_ME_REFRESH_DAYS_ADMIN = 3
 FRONTEND_URL = settings.frontend_url
 TELEGRAM_REDIRECT_PARAM = "redirect_to"
 
@@ -411,7 +417,13 @@ def email_login(
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    refresh_days = 30 if body.remember_me else None
+    refresh_days = None
+    if body.remember_me:
+        refresh_days = (
+            REMEMBER_ME_REFRESH_DAYS_ADMIN
+            if user.account_type == "admin"
+            else REMEMBER_ME_REFRESH_DAYS
+        )
     return _auth_response_for_user(
         db=db,
         user=user,

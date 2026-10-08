@@ -136,11 +136,39 @@ class TestAuthAPI:
             },
         )
         assert response.status_code == 200
-        assert "Max-Age=259200" in response.headers.get("set-cookie", "")
+        # Exact attribute match, not a substring check-"Max-Age=259200" is also a
+        # substring of the (wrong) 30-day value "Max-Age=2592000", which previously
+        # let this assertion pass even while the lifetime below was actually 30.
+        cookie_attrs = {
+            part.strip() for part in response.headers.get("set-cookie", "").split(";")
+        }
+        assert "Max-Age=259200" in cookie_attrs
         user = db.query(User).filter(User.email == test_admin_data["email"]).one()
         token = db.query(RefreshToken).filter(RefreshToken.user_id == user.id).one()
         assert token.lifetime_days == 3
-    
+
+    def test_student_remember_me_uses_thirty_day_refresh_lifetime(
+        self, client, db, test_user_data, seed_user
+    ):
+        """Only admin sessions get the shortened lifetime; students keep 30 days."""
+        seed_user(test_user_data)
+        response = client.post(
+            "/api/auth/login/email",
+            json={
+                "email": test_user_data["email"],
+                "password": test_user_data["password"],
+                "remember_me": True,
+            },
+        )
+        assert response.status_code == 200
+        cookie_attrs = {
+            part.strip() for part in response.headers.get("set-cookie", "").split(";")
+        }
+        assert "Max-Age=2592000" in cookie_attrs
+        user = db.query(User).filter(User.email == test_user_data["email"]).one()
+        token = db.query(RefreshToken).filter(RefreshToken.user_id == user.id).one()
+        assert token.lifetime_days == 30
+
     def test_login_invalid_credentials(self, client, test_user_data, seed_user):
         """Test login with invalid credentials"""
         # Register user first

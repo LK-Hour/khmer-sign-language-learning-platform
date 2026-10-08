@@ -119,7 +119,7 @@ def update_user(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK, response_model=UserResponse)
-def delete_user(
+def soft_delete_user(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

@@ -112,6 +112,30 @@ def _reset_rate_limits():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _reset_app_cache():
+    """Clear response-cache keys before each test.
+
+    Several read endpoints cache their response in the shared Redis instance for a
+    short TTL (e.g. ``ksl:cache:contributions:tree``, ``ksl:cache:public:dict:*``),
+    keyed independently of any per-test state. A test that writes new data and then
+    reads it back through a cached endpoint can otherwise get another test's (or an
+    earlier run's) stale cached response-order- and timing-dependent failures that
+    have nothing to do with the code under test. Routes should still invalidate
+    their own cache key on writes they own; this is defense in depth for the ones
+    that don't (or that this test run happens to be the one exercising).
+    """
+    from src.core.redis import get_redis_client
+
+    try:
+        rc = get_redis_client()
+        for key in rc.scan_iter(match="ksl:cache:*"):
+            rc.delete(key)
+    except Exception:
+        pass
+    yield
+
+
 @pytest.fixture
 def client(db):
     """Create test client with database session override."""

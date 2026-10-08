@@ -5,7 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+import redis as redis_lib
+
 from src.api.deps import get_db, get_optional_user
+from src.core.cache import cache_invalidate
+from src.core.redis import get_redis
 from src.models.user import User
 from src.schemas.word_detection import WdContributionUploadResponse
 from src.services.word_detection.word_detection_contribution_service import (
@@ -34,6 +38,7 @@ def upload_contribution(
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_user),
     guest_id: str | None = Header(default=None, alias=GUEST_ID_HEADER),
+    rc: redis_lib.Redis = Depends(get_redis),
 ) -> WdContributionUploadResponse:
     del predicted_label, confidence
     effective_guest_id = _require_user_or_guest(user, guest_id)
@@ -61,6 +66,10 @@ def upload_contribution(
         user_id=user.id if user else None,
         guest_id=effective_guest_id,
     )
+    # A new pending contribution changes the admin tree's per-node pending counts;
+    # the tree endpoint caches its response for 60s (see admin/contributions.py), so
+    # without this a just-submitted contribution stays invisible there for up to 60s.
+    cache_invalidate(rc, "ksl:cache:contributions:tree")
     return WdContributionUploadResponse(
         id=contribution.id,
         contribution_media_id=contribution.contribution_media_id or 0,
