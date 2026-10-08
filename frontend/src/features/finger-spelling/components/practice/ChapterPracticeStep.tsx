@@ -77,7 +77,7 @@ export default function ChapterPracticeStep({
     ? capturedMatchesTarget
       ? letter
       : capturedIsNoAction
-        ? "No Action"
+        ? t("PREDICTION.NO_ACTION")
         : t("BUTTON.TRY_AGAIN")
     : null;
   const capturedDisplayConfidence = hasCapturedPrediction
@@ -97,7 +97,7 @@ export default function ChapterPracticeStep({
   const liveDisplayLabel = liveLabelMatches
     ? letter
     : liveIsNoAction
-      ? "No Action"
+      ? t("PREDICTION.NO_ACTION")
       : t("PREDICTION.ANALYZING");
   const liveDisplayConfidence = liveLabelMatches ? Math.round(liveConfidence) : 0;
 

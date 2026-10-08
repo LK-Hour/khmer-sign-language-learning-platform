@@ -211,7 +211,8 @@
     "LANGUAGE": "Language"
   },
   "PREDICTION": {
-    "ANALYZING": "Analyzing..."
+    "ANALYZING": "Analyzing...",
+    "NO_ACTION": "No Action"
   },
   "DICTIONARY": {
     "CATEGORY": {

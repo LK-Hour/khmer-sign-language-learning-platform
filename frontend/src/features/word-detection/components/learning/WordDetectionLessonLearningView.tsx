@@ -132,6 +132,7 @@ export default function WordDetectionLessonLearningView({
     confidence: capturedPrediction?.confidence ?? null,
     predictionSeq: capturedPrediction?.seq ?? null,
     tryAgainLabel: t("BUTTON.TRY_AGAIN"),
+    noActionLabel: t("PREDICTION.NO_ACTION"),
   });
   const {
     continueEnabled,

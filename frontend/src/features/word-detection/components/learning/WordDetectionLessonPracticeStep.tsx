@@ -83,7 +83,7 @@ export default function WordDetectionLessonPracticeStep({
   const liveDisplayLabel = liveLabelMatches
     ? targetWord
     : liveIsNoAction
-      ? "No Action"
+      ? t("PREDICTION.NO_ACTION")
       : t("PREDICTION.ANALYZING");
   const liveDisplayConfidence = liveLabelMatches ? Math.round(liveConfidence) : 0;
   const displayedLabel = displayLabel ?? (showLivePrediction ? liveDisplayLabel : null);
@@ -171,7 +171,7 @@ export default function WordDetectionLessonPracticeStep({
           <MetricCard
             label={t("FINGER_SPELLING.LESSON.PREDICT_RESULT")}
             value={displayedLabel ?? "—"}
-            khmerValue={!!displayedLabel && displayedLabel !== "No Action"}
+            khmerValue={!!displayedLabel && displayedLabel !== t("PREDICTION.NO_ACTION")}
             highlight={predictionPassed}
           />
         </Grid>

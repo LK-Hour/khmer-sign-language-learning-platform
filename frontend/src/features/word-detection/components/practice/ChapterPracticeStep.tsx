@@ -73,7 +73,7 @@ export default function ChapterPracticeStep({
     ? capturedMatchesTarget
       ? word
       : capturedIsNoAction
-        ? "No Action"
+        ? t("PREDICTION.NO_ACTION")
         : t("BUTTON.TRY_AGAIN")
     : null;
   const capturedDisplayConfidence = hasCapturedPrediction
@@ -92,7 +92,7 @@ export default function ChapterPracticeStep({
   const liveDisplayLabel = liveLabelMatches
     ? word
     : liveIsNoAction
-      ? "No Action"
+      ? t("PREDICTION.NO_ACTION")
       : t("PREDICTION.ANALYZING");
   const liveDisplayConfidence = liveLabelMatches ? Math.round(liveConfidence) : 0;
 
@@ -247,7 +247,7 @@ export default function ChapterPracticeStep({
           <MetricCard
             label={t("FINGER_SPELLING.LESSON.PREDICT_RESULT")}
             value={cardLabel ?? "—"}
-            khmerValue={!!cardLabel && cardLabel !== "No Action" && cardLabel !== t("BUTTON.TRY_AGAIN") && cardLabel !== t("PREDICTION.ANALYZING")}
+            khmerValue={!!cardLabel && cardLabel !== t("PREDICTION.NO_ACTION") && cardLabel !== t("BUTTON.TRY_AGAIN") && cardLabel !== t("PREDICTION.ANALYZING")}
             highlight={cardLabel != null && continueEnabled}
           />
         </Grid>

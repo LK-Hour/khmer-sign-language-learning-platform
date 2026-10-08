@@ -211,7 +211,8 @@
     "LANGUAGE": "ភាសា"
   },
   "PREDICTION": {
-    "ANALYZING": "កំពុងវិភាគ..."
+    "ANALYZING": "កំពុងវិភាគ...",
+    "NO_ACTION": "គ្មានសកម្មភាព"
   },
   "DICTIONARY": {
     "CATEGORY": {

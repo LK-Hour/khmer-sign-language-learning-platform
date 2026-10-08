@@ -119,6 +119,7 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
     predictionSeq: capturedPrediction?.seq ?? null,
     maxAttempts: PRACTICE_MAX_ATTEMPTS,
     tryAgainLabel: t("BUTTON.TRY_AGAIN"),
+    noActionLabel: t("PREDICTION.NO_ACTION"),
   });
   const {
     continueEnabled,

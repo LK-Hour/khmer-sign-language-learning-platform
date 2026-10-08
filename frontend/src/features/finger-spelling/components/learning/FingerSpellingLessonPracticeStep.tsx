@@ -97,7 +97,7 @@ export default function FingerSpellingLessonPracticeStep({
     ? capturedMatchesTarget
       ? letter
       : capturedIsNoAction
-        ? "No Action"
+        ? t("PREDICTION.NO_ACTION")
         : t("BUTTON.TRY_AGAIN")
     : null;
   const capturedDisplayConfidence = hasCapturedPrediction
@@ -126,7 +126,7 @@ export default function FingerSpellingLessonPracticeStep({
   const liveDisplayLabel = liveLabelMatches
     ? letter
     : liveIsNoAction
-      ? "No Action"
+      ? t("PREDICTION.NO_ACTION")
       : t("PREDICTION.ANALYZING");
   const liveDisplayConfidence = liveLabelMatches ? Math.round(liveConfidence) : 0;
   const cardConfidence = showLivePrediction

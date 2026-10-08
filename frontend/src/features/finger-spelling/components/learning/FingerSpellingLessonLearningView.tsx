@@ -106,6 +106,7 @@ export default function FingerSpellingLessonLearningView({
     confidence: accuracy,
     predictionSeq: accuracy != null ? `${predictedLetter ?? ""}:${accuracy}` : null,
     tryAgainLabel: t("BUTTON.TRY_AGAIN"),
+    noActionLabel: t("PREDICTION.NO_ACTION"),
   });
   const {
     continueEnabled,

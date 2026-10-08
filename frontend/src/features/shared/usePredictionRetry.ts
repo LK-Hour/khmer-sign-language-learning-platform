@@ -9,6 +9,7 @@ export type PredictionRetryInput = {
   predictionSeq: number | string | null;
   maxAttempts?: number;
   tryAgainLabel: string;
+  noActionLabel?: string;
 };
 
 function normalizeLabel(label: string | null | undefined): string | null {
@@ -59,6 +60,7 @@ export function usePredictionRetry({
   predictionSeq,
   maxAttempts = 3,
   tryAgainLabel,
+  noActionLabel = "No Action",
 }: PredictionRetryInput) {
   const [attemptCount, setAttemptCount] = useState(0);
   const [continueEnabled, setContinueEnabled] = useState(false);
@@ -119,10 +121,10 @@ export function usePredictionRetry({
 
   const displayLabel = useMemo(() => {
     if (matched) return normalizeLabel(targetLabel);
-    if (isNoAction) return "No Action";
+    if (isNoAction) return noActionLabel;
     if (hasPrediction || showTryAgain) return tryAgainLabel;
     return null;
-  }, [hasPrediction, isNoAction, matched, showTryAgain, targetLabel, tryAgainLabel]);
+  }, [hasPrediction, isNoAction, matched, noActionLabel, showTryAgain, targetLabel, tryAgainLabel]);
 
   const displayConfidence = useMemo(() => {
     if (matched) return confidence != null ? Math.round(confidence) : null;
