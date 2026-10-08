@@ -137,7 +137,7 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
   if (loading) {
     return (
       <Box>
-        <Stack direction="row" sx={{ mb: 3, justifyContent: "flex-end" }}>
+        <Stack direction="row" sx={{ mb: 3, justifyContent: "flex-start" }}>
           <Skeleton variant="rounded" width={160} height={40} />
         </Stack>
         <Grid container spacing={2}>
@@ -173,7 +173,7 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
   return (
     <Box>
       {/* Status filter dropdown */}
-      <Stack direction="row" sx={{ mb: 3, justifyContent: "flex-end" }}>
+      <Stack direction="row" sx={{ mb: 3, justifyContent: "flex-start" }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel id="contribution-status-filter-label">Status</InputLabel>
           <Select

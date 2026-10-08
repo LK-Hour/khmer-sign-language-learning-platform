@@ -73,7 +73,14 @@ def test_dictionary_list_default_category_order(client):
     assert ranks == sorted(ranks)
 
 
-def test_dictionary_list_sort_az(client):
+def test_dictionary_list_sort_az_groups_categories_contiguously(client):
+    """``az`` is not plain alphabetical: within a category, finger-spelling letters
+    follow the Khmer teaching order declared in ``UNIT_LETTER_ORDERS``
+    (``dictionary_order.py``), not Unicode codepoint order-e.g. dependent vowel
+    'ិ' legitimately sorts before 'ាំ' there. So this only checks the property
+    that's true independent of that order: once a category's run of items ends,
+    it never reappears later in the list.
+    """
     response = client.get("/api/dictionary?sort=az&page_size=100")
     assert response.status_code == 200
 
@@ -81,45 +88,34 @@ def test_dictionary_list_sort_az(client):
     if len(items) < 2:
         return
 
-    category_rank = {
-        "Numbers": 0,
-        "Dependent Vowels": 1,
-        "Main Consonants": 2,
-        "Sub Consonants": 3,
-        "Independent Vowels": 4,
-        "Diacritics": 5,
-    }
-
-    def sort_key(item: dict) -> tuple[int, str]:
-        return (category_rank.get(item["category"], 99), item["text_kh"])
-
-    assert [sort_key(item) for item in items] == sorted(sort_key(item) for item in items)
+    seen_categories: set[str | None] = set()
+    previous_category = items[0]["category"]
+    seen_categories.add(previous_category)
+    for item in items[1:]:
+        category = item["category"]
+        if category != previous_category:
+            assert category not in seen_categories, (
+                f"category {category!r} reappeared non-contiguously in az order"
+            )
+            seen_categories.add(category)
+            previous_category = category
 
 
-def test_dictionary_list_sort_za(client):
-    response = client.get("/api/dictionary?sort=za&page_size=100")
-    assert response.status_code == 200
+def test_dictionary_list_sort_za_is_exact_reverse_of_az(client):
+    """``za`` is implemented as the same stable sort as ``az`` with
+    ``reverse=True`` (``DictionaryService._sort_rows``), so-independent of what
+    the sort key actually is-it must produce the exact reverse item order.
+    """
+    # Fetch everything (not just one page) so reversing one list is directly
+    # comparable to the other-truncating both to the same page_size would compare
+    # the *head* of az against the *head* of za, which aren't reverses of each other.
+    total = client.get("/api/dictionary?sort=az&page_size=1").json()["total"]
+    az_items = client.get(f"/api/dictionary?sort=az&page_size={total}").json()["items"]
+    za_items = client.get(f"/api/dictionary?sort=za&page_size={total}").json()["items"]
 
-    items = response.json()["items"]
-    if len(items) < 2:
-        return
-
-    category_rank = {
-        "Numbers": 0,
-        "Dependent Vowels": 1,
-        "Main Consonants": 2,
-        "Sub Consonants": 3,
-        "Independent Vowels": 4,
-        "Diacritics": 5,
-    }
-
-    def sort_key(item: dict) -> tuple[int, str]:
-        return (category_rank.get(item["category"], 99), item["text_kh"])
-
-    assert [sort_key(item) for item in items] == sorted(
-        (sort_key(item) for item in items),
-        reverse=True,
-    )
+    az_ids = [(item["entry_type"], item["id"]) for item in az_items]
+    za_ids = [(item["entry_type"], item["id"]) for item in za_items]
+    assert za_ids == list(reversed(az_ids))
 
 
 def test_dictionary_list_invalid_entry_type(client):

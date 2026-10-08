@@ -316,19 +316,11 @@ def _case_exercise_repository_and_service() -> bool:
             print("FAIL: get_with_options missing data")
             return False
 
-        user = _get_test_user(db)
-        if user is None:
-            print("SKIP: no users for submit test")
-            return True
-
+        # list_chapter_exercises is a plain read helper (chapter_id only, no per-user
+        # lock check-that lives separately in is_chapter_exercise_unlocked), so it
+        # never raises; it returns None only when the chapter itself doesn't exist.
         svc = FingerExerciseService(db)
-        try:
-            listed = svc.list_chapter_exercises(chapter.id, user.id)
-        except HTTPException as exc:
-            if exc.status_code == status.HTTP_403_FORBIDDEN:
-                print("  SKIP: chapter exercises locked (lessons not complete)")
-                return True
-            raise
+        listed = svc.list_chapter_exercises(chapter.id)
         if listed is None or len(listed) != len(exercises):
             print("FAIL: list_chapter_exercises mismatch")
             return False
@@ -364,30 +356,42 @@ def _case_single_attempt_submission() -> bool:
         lesson = lessons[0]
         progress_svc = FingerProgressService(db)
 
-        # First attempt — should not complete lesson yet (accuracy too low)
-        result1 = progress_svc.record_attempt(user.id, lesson.id, accuracy=50.0)
+        # This runs against the real dev DB (SessionLocal, not a rolled-back test
+        # transaction), so this user/lesson's attempts counter persists across runs-
+        # assert deltas off a baseline rather than absolute counts.
+        baseline = progress_svc.get_lesson_progress(user.id, lesson.id)
+        baseline_attempts = baseline.attempts if baseline is not None else 0
+
+        # record_practice_attempt always marks the lesson complete on any attempt
+        # (fires when the learner clicks Continue/Next, even after a skipped/failed
+        # attempt-see its docstring comment), regardless of accuracy. There's no
+        # accuracy-gated "did they pass" check here anymore; that's decided before
+        # this is called. It returns the progress row itself (no separate result type).
+        result1 = progress_svc.record_practice_attempt(user.id, lesson.id, accuracy=50.0)
         if result1 is None:
             print("FAIL: first attempt returned None")
             return False
-        if result1.lesson_completed:
-            print("FAIL: low accuracy should not complete lesson")
+        if result1.attempts != baseline_attempts + 1:
+            print(f"FAIL: expected {baseline_attempts + 1} attempts after first call, got {result1.attempts}")
+            return False
+        if not result1.is_completed:
+            print("FAIL: lesson should be marked complete on first attempt")
             return False
 
-        # Second attempt with passing accuracy
-        result2 = progress_svc.record_attempt(user.id, lesson.id, accuracy=85.0)
+        result2 = progress_svc.record_practice_attempt(user.id, lesson.id, accuracy=85.0)
         if result2 is None:
             print("FAIL: second attempt returned None")
             return False
-        if not result2.lesson_completed:
-            print("FAIL: high accuracy should complete lesson")
+        if result2.attempts != baseline_attempts + 2:
+            print(f"FAIL: expected {baseline_attempts + 2} attempts after second call, got {result2.attempts}")
             return False
 
         progress = progress_svc.get_lesson_progress(user.id, lesson.id)
         if progress is None or not progress.is_completed:
-            print("FAIL: progress should be completed after passing")
+            print("FAIL: progress should be completed")
             return False
-        if progress.attempts < 2:
-            print(f"FAIL: expected at least 2 attempts, got {progress.attempts}")
+        if progress.attempts != baseline_attempts + 2:
+            print(f"FAIL: expected {baseline_attempts + 2} attempts, got {progress.attempts}")
             return False
 
         print(f"  lesson_id={lesson.id}, attempts={progress.attempts}, completed={progress.is_completed}")

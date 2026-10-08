@@ -126,17 +126,12 @@ describe("EntityFormLayout", () => {
 
       expect(screen.getByTestId("main-content")).toBeInTheDocument();
     });
-
-    it("disables Save button when loading", () => {
-      render(
-        <EntityFormLayout {...defaultProps} loading={true}>
-          <div>Form content</div>
-        </EntityFormLayout>
-      );
-
-      const saveButton = screen.getByRole("button", { name: /save/i });
-      expect(saveButton).toBeDisabled();
-    });
+    // A "disables Save button when loading" test used to live here, asserting that a
+    // visible-but-disabled Save button appears during loading. That's no longer how this
+    // works: while `loading`, the component renders only the skeleton (see "shows skeleton
+    // when loading is true" and "does not render children when loading" above)-there's no
+    // Save button in the DOM at all to disable. Those two tests already cover the real
+    // current behavior, so the stale one was removed rather than reworded into a duplicate.
   });
 
   describe("Saving state", () => {

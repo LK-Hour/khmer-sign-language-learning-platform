@@ -247,7 +247,7 @@ class TestFingerSpellingAPI:
         class FakeHandPredictionService:
             is_available = True
 
-            def predict_from_features(self, features, *, handedness="Unknown"):
+            def predict_from_features(self, features, *, handedness="Unknown", category=None):
                 return SimpleNamespace(
                     match_confidence=92.5,
                     prediction=SimpleNamespace(

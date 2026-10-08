@@ -350,7 +350,19 @@ describe('Preservation: Explicit logout clears frontend state', () => {
           // After logout, when the access token is expired and refresh returns 401,
           // the store.clear() is called (this is the preservation behavior)
           const { refreshAuthSession } = await import('../client');
-          const refreshResult = await refreshAuthSession();
+          // On a 401, refreshAuthSession() waits a real 500ms (stale-cookie-jar grace
+          // period) before retrying once-see client.ts. Faking timers here turns that
+          // into an instant, deterministic advance instead of 500ms x numRuns of real
+          // wall-clock time, which was blowing past the default 5000ms test timeout.
+          vi.useFakeTimers();
+          let refreshResult: string | null;
+          try {
+            const refreshPromise = refreshAuthSession();
+            await vi.advanceTimersByTimeAsync(500);
+            refreshResult = await refreshPromise;
+          } finally {
+            vi.useRealTimers();
+          }
 
           // PROPERTY: On 401 from refresh (token revoked via logout), auth state is cleared
           expect(refreshResult).toBeNull();

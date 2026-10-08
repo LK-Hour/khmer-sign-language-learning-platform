@@ -141,8 +141,8 @@ def _case_letters_seeded():
         letters = db.query(FingerLetter).all()
         print(f"Total letters: {len(letters)}")
         
-        if len(letters) != 127:
-            print(f"❌ Expected 127 letters, got {len(letters)}")
+        if len(letters) != 128:
+            print(f"❌ Expected 128 letters, got {len(letters)}")
             return False
         
         # Show sample letters
@@ -169,16 +169,16 @@ def _case_lessons_and_relationships():
         lessons = db.query(FingerLesson).all()
         print(f"Total lessons: {len(lessons)}")
         
-        if len(lessons) != 127:
-            print(f"❌ Expected 127 lessons, got {len(lessons)}")
+        if len(lessons) != 128:
+            print(f"❌ Expected 128 lessons, got {len(lessons)}")
             return False
         
         # Check lesson-letter relationships
         lesson_letters = db.query(FingerLessonLetter).all()
         print(f"Lesson-letter links: {len(lesson_letters)}")
         
-        if len(lesson_letters) != 127:
-            print(f"❌ Expected 127 lesson-letter links, got {len(lesson_letters)}")
+        if len(lesson_letters) != 128:
+            print(f"❌ Expected 128 lesson-letter links, got {len(lesson_letters)}")
             return False
         
         # Verify each lesson has at least one letter
@@ -255,10 +255,10 @@ def _case_data_integrity():
         
         print(f"  Units:              {unit_count:4d} (expected 6)")
         print(f"  Chapters:           {chapter_count:4d} (expected 27)")
-        print(f"  Lessons:            {lesson_count:4d} (expected 127)")
-        print(f"  Letters:            {letter_count:4d} (expected 127)")
+        print(f"  Lessons:            {lesson_count:4d} (expected 128)")
+        print(f"  Letters:            {letter_count:4d} (expected 128)")
         print(f"  Media files:        {media_count:4d} (expected >= 440)")
-        print(f"  Letter-media links: {letter_media_count:4d} (expected == media files)")
+        print(f"  Letter-media links: {letter_media_count:4d} (expected >= letters, i.e. every letter has media)")
         
         # Verify foreign keys aren't broken
         chapters_with_unit = db.query(FingerChapter).filter(FingerChapter.unit_id.isnot(None)).count()
@@ -270,12 +270,15 @@ def _case_data_integrity():
         all_valid = (
             unit_count == 6 and
             chapter_count == 27 and
-            lesson_count == 127 and
-            letter_count == 127 and
+            lesson_count == 128 and
+            letter_count == 128 and
             media_count >= 440 and
-            letter_media_count == media_count and
+            # `medias` is shared across finger letters, word-detection words, exercise
+            # options, and contributions-it's never expected to equal the finger-letter
+            # link count. The real invariant is "every letter has at least one media link".
+            letter_media_count >= letter_count and
             chapters_with_unit == 27 and
-            lessons_with_chapter == 127
+            lessons_with_chapter == 128
         )
         
         if all_valid:

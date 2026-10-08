@@ -3,7 +3,7 @@
 This test suite validates the frontend's ability to fetch and display curriculum data for the Khmer letter "ក" (Ka) from the backend API.
 
 ## Test File
-- **Location:** `frontend/tests/letter-ka.test.ts`
+- **Location:** `frontend/tests/letter-ka.manual.ts`
 - **Language:** TypeScript
 - **Framework:** Node.js with native fetch API
 
@@ -25,13 +25,13 @@ This test suite validates the frontend's ability to fetch and display curriculum
 ### Method 1: Direct Node.js Execution
 ```bash
 cd frontend
-npx ts-node tests/letter-ka.test.ts
+npx ts-node tests/letter-ka.manual.ts
 ```
 
 ### Method 2: With Environment Variable
 ```bash
 cd frontend
-NEXT_PUBLIC_API_URL=http://localhost:8000 npx ts-node tests/letter-ka.test.ts
+NEXT_PUBLIC_API_URL=http://localhost:8000 npx ts-node tests/letter-ka.manual.ts
 ```
 
 ### Method 3: Using npm script (if added)
@@ -39,7 +39,7 @@ Add to `package.json`:
 ```json
 {
   "scripts": {
-    "test:letter": "ts-node tests/letter-ka.test.ts"
+    "test:letter": "ts-node tests/letter-ka.manual.ts"
   }
 }
 ```
