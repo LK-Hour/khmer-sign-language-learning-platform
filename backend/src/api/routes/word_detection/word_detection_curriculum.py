@@ -18,6 +18,7 @@ from src.models.user import User
 from src.schemas.word_detection import (
     WdChapterResponse,
     WdLessonDetailResponse,
+    WdLessonLearningResponse,
     WdLessonResponse,
     WdUnitResponse,
 )
@@ -417,3 +418,25 @@ def get_lesson(
     return lesson_detail_to_response(
         bundle, user_id, WordDetectionProgressService(db), is_admin=is_admin
     )
+
+
+@router.get("/lessons/{lesson_id}/learning", response_model=WdLessonLearningResponse)
+def get_lesson_learning(
+    lesson_id: int,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
+) -> WdLessonLearningResponse:
+    # Reuse the existing visibility/progress rules, with one auth lookup and
+    # one database session instead of four HTTP round trips. Only sibling IDs
+    # are needed here; avoid loading each sibling's word, media and lock state.
+    lesson = get_lesson(lesson_id, db, user)
+    chapter = get_chapter(lesson.chapterId, db, user)
+    unit = get_unit(chapter.unitId, db, user)
+    siblings = WordDetectionCurriculumService(db).list_lessons_for_chapter(chapter.id) or []
+    ordered = sorted(siblings, key=lambda row: (row.order_index, row.id))
+    next_id = None
+    for index, sibling in enumerate(ordered):
+        if sibling.id == lesson_id and index + 1 < len(ordered):
+            next_id = ordered[index + 1].id
+            break
+    return WdLessonLearningResponse(lesson=lesson, chapter=chapter, unit=unit, nextLessonId=next_id)

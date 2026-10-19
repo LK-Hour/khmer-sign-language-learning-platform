@@ -68,7 +68,7 @@ class WordDetectionProgressService:
             progress.completed_at = progress.last_practiced_at
 
         self.db.commit()
-        self.db.refresh(progress)
+        # The practice response does not read this row; avoid an extra SELECT.
         WordDetectionLockingService.clear_cache()
         return progress
 

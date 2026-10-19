@@ -103,6 +103,14 @@ class WdLessonDetailResponse(WdLessonResponse):
     descriptionKh: str | None = None
 
 
+class WdLessonLearningResponse(BaseModel):
+    """One request for the learning page, with fresh per-user progress."""
+    lesson: WdLessonDetailResponse
+    chapter: WdChapterResponse
+    unit: WdUnitResponse
+    nextLessonId: int | None = None
+
+
 # ── Exercise schemas ──────────────────────────────────────────────────────────
 
 class WdExerciseOptionResponse(BaseModel):
