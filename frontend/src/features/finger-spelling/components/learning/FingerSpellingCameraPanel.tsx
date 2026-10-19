@@ -1,5 +1,6 @@
 "use client";
 
+import { cameraErrorKey } from "@/features/shared/cameraError";
 import { DrawingUtils, HandLandmarker } from "@mediapipe/tasks-vision";
 import { Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
@@ -70,8 +71,8 @@ export default function FingerSpellingCameraPanel({
         video.srcObject = stream;
         await video.play();
       }
-    } catch {
-      setCameraError(t("FINGER_SPELLING.LESSON.CAMERA_DENIED"));
+    } catch (err) {
+      setCameraError(t(cameraErrorKey(err)));
     }
   }, [t]);
 

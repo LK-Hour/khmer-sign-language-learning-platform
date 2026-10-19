@@ -1,5 +1,6 @@
 "use client";
 
+import { cameraErrorKey } from "@/features/shared/cameraError";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DrawingUtils, HandLandmarker } from "@mediapipe/tasks-vision";
@@ -110,8 +111,8 @@ export default function SentenceSpellingCameraPanel({
         video.srcObject = stream;
         await video.play();
       }
-    } catch {
-      setCameraError(t("SENTENCE_SPELLING.PRACTICE.CAMERA_DENIED"));
+    } catch (err) {
+      setCameraError(t(cameraErrorKey(err)));
     }
   }, [t]);
 

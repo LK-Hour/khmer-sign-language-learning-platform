@@ -1,5 +1,6 @@
 "use client";
 
+import { cameraErrorKey } from "@/features/shared/cameraError";
 import { DrawingUtils, HandLandmarker, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { Stack, Typography } from "@mui/material";
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
@@ -88,9 +89,9 @@ export default function WordDetectionCameraPanel({
         video.srcObject = stream;
         await video.play();
       }
-    } catch {
+    } catch (err) {
       onRawStreamReady?.(null);
-      setCameraError(t("FINGER_SPELLING.LESSON.CAMERA_DENIED"));
+      setCameraError(t(cameraErrorKey(err)));
     }
   }, [onRawStreamReady, t, videoRef]);
 
@@ -108,6 +109,7 @@ export default function WordDetectionCameraPanel({
 
     let animationFrame = 0;
     let lastDetectionAt = 0;
+    let lastVideoTime = -1;
     let lastDrawnKey = "";
     const canvas = overlayCanvasRef.current;
     if (!canvas) return;
@@ -131,8 +133,9 @@ export default function WordDetectionCameraPanel({
       }
 
       // Small tolerance so 60 Hz animation frames (16.7 ms) land on every 2nd frame.
-      if (now - lastDetectionAt >= OVERLAY_DETECTION_INTERVAL_MS - 4) {
+      if (video.currentTime !== lastVideoTime && now - lastDetectionAt >= OVERLAY_DETECTION_INTERVAL_MS - 4) {
         lastDetectionAt = now;
+        lastVideoTime = video.currentTime;
         const detection = detectLandmarks(video);
         lastDetectionRef.current = detection;
         onDetection?.(detection);
