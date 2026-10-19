@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import { PageContainer } from "@/components/layout";
 import {
   fetchFsChapter,
@@ -11,17 +12,14 @@ import {
   FingerSpellingLessonLearningView,
 } from "@/features/finger-spelling/components";
 import { getNextLessonInChapter } from "@/features/shared/trackProgress";
+import { isServiceUnavailable } from "@/utils/api/client";
 import LessonDetailLoading from "./loading";
 
 type PageProps = {
   params: Promise<{ lessonId: string }>;
 };
 
-export default async function LessonDetailPage({ params }: PageProps) {
-  const { lessonId } = await params;
-  const id = Number(lessonId);
-  if (Number.isNaN(id)) notFound();
-
+async function loadLessonPage(id: number) {
   const lesson = await fetchFsLesson(id);
   if (!lesson) notFound();
 
@@ -35,6 +33,22 @@ export default async function LessonDetailPage({ params }: PageProps) {
   if (!unit) notFound();
 
   const nextLesson = getNextLessonInChapter(chapterLessons, lesson?.id);
+  return { lesson, chapter, unit, nextLesson };
+}
+
+export default async function LessonDetailPage({ params }: PageProps) {
+  const { lessonId } = await params;
+  const id = Number(lessonId);
+  if (Number.isNaN(id)) notFound();
+
+  let data: Awaited<ReturnType<typeof loadLessonPage>>;
+  try {
+    data = await loadLessonPage(id);
+  } catch (err) {
+    if (isServiceUnavailable(err)) return <LostDatabaseConnectionView />;
+    throw err;
+  }
+  const { lesson, chapter, unit, nextLesson } = data;
 
   return (
     <FingerSpellingLessonAccessGuard

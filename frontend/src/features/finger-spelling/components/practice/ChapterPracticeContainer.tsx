@@ -1,6 +1,7 @@
 "use client";
 
-import { Alert, Button, CircularProgress, Stack, Typography } from "@mui/material";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { Button, CircularProgress, Stack, Typography } from "@mui/material";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ROUTES } from "@/constants/routes";
@@ -116,9 +117,7 @@ export default function ChapterPracticeContainer({
 
   if (fetchState === "error" || !practice) {
     return (
-      <Alert severity="error" sx={{ mx: "auto" }}>
-        {t("FINGER_SPELLING.TRACK.LOAD_ERROR")}
-      </Alert>
+      <LostDatabaseConnectionView />
     );
   }
 

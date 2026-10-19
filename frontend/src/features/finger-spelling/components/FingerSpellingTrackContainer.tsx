@@ -1,8 +1,7 @@
 "use client";
 
-import { Alert } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useTranslation } from "@/i18n/useTranslation";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import { fetchFsTree } from "../api/curriculum";
 import { useFingerSpellingStore } from "../store";
 import { useGuestProgressStore } from "../store/guestProgress.store";
@@ -14,7 +13,6 @@ type FetchState = "idle" | "loading" | "ready" | "error";
 
 /** Loads curriculum from the API, then renders the track UI. */
 export default function FingerSpellingTrackContainer() {
-  const { t } = useTranslation();
   const setUnits = useFingerSpellingStore((state) => state.setUnits);
   const units = useFingerSpellingStore((state) => state.units);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
@@ -72,9 +70,10 @@ export default function FingerSpellingTrackContainer() {
 
   if (fetchState === "error") {
     return (
-      <Alert severity="error" sx={{ mx: "auto" }}>
-        {t("FINGER_SPELLING.TRACK.LOAD_ERROR")}
-      </Alert>
+      <FingerSpellingTrack
+        units={[]}
+        unavailable={<LostDatabaseConnectionView />}
+      />
     );
   }
 

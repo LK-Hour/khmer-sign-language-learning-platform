@@ -7,7 +7,7 @@ import {
   normalizeLessonDetail,
   normalizeUnit,
 } from "./adapters";
-import { apiFetch } from "@/utils/api/client";
+import { apiFetch, isNotFoundError } from "@/utils/api/client";
 
 export async function fetchFsUnits(): Promise<FsUnit[]> {
   const raw = await apiFetch<FsUnit[]>("/api/finger_spelling/units");
@@ -20,8 +20,9 @@ export async function fetchFsUnit(unitId: number): Promise<FsUnit | null> {
       `/api/finger_spelling/units/${unitId}`
     );
     return normalizeUnit(unit);
-  } catch {
-    return null;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
   }
 }
 
@@ -33,8 +34,9 @@ export async function fetchFsChapter(
       `/api/finger_spelling/chapters/${chapterId}`
     );
     return normalizeChapter(chapter);
-  } catch {
-    return null;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
   }
 }
 
@@ -53,8 +55,9 @@ export async function fetchFsLesson(
       `/api/finger_spelling/lessons/${lessonId}`
     );
     return normalizeLessonDetail(lesson);
-  } catch {
-    return null;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
   }
 }
 

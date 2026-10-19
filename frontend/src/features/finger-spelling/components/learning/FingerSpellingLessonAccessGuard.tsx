@@ -1,11 +1,11 @@
 "use client";
 
-import { Alert } from "@mui/material";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { useTranslation } from "@/i18n/useTranslation";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout";
 import { ROUTES } from "@/constants/routes";
-import { useTranslation } from "@/i18n/useTranslation";
 import { useAuthStore } from "@/store/auth.store";
 import { fetchFsTree } from "../../api/curriculum";
 import { applyGuestProgress } from "../../utils/guestProgressMerge";
@@ -32,7 +32,7 @@ export default function FingerSpellingLessonAccessGuard({
   children,
 }: FingerSpellingLessonAccessGuardProps) {
   const router = useRouter();
-  const { locale, t } = useTranslation();
+  const { locale } = useTranslation();
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
@@ -82,9 +82,7 @@ export default function FingerSpellingLessonAccessGuard({
   if (status === "error") {
     return (
       <PageContainer sx={{ py: { xs: 2.5, md: 4 } }}>
-        <Alert severity="error" sx={{ mx: "auto" }}>
-          {t("FINGER_SPELLING.TRACK.LOAD_ERROR")}
-        </Alert>
+        <LostDatabaseConnectionView />
       </PageContainer>
     );
   }

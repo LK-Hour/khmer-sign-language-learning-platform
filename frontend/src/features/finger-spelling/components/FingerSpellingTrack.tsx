@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { LearningTrack } from "@/components/track";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
@@ -14,6 +16,8 @@ import { getLessonDisplayLetter, getPracticeDisplayRange } from "../utils/chapte
 
 type FingerSpellingTrackProps = {
   units: FsTrackUnit[];
+  /** Shown instead of the unit list when the curriculum failed to load. */
+  unavailable?: ReactNode;
 };
 
 /** Fields a learner might type to find a finger-spelling lesson. */
@@ -21,7 +25,7 @@ function getLessonSearchText(lesson: FsLesson) {
   return [lesson?.letter, lesson?.romanization, lesson?.letterNameEn, lesson?.letterNameKh];
 }
 
-export default function FingerSpellingTrack({ units }: FingerSpellingTrackProps) {
+export default function FingerSpellingTrack({ units, unavailable }: FingerSpellingTrackProps) {
   const { locale, t } = useTranslation();
   const expandedUnitId = useFingerSpellingStore((state) => state.expandedUnitId);
   const expandedChapterIds = useFingerSpellingStore((state) => state.expandedChapterIds);
@@ -34,6 +38,7 @@ export default function FingerSpellingTrack({ units }: FingerSpellingTrackProps)
   return (
     <LearningTrack
       units={units}
+      unavailable={unavailable}
       expansion={{
         expandedUnitId,
         expandedChapterIds,

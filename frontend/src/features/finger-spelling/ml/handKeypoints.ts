@@ -4,21 +4,23 @@
  *
  * The model was trained on wrist-normalized, scale-invariant landmarks, not on
  * raw image coordinates, so the same normalization has to be applied here.
- * This is a TypeScript port of the reference implementation in
- * `docs.local/model/finger-spelling/MLP Model/real_time_mlp_inference.py`
- * (`normalize_single_hand`, `normalize_hand_pair`, `assign_right_and_left_hands`
- * and `build_feature_vector`); the normalization is chosen from the number of
- * hands MediaPipe detected:
+ * This is a TypeScript port of `build_feature_vector` and
+ * `assign_right_and_left_hands` in
+ * `docs.local/model/finger-spelling/real_time_mlp_inference_latest.py`
+ * ("Option B"). The frame is mirrored before detection (see
+ * `useHandLandmarker`), and on that frame MediaPipe's label is the opposite of
+ * the physical hand, so "Left" is treated as the physical Right hand and
+ * "Right" as the physical Left hand. The normalization is chosen from the
+ * number of hands MediaPipe detected:
  *
  *   0 hands -> nothing to predict
- *   1 hand  -> wrist normalization, placed in the Right slot whichever side
- *              MediaPipe reports (the trained dataset's single-hand convention)
- *   2 hands -> pair normalization: one shared wrist midpoint and one shared
- *              x-y scale, so the hands keep their position relative to each other
+ *   1 hand  -> wrist normalization in its own slot: physical Right (or an
+ *              unlabeled hand) in the Right block, physical Left in the Left block
+ *   2 hands -> pair normalization (one shared wrist midpoint and one shared
+ *              x-y scale), laid out physical Left then physical Right as in training
  *
- * The layout is always Right (63 values) followed by Left (63 values), with
- * zeros for a missing hand. In every case x, y and z are divided by the same
- * x-y scale.
+ * A single hand is laid out Right (63 values) then Left (63 values), with zeros
+ * for the missing hand. In every case x, y and z are divided by the same x-y scale.
  */
 
 export const VALUES_PER_HAND = 63;
@@ -55,10 +57,17 @@ function normalizeAround(hands: Point3[][], origin: Point3): number[][] | null {
   return centered.map((hand) => hand.flatMap((p) => [p.x / scale, p.y / scale, p.z / scale]));
 }
 
+/** Map MediaPipe's label on the mirrored frame to the physical hand (it is reversed). */
+function toPhysicalSide(mediaPipeLabel: string): string {
+  if (mediaPipeLabel === "Left") return "Right";
+  if (mediaPipeLabel === "Right") return "Left";
+  return "Unknown";
+}
+
 /**
- * Pick the Right and Left hand from two detections. MediaPipe labels normally
- * give one of each; when they don't (both "Right", or unknown), fall back to
- * image x-order like the reference does, smaller x first.
+ * Pick the physical Right and Left hand from two detections. The labels
+ * normally give one of each; when they don't (both the same, or unknown), fall
+ * back to image x-order like the reference does: smaller x is the Right hand.
  */
 function assignRightAndLeft(detections: [Detection, Detection]): [Point3[], Point3[]] {
   const right = detections.find((d) => d.side === "Right");
@@ -88,7 +97,7 @@ export function buildModelFeatures(
   // The model only knows two hands; ignore any beyond the first two detections.
   const detections: Detection[] = landmarks.slice(0, 2).map((points, index) => ({
     points,
-    side: handednesses[index]?.[0]?.categoryName ?? "Unknown",
+    side: toPhysicalSide(handednesses[index]?.[0]?.categoryName ?? "Unknown"),
   }));
 
   const hasRight = detections.some((d) => d.side === "Right");
@@ -107,10 +116,13 @@ export function buildModelFeatures(
       z: (right[0].z + left[0].z) / 2,
     };
     const pair = normalizeAround([right, left], midpoint);
-    return { features: pair ? [...pair[0], ...pair[1]] : noFeatures, handedness, handDetected: true };
+    // Two-hand training layout: physical Left block first, then physical Right.
+    return { features: pair ? [...pair[1], ...pair[0]] : noFeatures, handedness, handDetected: true };
   }
 
   const [hand] = detections;
   const single = normalizeAround([hand.points], hand.points[0]);
-  return { features: single ? [...single[0], ...zeros] : noFeatures, handedness, handDetected: true };
+  if (!single) return { features: noFeatures, handedness, handDetected: true };
+  const features = hand.side === "Left" ? [...zeros, ...single[0]] : [...single[0], ...zeros];
+  return { features, handedness, handDetected: true };
 }

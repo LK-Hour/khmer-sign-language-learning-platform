@@ -166,7 +166,7 @@ describe("FingerSpellingLessonAccessGuard", () => {
     fetchFsTreeMock.mockRejectedValue(new Error("network"));
     renderGuard(2);
 
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
     expect(screen.queryByTestId("lesson-view")).not.toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();
   });
