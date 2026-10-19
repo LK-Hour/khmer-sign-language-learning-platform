@@ -8,8 +8,8 @@ export type WordRecordingResult = {
 };
 
 const MIME_TYPE_CANDIDATES = [
-  "video/webm;codecs=vp9",
   "video/webm;codecs=vp8",
+  "video/webm;codecs=vp9",
   "video/webm",
   "video/mp4",
 ];
@@ -41,7 +41,17 @@ export function useWordRecording() {
       }
 
       const mimeType = pickSupportedMimeType();
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      // Own the tracks so an agreed donation can finish after the lesson's
+      // camera panel unmounts. Always release these tracks on completion.
+      const recordingStream = new MediaStream(stream.getVideoTracks().map((track) => track.clone()));
+      let recorder: MediaRecorder;
+      try {
+        recorder = new MediaRecorder(recordingStream, mimeType ? { mimeType } : undefined);
+      } catch (error) {
+        recordingStream.getTracks().forEach((track) => track.stop());
+        return Promise.reject(error);
+      }
+      const releaseTracks = () => recordingStream.getTracks().forEach((track) => track.stop());
       recorderRef.current = recorder;
       const chunks: BlobPart[] = [];
 
@@ -60,6 +70,8 @@ export function useWordRecording() {
 
         recorder.onerror = () => {
           window.clearTimeout(stopTimer);
+          releaseTracks();
+          if (recorderRef.current === recorder) recorderRef.current = null;
           setIsRecording(false);
           const message = "Recording failed. Please try again.";
           setError(message);
@@ -68,7 +80,8 @@ export function useWordRecording() {
 
         recorder.onstop = () => {
           window.clearTimeout(stopTimer);
-          recorderRef.current = null;
+          releaseTracks();
+          if (recorderRef.current === recorder) recorderRef.current = null;
           setIsRecording(false);
 
           if (chunks.length === 0) {
@@ -86,7 +99,15 @@ export function useWordRecording() {
         };
 
         setIsRecording(true);
-        recorder.start();
+        try {
+          recorder.start();
+        } catch (error) {
+          window.clearTimeout(stopTimer);
+          releaseTracks();
+          recorderRef.current = null;
+          setIsRecording(false);
+          reject(error);
+        }
       });
     },
     [],

@@ -35,6 +35,7 @@ type WordDetectionLessonPracticeStepProps = {
   predictorReady?: boolean;
   recError?: string | null;
   isContinuing?: boolean;
+  progressSaveStatus?: "idle" | "saving" | "saved" | "error";
   showRetryButton?: boolean;
   onRetry?: () => void;
   onContinue: () => void | Promise<void>;
@@ -61,6 +62,7 @@ export default function WordDetectionLessonPracticeStep({
   predictorReady = false,
   recError = null,
   isContinuing = false,
+  progressSaveStatus = "idle",
   showRetryButton = false,
   onRetry,
   onContinue,
@@ -72,7 +74,7 @@ export default function WordDetectionLessonPracticeStep({
 }: WordDetectionLessonPracticeStepProps) {
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { queueMicrotask(() => setMounted(true)); }, []);
   const tipText = tip?.trim() || t("WORD_DETECTION.LESSON.DEFAULT_TIP");
   const sampleVideoUrl = videoUrl?.trim() ?? "";
   const targetWord = word.trim();
@@ -155,6 +157,16 @@ export default function WordDetectionLessonPracticeStep({
         </Grid>
       </Grid>
 
+      {showLivePrediction && liveLabelMatches && (
+        <Typography role="status" sx={{ color: KslColors.textSecondary, fontSize: KslFontSizes.sm }}>
+          {t("PREDICTION.CONFIRMING_MATCH")}
+        </Typography>
+      )}
+      {progressSaveStatus === "saving" || progressSaveStatus === "saved" ? (
+        <Typography role="status" sx={{ color: KslColors.textSecondary, fontSize: KslFontSizes.sm }}>
+          {t(progressSaveStatus === "saving" ? "PREDICTION.SAVING_PROGRESS" : "PREDICTION.PROGRESS_SAVED")}
+        </Typography>
+      ) : null}
       {/* ── Info cards row ───────────────────────────────────────────── */}
       <Grid container spacing={1.5}>
         <Grid size={{ xs: 12, md: 5 }}>
@@ -164,7 +176,7 @@ export default function WordDetectionLessonPracticeStep({
           <MetricCard
             label={t("FINGER_SPELLING.LESSON.MATCH_CONFIDENCE")}
             value={displayedConfidence != null ? `${displayedConfidence}%` : "—"}
-            highlight={displayedConfidence != null && displayedConfidence >= 50}
+            highlight={!!finalLabel && displayedConfidence != null && displayedConfidence >= 50}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>

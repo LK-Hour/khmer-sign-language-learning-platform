@@ -17,7 +17,7 @@ import {
   normalizeLessonDetail,
   normalizeUnit,
 } from "./adapters";
-import { apiFetch } from "@/utils/api/client";
+import { apiFetch, isNotFoundError } from "@/utils/api/client";
 
 // ─── Units ─────────────────────────────────────────────────────────────────
 
@@ -30,8 +30,9 @@ export async function fetchWdUnit(unitId: number): Promise<WdUnit | null> {
   try {
     const unit = await apiFetch<WdUnit>(`/api/word_detection/units/${unitId}`);
     return normalizeUnit(unit);
-  } catch {
-    return null;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
   }
 }
 
@@ -45,8 +46,9 @@ export async function fetchWdChapter(
       `/api/word_detection/chapters/${chapterId}`
     );
     return normalizeChapter(chapter);
-  } catch {
-    return null;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
   }
 }
 
@@ -67,8 +69,9 @@ export async function fetchWdLesson(
       `/api/word_detection/lessons/${lessonId}`
     );
     return normalizeLessonDetail(lesson);
-  } catch {
-    return null;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
   }
 }
 
@@ -105,4 +108,19 @@ export async function fetchWdTree(): Promise<WdTrackUnit[]> {
         .sort((a, b) => a.orderIndex - b.orderIndex),
     }))
     .sort((a, b) => a.orderIndex - b.orderIndex);
+}
+
+
+export async function fetchWdLessonLearning(lessonId: number): Promise<{
+  lesson: WdLessonDetail; chapter: WdChapter; unit: WdUnit; nextLessonId: number | null;
+} | null> {
+  try {
+    const raw = await apiFetch<{
+      lesson: WdLessonDetail; chapter: WdChapter; unit: WdUnit; nextLessonId: number | null;
+    }>(`/api/word_detection/lessons/${lessonId}/learning`);
+    return { ...raw, lesson: normalizeLessonDetail(raw.lesson), chapter: normalizeChapter(raw.chapter), unit: normalizeUnit(raw.unit) };
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
+  }
 }

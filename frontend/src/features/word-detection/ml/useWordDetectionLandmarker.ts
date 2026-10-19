@@ -1,5 +1,6 @@
 "use client";
 
+import { recordWordTiming } from "./wordTiming";
 import {
   FilesetResolver,
   HandLandmarker,
@@ -49,6 +50,8 @@ export type WordDetectionLandmarks = {
   handDetected: boolean;
   /** Flattened row-major (30, 258) raw sequence on a 30 fps grid, or null before any valid frame. */
   sequenceFeatures: Float32Array | null;
+  /** Timestamp of an actual camera detection, used to reject frozen frames. */
+  detectedAt?: number;
 };
 
 /**
@@ -137,8 +140,8 @@ function copyFrameToCanvas(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
 ): void {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  if (canvas.width !== video.videoWidth) canvas.width = video.videoWidth;
+  if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
   // Mirror before detection, exactly like the live test (cv2.flip(frame, 1)):
   // landmarks and the left/right hand slots are then in the mirrored view.
   ctx.setTransform(-1, 0, 0, 1, canvas.width, 0);
@@ -204,6 +207,7 @@ export function useWordDetectionLandmarker() {
       return EMPTY_DETECTION;
     }
 
+    const started = performance.now();
     copyFrameToCanvas(video, canvas, ctx);
     const now = performance.now();
     // VIDEO mode needs strictly increasing timestamps.
@@ -222,22 +226,33 @@ export function useWordDetectionLandmarker() {
       // Only accumulate frames with a hand: all-zero frames make the model emit
       // a phantom default prediction.
       if (!handDetected) {
+        framesRef.current = [];
+        recordWordTiming("landmarks", started);
         return {
           poseLandmarks: pose,
           handLandmarks,
           handDetected: false,
-          sequenceFeatures: resampleSequence(framesRef.current),
+          detectedAt: performance.now(),
+          sequenceFeatures: null,
         };
       }
 
       const frame = buildRawFrame(pose, left, right);
       framesRef.current = pruneHistory([...framesRef.current, { time: now, values: frame }], now);
 
+      const frames = framesRef.current;
+      let sequence: Float32Array | null = null;
+      recordWordTiming("landmarks", started);
       return {
+        detectedAt: performance.now(),
         poseLandmarks: pose,
         handLandmarks,
         handDetected: true,
-        sequenceFeatures: resampleSequence(framesRef.current),
+        // Lazy: overlays run at 30 fps; sequences are needed only on sends.
+        get sequenceFeatures() {
+          sequence ??= resampleSequence(frames);
+          return sequence;
+        },
       };
     } catch {
       return EMPTY_DETECTION;

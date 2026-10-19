@@ -1,8 +1,7 @@
 "use client";
 
-import { Alert } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useTranslation } from "@/i18n/useTranslation";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import { fetchWdTree } from "../api/curriculum";
 import { useWordDetectionStore } from "../store";
 import { useAuthStore } from "@/store/auth.store";
@@ -16,7 +15,6 @@ type FetchState = "idle" | "loading" | "ready" | "error";
  * store, then renders the track UI. Mirrors FingerSpellingTrackContainer.
  */
 export default function WordDetectionTrackContainer() {
-  const { t } = useTranslation();
   const setUnits = useWordDetectionStore((s) => s.setUnits);
   const units = useWordDetectionStore((s) => s.units);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
@@ -62,9 +60,10 @@ export default function WordDetectionTrackContainer() {
 
   if (fetchState === "error") {
     return (
-      <Alert severity="error" sx={{ mx: "auto" }}>
-        {t("WORD_DETECTION.TRACK.LOAD_ERROR")}
-      </Alert>
+      <WordDetectionTrack
+        units={[]}
+        unavailable={<LostDatabaseConnectionView />}
+      />
     );
   }
 

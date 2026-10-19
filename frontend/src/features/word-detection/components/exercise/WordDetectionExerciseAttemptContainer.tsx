@@ -1,9 +1,9 @@
 "use client";
 
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Alert,
   Box,
   Button,
   CircularProgress,
@@ -144,9 +144,7 @@ export default function WordDetectionExerciseAttemptContainer({ unitId }: Props)
 
   if (fetchState === "error" || !unit) {
     return (
-      <Alert severity="error" sx={{ mx: "auto" }}>
-        {t("WORD_DETECTION.TRACK.LOAD_ERROR")}
-      </Alert>
+      <LostDatabaseConnectionView />
     );
   }
 

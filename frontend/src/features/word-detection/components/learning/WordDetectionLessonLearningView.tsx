@@ -13,7 +13,9 @@ import {
   type WordDetectionLandmarks,
 } from "@/features/word-detection/ml/useWordDetectionLandmarker";
 import { useWordRealtimePredictor } from "@/features/word-detection/ml/useWordRealtimePredictor";
-import { useWordDetectionPracticeActions } from "@/features/word-detection/hooks/useWordDetectionPracticeActions";
+import { useWordLessonSave } from "@/features/word-detection/hooks/useWordLessonSave";
+import { submitWdRecording } from "@/features/word-detection/api/practiceRecordings";
+import { WordPredictionStability, WORD_HAND_WARMUP_FRAMES } from "@/features/word-detection/ml/wordPredictionStability";
 import { usePredictionRetry } from "@/features/shared/usePredictionRetry";
 import { useWordContributionUpload } from "@/features/word-detection/hooks/useWordContributionUpload";
 import { useWordRecording } from "@/features/word-detection/hooks/useWordRecording";
@@ -27,12 +29,6 @@ import WordDetectionLessonPracticeStep from "./WordDetectionLessonPracticeStep";
 import WordRecordingPreview from "./WordRecordingPreview";
 
 const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 100;
-/** Consecutive live frames matching the target word at >= pass threshold
- *  before we latch a "passed" result (avoids a single flicker frame passing). */
-const WORD_PASS_STABLE_FRAMES = 6;
-/** Consecutive hand-present samples required before we start streaming, to
- *  avoid a single flicker frame triggering a phantom prediction. */
-const WORD_HAND_WARMUP_FRAMES = 10;
 const WORD_AUTO_RETRY_DELAY_MS = 1800;
 const WORD_AUTO_RETRY_POLL_INTERVAL_MS = 33;
 const WORD_DONATION_CONFIDENCE_THRESHOLD = 70;
@@ -64,15 +60,16 @@ export default function WordDetectionLessonLearningView({
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const latestDetectionRef = useRef<WordDetectionLandmarks>(EMPTY_WORD_DETECTION);
-  const stableLabelRef = useRef<string | null>(null);
-  const stableCountRef = useRef(0);
+  const stabilityRef = useRef(new WordPredictionStability());
   const handPresentCountRef = useRef(0);
   const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingInFlightRef = useRef(false);
-  const resultSavedRef = useRef(false);
-  const recordingStartTimeRef = useRef<number | null>(null);
+  const recordingSessionRef = useRef({ active: true, canceled: false, prediction: null as {
+    label: string; confidence: number; seq: number;
+  } | null });
+  const navigatingRef = useRef(false);
   const capturedPredictionRef = useRef<typeof capturedPrediction>(null);
   const [recError, setRecError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -82,16 +79,15 @@ export default function WordDetectionLessonLearningView({
   const [isRecordingPreviewOpen, setIsRecordingPreviewOpen] = useState(false);
   const [isPermissionOpen, setIsPermissionOpen] = useState(false);
   const [handDetected, setHandDetected] = useState(false);
-  const [handWarmupComplete, setHandWarmupComplete] = useState(false);
   const [manualRetryListening, setManualRetryListening] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;
     confidence: number;
     seq: number;
   } | null>(null);
-  const { completePractice } = useWordDetectionPracticeActions();
+  const { save: saveProgress, status: saveStatus } = useWordLessonSave(lesson);
   const {
-    isRecording,
+    stopRecording,
     error: recordingError,
     recordForDuration,
   } = useWordRecording();
@@ -144,11 +140,11 @@ export default function WordDetectionLessonLearningView({
     shouldAutoRetry,
   } = retryState;
 
-  const handlePermissionClose = useCallback((_doNotShowAgain: boolean) => {
+  const handlePermissionClose = useCallback(() => {
     setIsPermissionOpen(false);
   }, []);
 
-  const handlePermissionSkip = useCallback((_doNotShowAgain: boolean) => {
+  const handlePermissionSkip = useCallback(() => {
     setIsPermissionOpen(false);
   }, []);
 
@@ -163,76 +159,69 @@ export default function WordDetectionLessonLearningView({
     latestDetectionRef.current = detection;
   }, []);
 
-  // A correct prediction is saved as soon as it happens; Continue only saves
-  // when the user ran out of attempts without a match.
+  // Continue shares this pending write and never navigates before confirmation.
   useEffect(() => {
     if (!continueEnabled || !labelMatches || !capturedPrediction) return;
-    if (resultSavedRef.current) return;
-    resultSavedRef.current = true;
-    completePractice(lesson, capturedPrediction.confidence, true).catch(() => {
-      resultSavedRef.current = false;
+    void saveProgress(capturedPrediction.confidence, true).catch(() => {
+      // The save hook exposes the error. Continue retries the same result.
     });
-  }, [capturedPrediction, completePractice, continueEnabled, labelMatches, lesson]);
+  }, [capturedPrediction, continueEnabled, labelMatches, saveProgress]);
+
+  const nextHref = `/${locale}${nextLessonId != null ? ROUTES.words.lesson(nextLessonId) : ROUTES.words.root}`;
+  useEffect(() => {
+    // Prefetch after saving so unlock/progress data reflects the confirmed write.
+    if (saveStatus === "saved") router.prefetch(nextHref);
+  }, [nextHref, router, saveStatus]);
 
   const handleContinue = useCallback(async () => {
-    if (isCompleting || isRecording || isUploading) return;
+    if (!continueEnabled || navigatingRef.current) return;
+    navigatingRef.current = true;
+    setIsCompleting(true);
+    try {
+      await saveProgress(labelMatches ? capturedPrediction?.confidence ?? 0 : 0, labelMatches);
+      router.push(nextHref);
+    } catch {
+      navigatingRef.current = false;
+      setIsCompleting(false);
+    }
+  }, [capturedPrediction, continueEnabled, labelMatches, nextHref, router, saveProgress]);
 
-    if (!resultSavedRef.current) {
-      setIsCompleting(true);
-      try {
-        await completePractice(lesson, 0, false);
-        resultSavedRef.current = true;
-      } catch {
-        setIsCompleting(false);
-        setRecError(t("WORD_DETECTION.LESSON.PROGRESS_SYNC_FAILED"));
-        return;
+  useEffect(() => {
+    recordingSessionRef.current.active = true;
+    return () => {
+      const session = recordingSessionRef.current;
+      session.active = false;
+      // Only previously agreed, successful donations may outlive the page.
+      if (!usePermissionStore.getState().hasAgreed || !session.prediction ||
+          session.prediction.confidence < WORD_DONATION_CONFIDENCE_THRESHOLD ||
+          session.prediction.label !== lesson.word) {
+        session.canceled = true;
+        stopRecording();
       }
-    }
-
-    setIsCompleting(false);
-
-    if (nextLessonId != null) {
-      router.push(`/${locale}${ROUTES.words.lesson(nextLessonId)}`);
-    } else {
-      router.push(`/${locale}${ROUTES.words.root}`);
-    }
-  }, [
-    capturedPrediction,
-    completePractice,
-    continueEnabled,
-    isCompleting,
-    lesson,
-    locale,
-    nextLessonId,
-    router,
-    t,
-    isRecording,
-    isUploading,
-    labelMatches,
-  ]);
+    };
+  }, [lesson.word, stopRecording]);
 
   const resetPredictionState = useCallback(() => {
     latestDetectionRef.current = EMPTY_WORD_DETECTION;
-    stableLabelRef.current = null;
-    stableCountRef.current = 0;
+    stabilityRef.current.reset();
     handPresentCountRef.current = 0;
     setHandDetected(false);
-    setHandWarmupComplete(false);
     setCapturedPrediction(null);
     capturedPredictionRef.current = null;
     setRecError(null);
     setRecordedBlob(null);
     setIsRecordingPreviewOpen(false);
     recordingInFlightRef.current = false;
-    recordingStartTimeRef.current = null;
+    recordingSessionRef.current.canceled = true;
+    stopRecording();
+    recordingSessionRef.current = { active: true, canceled: false, prediction: null };
     setRetryWaiting(false);
     resetSequence();
     resetLivePrediction();
-  }, [resetLivePrediction, resetSequence]);
+  }, [resetLivePrediction, resetSequence, stopRecording]);
 
   useEffect(() => {
     resetAttempts();
-    resultSavedRef.current = false;
     queueMicrotask(() => {
       setManualRetryListening(false);
       resetPredictionState();
@@ -246,18 +235,17 @@ export default function WordDetectionLessonLearningView({
 
     const { hasAgreed } = usePermissionStore.getState();
     if (!hasAgreed) {
-      setIsPermissionOpen(true);
+      queueMicrotask(() => setIsPermissionOpen(true));
     }
   }, [lesson.orderIndex]);
 
   useEffect(() => {
-    if (isLandmarkerReady) {
-      connectPredictor();
-    }
+    // Authenticate in parallel with loading the browser landmark models.
+    connectPredictor();
     return () => {
       disconnectPredictor();
     };
-  }, [connectPredictor, disconnectPredictor, isLandmarkerReady]);
+  }, [connectPredictor, disconnectPredictor]);
 
   useEffect(() => {
     if (!isLandmarkerReady || predictorState !== "ready") {
@@ -271,37 +259,29 @@ export default function WordDetectionLessonLearningView({
     samplingLoopRef.current = setInterval(() => {
       // Prediction already passed: stop streaming so the server is free for
       // the progress save and next-lesson load.
-      if (continueEnabled && !manualRetryListening) return;
+      if ((continueEnabled && !manualRetryListening) || retryWaiting || capturedPredictionRef.current) return;
 
       const detection = latestDetectionRef.current;
 
       // Require the hand to be present for a few consecutive samples before
       // streaming, so a single flicker frame can't trigger a phantom result.
-      if (!detection.handDetected) {
+      if (!detection.handDetected || (detection.detectedAt != null && performance.now() - detection.detectedAt > 250)) {
         handPresentCountRef.current = 0;
         setHandDetected(false);
         return;
       }
       handPresentCountRef.current += 1;
 
-      if (!handDetected) {
-        setHandDetected(true);
-      }
+      setHandDetected(true);
 
       if (handPresentCountRef.current < WORD_HAND_WARMUP_FRAMES) {
         return;
       }
 
-      if (!handWarmupComplete) {
-        setHandWarmupComplete(true);
-      }
-
-      const sequenceFeatures = detection.sequenceFeatures;
-      if (!sequenceFeatures || sequenceFeatures.length !== WORD_SEQUENCE_FEATURE_COUNT) {
-        return;
-      }
-
-      sendFeatures(Array.from(sequenceFeatures), lesson.word);
+      sendFeatures(() => {
+        const sequence = detection.sequenceFeatures;
+        return sequence?.length === WORD_SEQUENCE_FEATURE_COUNT ? sequence : null;
+      }, lesson.word);
     }, WORD_PREDICTION_SAMPLE_INTERVAL_MS);
 
     return () => {
@@ -310,34 +290,22 @@ export default function WordDetectionLessonLearningView({
         samplingLoopRef.current = null;
       }
     };
-  }, [isLandmarkerReady, lesson.word, predictorState, sendFeatures, handDetected, handWarmupComplete, continueEnabled, manualRetryListening]);
+  }, [isLandmarkerReady, lesson.word, predictorState, sendFeatures, continueEnabled, manualRetryListening, retryWaiting]);
 
   useEffect(() => {
-    if ((continueEnabled && !manualRetryListening) || retryWaiting) return;
-
+    if ((continueEnabled && !manualRetryListening) || retryWaiting || capturedPredictionRef.current) return;
+    // Responses describe the hand-present frames submitted earlier, not the
+    // current camera frame. The predictor correlates responses to this attempt;
+    // stability uses their sampledAt timestamps, so lowering a hand while the
+    // server responds must not discard otherwise valid matching evidence.
     const prediction = livePrediction;
-    if (!prediction.label || prediction.label === "No Action") {
-      stableLabelRef.current = null;
-      stableCountRef.current = 0;
-      return;
-    }
-
-    if (prediction.label === stableLabelRef.current) {
-      stableCountRef.current += 1;
-    } else {
-      stableLabelRef.current = prediction.label;
-      stableCountRef.current = 1;
-    }
-
-    if (stableCountRef.current >= WORD_PASS_STABLE_FRAMES) {
-      setCapturedPrediction({
-        label: prediction.label as string,
-        confidence: prediction.confidence,
-        seq: prediction.seq,
-      });
+    if (stabilityRef.current.accept(prediction)) {
+      const captured = { label: prediction.label!, confidence: prediction.confidence, seq: prediction.seq };
+      capturedPredictionRef.current = captured;
+      recordingSessionRef.current.prediction = captured;
+      setCapturedPrediction(captured);
       setManualRetryListening(false);
-      stableLabelRef.current = null;
-      stableCountRef.current = 0;
+      stabilityRef.current.reset();
     }
   }, [continueEnabled, livePrediction, manualRetryListening, retryWaiting]);
 
@@ -413,13 +381,14 @@ export default function WordDetectionLessonLearningView({
     if (recordedBlob || isRecordingPreviewOpen) return;
     if (continueEnabled) return;
 
-    recordingStartTimeRef.current = Date.now();
+    const session = recordingSessionRef.current;
     recordingInFlightRef.current = true;
 
     recordForDuration(rawStream, WORD_RECORDING_DURATION_MS)
-      .then(({ blob }) => {
+      .then(async ({ blob }) => {
+        if (session.canceled) return;
         // Use ref to get the latest prediction at the time recording finished
-        const latestPrediction = capturedPredictionRef.current;
+        const latestPrediction = session.prediction;
         const predictionMatches =
           latestPrediction &&
           latestPrediction.label === lesson.word &&
@@ -430,34 +399,39 @@ export default function WordDetectionLessonLearningView({
           const { hasAgreed } = usePermissionStore.getState();
           if (hasAgreed) {
             // Auto-donate: upload directly without showing preview dialog
-            uploadContribution({
+            const upload = session.active ? uploadContribution : submitWdRecording;
+            await upload({
               video: blob,
               lessonId: lesson.id,
               word: lesson.word,
               predictedLabel: latestPrediction.label,
               confidence: latestPrediction.confidence,
             });
-          } else {
+          } else if (session.active) {
             // Show preview dialog for user to choose
             setRecordedBlob(blob);
             setIsRecordingPreviewOpen(true);
           }
-        } else {
+        } else if (session.active) {
           // Discard silently - no preview shown
           setRecordedBlob(null);
         }
       })
       .catch((err) => {
+        if (session.canceled) return;
+        if (!session.active) {
+          console.warn("Background word contribution upload failed", err);
+          return;
+        }
         const message = err instanceof Error ? err.message : "Recording failed.";
         setRecError(message);
       })
       .finally(() => {
-        recordingInFlightRef.current = false;
-        recordingStartTimeRef.current = null;
+        if (recordingSessionRef.current === session) recordingInFlightRef.current = false;
       });
   }, [rawStream, recordForDuration, recordedBlob, isRecordingPreviewOpen, handDetected, lesson.word, lesson.id, continueEnabled, uploadContribution]);
 
-  // Recording no longer stops early on prediction; it runs for full 4s
+  // Agreed donations keep their full duration without blocking Continue.
 
   useEffect(() => {
     if (
@@ -481,10 +455,9 @@ export default function WordDetectionLessonLearningView({
     }
   }, [recordingError]);
 
-  const handleDiscardRecording = useCallback((_doNotShowAgain: boolean) => {
+  const handleDiscardRecording = useCallback(() => {
     setIsRecordingPreviewOpen(false);
     setRecordedBlob(null);
-    setHandWarmupComplete(false);
   }, []);
 
   const handleUploadRecording = useCallback(
@@ -504,7 +477,6 @@ export default function WordDetectionLessonLearningView({
         }
         setIsRecordingPreviewOpen(false);
         setRecordedBlob(null);
-        setHandWarmupComplete(false);
       } catch {
         // The upload hook owns the visible error state and keeps the blob for retry.
       }
@@ -554,8 +526,9 @@ export default function WordDetectionLessonLearningView({
         liveConfidence={livePrediction.confidence}
         liveLabelMatches={livePrediction.labelMatches}
         predictorReady={predictorState === "ready"}
-        recError={recError ?? landmarkerError ?? predictorError}
-        isContinuing={isCompleting || isRecording || isUploading}
+        recError={saveStatus === "error" ? t("WORD_DETECTION.LESSON.PROGRESS_SYNC_FAILED") : recError ?? landmarkerError ?? predictorError}
+        isContinuing={isCompleting}
+        progressSaveStatus={saveStatus}
         showRetryButton={continueEnabled && capturedPrediction != null}
         onRetry={handleRetry}
         onContinue={handleContinue}

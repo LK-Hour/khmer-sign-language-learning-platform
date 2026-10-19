@@ -26,13 +26,12 @@ import {
 import { useWordRealtimePredictor } from "../../ml/useWordRealtimePredictor";
 import { useWordDetectionStore } from "../../store";
 import type { WdChapterPractice, WdPracticeItem } from "../../types";
+import { WordPredictionStability, WORD_HAND_WARMUP_FRAMES } from "../../ml/wordPredictionStability";
 import ChapterPracticeStep from "./ChapterPracticeStep";
 
 const PRACTICE_FEATURE = "word-detection" as const;
 
 const WORD_PREDICTION_SAMPLE_INTERVAL_MS = 100;
-const WORD_PASS_STABLE_FRAMES = 6;
-const WORD_HAND_WARMUP_FRAMES = 10;
 const WORD_AUTO_RETRY_DELAY_MS = 1800;
 const WORD_AUTO_RETRY_POLL_INTERVAL_MS = 33;
 const ADVANCE_DELAY_MS = 2200;
@@ -57,13 +56,12 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const latestDetectionRef = useRef<WordDetectionLandmarks>(EMPTY_WORD_DETECTION);
-  const stableLabelRef = useRef<string | null>(null);
-  const stableCountRef = useRef(0);
+  const stabilityRef = useRef(new WordPredictionStability());
   const handPresentCountRef = useRef(0);
   const samplingLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRetryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const savedProgressRef = useRef(
+  const [savedProgress] = useState(() =>
     loadChapterPracticeProgress(
       PRACTICE_FEATURE,
       practice.chapterId,
@@ -71,20 +69,18 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
     )
   );
   const perWordScoresRef = useRef<number[]>(
-    savedProgressRef.current?.scores ?? []
+    savedProgress?.scores ?? []
   );
   const advancingRef = useRef(false);
 
   const [currentIndex, setCurrentIndex] = useState(
-    () => savedProgressRef.current?.currentIndex ?? 0
+    () => savedProgress?.currentIndex ?? 0
   );
   const [isComplete, setIsComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [finalAvgScore, setFinalAvgScore] = useState<number | null>(null);
   const [recError, setRecError] = useState<string | null>(null);
   const [retryWaiting, setRetryWaiting] = useState(false);
-  const [handDetected, setHandDetected] = useState(false);
-  const [handWarmupComplete, setHandWarmupComplete] = useState(false);
   const [capturedPrediction, setCapturedPrediction] = useState<{
     label: string;
     confidence: number;
@@ -149,11 +145,8 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
     setRecError(null);
     latestDetectionRef.current = EMPTY_WORD_DETECTION;
     setCapturedPrediction(null);
-    stableLabelRef.current = null;
-    stableCountRef.current = 0;
+    stabilityRef.current.reset();
     handPresentCountRef.current = 0;
-    setHandDetected(false);
-    setHandWarmupComplete(false);
     resetSequence();
     resetLivePrediction();
   }, [clearAutoRetryTimers, resetLivePrediction, resetSequence]);
@@ -277,13 +270,13 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
   }, [continueEnabled, capturedPrediction, isComplete, advanceToNextWord]);
 
   useEffect(() => {
-    if (isLandmarkerReady && !continueEnabled && !isComplete) {
+    if (!isComplete) {
       connectPredictor();
     }
     return () => {
       disconnectPredictor();
     };
-  }, [isLandmarkerReady, continueEnabled, isComplete, connectPredictor, disconnectPredictor]);
+  }, [isComplete, connectPredictor, disconnectPredictor]);
 
   useEffect(() => {
     if (
@@ -303,31 +296,20 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
     samplingLoopRef.current = setInterval(() => {
       const detection = latestDetectionRef.current;
 
-      if (!detection.handDetected) {
+      if (!detection.handDetected || (detection.detectedAt != null && performance.now() - detection.detectedAt > 250)) {
         handPresentCountRef.current = 0;
-        setHandDetected(false);
         return;
       }
       handPresentCountRef.current += 1;
-
-      if (!handDetected) {
-        setHandDetected(true);
-      }
 
       if (handPresentCountRef.current < WORD_HAND_WARMUP_FRAMES) {
         return;
       }
 
-      if (!handWarmupComplete) {
-        setHandWarmupComplete(true);
-      }
-
-      const sequenceFeatures = detection.sequenceFeatures;
-      if (!sequenceFeatures || sequenceFeatures.length !== WORD_SEQUENCE_FEATURE_COUNT) {
-        return;
-      }
-
-      sendFeatures(Array.from(sequenceFeatures), displayWord);
+      sendFeatures(() => {
+        const sequence = detection.sequenceFeatures;
+        return sequence?.length === WORD_SEQUENCE_FEATURE_COUNT ? sequence : null;
+      }, displayWord);
     }, WORD_PREDICTION_SAMPLE_INTERVAL_MS);
 
     return () => {
@@ -344,41 +326,24 @@ export default function ChapterPracticeView({ practice }: ChapterPracticeViewPro
     currentItem,
     sendFeatures,
     displayWord,
-    handDetected,
-    handWarmupComplete,
   ]);
 
   useEffect(() => {
     if (continueEnabled || retryWaiting || advancingRef.current) return;
-
+    // Responses describe the hand-present frames submitted earlier, not the
+    // current camera frame. The predictor correlates responses to this attempt;
+    // stability uses their sampledAt timestamps, so lowering a hand while the
+    // server responds must not discard otherwise valid matching evidence.
     const prediction = livePrediction;
-    if (!prediction.label || prediction.label === "No Action") {
-      stableLabelRef.current = null;
-      stableCountRef.current = 0;
-      return;
-    }
-
-    if (prediction.label === stableLabelRef.current) {
-      stableCountRef.current += 1;
-    } else {
-      stableLabelRef.current = prediction.label;
-      stableCountRef.current = 1;
-    }
-
-    if (stableCountRef.current >= WORD_PASS_STABLE_FRAMES) {
-      setCapturedPrediction({
-        label: prediction.label as string,
-        confidence: prediction.confidence,
-        seq: prediction.seq,
-      });
-      stableLabelRef.current = null;
-      stableCountRef.current = 0;
+    if (stabilityRef.current.accept(prediction)) {
+      setCapturedPrediction({ label: prediction.label!, confidence: prediction.confidence, seq: prediction.seq });
+      stabilityRef.current.reset();
     }
   }, [continueEnabled, livePrediction, retryWaiting]);
 
   useEffect(() => {
     resetAttempts();
-    resetPredictionAttempt();
+    queueMicrotask(resetPredictionAttempt);
   }, [currentIndex, resetAttempts, resetPredictionAttempt]);
 
   const handleDetection = useCallback((detection: WordDetectionLandmarks) => {

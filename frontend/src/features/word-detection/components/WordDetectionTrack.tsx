@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { LearningTrack } from "@/components/track";
 import { ROUTES } from "@/constants/routes";
 import { useTranslation } from "@/i18n/useTranslation";
@@ -16,6 +18,8 @@ import { getPracticeDisplayRange } from "../utils/chapter";
 
 type WordDetectionTrackProps = {
   units: WdTrackUnit[];
+  /** Shown instead of the unit list when the curriculum failed to load. */
+  unavailable?: ReactNode;
 };
 
 /** Fields a learner might type to find a word lesson. */
@@ -25,7 +29,7 @@ function getLessonSearchText(lesson: WdLesson) {
 
 const PRACTICE_SUBTITLE_SX = { fontSize: KslFontSizes.lg, fontFamily: fontFamilies.khmer };
 
-export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
+export default function WordDetectionTrack({ units, unavailable }: WordDetectionTrackProps) {
   const { locale, t } = useTranslation();
   const expandedUnitId = useWordDetectionStore((s) => s.expandedUnitId);
   const expandedChapterIds = useWordDetectionStore((s) => s.expandedChapterIds);
@@ -38,6 +42,7 @@ export default function WordDetectionTrack({ units }: WordDetectionTrackProps) {
   return (
     <LearningTrack
       units={units}
+      unavailable={unavailable}
       expansion={{
         expandedUnitId,
         expandedChapterIds,
