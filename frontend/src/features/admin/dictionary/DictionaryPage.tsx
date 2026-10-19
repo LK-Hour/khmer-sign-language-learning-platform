@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Add from "@mui/icons-material/Add";
 import { Alert, Box, Button } from "@mui/material";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import PageHeader from "../components/shared/PageHeader";
 import SearchInput from "../components/shared/SearchInput";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
@@ -15,7 +16,7 @@ import {
   type DictionaryItem,
   type PaginatedDictionaryResponse,
 } from "../api/dictionaryAdminApi";
-import { ApiError } from "@/utils/api/client";
+import { ApiError, isServiceUnavailable } from "@/utils/api/client";
 import { useLocale } from "@/i18n/locale-context";
 import SuccessSnackbar from "../components/shared/SuccessSnackbar";
 
@@ -42,6 +43,7 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
   const [data, setData] = useState<PaginatedDictionaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const title = type === "characters" ? "Characters" : "Words";
   const basePath = `/${locale}/admin/dictionary/${type}`;
@@ -59,6 +61,7 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
     try {
       const params = {
         page: page + 1, // API is 1-indexed
@@ -69,7 +72,11 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
       const result = await fetcher(params);
       setData(result);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to load data.");
+      if (isServiceUnavailable(err)) {
+        setLoadFailed(true);
+      } else {
+        setError(err instanceof ApiError ? err.message : "Failed to load data.");
+      }
     } finally {
       setLoading(false);
     }
@@ -151,23 +158,26 @@ export default function DictionaryPage({ type }: DictionaryPageProps) {
         </Alert>
       )}
 
-      {/* Data table */}
-      <DataTable<DictionaryItem>
-        columns={columns}
-        rows={data?.items ?? []}
-        loading={loading}
-        onRowClick={(row) => router.push(`${basePath}/${row.id}/edit`)}
-        pagination={{
-          page,
-          rowsPerPage,
-          total: data?.total ?? 0,
-        }}
-        onPageChange={setPage}
-        onRowsPerPageChange={(rpp) => {
-          setRowsPerPage(rpp);
-          setPage(0);
-        }}
-      />
+      {loadFailed ? (
+        <LostDatabaseConnectionView onRetry={loadData} />
+      ) : (
+        <DataTable<DictionaryItem>
+          columns={columns}
+          rows={data?.items ?? []}
+          loading={loading}
+          onRowClick={(row) => router.push(`${basePath}/${row.id}/edit`)}
+          pagination={{
+            page,
+            rowsPerPage,
+            total: data?.total ?? 0,
+          }}
+          onPageChange={setPage}
+          onRowsPerPageChange={(rpp) => {
+            setRowsPerPage(rpp);
+            setPage(0);
+          }}
+        />
+      )}
 
       {/* Success notification from form submission */}
       <SuccessSnackbar />

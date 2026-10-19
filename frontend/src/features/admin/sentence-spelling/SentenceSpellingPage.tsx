@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Add from "@mui/icons-material/Add";
 import { Alert, Box, Button } from "@mui/material";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import PageHeader from "../components/shared/PageHeader";
 import SearchInput from "../components/shared/SearchInput";
 import DataTable, { type DataTableColumn } from "../components/shared/DataTable";
@@ -17,7 +18,7 @@ import {
   type SentenceItem,
   type PaginatedSentenceResponse,
 } from "../api/sentenceSpellingAdminApi";
-import { ApiError } from "@/utils/api/client";
+import { ApiError, isServiceUnavailable } from "@/utils/api/client";
 import { useLocale } from "@/i18n/locale-context";
 
 // ---------------------------------------------------------------------------
@@ -35,6 +36,7 @@ export default function SentenceSpellingPage() {
   const [data, setData] = useState<PaginatedSentenceResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<SentenceItem | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -54,6 +56,7 @@ export default function SentenceSpellingPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
     try {
       const params = {
         page: page + 1, // API is 1-indexed
@@ -63,7 +66,11 @@ export default function SentenceSpellingPage() {
       const result = await listSentences(params);
       setData(result);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to load data.");
+      if (isServiceUnavailable(err)) {
+        setLoadFailed(true);
+      } else {
+        setError(err instanceof ApiError ? err.message : "Failed to load data.");
+      }
     } finally {
       setLoading(false);
     }
@@ -153,30 +160,33 @@ export default function SentenceSpellingPage() {
         />
       </Box>
 
-      {/* Error */}
+      {/* Delete error */}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
-      {/* Data table */}
-      <DataTable<SentenceItem>
-        columns={columns}
-        rows={data?.items ?? []}
-        loading={loading}
-        onRowClick={(row) => router.push(`${basePath}/${row.id}/edit`)}
-        pagination={{
-          page,
-          rowsPerPage,
-          total: data?.total ?? 0,
-        }}
-        onPageChange={setPage}
-        onRowsPerPageChange={(rpp) => {
-          setRowsPerPage(rpp);
-          setPage(0);
-        }}
-      />
+      {loadFailed ? (
+        <LostDatabaseConnectionView onRetry={loadData} />
+      ) : (
+        <DataTable<SentenceItem>
+          columns={columns}
+          rows={data?.items ?? []}
+          loading={loading}
+          onRowClick={(row) => router.push(`${basePath}/${row.id}/edit`)}
+          pagination={{
+            page,
+            rowsPerPage,
+            total: data?.total ?? 0,
+          }}
+          onPageChange={setPage}
+          onRowsPerPageChange={(rpp) => {
+            setRowsPerPage(rpp);
+            setPage(0);
+          }}
+        />
+      )}
 
       {/* Success notification from form submission */}
       <SuccessSnackbar />

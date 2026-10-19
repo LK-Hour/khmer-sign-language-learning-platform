@@ -23,8 +23,12 @@ import { useAutoRefresh } from "@/features/admin/hooks/useAutoRefresh";
 import {
   getDashboardAnalytics,
   type DashboardAnalyticsResponse,
+  type KpiValue,
 } from "@/features/admin/api/analyticsAdminApi";
 
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { isServiceUnavailable } from "@/utils/api/client";
+import { SERVICE_UNAVAILABLE_ERROR } from "../components/shared/LoadError";
 import StatCards from "./StatCards";
 import type { KpiData } from "./StatCards";
 import BarListChart from "./BarListChart";
@@ -126,14 +130,18 @@ function mapKpis(
   ];
 
   return entries.map(({ key, title }) => {
-    const kpi = response[key as keyof DashboardAnalyticsResponse] as {
-      value: number;
-      change: number;
-    };
+    const kpi = response[key as keyof DashboardAnalyticsResponse] as KpiValue;
     return {
       title,
       value: formatKpiValue(key, kpi.value),
       change: kpi.change,
+      changeUnit: kpi.change_unit,
+      // Only worth a "New" chip when something actually happened this period.
+      newLabel: kpi.delta > 0 ? t("ANALYTICS.NEW") : undefined,
+      subtitle:
+        kpi.total !== null
+          ? `${kpi.total.toLocaleString()} ${t("ANALYTICS.ALL_TIME")}`
+          : undefined,
     };
   });
 }
@@ -207,8 +215,11 @@ export default function AdminAnalyticsDashboard() {
       setCharts({ data: mapCharts(response, t), loading: false, error: null });
     } catch (err) {
       if (!silent) {
-        const message =
-          err instanceof Error ? err.message : t("ANALYTICS.FAILED_TO_LOAD");
+        const message = isServiceUnavailable(err)
+          ? SERVICE_UNAVAILABLE_ERROR
+          : err instanceof Error
+            ? err.message
+            : t("ANALYTICS.FAILED_TO_LOAD");
         setKpis({ data: null, loading: false, error: message });
         setCharts({ data: null, loading: false, error: message });
       }
@@ -221,17 +232,31 @@ export default function AdminAnalyticsDashboard() {
 
   useAutoRefresh(() => fetchData({ silent: true }));
 
+  const header = (
+    <PageHeader
+      title={t("ANALYTICS.TITLE")}
+      subtitle={t("ANALYTICS.SUBTITLE")}
+      breadcrumbs={[
+        { label: t("PAGE.ANALYTICS"), href: `/${locale}/admin` },
+        { label: t("ANALYTICS.TITLE") },
+      ]}
+    />
+  );
+
+  // An outage fails every section at once; show one clear view instead of seven alerts.
+  if (kpis.error === SERVICE_UNAVAILABLE_ERROR) {
+    return (
+      <Stack spacing={3}>
+        {header}
+        <LostDatabaseConnectionView onRetry={fetchData} />
+      </Stack>
+    );
+  }
+
   return (
     <Stack spacing={3}>
       {/* Page Header */}
-      <PageHeader
-        title={t("ANALYTICS.TITLE")}
-        subtitle={t("ANALYTICS.SUBTITLE")}
-        breadcrumbs={[
-          { label: t("PAGE.ANALYTICS"), href: `/${locale}/admin` },
-          { label: t("ANALYTICS.TITLE") },
-        ]}
-      />
+      {header}
 
       {/* KPI Stat Cards-6 cards (3 cols desktop, 2 tablet, 1 mobile) */}
       <Box>

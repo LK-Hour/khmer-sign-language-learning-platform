@@ -11,7 +11,11 @@ import { statusTone } from "../../theme/tones";
 export interface StatsCardProps {
   title: string;
   value: string | number;
-  change?: number;
+  /** undefined hides the chip; null shows `newLabel` (no baseline last period). */
+  change?: number | null;
+  changeUnit?: "percent" | "points";
+  newLabel?: string;
+  subtitle?: string;
   icon?: ReactNode;
   chart?: ReactNode;
   sx?: SxProps<Theme>;
@@ -28,10 +32,14 @@ export default function StatsCard({
   title,
   value,
   change,
+  changeUnit = "percent",
+  newLabel,
+  subtitle,
   icon,
   chart,
   sx,
 }: StatsCardProps) {
+  const unit = changeUnit === "points" ? " pts" : "%";
   return (
     <Card elevation={0} sx={{ p: 0, width: "100%", height: "100%", ...sx }}>
       <CardContent sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -45,11 +53,19 @@ export default function StatsCard({
               {formatValue(value)}
             </Typography>
 
-            {change !== undefined && (
+            {change === null && newLabel && (
+              <Chip
+                size="small"
+                label={newLabel}
+                sx={{ fontWeight: 700, fontSize: "0.75rem", borderRadius: "6px" }}
+              />
+            )}
+
+            {change !== undefined && change !== null && (
               <Chip
                 size="small"
                 icon={change >= 0 ? <TrendingUpIcon sx={{ fontSize: 16 }} /> : <TrendingDownIcon sx={{ fontSize: 16 }} />}
-                label={`${change >= 0 ? "+" : ""}${change}%`}
+                label={`${change >= 0 ? "+" : ""}${change}${unit}`}
                 sx={(theme) => ({
                   ...statusTone(theme, change >= 0 ? "success" : "error"),
                   fontWeight: 700,
@@ -60,6 +76,12 @@ export default function StatsCard({
                   },
                 })}
               />
+            )}
+
+            {subtitle && (
+              <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
+                {subtitle}
+              </Typography>
             )}
           </Box>
 

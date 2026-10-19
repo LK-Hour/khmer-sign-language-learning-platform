@@ -1,9 +1,9 @@
 "use client";
 
+import LoadError, { loadErrorState } from "../components/shared/LoadError";
 import {
   Alert,
   Box,
-  Button,
   FormControl,
   Grid,
   InputLabel,
@@ -71,11 +71,7 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
       );
       setContributions(detailed);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to load contributions",
-      );
+      setError(loadErrorState(err, "Failed to load contributions"));
     } finally {
       setLoading(false);
     }
@@ -155,16 +151,7 @@ export default function ContributionCardGrid({ wordId }: ContributionCardGridPro
 
   if (error) {
     return (
-      <Alert
-        severity="error"
-        action={
-          <Button color="inherit" size="small" onClick={fetchContributions}>
-            Retry
-          </Button>
-        }
-      >
-        {error}
-      </Alert>
+      <LoadError error={error} onRetry={fetchContributions} />
     );
   }
 

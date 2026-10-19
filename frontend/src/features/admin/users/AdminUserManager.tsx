@@ -35,7 +35,8 @@ import {
   type ListUsersParams,
   type UserResponse,
 } from "../api/userAdminApi";
-import { ApiError } from "@/utils/api/client";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { ApiError, isServiceUnavailable } from "@/utils/api/client";
 import PageHeader from "../components/shared/PageHeader";
 import Scrollbar from "../components/shared/Scrollbar";
 import StatusChip from "../components/shared/StatusChip";
@@ -120,6 +121,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // ── Detail panel state ───────────────────────────────────────────────────
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
@@ -137,6 +139,7 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
     if (!silent) {
       setLoading(true);
       setError(null);
+      setLoadFailed(false);
     }
 
     try {
@@ -171,7 +174,11 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
       );
     } catch (err) {
       if (!silent) {
-        setError(err instanceof Error ? err.message : "Failed to fetch users");
+        if (isServiceUnavailable(err)) {
+          setLoadFailed(true);
+        } else {
+          setError(err instanceof Error ? err.message : "Failed to fetch users");
+        }
       }
     } finally {
       if (!silent) setLoading(false);
@@ -319,7 +326,9 @@ export default function AdminUserManager({ roleFilter }: AdminUserManagerProps) 
       )}
 
       {/* Table */}
-      {loading ? (
+      {loadFailed ? (
+        <LostDatabaseConnectionView onRetry={() => fetchUsers()} />
+      ) : loading ? (
         <Card>
           <Box sx={{ p: 2 }}>
             {Array.from({ length: 5 }).map((_, i) => (

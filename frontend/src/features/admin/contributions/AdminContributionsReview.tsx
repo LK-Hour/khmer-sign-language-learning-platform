@@ -1,9 +1,8 @@
 "use client";
 
+import LoadError, { loadErrorState } from "../components/shared/LoadError";
 import {
-  Alert,
   Box,
-  Button,
   Chip,
   Skeleton,
   Stack,
@@ -13,7 +12,6 @@ import { useRouter } from "next/navigation";
 
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
-import { ApiError } from "@/utils/api/client";
 
 import * as contributionsApi from "../api/contributionsAdminApi";
 import type {
@@ -69,11 +67,7 @@ export default function AdminContributionsReview() {
       const data = await contributionsApi.getContributionTree();
       setTree(data);
     } catch (err) {
-      setTreeError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to load curriculum tree",
-      );
+      setTreeError(loadErrorState(err, "Failed to load curriculum tree"));
     } finally {
       setTreeLoading(false);
     }
@@ -86,11 +80,7 @@ export default function AdminContributionsReview() {
       const data = await contributionsApi.listContributions({ word_id: wordId, status: "all" });
       setContributions(data);
     } catch (err) {
-      setContributionsError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to load contributions",
-      );
+      setContributionsError(loadErrorState(err, "Failed to load contributions"));
     } finally {
       setContributionsLoading(false);
     }
@@ -173,16 +163,7 @@ export default function AdminContributionsReview() {
             </Stack>
           ) : treeError ? (
             <Stack sx={{ p: 2 }} spacing={1}>
-              <Alert
-                severity="error"
-                action={
-                  <Button color="inherit" size="small" onClick={fetchTree}>
-                    Retry
-                  </Button>
-                }
-              >
-                {treeError}
-              </Alert>
+              <LoadError error={treeError} onRetry={fetchTree} />
             </Stack>
           ) : (
             <ContributionTree

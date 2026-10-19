@@ -22,7 +22,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
-import { ApiError } from "@/utils/api/client";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { ApiError, isServiceUnavailable } from "@/utils/api/client";
 
 import * as adminApi from "../api/adminApi";
 import type {
@@ -51,6 +52,7 @@ export default function AdminCurriculumManager() {
   const [lessons, setLessons] = useState<AdminLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
@@ -69,6 +71,7 @@ export default function AdminCurriculumManager() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
     try {
       const [unitRows, chapterRows, lessonRows] = await Promise.all([
         adminApi.listUnits(track),
@@ -79,7 +82,11 @@ export default function AdminCurriculumManager() {
       setChapters(chapterRows);
       setLessons(lessonRows);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t("ADMIN.LOAD_FAILED"));
+      if (isServiceUnavailable(err)) {
+        setLoadFailed(true);
+      } else {
+        setError(err instanceof ApiError ? err.message : t("ADMIN.LOAD_FAILED"));
+      }
     } finally {
       setLoading(false);
     }
@@ -354,26 +361,30 @@ export default function AdminCurriculumManager() {
           </Tabs>
         </Stack>
 
-        <DataTable<AdminEntity>
-          columns={columns}
-          rows={pagedRows}
-          loading={loading}
-          searchValue={search}
-          onSearchChange={setSearch}
-          filterTabs={filterTabs}
-          activeFilterIndex={statusFilter}
-          onFilterChange={setStatusFilter}
-          pagination={{
-            page,
-            rowsPerPage,
-            total: filteredRows.length,
-          }}
-          onPageChange={setPage}
-          onRowsPerPageChange={(rpp) => {
-            setRowsPerPage(rpp);
-            setPage(0);
-          }}
-        />
+        {loadFailed ? (
+          <LostDatabaseConnectionView onRetry={loadAll} />
+        ) : (
+          <DataTable<AdminEntity>
+            columns={columns}
+            rows={pagedRows}
+            loading={loading}
+            searchValue={search}
+            onSearchChange={setSearch}
+            filterTabs={filterTabs}
+            activeFilterIndex={statusFilter}
+            onFilterChange={setStatusFilter}
+            pagination={{
+              page,
+              rowsPerPage,
+              total: filteredRows.length,
+            }}
+            onPageChange={setPage}
+            onRowsPerPageChange={(rpp) => {
+              setRowsPerPage(rpp);
+              setPage(0);
+            }}
+          />
+        )}
       </Stack>
 
       {/* Publish Confirmation */}

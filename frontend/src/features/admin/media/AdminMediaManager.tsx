@@ -15,7 +15,8 @@ import { useRouter } from "next/navigation";
 
 import { useTranslation } from "@/i18n/useTranslation";
 import { useLocale } from "@/i18n/locale-context";
-import { ApiError } from "@/utils/api/client";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { ApiError, isServiceUnavailable } from "@/utils/api/client";
 
 import * as mediaApi from "../api/mediaAdminApi";
 import type { MediaResponse, PaginatedMediaResponse } from "../api/mediaAdminApi";
@@ -60,6 +61,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   const [mediaData, setMediaData] = useState<PaginatedMediaResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // ── Search State ───────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,6 +89,7 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
   const loadMedia = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
     try {
       const params: mediaApi.ListMediaParams = {
         page: page + 1, // API is 1-indexed
@@ -103,7 +106,11 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
       const data = await mediaApi.listMedia(params);
       setMediaData(data);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to load media assets.");
+      if (isServiceUnavailable(err)) {
+        setLoadFailed(true);
+      } else {
+        setError(err instanceof ApiError ? err.message : "Failed to load media assets.");
+      }
     } finally {
       setLoading(false);
     }
@@ -253,22 +260,26 @@ export default function AdminMediaManager(props?: AdminMediaManagerProps) {
         )}
 
         {/* Data Table with columns: ID, File name, Type, Linked To, Size, Actions */}
-        <DataTable<MediaResponse>
-          columns={columns}
-          rows={filteredItems}
-          loading={loading}
-          onRowClick={(row) => router.push(`/${locale}/admin/media/${row.id}/edit`)}
-          pagination={{
-            page,
-            rowsPerPage,
-            total: totalCount,
-          }}
-          onPageChange={(newPage) => setPage(newPage)}
-          onRowsPerPageChange={(rpp) => {
-            setRowsPerPage(rpp);
-            setPage(0);
-          }}
-        />
+        {loadFailed ? (
+          <LostDatabaseConnectionView onRetry={loadMedia} />
+        ) : (
+          <DataTable<MediaResponse>
+            columns={columns}
+            rows={filteredItems}
+            loading={loading}
+            onRowClick={(row) => router.push(`/${locale}/admin/media/${row.id}/edit`)}
+            pagination={{
+              page,
+              rowsPerPage,
+              total: totalCount,
+            }}
+            onPageChange={(newPage) => setPage(newPage)}
+            onRowsPerPageChange={(rpp) => {
+              setRowsPerPage(rpp);
+              setPage(0);
+            }}
+          />
+        )}
       </Stack>
 
       {/* Delete confirmation */}

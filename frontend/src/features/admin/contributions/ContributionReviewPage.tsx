@@ -1,5 +1,6 @@
 "use client";
 
+import LoadError, { loadErrorState } from "../components/shared/LoadError";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -93,11 +94,7 @@ export default function ContributionReviewPage({
       const data = await contributionsApi.getContribution(contributionId);
       setContribution(data);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Failed to load contribution details",
-      );
+      setError(loadErrorState(err, "Failed to load contribution details"));
     } finally {
       setLoading(false);
     }
@@ -187,16 +184,7 @@ export default function ContributionReviewPage({
         >
           Back to Contributions
         </Button>
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" size="small" onClick={fetchContribution}>
-              Retry
-            </Button>
-          }
-        >
-          {error || "Contribution not found"}
-        </Alert>
+        <LoadError error={error || "Contribution not found"} onRetry={fetchContribution} />
       </Box>
     );
   }

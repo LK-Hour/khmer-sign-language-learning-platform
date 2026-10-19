@@ -12,7 +12,8 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ApiError } from "@/utils/api/client";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { ApiError, isServiceUnavailable } from "@/utils/api/client";
 import { useLocale } from "@/i18n/locale-context";
 
 import * as adminApi from "../api/adminApi";
@@ -69,6 +70,7 @@ export default function CurriculumTablePage({
   const [lessons, setLessons] = useState<AdminLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
@@ -89,6 +91,7 @@ export default function CurriculumTablePage({
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
     try {
       const [unitRows, chapterRows, lessonRows] = await Promise.all([
         adminApi.listUnits(track),
@@ -99,7 +102,11 @@ export default function CurriculumTablePage({
       setChapters(chapterRows);
       setLessons(lessonRows);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to load data");
+      if (isServiceUnavailable(err)) {
+        setLoadFailed(true);
+      } else {
+        setError(err instanceof ApiError ? err.message : "Failed to load data");
+      }
     } finally {
       setLoading(false);
     }
@@ -436,27 +443,31 @@ export default function CurriculumTablePage({
           </Alert>
         )}
 
-        <DataTable<AdminEntity>
-          columns={columns}
-          rows={pagedRows}
-          loading={loading}
-          onRowClick={(row) => openEdit(row)}
-          searchValue={search}
-          onSearchChange={setSearch}
-          filterTabs={filterTabs}
-          activeFilterIndex={statusFilter}
-          onFilterChange={setStatusFilter}
-          pagination={{
-            page,
-            rowsPerPage,
-            total: filteredRows.length,
-          }}
-          onPageChange={setPage}
-          onRowsPerPageChange={(rpp) => {
-            setRowsPerPage(rpp);
-            setPage(0);
-          }}
-        />
+        {loadFailed ? (
+          <LostDatabaseConnectionView onRetry={loadAll} />
+        ) : (
+          <DataTable<AdminEntity>
+            columns={columns}
+            rows={pagedRows}
+            loading={loading}
+            onRowClick={(row) => openEdit(row)}
+            searchValue={search}
+            onSearchChange={setSearch}
+            filterTabs={filterTabs}
+            activeFilterIndex={statusFilter}
+            onFilterChange={setStatusFilter}
+            pagination={{
+              page,
+              rowsPerPage,
+              total: filteredRows.length,
+            }}
+            onPageChange={setPage}
+            onRowsPerPageChange={(rpp) => {
+              setRowsPerPage(rpp);
+              setPage(0);
+            }}
+          />
+        )}
       </Stack>
 
       {/* Publish Confirmation */}

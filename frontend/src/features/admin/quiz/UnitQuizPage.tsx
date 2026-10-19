@@ -1,11 +1,11 @@
 "use client";
 
+import LoadError, { loadErrorState } from "../components/shared/LoadError";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Add from "@mui/icons-material/Add";
 import { alpha, type Theme } from "@mui/material/styles";
 import {
-  Alert,
   Button,
   Chip,
   CircularProgress,
@@ -114,9 +114,7 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
       const data = await listExercises(track, { unit_id: unitId });
       setExercises(mapExercises(data));
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Failed to load exercises",
-      );
+      setError(loadErrorState(err, "Failed to load exercises"));
     } finally {
       setLoading(false);
     }
@@ -247,17 +245,9 @@ export default function UnitQuizPage({ unitId, track }: UnitQuizPageProps) {
             { label: `Unit ${unitId}` },
           ]}
         />
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" onClick={fetchExercises}>
-              Retry
-            </Button>
-          }
-          sx={{ mx: 3, mt: 2 }}
-        >
-          {error}
-        </Alert>
+        <Box sx={{ mx: 3, mt: 2 }}>
+          <LoadError error={error} onRetry={fetchExercises} />
+        </Box>
       </>
     );
   }

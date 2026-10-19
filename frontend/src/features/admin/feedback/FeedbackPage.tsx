@@ -18,7 +18,8 @@ import RowActionsMenu from "../components/shared/RowActionsMenu";
 import PreviewDrawer from "../components/shared/PreviewDrawer";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { statusTone, type StatusTone } from "../theme/tones";
-import { ApiError } from "@/utils/api/client";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
+import { ApiError, isServiceUnavailable } from "@/utils/api/client";
 import {
   listFeedback,
   deleteFeedback,
@@ -84,6 +85,7 @@ export default function FeedbackPage() {
   const [data, setData] = useState<PaginatedFeedbackResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const [previewItem, setPreviewItem] = useState<FeedbackItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FeedbackItem | null>(null);
@@ -107,6 +109,7 @@ export default function FeedbackPage() {
   const fetchFeedback = useCallback(() => {
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
 
     return listFeedback({
       page: page + 1, // API is 1-indexed
@@ -120,7 +123,11 @@ export default function FeedbackPage() {
         setLoading(false);
       })
       .catch((err) => {
-        setError(err?.message ?? "Failed to load feedback");
+        if (isServiceUnavailable(err)) {
+          setLoadFailed(true);
+        } else {
+          setError(err?.message ?? "Failed to load feedback");
+        }
         setLoading(false);
       });
   }, [page, rowsPerPage, moodFilter, typeFilter, debouncedSearch]);
@@ -326,20 +333,23 @@ export default function FeedbackPage() {
         </Alert>
       )}
 
-      {/* Data Table */}
-      <DataTable<FeedbackItem>
-        columns={columns}
-        rows={data?.items ?? []}
-        loading={loading}
-        onRowClick={(row) => setPreviewItem(row)}
-        pagination={{
-          page,
-          rowsPerPage,
-          total: data?.total ?? 0,
-        }}
-        onPageChange={handlePageChange}
-        onRowsPerPageChange={handleRowsPerPageChange}
-      />
+      {loadFailed ? (
+        <LostDatabaseConnectionView onRetry={fetchFeedback} />
+      ) : (
+        <DataTable<FeedbackItem>
+          columns={columns}
+          rows={data?.items ?? []}
+          loading={loading}
+          onRowClick={(row) => setPreviewItem(row)}
+          pagination={{
+            page,
+            rowsPerPage,
+            total: data?.total ?? 0,
+          }}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+        />
+      )}
 
       {/* Preview drawer */}
       <PreviewDrawer

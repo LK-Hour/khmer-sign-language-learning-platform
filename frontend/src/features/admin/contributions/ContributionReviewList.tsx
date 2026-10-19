@@ -1,9 +1,8 @@
 "use client";
 
+import LoadError from "../components/shared/LoadError";
 import {
-  Alert,
   Box,
-  Button,
   Skeleton,
   Stack,
   ToggleButton,
@@ -95,16 +94,7 @@ export default function ContributionReviewList({
   if (error) {
     return (
       <Box sx={{ p: 2 }}>
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" size="small" onClick={onRetry}>
-              Retry
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
+        <LoadError error={error} onRetry={onRetry} />
       </Box>
     );
   }

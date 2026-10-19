@@ -13,7 +13,10 @@ import StatsCard from "@/features/admin/components/shared/StatsCard";
 export interface KpiData {
   title: string;
   value: string | number;
-  change: number; // percentage, positive = green, negative = red
+  change: number | null; // positive = green, negative = red, null = "New"
+  changeUnit?: "percent" | "points";
+  newLabel?: string;
+  subtitle?: string;
 }
 
 interface StatCardsProps {
@@ -52,6 +55,9 @@ export default function StatCards({ kpis, loading }: StatCardsProps) {
             title={kpi.title}
             value={kpi.value}
             change={kpi.change}
+            changeUnit={kpi.changeUnit}
+            newLabel={kpi.newLabel}
+            subtitle={kpi.subtitle}
             icon={KPI_ICONS[index] ?? KPI_ICONS[0]}
           />
         </Grid>

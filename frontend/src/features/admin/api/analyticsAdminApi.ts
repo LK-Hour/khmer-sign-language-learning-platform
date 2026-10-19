@@ -8,7 +8,12 @@ import { apiFetch } from "@/utils/api/client";
 
 export interface KpiValue {
   value: number;
-  change: number;
+  /** null = no meaningful baseline last period (show "New"). */
+  change: number | null;
+  change_unit: "percent" | "points";
+  delta: number;
+  /** All-time figure, when `value` is scoped to the current month. */
+  total: number | null;
 }
 
 export interface LessonRankEntry {
