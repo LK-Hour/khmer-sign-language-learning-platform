@@ -80,4 +80,5 @@ instance/
 .webassets-cache
 run_server.sh
 *.backup
-tests/
+tests/*
+!tests/test_word_prediction_pipeline.py
