@@ -8,6 +8,7 @@ and the unified dashboard analytics response.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -61,7 +62,12 @@ class KpiValue(BaseModel):
     """Single KPI metric with period-over-period change."""
 
     value: float
-    change: float  # percentage change vs previous period
+    # Change vs the previous period, in ``change_unit``. ``None`` means there is
+    # no meaningful baseline (previous period too small / empty): show "New".
+    change: float | None = None
+    change_unit: Literal["percent", "points"] = "percent"
+    delta: float = 0.0  # absolute difference vs previous period
+    total: float | None = None  # all-time figure, when ``value`` is period-scoped
 
 
 class LessonRankEntry(BaseModel):
