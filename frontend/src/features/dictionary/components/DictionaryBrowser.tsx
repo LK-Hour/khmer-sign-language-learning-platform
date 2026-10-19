@@ -17,6 +17,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import { MAIN_HEADER_HEIGHT } from "@/components/layout/header-nav/MainHeaderSkeleton";
 import { useTranslation } from "@/i18n/useTranslation";
 import { KslColors, KslFontSizes, KslPalette, KslRadii } from "@/theme/theme";
@@ -478,7 +479,7 @@ export default function DictionaryBrowser({
 
   const renderPanel = () => {
     if (loadFailed) {
-      return <EmptyState title={t("DICTIONARY.LIST.LOAD_ERROR")} />;
+      return <LostDatabaseConnectionView />;
     }
     if (currentCount === 0) {
       return (

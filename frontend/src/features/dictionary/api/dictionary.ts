@@ -1,4 +1,4 @@
-import { apiFetch } from "@/utils/api/client";
+import { apiFetch, isNotFoundError } from "@/utils/api/client";
 import type { DictionaryWord } from "../types";
 import { resolveApiAssetUrl } from "./config";
 
@@ -60,7 +60,8 @@ export async function fetchDictionaryWord(
       `/api/dictionary/${wordId}`,
     );
     return normalizeWord(raw);
-  } catch {
-    return null;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
   }
 }

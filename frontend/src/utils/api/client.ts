@@ -4,6 +4,8 @@ const baseURL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:8000";
 const CSRF_HEADER_VALUE = "KSL-Client";
+/** Give up on a silent backend instead of leaving the UI loading forever. */
+const REQUEST_TIMEOUT_MS = 30_000;
 
 export class ApiError extends Error {
   constructor(
@@ -15,6 +17,27 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
   }
+}
+
+/** The backend could not be reached at all (offline, refused, DNS, CORS-level failure). */
+export class ApiUnavailableError extends Error {
+  constructor(
+    public readonly path: string,
+    options?: { cause?: unknown }
+  ) {
+    super(`API unreachable: ${path}`, options);
+    this.name = "ApiUnavailableError";
+  }
+}
+
+/** True when the failure means the service/database is down rather than a bad request. */
+export function isServiceUnavailable(err: unknown): boolean {
+  if (err instanceof ApiUnavailableError) return true;
+  return err instanceof ApiError && (err.status === 502 || err.status === 503 || err.status === 504);
+}
+
+export function isNotFoundError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 404;
 }
 
 /**
@@ -78,9 +101,31 @@ export type ApiFetchOptions = RequestInit & {
 
 let refreshPromise: Promise<string | null> | null = null;
 
-export async function refreshAuthSession(): Promise<string | null> {
+/** After a non-401 failure (backend/database down), skip refreshes for a while. */
+const REFRESH_FAILURE_COOLDOWN_MS = 15_000;
+let lastRefreshFailureAt = 0;
+
+type AuthStoreState = ReturnType<typeof useAuthStore.getState>;
+
+function markRefreshFailed(store: AuthStoreState) {
+  lastRefreshFailureAt = Date.now();
+  store.setSessionCheckFailed(true);
+}
+
+function markRefreshSucceeded(store: AuthStoreState) {
+  lastRefreshFailureAt = 0;
+  store.setSessionCheckFailed(false);
+}
+
+export async function refreshAuthSession(
+  options: { force?: boolean } = {}
+): Promise<string | null> {
   // Deduplicate: if a refresh is already in-flight, reuse that same promise.
   if (refreshPromise) return refreshPromise;
+  // Avoid hammering a backend that just failed; the user can retry explicitly.
+  if (!options.force && Date.now() - lastRefreshFailureAt < REFRESH_FAILURE_COOLDOWN_MS) {
+    return null;
+  }
 
   refreshPromise = (async () => {
     const store = useAuthStore.getState();
@@ -119,10 +164,18 @@ export async function refreshAuthSession(): Promise<string | null> {
               user?: { id: string; email: string | null; first_name: string; last_name: string | null; picture: string | null; provider: string; account_type?: string; is_guest?: boolean } | null;
             };
             store.setAccessToken(retryToken);
+            markRefreshSucceeded(store);
             return retryToken?.access_token;
           }
-          // Retry also failed-session is gone
-          store.clear();
+          // Only a second 401 means the session is gone; anything else
+          // (e.g. 5xx while the database is down) must not log the user out.
+          if (retryRes.status === 401) {
+            store.clear();
+          } else {
+            markRefreshFailed(store);
+          }
+        } else {
+          markRefreshFailed(store);
         }
         return null;
       }
@@ -133,11 +186,13 @@ export async function refreshAuthSession(): Promise<string | null> {
         user?: { id: string; email: string | null; first_name: string; last_name: string | null; picture: string | null; provider: string; account_type?: string; is_guest?: boolean } | null;
       };
       store.setAccessToken(tokenResp);
+      markRefreshSucceeded(store);
       return tokenResp?.access_token;
     } catch (err) {
       // Transient failure (e.g. the network is down). The caller treats a null
       // result as "could not refresh"; log so the failure isn't invisible.
       console.warn("Auth session refresh failed:", err);
+      markRefreshFailed(store);
       return null;
     } finally {
       store.setRefreshing(false);
@@ -184,12 +239,23 @@ export async function apiFetch<T>(
     }
   }
 
-  const res = await fetch(`${baseURL}${path}`, {
-    ...requestInit,
-    headers,
-    cache: requestInit.cache ?? "no-store",
-    credentials: "include",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${baseURL}${path}`, {
+      // Uploads can legitimately take long, and callers may bring their own signal.
+      ...(!requestInit.signal && !bodyIsFormData && typeof AbortSignal.timeout === "function"
+        ? { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
+        : {}),
+      ...requestInit,
+      headers,
+      cache: requestInit.cache ?? "no-store",
+      credentials: "include",
+    });
+  } catch (err) {
+    // Aborts are the caller's own doing; everything else is a network failure.
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new ApiUnavailableError(path, { cause: err });
+  }
 
   if (res.status === 401 && !skipAuth && retryOnUnauthorized) {
     const newToken = await refreshAuthSession();

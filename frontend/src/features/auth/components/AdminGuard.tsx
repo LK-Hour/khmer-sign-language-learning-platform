@@ -3,9 +3,11 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Container, Skeleton, Stack } from "@mui/material";
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import { ROUTES } from "@/constants/routes";
 import { useLocaleStore } from "@/store/locale.store";
 import { useAuthStore } from "@/store/auth.store";
+import { refreshAuthSession } from "@/utils/api/client";
 
 type AdminGuardProps = {
   children: React.ReactNode;
@@ -24,12 +26,19 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   const isRefreshing = useAuthStore((state) => state.isRefreshing);
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
+  const sessionCheckFailed = useAuthStore((state) => state.sessionCheckFailed);
 
   const isAdmin = Boolean(user && isAuthenticated && user?.account_type === "admin");
   const canRefreshRealUser = Boolean(user && !user?.is_guest && !token);
   const isAnonymous = hasHydrated && !isRefreshing && !canRefreshRealUser && (!user || !isAuthenticated);
   const isForbidden = hasHydrated && !isRefreshing && !canRefreshRealUser && user && isAuthenticated && !isAdmin;
-  const isLoading = !hasHydrated || isRefreshing || canRefreshRealUser;
+  // The admin role can only be confirmed by the backend. If that check failed
+  // (e.g. database down) keep the session, show no admin content, and let the
+  // admin retry instead of spinning forever or bouncing them to login.
+  const isUnverifiable = hasHydrated && !isRefreshing && canRefreshRealUser && sessionCheckFailed;
+  // A background refresh must not unmount an already-verified admin's page:
+  // the remount would refetch, trigger another refresh, and loop forever.
+  const isLoading = !hasHydrated || canRefreshRealUser || (isRefreshing && !isAdmin);
 
   useEffect(() => {
     if (isLoading || isAdmin) return;
@@ -44,6 +53,10 @@ export default function AdminGuard({ children }: AdminGuardProps) {
       router.replace(localizedPath(locale, ROUTES.home));
     }
   }, [isAdmin, isAnonymous, isForbidden, isLoading, locale, pathname, router]);
+
+  if (isUnverifiable) {
+    return <LostDatabaseConnectionView onRetry={() => void refreshAuthSession({ force: true })} />;
+  }
 
   if (isLoading || !isAdmin) {
     return (

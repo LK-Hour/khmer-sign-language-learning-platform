@@ -16,6 +16,7 @@ vi.mock("@/store/auth.store", () => ({
       token: null,
       isTokenExpired: () => false,
       setRefreshing: () => {},
+      setSessionCheckFailed: () => {},
       setAccessToken: () => {},
       clear: () => {},
     }),

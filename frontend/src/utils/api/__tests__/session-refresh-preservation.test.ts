@@ -74,6 +74,7 @@ describe('Preservation: Valid non-expired access token used directly', () => {
                 isRefreshing: false,
                 isTokenExpired: () => false,
                 setRefreshing: vi.fn(),
+                setSessionCheckFailed: vi.fn(),
                 setAccessToken: vi.fn(),
                 clear: vi.fn(),
               }),
@@ -156,6 +157,7 @@ describe('Preservation: Guest user skips refresh mechanism', () => {
                 isRefreshing: false,
                 isTokenExpired: () => true, // Token "expired" but user is guest
                 setRefreshing: vi.fn(),
+                setSessionCheckFailed: vi.fn(),
                 setAccessToken: vi.fn(),
                 clear: vi.fn(),
               }),
@@ -234,6 +236,7 @@ describe('Preservation: Successful single-caller refresh performs rotation', () 
                 isRefreshing: false,
                 isTokenExpired: () => true,
                 setRefreshing: vi.fn(),
+                setSessionCheckFailed: vi.fn(),
                 setAccessToken: (resp: { access_token: string; token_type: string }) => {
                   setAccessTokenCalledWith = resp;
                 },
@@ -328,6 +331,7 @@ describe('Preservation: Explicit logout clears frontend state', () => {
                 isRefreshing: false,
                 isTokenExpired: () => true,
                 setRefreshing: vi.fn(),
+                setSessionCheckFailed: vi.fn(),
                 setAccessToken: vi.fn(),
                 clear: () => {
                   clearCalled = true;

@@ -3,7 +3,7 @@
 import { Icon } from "@iconify/react";
 import { Button, ButtonBase, Collapse, Grid, Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { Locale } from "@/i18n/config";
 import { useTranslation } from "@/i18n/useTranslation";
 import { formatChapterBadge, formatLessonLabel, formatOrderIndex } from "@/features/shared/trackFormat";
@@ -106,6 +106,8 @@ export type LearningTrackProps<
   /** Show the unit category above the unit title. */
   showUnitCategory?: boolean;
   exercisesHref: string;
+  /** Rendered in place of the unit list when the curriculum could not be loaded. */
+  unavailable?: ReactNode;
 } & Omit<RowConfig<L, C>, "lessonAction" | "practiceTitle" | "practiceAction">;
 
 function localizedTitle(item: { title: string; titleKh: string }, locale: Locale): string {
@@ -136,6 +138,7 @@ export default function LearningTrack<
   formatUnitProgress,
   showUnitCategory = false,
   exercisesHref,
+  unavailable,
   ...rowConfig
 }: LearningTrackProps<L, C, U>) {
   const { locale, t } = useTranslation();
@@ -262,29 +265,31 @@ export default function LearningTrack<
         </Grid>
       </Grid>
 
-      <Stack spacing={1.5}>
-        {filters.visibleUnits.map((unit) => (
-          <UnitTrackCard
-            key={unit?.id}
-            unit={unit}
-            expanded={filters.isUnitExpanded(unit)}
-            onToggle={() => filters.toggleUnit(unit)}
-            filters={filters}
-            locale={locale}
-            unitLabel={labels.unit}
-            chapterLabel={labels.chapter}
-            progressLabel={formatUnitProgress(
-              unit?.completedLessonCount ?? 0,
-              unit?.totalLessonCount ?? 0,
-            )}
-            showCategory={showUnitCategory}
-            rows={rows}
-          />
-        ))}
-        {filters.visibleUnits.length === 0 ? (
-          <TrackEmptyState onClear={filters.clearAll} />
-        ) : null}
-      </Stack>
+      {unavailable ?? (
+        <Stack spacing={1.5}>
+          {filters.visibleUnits.map((unit) => (
+            <UnitTrackCard
+              key={unit?.id}
+              unit={unit}
+              expanded={filters.isUnitExpanded(unit)}
+              onToggle={() => filters.toggleUnit(unit)}
+              filters={filters}
+              locale={locale}
+              unitLabel={labels.unit}
+              chapterLabel={labels.chapter}
+              progressLabel={formatUnitProgress(
+                unit?.completedLessonCount ?? 0,
+                unit?.totalLessonCount ?? 0,
+              )}
+              showCategory={showUnitCategory}
+              rows={rows}
+            />
+          ))}
+          {filters.visibleUnits.length === 0 ? (
+            <TrackEmptyState onClear={filters.clearAll} />
+          ) : null}
+        </Stack>
+      )}
     </Stack>
   );
 }

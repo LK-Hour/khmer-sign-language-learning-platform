@@ -30,6 +30,8 @@ interface AuthState {
   isAuthenticated: boolean;
   isRefreshing: boolean;
   hasHydrated: boolean;
+  /** True when the last session refresh failed for a reason other than a revoked session (e.g. backend or database down). */
+  sessionCheckFailed: boolean;
 
   /** Set auth state from a login response. */
   setAuth: (response: AuthTokenResponse) => void;
@@ -43,6 +45,8 @@ interface AuthState {
   setRefreshing: (isRefreshing: boolean) => void;
 
   setHasHydrated: (hasHydrated: boolean) => void;
+
+  setSessionCheckFailed: (failed: boolean) => void;
 
   /** Clear all auth state (logout). */
   clear: () => void;
@@ -102,6 +106,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isRefreshing: false,
       hasHydrated: false,
+      sessionCheckFailed: false,
 
       setAuth: (response) =>
         set({
@@ -151,6 +156,8 @@ export const useAuthStore = create<AuthState>()(
 
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
 
+      setSessionCheckFailed: (sessionCheckFailed) => set({ sessionCheckFailed }),
+
       clear: () =>
         set({
           token: null,
@@ -158,6 +165,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           isAuthenticated: false,
           isRefreshing: false,
+          sessionCheckFailed: false,
         }),
 
       restoreSession: (token, user, tokenExpiresAt = decodeJwtExpiry(token)) =>

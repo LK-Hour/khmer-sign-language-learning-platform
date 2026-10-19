@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import LostDatabaseConnectionView from "@/components/LostDatabaseConnectionView";
 import { PageContainer } from "@/components/layout";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -14,6 +15,7 @@ import { t } from "@/i18n/translations";
 import { absoluteUrl, buildLanguageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo/config";
 import JsonLd from "@/lib/seo/JsonLd";
 import { dictionaryWordJsonLd } from "@/lib/seo/structuredData";
+import { isServiceUnavailable } from "@/utils/api/client";
 
 type PageProps = {
   params: Promise<{ locale: string; wordId: string }>;
@@ -28,7 +30,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: t(locale, "DICTIONARY.LIST.NO_RESULTS_TITLE") };
   }
 
-  const word = await fetchDictionaryWord(id);
+  // Metadata must never fail the page: an outage just falls back to a generic title.
+  const word = await fetchDictionaryWord(id).catch(() => null);
   if (!word) {
     return { title: t(locale, "DICTIONARY.LIST.NO_RESULTS_TITLE") };
   }
@@ -72,10 +75,17 @@ export default async function DictionaryWordPage({ params }: PageProps) {
   const id = Number(wordId);
   if (Number.isNaN(id)) notFound();
 
-  const [word, allWords] = await Promise.all([
-    fetchDictionaryWord(id),
-    fetchAllDictionaryWords().catch(() => []),
-  ]);
+  let word: Awaited<ReturnType<typeof fetchDictionaryWord>>;
+  let allWords: Awaited<ReturnType<typeof fetchAllDictionaryWords>>;
+  try {
+    [word, allWords] = await Promise.all([
+      fetchDictionaryWord(id),
+      fetchAllDictionaryWords().catch(() => []),
+    ]);
+  } catch (err) {
+    if (isServiceUnavailable(err)) return <LostDatabaseConnectionView />;
+    throw err;
+  }
   if (!word) notFound();
 
   const { previous, next, siblings } = getDictionaryNeighbors(allWords, word);
