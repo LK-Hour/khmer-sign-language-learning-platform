@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import logging
 import os
@@ -11,6 +12,8 @@ load_dotenv()
 
 from .api.router import router as api_router
 from .core.config import settings
+from .core.errors import register_exception_handlers
+from .db.session import check_database
 
 logger = logging.getLogger("ksl.timing")
 
@@ -53,6 +56,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+register_exception_handlers(app)
+
 # Include routes
 app.include_router(api_router)
 
@@ -67,3 +72,14 @@ if os.path.isdir(_DATASET_DIR):
 @app.get("/")
 def read_root():
     return {"status": "Backend is running", "environment": settings.environment}
+
+
+@app.get("/api/health")
+def health_check():
+    """Liveness plus database reachability; 503 when the database is down."""
+    if not check_database():
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "database": "unavailable"},
+        )
+    return {"status": "ok", "database": "ok"}

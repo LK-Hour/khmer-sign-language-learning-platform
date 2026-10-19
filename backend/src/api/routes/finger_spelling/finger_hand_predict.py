@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from src.api.deps import get_optional_user
 from src.models.user import User
@@ -10,6 +12,8 @@ from src.schemas.finger_spelling import (
     HandPredictResponse,
     HandPredictStatusResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 GUEST_ID_HEADER = "X-KSL-Guest-Id"
@@ -29,9 +33,10 @@ def _get_hand_prediction_service():
             get_hand_prediction_service,
         )
     except ImportError as exc:
+        logger.error("Prediction service import failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Hand prediction service is unavailable: {exc}",
+            detail="Hand prediction service is unavailable",
         ) from exc
 
     return get_hand_prediction_service()
@@ -43,9 +48,10 @@ def _get_hand_label_match_prediction_service():
             get_hand_label_match_prediction_service,
         )
     except ImportError as exc:
+        logger.error("Prediction service import failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Hand label-match prediction service is unavailable: {exc}",
+            detail="Hand label-match prediction service is unavailable",
         ) from exc
 
     return get_hand_label_match_prediction_service()
@@ -110,9 +116,10 @@ def predict_from_features(
             )
             label_match = None
     except FileNotFoundError as exc:
+        logger.error("Prediction model file missing: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
+            detail="Prediction model is not available",
         ) from exc
     except ValueError as exc:
         raise HTTPException(
@@ -120,9 +127,10 @@ def predict_from_features(
             detail=str(exc),
         ) from exc
     except Exception as exc:
+        logger.exception("Prediction failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Prediction failed: {exc}",
+            detail="Prediction failed",
         ) from exc
 
     return HandPredictResponse(

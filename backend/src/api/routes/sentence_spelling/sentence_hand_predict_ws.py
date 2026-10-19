@@ -13,6 +13,7 @@ import uuid
 from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, ValidationError
 
+from src.core.errors import DATABASE_UNAVAILABLE_DETAIL, DATABASE_UNAVAILABLE_ERRORS
 from src.db.session import SessionLocal
 from src.models.user import User
 from src.services.sentence_spelling.sentence_hand_prediction_service import (
@@ -123,7 +124,13 @@ async def handle_websocket(websocket: WebSocket) -> None:
                     subject_id = auth.guestId
                     await websocket.send_json({"type": "auth_ok"})
                 elif auth.token:
-                    user_id = _authenticate_token(auth.token)
+                    try:
+                        user_id = _authenticate_token(auth.token)
+                    except DATABASE_UNAVAILABLE_ERRORS:
+                        await websocket.send_json(
+                            WsErrorResponse(message=DATABASE_UNAVAILABLE_DETAIL).model_dump()
+                        )
+                        continue
                     if not user_id:
                         await websocket.send_json(
                             WsErrorResponse(message="Authentication required").model_dump()
@@ -182,7 +189,7 @@ async def handle_websocket(websocket: WebSocket) -> None:
                 except Exception as exc:
                     logger.exception("Prediction failed")
                     await websocket.send_json(
-                        WsErrorResponse(message=str(exc)).model_dump()
+                        WsErrorResponse(message="Prediction failed").model_dump()
                     )
                     continue
 

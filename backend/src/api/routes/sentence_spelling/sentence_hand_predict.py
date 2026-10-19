@@ -4,6 +4,8 @@ frontend camera panel primarily uses the WebSocket endpoint in
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from src.api.deps import get_optional_user
@@ -13,6 +15,8 @@ from src.schemas.sentence_spelling import (
     HandPredictResponse,
     HandPredictStatusResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/sentence_spelling", tags=["sentence-spelling-predict"])
 GUEST_ID_HEADER = "X-KSL-Guest-Id"
@@ -87,9 +91,10 @@ def sentence_predict_from_features(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except Exception as exc:
+        logger.exception("Prediction failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Prediction failed: {exc}",
+            detail="Prediction failed",
         ) from exc
 
     return HandPredictResponse(

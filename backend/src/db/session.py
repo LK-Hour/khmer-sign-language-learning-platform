@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from src.core.config import settings
 
@@ -13,11 +13,16 @@ if not all(c in _ALLOWED_TZ_CHARS for c in settings.database_timezone):
 
 engine = create_engine(
     settings.database_url,
-    connect_args={"options": f"-c timezone={settings.database_timezone}"},
+    # Fail fast when the database is unreachable so requests return a 503
+    # instead of hanging for the OS-level TCP timeout.
+    connect_args={
+        "options": f"-c timezone={settings.database_timezone}",
+        "connect_timeout": 5,
+    },
     pool_pre_ping=True,
     pool_size=5,
     max_overflow=10,
-    pool_timeout=30,
+    pool_timeout=10,
 )
 
 
@@ -49,3 +54,13 @@ def get_db():
         raise
     finally:
         db.close()
+
+
+def check_database() -> bool:
+    """Return True when a trivial query succeeds on a fresh connection."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False

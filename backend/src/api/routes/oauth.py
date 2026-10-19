@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from src.api.deps import get_db
 from src.api.deps import get_current_user
 from src.core.config import settings
+from src.core.errors import DATABASE_UNAVAILABLE_DETAIL, DATABASE_UNAVAILABLE_ERRORS
 from src.core.rate_limit import auth_rate_limiter
 from src.core.redis import get_redis
 from src.schemas.oauth import OAuthLoginRequest, AuthTokenResponse, EmailLoginRequest
@@ -231,8 +232,11 @@ def telegram_widget_redirect(
         return response
     except ValueError as e:
         return _redirect_with_params(redirect_url, {"error": str(e)})
-    except Exception as e:
-        return _redirect_with_params(redirect_url, {"error": f"Telegram login failed: {e}"})
+    except DATABASE_UNAVAILABLE_ERRORS:
+        return _redirect_with_params(redirect_url, {"error": DATABASE_UNAVAILABLE_DETAIL})
+    except Exception:
+        logger.exception("Telegram redirect login failed")
+        return _redirect_with_params(redirect_url, {"error": "Telegram login failed"})
 
 
 @router.post("/telegram/exchange", response_model=AuthTokenResponse)
@@ -295,8 +299,14 @@ def google_login(
         )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Google login failed: {e}")
+    except DATABASE_UNAVAILABLE_ERRORS:
+        raise
+    except Exception:
+        logger.exception("Google login failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google login failed",
+        )
 
 
 @router.post("/facebook", response_model=AuthTokenResponse)
@@ -337,8 +347,14 @@ def facebook_login(
         )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Facebook login failed: {e}")
+    except DATABASE_UNAVAILABLE_ERRORS:
+        raise
+    except Exception:
+        logger.exception("Facebook login failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Facebook login failed",
+        )
 
 
 @router.post("/telegram", response_model=AuthTokenResponse)
@@ -385,8 +401,14 @@ def telegram_login(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Telegram login failed: {e}")
+    except DATABASE_UNAVAILABLE_ERRORS:
+        raise
+    except Exception:
+        logger.exception("Telegram login failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Telegram login failed",
+        )
 
 
 @router.post("/guest", response_model=AuthTokenResponse)

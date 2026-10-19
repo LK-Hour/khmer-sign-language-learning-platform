@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import logging
+from time import perf_counter
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -16,6 +18,8 @@ from src.ml.word_features import (
     SEQUENCE_LENGTH as WORD_SEQUENCE_LENGTH,
     build_model_input,
 )
+
+logger = logging.getLogger(__name__)
 
 # The browser sends raw landmarks (30 frames x 258); the model's 686 engineered
 # features per frame are built server-side in ``word_features``.
@@ -117,9 +121,13 @@ class WordDetectionPredictor:
                 f"Expected {WORD_FEATURE_COUNT} word features, got {vector.shape[0]}"
             )
 
+        started = perf_counter()
         sequence = build_model_input(vector.reshape(WORD_SEQUENCE_LENGTH, WORD_FEATURES_PER_FRAME))
+        feature_ms = (perf_counter() - started) * 1000
+        inference_started = perf_counter()
         prediction = self._model(sequence[np.newaxis], training=False)
         probabilities = np.asarray(prediction, dtype=np.float32).reshape(-1)
+        logger.debug("Word features=%.1fms inference=%.1fms", feature_ms, (perf_counter() - inference_started) * 1000)
         predicted_index = int(np.argmax(probabilities))
         confidence = float(probabilities[predicted_index]) * 100.0
 

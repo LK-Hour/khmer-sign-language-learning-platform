@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from src.api.deps import get_optional_user
@@ -11,6 +13,8 @@ from src.schemas.word_detection import (
     WordPredictResponse,
     WordPredictStatusResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 GUEST_ID_HEADER = "X-KSL-Guest-Id"
@@ -30,9 +34,10 @@ def _get_word_prediction_service():
             get_word_prediction_service,
         )
     except ImportError as exc:
+        logger.error("Prediction service import failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Word prediction service is unavailable: {exc}",
+            detail="Word prediction service is unavailable",
         ) from exc
 
     return get_word_prediction_service()
@@ -44,9 +49,10 @@ def _get_word_label_match_prediction_service():
             get_word_label_match_prediction_service,
         )
     except ImportError as exc:
+        logger.error("Prediction service import failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Word label-match prediction service is unavailable: {exc}",
+            detail="Word label-match prediction service is unavailable",
         ) from exc
 
     return get_word_label_match_prediction_service()
@@ -104,9 +110,10 @@ def predict_from_features(
             base_result = service.predict_from_features(body.features)
             label_match = None
     except FileNotFoundError as exc:
+        logger.error("Prediction model file missing: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
+            detail="Prediction model is not available",
         ) from exc
     except ValueError as exc:
         raise HTTPException(
@@ -114,9 +121,10 @@ def predict_from_features(
             detail=str(exc),
         ) from exc
     except Exception as exc:
+        logger.exception("Prediction failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Prediction failed: {exc}",
+            detail="Prediction failed",
         ) from exc
 
     return WordPredictResponse(

@@ -6,10 +6,12 @@ import asyncio
 import json
 import logging
 import uuid
+from time import perf_counter
 
 from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, ValidationError
 
+from src.core.errors import DATABASE_UNAVAILABLE_DETAIL, DATABASE_UNAVAILABLE_ERRORS
 from src.db.session import SessionLocal
 from src.ml.word_predictor import WORD_FEATURE_COUNT
 from src.models.user import User
@@ -35,6 +37,8 @@ class PredictMessage(BaseModel):
     features: list[float]
     target_label: str | None = None
     targetLabel: str | None = None
+    requestId: int | None = None
+    attemptId: int | None = None
 
 
 class WsPredictResponse(BaseModel):
@@ -44,11 +48,16 @@ class WsPredictResponse(BaseModel):
     classIndex: int
     targetLabel: str | None = None
     labelMatches: bool | None = None
+    requestId: int | None = None
+    attemptId: int | None = None
+    processingMs: float | None = None
 
 
 class WsErrorResponse(BaseModel):
     type: str = "error"
     message: str
+    requestId: int | None = None
+    attemptId: int | None = None
 
 
 def _authenticate_token(token: str) -> str | None:
@@ -118,7 +127,13 @@ async def handle_websocket(websocket: WebSocket) -> None:
                     subject_id = auth.guestId
                     await websocket.send_json({"type": "auth_ok"})
                 elif auth.token:
-                    user_id = _authenticate_token(auth.token)
+                    try:
+                        user_id = await asyncio.to_thread(_authenticate_token, auth.token)
+                    except DATABASE_UNAVAILABLE_ERRORS:
+                        await websocket.send_json(
+                            WsErrorResponse(message=DATABASE_UNAVAILABLE_DETAIL).model_dump()
+                        )
+                        continue
                     if not user_id:
                         await websocket.send_json(
                             WsErrorResponse(message="Authentication required").model_dump()
@@ -151,12 +166,14 @@ async def handle_websocket(websocket: WebSocket) -> None:
                 if len(pred_msg.features) != WORD_FEATURE_COUNT:
                     await websocket.send_json(
                         WsErrorResponse(
-                            message=f"Expected {WORD_FEATURE_COUNT} features, got {len(pred_msg.features)}"
+                            message=f"Expected {WORD_FEATURE_COUNT} features, got {len(pred_msg.features)}",
+                            requestId=pred_msg.requestId, attemptId=pred_msg.attemptId
                         ).model_dump()
                     )
                     continue
 
                 try:
+                    started = perf_counter()
                     label_match = None
                     if msg_type == "predict_label_match":
                         # Inference is CPU-bound; run it off the event loop so
@@ -172,13 +189,16 @@ async def handle_websocket(websocket: WebSocket) -> None:
                         result = await asyncio.to_thread(
                             service.predict_from_features, pred_msg.features
                         )
-                except Exception as exc:
+                except Exception:
                     logger.exception("Word prediction failed")
-                    await websocket.send_json(WsErrorResponse(message=str(exc)).model_dump())
+                    await websocket.send_json(WsErrorResponse(message="Prediction failed", requestId=pred_msg.requestId, attemptId=pred_msg.attemptId).model_dump())
                     continue
 
                 await websocket.send_json(
                     WsPredictResponse(
+                        requestId=pred_msg.requestId,
+                        attemptId=pred_msg.attemptId,
+                        processingMs=round((perf_counter() - started) * 1000, 2),
                         label=result.prediction.predicted_label,
                         confidence=result.match_confidence,
                         classIndex=result.prediction.predicted_class_index,
